@@ -1,0 +1,109 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="scenario-update-mutation">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation UpdateMutation($drn: String = "", $description: String = "", $path: String = "", $position: Int = 0, $inputs: [ScenarioUpdateMutation_Input!] = [], $traces: [ScenarioUpdateMutation_Trace!] = []) {
+       TestSuite{
+         Scenario{
+           updateMutation(input: {drn: $drn,description: $description,path: $path,position: $position,inputs: $inputs,traces: $traces}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "description",
+    "title": "Description",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "path",
+    "title": "Path",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "position",
+    "title": "Position",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "inputs",
+    "title": "Inputs",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "title": "Type",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "value",
+        "title": "Value",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "traces",
+    "title": "Traces",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "command",
+        "title": "Command",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "status",
+        "title": "Status",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

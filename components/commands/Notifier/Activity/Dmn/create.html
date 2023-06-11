@@ -1,0 +1,95 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="add-dmn-activity">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Create($dmnDrn: String = "", $notifierDrn: String = "", $failSilent: Boolean = False, $inputs: [AddDmnActivity_Input!] = [], $outputs: [AddDmnActivity_Output!] = []) {
+       Notifier{
+         Activity{
+           Dmn{
+             create(input: {dmnDrn: $dmnDrn,notifierDrn: $notifierDrn,failSilent: $failSilent,inputs: $inputs,outputs: $outputs}) {
+                correlationId
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "dmnDrn",
+    "title": "Dmndrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:global:(actorexpression|triggerexpression|dmn|code|template|dependency|pattern):([A-Z]{1}[a-z]+)+(\\.[a-z]{2,5})?$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "notifierDrn",
+    "title": "Notifierdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:notifier:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "failSilent",
+    "title": "Failsilent",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "False",
+    "default": "False"
+  },
+  {
+    "name": "inputs",
+    "title": "Inputs",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "variableName",
+        "title": "Variablename",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "mapping",
+        "title": "Mapping",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "outputs",
+    "title": "Outputs",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "variableName",
+        "title": "Variablename",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "target",
+        "title": "Target",
+        "type": "String",
+        "pattern": "^[a-z]+([A-Z]{1}[a-z]+)*$",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

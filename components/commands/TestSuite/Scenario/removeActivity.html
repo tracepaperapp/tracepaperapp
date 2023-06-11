@@ -1,0 +1,39 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="scenario-remove-activity">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation RemoveActivity($drn: String = "", $position: Int = 0) {
+       TestSuite{
+         Scenario{
+           removeActivity(input: {drn: $drn,position: $position}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "position",
+    "title": "Position",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

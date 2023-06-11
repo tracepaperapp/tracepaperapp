@@ -1,0 +1,36 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="project-build-filter">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query FilterBuild($key_begins_with: String = "") {
+       Project {
+         Build {
+           filter(key_begins_with: $key_begins_with) {
+              resultset { 
+               key
+               drn
+               status
+               owner
+               gitWorkspace
+               gitRepository
+               logs
+             }
+           }
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key_begins_with",
+    "type": "String",
+    "title": "Key Begins With"
+  }
+]
+        </div>
+    </div>
+</template>

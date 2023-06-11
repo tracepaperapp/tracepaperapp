@@ -1,0 +1,88 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="notifier-get">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query GetNotifier($key: ID = "") {
+       Notifier {
+         get(key: $key) {
+           key
+           drn
+           name
+           summary
+           documentation
+           subFlow
+           projectDrn
+           triggers {
+             eventName
+             keyField
+             mapping {
+               eventFieldName
+               flowVariableName
+             } 
+           } 
+           activities {
+             type
+             order
+             groupName
+             userName
+             password
+             sender
+             receiver
+             subject
+             text
+             html
+             variableName
+             propertyKey
+             expression
+             templateDrn
+             fileName
+             content
+             bucket
+             path
+             handler
+             scriptDrn
+             dmnDrn
+             inputs {
+               variableName
+               mapping
+             } 
+             outputs {
+               variableName
+               target
+             } 
+             url
+             method
+             loadJson
+             params
+             headers
+             identifier
+             notificationType
+             message
+             eventName
+             sendAfter
+             uri
+             array
+             sub
+             failSilent
+           } 
+           flowVars {
+             name
+             type
+           } 
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key",
+    "type": "String"
+  }
+]
+        </div>
+    </div>
+</template>

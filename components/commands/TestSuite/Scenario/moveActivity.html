@@ -1,0 +1,47 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="scenario-move-activity">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation MoveActivity($drn: String = "", $position: Int = 0, $newPosition: Int = 0) {
+       TestSuite{
+         Scenario{
+           moveActivity(input: {drn: $drn,position: $position,newPosition: $newPosition}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "position",
+    "title": "Position",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "newPosition",
+    "title": "Newposition",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

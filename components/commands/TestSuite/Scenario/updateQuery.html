@@ -1,0 +1,179 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="scenario-update-query">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation UpdateQuery($drn: String = "", $description: String = "", $path: String = "", $view: String = "", $position: Int = 0, $inputs: [ScenarioUpdateQuery_Input!] = [], $expectations: [ScenarioUpdateQuery_Expectation!] = [], $extractions: [ScenarioUpdateQuery_Extraction!] = [], $remediations: [ScenarioUpdateQuery_Remediation!] = []) {
+       TestSuite{
+         Scenario{
+           updateQuery(input: {drn: $drn,description: $description,path: $path,view: $view,position: $position,inputs: $inputs,expectations: $expectations,extractions: $extractions,remediations: $remediations}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "description",
+    "title": "Description",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "path",
+    "title": "Path",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "view",
+    "title": "View",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "position",
+    "title": "Position",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "inputs",
+    "title": "Inputs",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "title": "Type",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "value",
+        "title": "Value",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "expectations",
+    "title": "Expectations",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "title": "Type",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "value",
+        "title": "Value",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "extractions",
+    "title": "Extractions",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "key",
+        "title": "Key",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "remediations",
+    "title": "Remediations",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "domain",
+        "title": "Domain",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "aggregate",
+        "title": "Aggregate",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "identifier",
+        "title": "Identifier",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

@@ -1,0 +1,61 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="testsuite-scenario-get">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query GetTestScenario($key: ID = "") {
+       TestSuite {
+         Scenario {
+           get(key: $key) {
+             key
+             drn
+             name
+             activities {
+               type
+               description
+               path
+               view
+               milliseconds
+               userNumber
+               role
+               inputs {
+                 name
+                 type
+                 value
+               } 
+               traces {
+                 command
+                 status
+               } 
+               expectations {
+                 name
+                 type
+                 value
+               } 
+               extractions {
+                 name
+                 key
+               } 
+               remediations {
+                 domain
+                 aggregate
+                 identifier
+               } 
+             } 
+           }
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key",
+    "type": "String"
+  }
+]
+        </div>
+    </div>
+</template>

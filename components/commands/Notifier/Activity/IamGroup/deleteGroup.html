@@ -1,0 +1,49 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="add-delete-iam-group">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation DeleteGroup($groupName: String = "", $notifierDrn: String = "", $failSilent: Boolean = False) {
+       Notifier{
+         Activity{
+           IamGroup{
+             deleteGroup(input: {groupName: $groupName,notifierDrn: $notifierDrn,failSilent: $failSilent}) {
+                correlationId
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "groupName",
+    "title": "Groupname",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "notifierDrn",
+    "title": "Notifierdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:notifier:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "failSilent",
+    "title": "Failsilent",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "False",
+    "default": "False"
+  }
+]
+    </div>
+  </div>
+</template>

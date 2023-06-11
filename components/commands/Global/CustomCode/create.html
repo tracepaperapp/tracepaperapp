@@ -1,0 +1,55 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="create-custom-code">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Create($name: String = "", $functions: String = "", $source: String = "", $projectDrn: String = "") {
+       Global{
+         CustomCode{
+           create(input: {name: $name,functions: $functions,source: $source,projectDrn: $projectDrn}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "name",
+    "title": "Name",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "functions",
+    "title": "Functions",
+    "type": "String",
+    "pattern": "^[0-z]+(;[0-z]+)*$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "source",
+    "title": "Source",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "projectDrn",
+    "title": "Projectdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

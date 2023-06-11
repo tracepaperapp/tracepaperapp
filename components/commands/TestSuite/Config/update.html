@@ -1,0 +1,63 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="update-test-suite-config">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Update($cleanDb: Boolean = false, $cleanIam: Boolean = false, $eventCoverage: Int = 0, $viewCoverage: Int = 0, $drn: String = "") {
+       TestSuite{
+         Config{
+           update(input: {cleanDb: $cleanDb,cleanIam: $cleanIam,eventCoverage: $eventCoverage,viewCoverage: $viewCoverage,drn: $drn}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "cleanDb",
+    "title": "Cleandb",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "cleanIam",
+    "title": "Cleaniam",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "eventCoverage",
+    "title": "Eventcoverage",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "viewCoverage",
+    "title": "Viewcoverage",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

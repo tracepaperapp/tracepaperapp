@@ -1,0 +1,78 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="scenario-update-set-variables">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation UpdateSetVariables($drn: String = "", $description: String = "", $position: Int = 0, $inputs: [ScenarioUpdateSetVariables_Input!] = []) {
+       TestSuite{
+         Scenario{
+           updateSetVariables(input: {drn: $drn,description: $description,position: $position,inputs: $inputs}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "description",
+    "title": "Description",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "position",
+    "title": "Position",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "inputs",
+    "title": "Inputs",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "title": "Type",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "value",
+        "title": "Value",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

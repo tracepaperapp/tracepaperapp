@@ -1,0 +1,55 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="scenario-insert-switch-user">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation InsertSwitchUser($drn: String = "", $description: String = "", $userNumber: Int = 1, $position: Int = 0) {
+       TestSuite{
+         Scenario{
+           insertSwitchUser(input: {drn: $drn,description: $description,userNumber: $userNumber,position: $position}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "description",
+    "title": "Description",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "userNumber",
+    "title": "Usernumber",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "1",
+    "default": "1"
+  },
+  {
+    "name": "position",
+    "title": "Position",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

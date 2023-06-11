@@ -1,0 +1,159 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="add-test-case">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Create($flowName: String = "", $caseName: String = "", $triggerEvent: String = "", $userName: String = "", $expectError: Boolean = false, $state: String = "", $expectedState: String = "", $aggregateDrn: String = "", $inputs: [AddTestCase_Input!] = [], $expectedFields: [AddTestCase_Expectedfield!] = []) {
+       Aggregate{
+         Behavior{
+           TestCase{
+             create(input: {flowName: $flowName,caseName: $caseName,triggerEvent: $triggerEvent,userName: $userName,expectError: $expectError,state: $state,expectedState: $expectedState,aggregateDrn: $aggregateDrn,inputs: $inputs,expectedFields: $expectedFields}) {
+                correlationId
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "flowName",
+    "title": "Flowname",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "caseName",
+    "title": "Casename",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "triggerEvent",
+    "title": "Triggerevent",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "userName",
+    "title": "Username",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "expectError",
+    "title": "Expecterror",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "state",
+    "title": "State",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "expectedState",
+    "title": "Expectedstate",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "aggregateDrn",
+    "title": "Aggregatedrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:domain:([A-Z]{1}[a-z]+)+:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "inputs",
+    "title": "Inputs",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "value",
+        "title": "Value",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "title": "Type",
+        "type": "String",
+        "pattern": "^(String|Number|Boolean|NestedObject)$",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "expectedFields",
+    "title": "Expectedfields",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "eventName",
+        "title": "Eventname",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "value",
+        "title": "Value",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "title": "Type",
+        "type": "String",
+        "pattern": "^(String|Number|Boolean)$",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

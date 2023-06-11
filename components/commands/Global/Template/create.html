@@ -1,0 +1,63 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="create-template">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Create($name: String = "", $substitutions: String = "", $source: String = "", $extension: String = "", $projectDrn: String = "") {
+       Global{
+         Template{
+           create(input: {name: $name,substitutions: $substitutions,source: $source,extension: $extension,projectDrn: $projectDrn}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "name",
+    "title": "Name",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "substitutions",
+    "title": "Substitutions",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "source",
+    "title": "Source",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "extension",
+    "title": "Extension",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "projectDrn",
+    "title": "Projectdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

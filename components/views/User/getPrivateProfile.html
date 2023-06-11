@@ -1,0 +1,36 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="user-get-private-profile">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query GetprivateprofilePrivateProfile($key: ID = "") {
+       User {
+         getPrivateProfile(key: $key) {
+           key
+           username
+           hash
+           ownedWorkspaces
+           workspaceDrn
+           roles {
+             role
+             userName
+             status
+             workspaceDrn
+             workspaceName
+           } 
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key",
+    "type": "String"
+  }
+]
+        </div>
+    </div>
+</template>

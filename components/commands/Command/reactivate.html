@@ -1,0 +1,29 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="reactivate-command">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Reactivate($drn: String = "") {
+       Command{
+         reactivate(input: {drn: $drn}) {
+            correlationId
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:command:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

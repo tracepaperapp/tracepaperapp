@@ -1,0 +1,36 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="workspace-get">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query GetWorkSpace($key: ID = "") {
+       Workspace {
+         get(key: $key) {
+           key
+           drn
+           name
+           ownerId
+           workspaceType
+           iam {
+             role
+             userName
+             status
+             workspaceDrn
+             workspaceName
+           } 
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key",
+    "type": "String"
+  }
+]
+        </div>
+    </div>
+</template>

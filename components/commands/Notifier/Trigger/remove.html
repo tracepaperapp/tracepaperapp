@@ -1,0 +1,39 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="remove-notifier-trigger">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Remove($eventName: String = "", $notifierDrn: String = "") {
+       Notifier{
+         Trigger{
+           remove(input: {eventName: $eventName,notifierDrn: $notifierDrn}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "eventName",
+    "title": "Eventname",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "notifierDrn",
+    "title": "Notifierdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:notifier:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

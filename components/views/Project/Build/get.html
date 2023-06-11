@@ -1,0 +1,33 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="project-build-get">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query GetBuild($key: ID = "") {
+       Project {
+         Build {
+           get(key: $key) {
+             key
+             drn
+             status
+             owner
+             gitWorkspace
+             gitRepository
+             logs
+           }
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key",
+    "type": "String"
+  }
+]
+        </div>
+    </div>
+</template>

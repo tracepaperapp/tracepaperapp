@@ -1,0 +1,96 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="aggregate-behavior-filter">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query FilterBehavior($key_begins_with: String = "") {
+       Aggregate {
+         Behavior {
+           filter(key_begins_with: $key_begins_with) {
+              resultset { 
+               key
+               drn
+               projectDrn
+               aggregateDrn
+               name
+               summary
+               documentation
+               createCommand
+               triggers {
+                 event
+                 keyField
+                 mapping {
+                   eventFieldName
+                   flowVariableName
+                 } 
+               } 
+               processors {
+                 type
+                 order
+                 condition
+                 exceptionMessage
+                 scriptDrn
+                 handler
+                 eventName
+                 mappings {
+                   source
+                   target
+                 } 
+                 dmnDrn
+                 inputs {
+                   name
+                   mapping
+                 } 
+                 outputs {
+                   name
+                   target
+                 } 
+                 expression
+                 name
+                 source
+                 target
+               } 
+               flowVars {
+                 name
+                 type
+               } 
+               testcases {
+                 name
+                 triggerEvent
+                 status
+                 report
+                 userName
+                 expectError
+                 inputs {
+                   name
+                   value
+                   type
+                 } 
+                 state
+                 expectedFields {
+                   eventName
+                   name
+                   value
+                   type
+                 } 
+                 expectedState
+               } 
+             }
+           }
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key_begins_with",
+    "type": "String",
+    "title": "Key Begins With"
+  }
+]
+        </div>
+    </div>
+</template>

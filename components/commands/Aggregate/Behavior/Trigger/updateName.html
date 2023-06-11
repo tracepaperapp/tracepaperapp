@@ -1,0 +1,57 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="update-trigger-name">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation UpdateName($flowName: String = "", $aggregateDrn: String = "", $oldName: String = "", $newName: String = "") {
+       Aggregate{
+         Behavior{
+           Trigger{
+             updateName(input: {flowName: $flowName,aggregateDrn: $aggregateDrn,oldName: $oldName,newName: $newName}) {
+                correlationId
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "flowName",
+    "title": "Flowname",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "aggregateDrn",
+    "title": "Aggregatedrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:domain:([A-Z]{1}[a-z]+)+:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "oldName",
+    "title": "Oldname",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "newName",
+    "title": "Newname",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

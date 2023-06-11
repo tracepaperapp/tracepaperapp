@@ -1,0 +1,57 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="add-custom-code-activity">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Create($handler: String = "", $scriptDrn: String = "", $notifierDrn: String = "", $failSilent: Boolean = False) {
+       Notifier{
+         Activity{
+           CustomCode{
+             create(input: {handler: $handler,scriptDrn: $scriptDrn,notifierDrn: $notifierDrn,failSilent: $failSilent}) {
+                correlationId
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "handler",
+    "title": "Handler",
+    "type": "String",
+    "pattern": "^[A-z_]+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "scriptDrn",
+    "title": "Scriptdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:global:(actorexpression|triggerexpression|dmn|code|template|dependency|pattern):([A-Z]{1}[a-z]+)+(\\.[a-z]{2,5})?$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "notifierDrn",
+    "title": "Notifierdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:notifier:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "failSilent",
+    "title": "Failsilent",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "False",
+    "default": "False"
+  }
+]
+    </div>
+  </div>
+</template>

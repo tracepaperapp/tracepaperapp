@@ -1,0 +1,43 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="command-get">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query GetCommand($key: ID = "") {
+       Command {
+         get(key: $key) {
+           key
+           drn
+           name
+           eventName
+           graphqlNamespace
+           graphqlMethodName
+           authorization
+           summary
+           documentation
+           role
+           usernameField
+           fields {
+             name
+             type
+             default
+             pattern
+             autofill
+           } 
+           projectDrn
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key",
+    "type": "String"
+  }
+]
+        </div>
+    </div>
+</template>

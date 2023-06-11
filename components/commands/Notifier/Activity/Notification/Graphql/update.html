@@ -1,0 +1,75 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="update-graphql-notification-activity">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Update($identifier: String = "", $notificationType: String = "", $message: String = "", $order: Int = 0, $notifierDrn: String = "", $failSilent: Boolean = False) {
+       Notifier{
+         Activity{
+           Notification{
+             Graphql{
+               update(input: {identifier: $identifier,notificationType: $notificationType,message: $message,order: $order,notifierDrn: $notifierDrn,failSilent: $failSilent}) {
+                  correlationId
+               }
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "identifier",
+    "title": "Identifier",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "notificationType",
+    "title": "Notificationtype",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "message",
+    "title": "Message",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "order",
+    "title": "Order",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "notifierDrn",
+    "title": "Notifierdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:notifier:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "failSilent",
+    "title": "Failsilent",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "False",
+    "default": "False"
+  }
+]
+    </div>
+  </div>
+</template>

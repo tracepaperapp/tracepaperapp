@@ -1,0 +1,57 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="reorder-processor">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Reorder($flowName: String = "", $oldOrder: Int = 0, $newOrder: Int = 0, $aggregateDrn: String = "") {
+       Aggregate{
+         Behavior{
+           Processor{
+             reorder(input: {flowName: $flowName,oldOrder: $oldOrder,newOrder: $newOrder,aggregateDrn: $aggregateDrn}) {
+                correlationId
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "flowName",
+    "title": "Flowname",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "oldOrder",
+    "title": "Oldorder",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "newOrder",
+    "title": "Neworder",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "aggregateDrn",
+    "title": "Aggregatedrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:domain:([A-Z]{1}[a-z]+)+:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

@@ -1,0 +1,132 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="create-command">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Create($name: String = "", $graphqlNamespace: String = "", $graphqlMethodName: String = "", $documentation: String = "", $authorization: String = "", $role: String = "", $usernameField: String = "", $projectDrn: String = "", $fields: [CreateCommand_Field!] = []) {
+       Command{
+         create(input: {name: $name,graphqlNamespace: $graphqlNamespace,graphqlMethodName: $graphqlMethodName,documentation: $documentation,authorization: $authorization,role: $role,usernameField: $usernameField,projectDrn: $projectDrn,fields: $fields}) {
+            correlationId
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "name",
+    "title": "Name",
+    "type": "String",
+    "pattern": "([A-Z]{1}[a-z]+)+",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "graphqlNamespace",
+    "title": "Graphqlnamespace",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+(\\.([A-Z]{1}[a-z]+)+)*$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "graphqlMethodName",
+    "title": "Graphqlmethodname",
+    "type": "String",
+    "pattern": "^[a-z]+([A-Z]{1}[a-z]+)*$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "documentation",
+    "title": "Documentation",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "authorization",
+    "title": "Authorization",
+    "type": "String",
+    "pattern": "^(authenticated|role|user|anonymous)$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "role",
+    "title": "Role",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "usernameField",
+    "title": "Usernamefield",
+    "type": "String",
+    "pattern": "^[a-z]+([A-Z]{1}[a-z]+)*(\\.[a-z]+([A-Z]{1}[a-z]+)*)*$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "projectDrn",
+    "title": "Projectdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "fields",
+    "title": "Fields",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "^[a-z]+([A-Z]{1}[a-z]+)*(\\.[a-z]+([A-Z]{1}[a-z]+)*)*$",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "type",
+        "title": "Type",
+        "type": "String",
+        "pattern": "^(String|Int|Float|Boolean|NestedString|NestedInt|NestedFloat|NestedBoolean)$",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "default",
+        "title": "Default",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "pattern",
+        "title": "Pattern",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "autofill",
+        "title": "Autofill",
+        "type": "String",
+        "pattern": "^(autofill-disabled|username|uuid)$",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

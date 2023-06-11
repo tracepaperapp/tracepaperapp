@@ -1,0 +1,78 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="scenario-update-view-store-update">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation UpdateViewStoreUpdate($drn: String = "", $description: String = "", $position: Int = 0, $remediations: [ScenarioUpdateViewStoreUpdate_Remediation!] = []) {
+       TestSuite{
+         Scenario{
+           updateViewStoreUpdate(input: {drn: $drn,description: $description,position: $position,remediations: $remediations}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "description",
+    "title": "Description",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "position",
+    "title": "Position",
+    "type": "Int",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "remediations",
+    "title": "Remediations",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "domain",
+        "title": "Domain",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "aggregate",
+        "title": "Aggregate",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "identifier",
+        "title": "Identifier",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

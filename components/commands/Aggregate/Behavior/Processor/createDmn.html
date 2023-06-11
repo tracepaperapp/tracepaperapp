@@ -1,0 +1,95 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="add-dmn-processor">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation CreateDmn($flowName: String = "", $dmnDrn: String = "", $aggregateDrn: String = "", $inputs: [AddDmnProcessor_Input!] = [], $outputs: [AddDmnProcessor_Output!] = []) {
+       Aggregate{
+         Behavior{
+           Processor{
+             createDmn(input: {flowName: $flowName,dmnDrn: $dmnDrn,aggregateDrn: $aggregateDrn,inputs: $inputs,outputs: $outputs}) {
+                correlationId
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "flowName",
+    "title": "Flowname",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "dmnDrn",
+    "title": "Dmndrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:global:(actorexpression|triggerexpression|dmn|code|template|dependency|pattern):([A-Z]{1}[a-z]+)+(\\.[a-z]{2,5})?$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "aggregateDrn",
+    "title": "Aggregatedrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:domain:([A-Z]{1}[a-z]+)+:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "inputs",
+    "title": "Inputs",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "mapping",
+        "title": "Mapping",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  },
+  {
+    "name": "outputs",
+    "title": "Outputs",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "name",
+        "title": "Name",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "target",
+        "title": "Target",
+        "type": "String",
+        "pattern": "^[a-z]+([A-Z]{1}[a-z]+)*$",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

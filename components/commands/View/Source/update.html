@@ -1,0 +1,126 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="update-source-for-view">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation Update($drn: String = "", $aggregateDrn: String = "", $eventName: String = "", $keyField: String = "", $synchronizeDeletePolicy: Boolean = false, $processingStrategy: String = "", $dictionaryField: String = "", $mappings: [UpdateSourceForView_Mapping!] = []) {
+       View{
+         Source{
+           update(input: {drn: $drn,aggregateDrn: $aggregateDrn,eventName: $eventName,keyField: $keyField,synchronizeDeletePolicy: $synchronizeDeletePolicy,processingStrategy: $processingStrategy,dictionaryField: $dictionaryField,mappings: $mappings}) {
+              correlationId
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:view:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "aggregateDrn",
+    "title": "Aggregatedrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:domain:([A-Z]{1}[a-z]+)+:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "eventName",
+    "title": "Eventname",
+    "type": "String",
+    "pattern": "^(SNAPSHOT|([A-Z]{1}[a-z]+)+)$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "keyField",
+    "title": "Keyfield",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "synchronizeDeletePolicy",
+    "title": "Synchronizedeletepolicy",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "false",
+    "default": "false"
+  },
+  {
+    "name": "processingStrategy",
+    "title": "Processingstrategy",
+    "type": "String",
+    "pattern": "^(item|dictionary)$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "dictionaryField",
+    "title": "Dictionaryfield",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "mappings",
+    "title": "Mappings",
+    "type": "nested",
+    "fields": [
+      {
+        "name": "source",
+        "title": "Source",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "target",
+        "title": "Target",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "key",
+        "title": "Key",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "template",
+        "title": "Template",
+        "type": "String",
+        "pattern": "",
+        "placeholder": "",
+        "default": ""
+      },
+      {
+        "name": "operand",
+        "title": "Operand",
+        "type": "String",
+        "pattern": "^(set|append|remove|add|subtract|put|items|convert_items|python-expression|apply-patch)$",
+        "placeholder": "",
+        "default": ""
+      }
+    ]
+  }
+]
+    </div>
+  </div>
+</template>

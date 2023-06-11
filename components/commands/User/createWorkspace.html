@@ -1,0 +1,53 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="workspace-creation">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation CreateWorkspace($username: String = "", $workspaceName: String = "", $workspaceSlug: String = "", $type: String = "") {
+       User{
+         createWorkspace(input: {username: $username,workspaceName: $workspaceName,workspaceSlug: $workspaceSlug,type: $type}) {
+            correlationId
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "username",
+    "title": "Username",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "workspaceName",
+    "title": "Workspacename",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "workspaceSlug",
+    "title": "Workspaceslug",
+    "type": "String",
+    "pattern": "^[a-z]+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "type",
+    "title": "Type",
+    "type": "String",
+    "pattern": "^(personal|business|enterprise)$",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

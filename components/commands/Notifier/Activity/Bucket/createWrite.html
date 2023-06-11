@@ -1,0 +1,73 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="add-write-file-activity">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation CreateWrite($fileName: String = "", $content: String = "", $bucket: String = "", $path: String = "", $notifierDrn: String = "", $failSilent: Boolean = False) {
+       Notifier{
+         Activity{
+           Bucket{
+             createWrite(input: {fileName: $fileName,content: $content,bucket: $bucket,path: $path,notifierDrn: $notifierDrn,failSilent: $failSilent}) {
+                correlationId
+             }
+           }
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "fileName",
+    "title": "Filename",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "content",
+    "title": "Content",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "bucket",
+    "title": "Bucket",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "path",
+    "title": "Path",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "notifierDrn",
+    "title": "Notifierdrn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+:([A-Z]{1}[a-z]+)+:notifier:([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "failSilent",
+    "title": "Failsilent",
+    "type": "Boolean",
+    "pattern": "",
+    "placeholder": "False",
+    "default": "False"
+  }
+]
+    </div>
+  </div>
+</template>

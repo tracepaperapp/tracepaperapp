@@ -1,0 +1,30 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="domain-get">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query GetDomain($key: ID = "") {
+       Domain {
+         get(key: $key) {
+           key
+           drn
+           name
+           summary
+           documentation
+           projectDrn
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key",
+    "type": "String"
+  }
+]
+        </div>
+    </div>
+</template>

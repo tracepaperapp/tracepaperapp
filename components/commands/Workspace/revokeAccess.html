@@ -1,0 +1,37 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="revoke-access">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+     mutation RevokeAccess($userName: String = "", $drn: String = "") {
+       Workspace{
+         revokeAccess(input: {userName: $userName,drn: $drn}) {
+            correlationId
+         }
+       }
+     }
+    </draftsman-mutation>
+    <div x-init="$store.forms[$prop('command')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "userName",
+    "title": "Username",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+$",
+    "placeholder": "",
+    "default": ""
+  }
+]
+    </div>
+  </div>
+</template>

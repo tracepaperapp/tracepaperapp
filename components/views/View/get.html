@@ -1,0 +1,68 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this view
+please make sure you rename the file.
+-->
+<template x-component="view-get">
+    <div>
+        <draftsman-query :alias="$prop('alias')" authenticated>
+     query GetView($key: ID = "") {
+       View {
+         get(key: $key) {
+           key
+           drn
+           name
+           namespace
+           summary
+           documentation
+           projectDrn
+           fields {
+             name
+             type
+             referencedView
+             authorization
+             foreignKey
+             role
+             isPrimaryKey
+           } 
+           sources {
+             aggregateDrn
+             eventName
+             keyField
+             processingStrategy
+             dictionaryField
+             synchronizeDeletePolicy
+             mappings {
+               source
+               target
+               key
+               template
+               operand
+             } 
+           } 
+           queries {
+             name
+             namespace
+             type
+             authorization
+             role
+             usernameField
+             canonicalSearch
+             filters {
+               fieldName
+               operand
+             } 
+           } 
+         }
+       }
+     }
+        </draftsman-query>
+        <div x-init="$store.forms[$prop('alias')] = $el.innerHTML" style="display:none;">
+[
+  {
+    "name": "key",
+    "type": "String"
+  }
+]
+        </div>
+    </div>
+</template>
