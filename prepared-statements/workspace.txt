@@ -1,0 +1,12 @@
+query MyQuery($drn: ID = "") {
+  Workspace {
+    get(key: $drn) {
+      name
+      projects {
+        name
+        drn
+        summary
+      }
+    }
+  }
+}

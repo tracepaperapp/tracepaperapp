@@ -3,36 +3,64 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="Generated example" />
-        <title>Getting Started</title>
+        <meta name="description" content="Tracepaper Tool" />
+        <title>Tracepaper by Draftsman</title>
         <link rel="icon" type="image/x-icon" href="/assets/draftsman-logo.png" />
         <script src="/js/configuration.js"></script>
         <script src="/js/draftsman.js"></script>
-
-        <!--
-            This example uses bootstrap 5 as it's CSS framework
-            But feel free to use your own preference.
-        -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
               integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA=="
               crossorigin="anonymous" referrerpolicy="no-referrer" />
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" defer></script>
-
+        <script src="https://cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
     </head>
-    <body class="d-flex flex-column h-100" x-data x-import="navbar">
+    <body class="d-flex flex-column h-100" x-data x-import="custom-navbar">
+
         <main class="flex-shrink-0">
             <ui-navbar></ui-navbar>
             <br>
-            <div class="container">
-                <!-- Render the ReadMe on this page -->
-                <script src=" https://unpkg.com/showdown/dist/showdown.min.js"></script>
-                <script>
-                    var converter = new showdown.Converter();
-                </script>
-                <div x-include="README.md" x-effect="setTimeout(function(){
-                    $refs.target.innerHTML = converter.makeHtml($el.innerHTML);
-                },100);" style="display:none;"></div>
-                <div x-ref="target"></div>
+            <div class="container data-element" x-data="{data: $store.data.getPrivateProfile}"
+                 @refresh="data = $store.data.getPrivateProfile">
+                <h1>Tracepaper</h1>
+                <hr>
+                <div class="row">
+                    <div class="col-lg-2 col-4">
+                        <img x-bind:src="'https://d2v2c5dancscfm.cloudfront.net/uploads/'
+                            + md5(data.key) + '/avatar'"
+                             x-bind:id="data.key"
+                             width="100%"
+                             onerror="this.src = 'https://picsum.photos/seed/' + $el.id + '/250'"/>
+                    </div>
+                    <div class="col-8">
+                        <h4>Hello <span x-text="data.public.fullName"></span>!</h4>
+                        <p>What are you working on today?</p>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <template x-for="item in data.workspaces">
+                        <div class="col-lg-4">
+                            <div class="card card-custom">
+                                <div class="card-body">
+                                    <h5 class="card-title" x-text="item.name"></h5>
+                                    <p class="card-text" x-text="'Owned by: ' + item.owner.fullName"></p>
+                                    <hr>
+                                    <template x-for="colaborator in item.iam">
+                                        <div>
+                                            <p x-text ="'User: ' + colaborator.userName + ' / Role: ' + colaborator.role"></p>
+                                        </div>
+                                    </template>
+                                    <a x-bind:href="'/workspace?drn=' + item.drn" class="btn btn-primary">Open</a>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div x-init="Draftsman.set_variable('key',JSON.parse(localStorage._x_username))">
+                <draftsman-query alias="data" x-include="/prepared-statements/home.md" authenticated>
+                </draftsman-query>
             </div>
         </main>
     </body>

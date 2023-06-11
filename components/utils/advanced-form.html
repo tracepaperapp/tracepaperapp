@@ -1,0 +1,67 @@
+<template x-component="advanced-form" >
+    <div x-data="{command: $persist({}).using(expiringStorage).as($prop('alias')),
+    submitted:false, name: $prop('alias'), fields: []}" class="form-element"
+    @refresh="fields = $api.get(command);">
+        <template :x-target="$prop('target')">
+            <form
+                    @setdata.window="if($event.detail.command == name){command = $event.detail.data}">
+                <template x-for="field in fields">
+                    <div class="mb-3" :style="field.type == 'hidden' ? 'display:none;' : ''">
+                        <label :for="name + field.name" class="form-label" x-text="field.title"></label>
+                        <template x-if="field.type == 'String' && field.pattern != ''">
+                            <input type="text"
+                                   class="form-control"
+                                   :value="field.default"
+                                   :pattern="field.pattern"
+                                   x-model="command[field.name]"
+                                   :id="name + field.name"
+                                   :placeholder="field.placeholder"/>
+                        </template>
+                        <template x-if="field.type == 'String' && field.pattern == ''">
+        <textarea class="form-control"
+                  x-model="command[field.name]"
+                  :value="field.default"
+                  :id="name + field.name" rows="3"></textarea>
+                        </template>
+                        <template x-if="field.type == 'Int' || field.type == 'Float'">
+                            <input type="number"
+                                   class="form-control"
+                                   :value="field.default"
+                                   x-model="command[field.name]"
+                                   :id="name + field.name"/>
+                        </template>
+                        <template x-if="field.type == 'Boolean'">
+                            <input type="checkbox"
+                                   class="form-control"
+                                   :value="field.default"
+                                   x-model="command[field.name]"
+                                   :id="name + field.name"/>
+                        </template>
+                        <template x-if="field.type == 'hidden'">
+                            <input type="hidden"
+                                   class="form-control"
+                                   :value="field.default"
+                                   :pattern="field.pattern"
+                                   x-model="command[field.name]"
+                                   :id="name + field.name"
+                                   :placeholder="field.placeholder"/>
+                        </template>
+                    </div>
+                </template>
+                <button class="w-100 btn btn-lg btn-primary" x-show="!submitted" @click="if (!submitted){
+                $store.mutation.send(name,command);
+                $dispatch('submitted',command);submitted=true}" type="button">Submit
+                </button>
+                <button class="w-100 btn btn-lg btn-primary" x-show="submitted" disabled type="button">Submit
+                </button>
+            </form>
+        </template>
+        <script>
+      return {
+        get(command){
+            return getForm(this,command);
+        }
+      }
+        </script>
+    </div>
+</template>
