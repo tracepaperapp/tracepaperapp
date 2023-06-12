@@ -1,0 +1,32 @@
+<!-- Custom component for Tracepaper -->
+<template x-component="form-modal">
+  <div class="data-element" x-data="{ data: {}}"
+       @refresh="data = {
+        title: $prop('title'),
+        alias: $prop('alias'),
+        sort_keys: $prop('sort-keys'),
+        prefill: $prop('pre-fill'),
+        hide: $prop('hide')
+      }"
+       x-import="utils/advanced-form;
+                        utils/tables;
+                        utils/basic-modal">
+    <template x-if="data !== {}">
+      <div>
+
+        <ui-basic-modal
+                :title="data.title"
+                :alias="data.alias"></ui-basic-modal>
+
+        <ui-trace-table
+                :target="'#modal_body_' + data.alias"></ui-trace-table>
+
+        <ui-advanced-form :alias="data.alias"
+                          :sort-keys="data.sort_keys"
+                          :pre-fill="data.prefill"
+                          :hide="data.hide"
+                          :target="'#modal_body_' + data.alias"></ui-advanced-form>
+      </div>
+    </template>
+  </div>
+</template>

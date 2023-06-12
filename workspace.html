@@ -20,6 +20,7 @@
                                                         commands/Project/create;
                                                         utils/advanced-form;
                                                         utils/tables;
+                                                        utils/form-modal;
                                                         utils/basic-modal">
 
 <main class="flex-shrink-0">
@@ -56,19 +57,13 @@
     </div>
 
     <ui-create-project command="initializeProject"></ui-create-project>
-
-    <ui-basic-modal
-            title="Initialize a new project"
-            alias="initializeProject"></ui-basic-modal>
-
-    <ui-trace-table
-            target="#modal_body_initializeProject"></ui-trace-table>
-
-    <ui-advanced-form alias="initializeProject"
-                   sort-keys="['name','documentation']"
-                   :pre-fill="{'workspaceDrn' : Draftsman.fetch_query_parameter('drn')}"
-                   hide="['workspaceDrn']"
-                   target="#modal_body_initializeProject"></ui-advanced-form>
+    <ui-form-modal
+        alias="initializeProject"
+        title="Initialize a new project"
+        sort-keys="['name','documentation']"
+        :pre-fill="{'workspaceDrn' : Draftsman.fetch_query_parameter('drn')}"
+        hide="['workspaceDrn']"
+    ></ui-form-modal>
 
     <draftsman-query alias="data" x-include="/prepared-statements/workspace.txt" authenticated>
     </draftsman-query>

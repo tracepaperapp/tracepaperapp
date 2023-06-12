@@ -1,5 +1,5 @@
 <template x-component="basic-modal">
-  <div x-data="{name : $prop('alias')}" x-import="utils/tables">
+  <div x-data="{name : $prop('alias')}" class="data-element" @refresh="setTimeout(function(){name = $prop('alias')},500);">
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" x-show="$prop('button-text')"
             :data-bs-target="'#modal' + name" x-text="$prop('button-text')">
     </button>

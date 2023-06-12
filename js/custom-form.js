@@ -11,7 +11,6 @@ function getForm(container,command){
             }
             hide.forEach(key => {
                 let index = elements.findIndex(x => x.name === key);
-                console.log(key, index);
                 if (index !== -1){
                     elements[index]["type"] = "hidden";
                 }
