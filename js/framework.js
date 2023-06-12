@@ -197,7 +197,7 @@ document.addEventListener('alpine:init', () => {
                 }
             }
         },1000);
-    },500);
+    },600);
 });
 
 async function process_teleports(nodes){
@@ -458,10 +458,14 @@ async function load_data(alias,filter){
     var variable_mapping = {};
     var query = "";
     var variable_number = 0;
+
     tags.forEach(q => {
 
         // Extract query
         let nested_query = q.innerHTML.trim();
+        if (nested_query === ""){
+            location.reload();
+        }
         nested_query = nested_query.substring(nested_query.indexOf('{')+1).trim().slice(0, -1);
 
         // Extract variables
