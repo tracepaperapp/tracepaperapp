@@ -20,7 +20,8 @@
 <body class="d-flex flex-column h-100" x-data x-import="custom-navbar;
                                                         ">
 
-<main class="flex-shrink-0" x-data="{project: $store.project.get, events: $store.events.filter.resultset}">
+<main class="flex-shrink-0"
+      x-data="{project: $store.project.get, events: $store.events.filter.resultset}">
 
     <!-- Configure navbar -->
     <ui-navbar :path="[
@@ -32,7 +33,7 @@
     <!-- Import prepared query -->
     <draftsman-query alias="project" x-include="/prepared-statements/project/project.txt" authenticated>
     </draftsman-query>
-    <div class="data-element" @refresh="project = $store.project.get" />
+    <div class="data-element" @refresh="project = $store.project.get;console.log($store.project);" />
 
     <draftsman-query alias="events" x-include="/prepared-statements/project/events.txt" authenticated>
     </draftsman-query>

@@ -13,32 +13,34 @@
               crossorigin="anonymous" referrerpolicy="no-referrer" />
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" defer></script>
         <script src="https://cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+        <script src="/js/globals.js"></script>
     </head>
     <body class="d-flex flex-column h-100" x-data x-import="custom-navbar">
 
         <main class="flex-shrink-0">
             <ui-navbar></ui-navbar>
             <br>
-            <div class="container data-element" x-data="{data: $store.data.getPrivateProfile}"
-                 @refresh="data = $store.data.getPrivateProfile">
+            <div class="container data-element" x-data="{profile: {}}"
+                 x-init="$store.data.getPrivateProfile"
+                 @refresh="profile = $store.data.getPrivateProfile;">
                 <h1>Tracepaper</h1>
                 <hr>
                 <div class="row">
                     <div class="col-lg-2 col-4">
                         <img x-bind:src="'https://d2v2c5dancscfm.cloudfront.net/uploads/'
-                            + md5(data.key) + '/avatar'"
-                             x-bind:id="data.key"
+                            + md5(profile.key) + '/avatar'"
+                             x-bind:id="profile.key"
                              width="100%"
                              onerror="this.src = 'https://picsum.photos/seed/' + $el.id + '/250'"/>
                     </div>
                     <div class="col-8">
-                        <h4>Hello <span x-text="data.public.fullName"></span>!</h4>
+                        <h4>Hello <span x-text="profile.public.fullName"></span>!</h4>
                         <p>What are you working on today?</p>
                     </div>
                 </div>
                 <br>
                 <div class="row">
-                    <template x-for="item in data.workspaces">
+                    <template x-for="item in profile.workspaces">
                         <div class="col-lg-4">
                             <div class="card card-custom">
                                 <div class="card-body">

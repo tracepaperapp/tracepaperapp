@@ -1,5 +1,6 @@
 <template x-component="simple-cards">
   <div class="row data-element" x-data="{data: []}"
+       x-init="data = $api.getData()"
        @refresh="data = $api.getData()">
     <template x-for="item in data">
       <div class="col-lg-4">

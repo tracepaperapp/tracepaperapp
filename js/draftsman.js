@@ -10,10 +10,9 @@ var script = document.createElement("script");
 script.setAttribute("src","/js/framework.js");
 document.head.appendChild(script);
 
-// Insert the cache (async)
+// Insert the cache
 var script = document.createElement("script");
 script.setAttribute("src","/js/cache.js");
-script.setAttribute("async","true");
 document.head.appendChild(script);
 
 // Insert Vimesh UI (must by synchronous)
@@ -31,10 +30,9 @@ script.addEventListener('load', function() {
 });
 document.head.appendChild(script);
 
-// Insert the AlpineJS persist API (async)
+// Insert the AlpineJS persist API
 var script = document.createElement("script");
 script.setAttribute("src","https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js");
-script.setAttribute("async","true");
 document.head.appendChild(script);
 
 // Insert the AlpineJS core (defered)
@@ -42,3 +40,14 @@ var script = document.createElement("script");
 script.setAttribute("src","https://unpkg.com/alpinejs");
 script.setAttribute("defer","true");
 document.head.appendChild(script);
+
+setTimeout(function(){
+    //Make sure Draftsman framework is imported.
+    try {
+        Draftsman.contains_teleports = Draftsman.contains_teleports;
+    } catch (e) {
+        if (e instanceof ReferenceError) {
+            location.reload();
+        }
+    }
+},1000)

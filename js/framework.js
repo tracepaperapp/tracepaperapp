@@ -203,7 +203,7 @@ document.addEventListener('alpine:init', () => {
                 }
             }
         },1000);
-    },600);
+    },500);
 });
 
 async function process_teleports(nodes){
@@ -225,6 +225,12 @@ function trigger_refresh_form_on_components(){
     for (var i = 0; i < elements.length; i++) {
         elements[i].dispatchEvent(new CustomEvent('refresh'));
     }
+}
+
+
+if (must_be_signed_in && !localStorage["token"]){
+    sessionStorage["prevLoc"] = location;
+    location = "/auth/signin";
 }
 var subscription_reconnect_backoff = 100;
 
@@ -432,8 +438,33 @@ function start_notification_subscription(){
     });
     notification_subscription_started = true;
 }
-var query_mode = "automtic";
+var query_mode = "automatic";
 async function load_data(alias,filter){
+    await load_data_after_page_init(alias,filter);
+}
+
+var load_retry_count = 0;
+async function load_data_after_page_init(alias,filter){
+    var ready_to_aggregate_query = true;
+    var tags = document.getElementsByTagName("draftsman-query");
+    tags = Array.prototype.slice.call(tags);
+    tags.forEach(q => {
+        let nested_query = q.innerHTML.trim();
+        ready_to_aggregate_query = ready_to_aggregate_query && nested_query !== "";
+    });
+    if (ready_to_aggregate_query){
+        await execute_load_data(alias,filter);
+    } else if (load_retry_count < 10){
+        load_retry_count++;
+        setTimeout(function(){
+            load_data_after_page_init(alias,filter);
+        },100);
+    } else {
+        location.reload();
+    }
+}
+
+async function execute_load_data(alias,filter){
     let key = "lq" + location;
     if (query_mode == "on-demand" && alias != null){
         localStorage[key] = JSON.stringify({
@@ -469,9 +500,6 @@ async function load_data(alias,filter){
 
         // Extract query
         let nested_query = q.innerHTML.trim();
-        if (nested_query === ""){
-            location.reload();
-        }
         nested_query = nested_query.substring(nested_query.indexOf('{')+1).trim().slice(0, -1);
 
         // Extract variables

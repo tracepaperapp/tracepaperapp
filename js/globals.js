@@ -1,3 +1,4 @@
+var must_be_signed_in = true;
 
 function fetch_data(element){
     var data = Alpine.store(element.$prop('alias'));
