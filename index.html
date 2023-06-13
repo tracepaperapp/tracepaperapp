@@ -18,7 +18,7 @@
     <body class="d-flex flex-column h-100" x-data x-import="custom-navbar">
 
         <main class="flex-shrink-0">
-            <ui-navbar></ui-navbar>
+            <ui-navbar disable-domain-browser></ui-navbar>
             <br>
             <div class="container data-element" x-data="{profile: {}}"
                  x-init="$store.data.getPrivateProfile"

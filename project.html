@@ -18,10 +18,11 @@
     <script src="/js/globals.js"></script>
 </head>
 <body class="d-flex flex-column h-100" x-data x-import="custom-navbar;
-                                                        ">
+                                                        project/update-docs;">
 
 <main class="flex-shrink-0"
-      x-data="{project: $store.project.get, events: $store.events.filter.resultset}">
+      x-init="project = $store.project.get;events = $store.events.filter.resultset;"
+      x-data="{project: {}, events: []}">
 
     <!-- Configure navbar -->
     <ui-navbar :path="[
@@ -30,7 +31,7 @@
         [project.name,'/project?drn=' +get_drn(3)]
     ]"></ui-navbar>
 
-    <!-- Import prepared query -->
+    <!-- Import prepared queries -->
     <draftsman-query alias="project" x-include="/prepared-statements/project/project.txt" authenticated>
     </draftsman-query>
     <div class="data-element" @refresh="project = $store.project.get;console.log($store.project);" />
@@ -38,6 +39,14 @@
     <draftsman-query alias="events" x-include="/prepared-statements/project/events.txt" authenticated>
     </draftsman-query>
     <div class="data-element" @refresh="events = $store.events.filter.resultset" />
+
+    <!-- Make sure data is reloaded on view updates -->
+    <draftsman-notification message="updated" type="Project" :identifier="get_drn(3)"
+                            @notification="Draftsman.force_reload_data();">
+    </draftsman-notification>
+
+    <!-- Inject form modals -->
+    <ui-update-documentation></ui-update-documentation>
 
     <!-- Page Body -->
     <div class="container">
@@ -100,7 +109,37 @@
                 <div x-html="convert_to_html(project.documentation)"></div>
             </div>
             <div class="col-1"></div>
-            <div class="col-2"></div>
+            <div class="col-2">
+                <div class="text-center">
+                    <div class="btn-group-vertical bottom-spacer" style="width:100%;">
+                        <button type="button" class="btn btn-outline-primary"
+                                data-bs-toggle="modal" data-bs-target="#modal_updateDocumentation">
+                            Update Documentation
+                        </button>
+                    </div>
+
+                    <div class="btn-group-vertical bottom-spacer" style="width:100%;">
+                        <a class="btn btn-outline-primary"
+                           x-bind:href="'/build?drn=' + project.drn">Builds &amp; Deployments</a>
+                        <a class="btn btn-outline-primary"
+                           x-bind:href="'/quality-gate?drn=' + project.drn">QualityGate</a>
+                        <a class="btn btn-outline-primary"
+                           x-bind:href="'/archive?drn=' + project.drn">Archive</a>
+                    </div>
+
+                    <div class="btn-group-vertical bottom-spacer" style="width:100%;">
+                        <button type="button" class="btn btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#modalrename">
+                            Rename Project
+                        </button>
+                        <button type="button" class="btn btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#modaldelete">
+                            Delete Project
+                        </button>
+                    </div>
+
+                </div>
+            </div>
         </div>
         <br>
     </div>

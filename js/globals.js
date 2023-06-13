@@ -11,14 +11,16 @@ function fetch_data(element){
 }
 
 function get_drn(x){
-    return Draftsman.fetch_query_parameter('drn').split(':').slice(0,x).join(':');
+    if (x){
+        return Draftsman.fetch_query_parameter('drn').split(':').slice(0,x).join(':');
+    } else {
+        return Draftsman.fetch_query_parameter('drn');
+    }
 }
 
 function convert_to_html(markdown){
-    console.log(markdown);
     var converter = new showdown.Converter();
     var html = converter.makeHtml(markdown);
     html = html.replaceAll('<img','<img style="width:100%;"');
-    console.log(html);
     return html;
 }

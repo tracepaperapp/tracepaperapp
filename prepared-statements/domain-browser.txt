@@ -1,0 +1,10 @@
+query MyQuery($drn: String = "") {
+  Project {
+    getGraph(sourceDrn: $drn, type: "command") {
+      edges
+      legenda
+      message
+      nodes
+    }
+  }
+}

@@ -28,7 +28,7 @@
     <ui-navbar :path="[
         ['Home','/'],
         ['Workspace','/workspace?drn=' + Draftsman.fetch_query_parameter('drn')]
-    ]"></ui-navbar>
+    ]" disable-domain-browser></ui-navbar>
 
     <!-- Import prepared query -->
     <draftsman-query alias="data" x-include="/prepared-statements/workspace.txt" authenticated>
@@ -74,7 +74,7 @@
                         $('#modal_initializeProject').modal('hide');">
     </draftsman-trace>
 
-    <!-- Clear cache & Navigate on view update, this view update is a effect of the command -->
+    <!-- Clear cache & Navigate on view update, this view update is an effect of the command -->
     <draftsman-notification message="updated" type="Project"
                             @notification="
         if ($event.detail.identifier === $store.mutation.last_command.workspaceDrn + ':' + $store.mutation.last_command.name){

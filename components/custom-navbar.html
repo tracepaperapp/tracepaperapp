@@ -1,6 +1,6 @@
 <template x-component="navbar">
     <div>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light" x-transition>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light custom-navbar" x-transition>
             <div class="container px-5">
                 <a class="navbar-brand" href="/" @click="Draftsman.clear_cache();location.reload()">
                     <img src="/assets/draftsman-logo.png" height="40px" alt="logo"/>
@@ -23,10 +23,20 @@
                         </template>
                     </ul>
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item" x-show="!$prop('disable-domain-browser')">
+                            <a :href="'/domain-browser?drn=' + Draftsman.fetch_query_parameter('drn')" class="nav-link">Domain Browser</a>
+                        </li>
                         <li class="nav-item" x-show="localStorage.token">
                             <a href="#" class="nav-link" @click="Draftsman.sign_out();">Sign out</a>
                         </li>
                     </ul>
+                    <template x-if="search">
+                        <form class="form-inline my-2 my-lg-0">
+                            <input class="form-control mr-sm-2" type="search"
+                                   x-model="search"
+                                   placeholder="Search" aria-label="Search">
+                        </form>
+                    </template>
                 </div>
             </div>
         </nav>

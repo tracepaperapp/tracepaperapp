@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Tracepaper Tool" />
+    <title>Domain Browser</title>
+    <link rel="icon" type="image/x-icon" href="/assets/draftsman-logo.png" />
+    <script src="/js/configuration.js"></script>
+    <script src="/js/draftsman.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
+          integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <link rel="stylesheet" href="/css/customs.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="/js/custom-form.js"></script>
+    <script src="/js/globals.js"></script>
+</head>
+<body class="d-flex flex-column h-100" x-data x-import="custom-navbar;">
+
+<style>
+.graph {
+  border-radius: 25px;
+  border: 2px solid #0d6efd;
+  padding: 20px;
+  width: 100%;
+  height: 70vh;
+}
+</style>
+
+<main class="flex-shrink-0 data-element"
+      x-init="graph = $store.graph.getGraph"
+      @refresh="graph = $store.graph.getGraph"
+      x-data="{graph: {}, search: ''}" >
+
+    <!-- Configure navbar -->
+    <ui-navbar :path="[
+        ['Home','/'],
+        ['Workspace','/workspace?drn=' + get_drn(2)],
+        [get_drn(3).split(':').at(-1),get_drn(3)],
+        ['Domain Browser',Draftsman.fetch_query_parameter('drn')]
+    ]" disable-domain-browser></ui-navbar>
+
+    <!-- Import prepared query -->
+    <draftsman-query alias="graph" x-include="/prepared-statements/domain-browser.txt" authenticated>
+    </draftsman-query>
+
+    <div class="container">
+        <h1 x-text="graph.message + ' perspective: ' + Draftsman.fetch_query_parameter('drn').split(':').at(-1)"></h1>
+        <hr>
+        <div class="row" x-data="{graph_mode: $persist('directed')}">
+
+            <!-- Graph container -->
+            <div class="col-9">
+                <div class="row">
+                    <div x-effect="graph_mode == 'directed' ?
+                        sort_directed(graph) : graph_mode == 'hub' ?
+                        sort_hub(graph) :
+                        sort_free(graph)"></div>
+                    <div class="btn-group bottom-spacer">
+                        <button type="button" x-bind:class="graph_mode == 'directed' ? 'btn btn-primary' : 'btn btn-outline-primary'"
+                                @click="graph_mode = 'directed';sort_directed(graph);">Directed</button>
+                        <button type="button" x-bind:class="graph_mode == 'hub' ? 'btn btn-primary' : 'btn btn-outline-primary'"
+                                @click="graph_mode = 'hub';sort_hub(graph);">Hub</button>
+                        <button type="button" x-bind:class="graph_mode == 'free' ? 'btn btn-primary' : 'btn btn-outline-primary'"
+                                @click="graph_mode = 'free';sort_free(graph);">Force Directed</button>
+                    </div>
+                </div>
+                <div id="mynetwork" class="graph"></div>
+            </div>
+
+            <!-- Domain Navigation -->
+            <div class="col-3">
+                <div class="text-center">
+
+                    <!-- Current component -->
+                    <div class="btn-group-vertical bottom-spacer"
+                         style="width:100%;" >
+                        <a href="#" class="btn btn-outline-primary"
+                           x-bind:href="get_url({'drn':Draftsman.fetch_query_parameter('drn'), 'type':graph.message.toLowerCase()});"
+                           x-html="'Open ' + graph.message.toLowerCase()">
+                        </a>
+                    </div>
+
+                    <!-- Project controls -->
+                    <div class="btn-group-vertical bottom-spacer"
+                         x-show="graph.message != 'Project'"
+                         style="width:100%;" >
+                        <a href="#" class="btn btn-outline-secondary disabled"
+                           x-bind:href="title"
+                           x-html="'project: ' + Draftsman.fetch_query_parameter('drn').split(':').at(2)"
+                        >
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary"
+                           x-bind:href="'/domain-browser?drn=' + get_drn(3)">Zoom out
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary"
+                           x-bind:href="'/project?drn=' + get_drn(3)">Go to project
+                        </a>
+                    </div>
+
+                    <!-- Aggregate / Domain controls -->
+                    <div class="btn-group-vertical bottom-spacer"
+                         x-show="graph.message == 'Aggregate' || graph.message == 'Subdomain'"
+                         style="width:100%;" >
+                        <a href="#" class="btn btn-outline-secondary disabled"
+                           x-bind:href="title"
+                           x-html="'subdomain: ' + Draftsman.fetch_query_parameter('drn').split(':').at(4)"
+                        >
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary"
+                           x-bind:href="'/domain-browser?drn=' + get_drn(5)"
+                           x-show="graph.message == 'Aggregate'" >Zoom out
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary"
+                           x-bind:href="'/subdomain?drn=' + get_drn(5)">Go to subdomain
+                        </a>
+                    </div>
+
+                    <!-- Components -->
+                    <template x-for="(item,index) in JSON.parse(graph.legenda)">
+                        <div class="btn-group-vertical bottom-spacer"
+                             x-show="item.drn != Draftsman.fetch_query_parameter('drn') && (search == ''
+                             || `${item.name} ${item.type}`.toLowerCase().includes(search.toLowerCase()))"
+                             style="width:100%;" >
+                            <a href="#" class="btn btn-outline-secondary disabled"
+                               x-bind:href="title"
+                               x-html="item.type + ': ' + item.name">
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary"
+                               x-bind:href="'/domain-browser?drn=' + item.drn">
+                                Focus diagram
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary"
+                               x-bind:href="get_url(item);">
+                                Open component
+                            </a>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"
+        integrity="sha512-XHDcSyqhOoO2ocB7sKOCJEkUjw/pQCJViP1ynpy+EGh/LggzrP6U/V3a++LQTnZT7sCQKeHRyWHfhN2afjXjCg=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<script src="/js/domain-browser.js"></script>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
+</html>
