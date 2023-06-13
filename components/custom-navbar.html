@@ -30,7 +30,7 @@
                             <a href="#" class="nav-link" @click="Draftsman.sign_out();">Sign out</a>
                         </li>
                     </ul>
-                    <template x-if="search">
+                    <template x-if="typeof search !== 'undefined'">
                         <form class="form-inline my-2 my-lg-0">
                             <input class="form-control mr-sm-2" type="search"
                                    x-model="search"

@@ -18,7 +18,9 @@
     <script src="/js/globals.js"></script>
 </head>
 <body class="d-flex flex-column h-100" x-data x-import="custom-navbar;
-                                                        project/update-docs;">
+                                                        project/update-docs;
+                                                        project/rename;
+                                                        project/delete;">
 
 <main class="flex-shrink-0"
       x-init="project = $store.project.get;events = $store.events.filter.resultset;"
@@ -47,6 +49,8 @@
 
     <!-- Inject form modals -->
     <ui-update-documentation></ui-update-documentation>
+    <ui-rename></ui-rename>
+    <ui-delete></ui-delete>
 
     <!-- Page Body -->
     <div class="container">
@@ -129,11 +133,11 @@
 
                     <div class="btn-group-vertical bottom-spacer" style="width:100%;">
                         <button type="button" class="btn btn-outline-danger"
-                                data-bs-toggle="modal" data-bs-target="#modalrename">
+                                data-bs-toggle="modal" data-bs-target="#modal_rename">
                             Rename Project
                         </button>
                         <button type="button" class="btn btn-outline-danger"
-                                data-bs-toggle="modal" data-bs-target="#modaldelete">
+                                data-bs-toggle="modal" data-bs-target="#modal_delete">
                             Delete Project
                         </button>
                     </div>
