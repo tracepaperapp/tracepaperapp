@@ -138,6 +138,12 @@ const Draftsman = {
         await load_data(alias,filter);
         cache_enabled = previous_cache_enabled;
     },
+    force_reload_data: async function(){
+        var previous_cache_enabled = cache_enabled;
+        cache_enabled = false;
+        await load_data();
+        cache_enabled = previous_cache_enabled;
+    },
     disable_cache_for_page: function(){
         cache_enabled = false;
     },

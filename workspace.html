@@ -15,55 +15,77 @@
     <link rel="stylesheet" href="/css/customs.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="/js/custom-form.js"></script>
+    <script src="/js/globals.js"></script>
 </head>
 <body class="d-flex flex-column h-100" x-data x-import="custom-navbar;
                                                         commands/Project/create;
+                                                        utils/simple-cards;
                                                         utils/form-modal">
 
 <main class="flex-shrink-0">
-    <ui-navbar></ui-navbar>
-    <br>
+
+    <!-- Configure navbar -->
+    <ui-navbar :path="[
+        ['Home','/'],
+        ['Workspace','/workspace?drn=' + Draftsman.fetch_query_parameter('drn')]
+    ]"></ui-navbar>
+
+    <!-- Import prepared query -->
+    <draftsman-query alias="data" x-include="/prepared-statements/workspace.txt" authenticated>
+    </draftsman-query>
+
+    <!-- Make sure the data is refreshed if a certain view is updated -->
+    <draftsman-notification message="updated" type="Project"
+                            @notification="
+                                if ($event.detail.identifier.startsWith(Draftsman.fetch_query_parameter('drn'))) {
+                                    Draftsman.force_reload_data();
+                                }">
+    </draftsman-notification>
+
+    <!-- The body of this page -->
     <div class="container data-element" x-data="{data: $store.data.get}"
          @refresh="data = $store.data.get">
         <h1><span x-text="data.name"></span> projects</h1>
         <hr>
-        <div class="row">
-            <template x-for="item in data.projects">
-                <div class="col-lg-4">
-                    <div class="card card-custom">
-                        <div class="card-body">
-                            <h5 class="card-title" x-text="item.name"></h5>
-                            <p class="card-text" x-text="item.summary"></p>
-                            <a x-bind:href="'/project?drn=' + item.drn" class="btn btn-primary">Open</a>
-                        </div>
-                    </div>
-                </div>
-            </template>
-            <div class="col-1">
-                <div class="card border-light card-custom">
-                    <div class="card-body" style="min-height:100px;">
-                        <button class="btn btn-success btn-circle btn-xl vertical-center"
-                                data-bs-target="#modal_initializeProject"
-                                data-bs-toggle="modal" >
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <ui-simple-cards alias="data"
+                         path="get.projects"
+                         command="initializeProject"
+                         child-slug="project"></ui-simple-cards>
     </div>
 
+    <!-- Import a command -->
     <ui-create-project command="initializeProject"></ui-create-project>
-    <ui-form-modal
-        alias="initializeProject"
-        title="Initialize a new project"
-        sort-keys="['name','documentation']"
-        :pre-fill="{'workspaceDrn' : Draftsman.fetch_query_parameter('drn')}"
-        hide="['workspaceDrn']"
-    ></ui-form-modal>
 
-    <draftsman-query alias="data" x-include="/prepared-statements/workspace.txt" authenticated>
-    </draftsman-query>
+    <!-- Bind a form modal to the command -->
+    <ui-form-modal
+            alias="initializeProject"
+            title="Initialize a new project"
+            sort-keys="['name','documentation']"
+            :pre-fill="{'workspaceDrn' : Draftsman.fetch_query_parameter('drn')}"
+            hide="['workspaceDrn']"></ui-form-modal>
+
+    <!-- Reset form and close modal on specific trace -->
+    <draftsman-trace command="initializeProject"
+                     component="TestSuiteConfig.Create"
+                     status="success"
+                     @trace="
+                        Draftsman.empty_track_and_trace_log();
+                        $dispatch('setdata',{command: 'initializeProject',data:{} });
+                        $('#modal_initializeProject').modal('hide');">
+    </draftsman-trace>
+
+    <!-- Clear cache & Navigate on view update, this view update is a effect of the command -->
+    <draftsman-notification message="updated" type="Project"
+                            @notification="
+        if ($event.detail.identifier === $store.mutation.last_command.workspaceDrn + ':' + $store.mutation.last_command.name){
+            Draftsman.clear_cache();
+            location = '/project?drn=' + $event.detail.identifier;
+        }">
+    </draftsman-notification>
+
 </main>
 </body>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
 </html>

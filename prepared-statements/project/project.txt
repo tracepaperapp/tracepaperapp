@@ -1,0 +1,27 @@
+query MyQuery($drn: ID = "") {
+  Project {
+    get(key: $drn) {
+      name
+      gitWorkspace
+      gitRepository
+      drn
+      documentation
+      commands {
+        drn
+      }
+      domains {
+        drn
+        documentation
+      }
+      views {
+        drn
+      }
+      notifiers {
+        drn
+      }
+      globalComponents {
+        drn
+      }
+    }
+  }
+}

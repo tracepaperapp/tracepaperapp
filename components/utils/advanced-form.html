@@ -1,7 +1,7 @@
 <template x-component="advanced-form" >
-    <div x-data="{command: $persist({}).using(expiringStorage).as($prop('alias')),
+    <div x-data="{command: $persist({}).using(expiringStorage).as(name),
     submitted:false, name: $prop('alias'), fields: []}" class="form-element"
-    @refresh="fields = $api.get(command);">
+    @refresh="fields = $api.get(command);name = $prop('alias')">
         <template :x-target="$prop('target')">
             <form
                     @setdata.window="if($event.detail.command == name){command = $event.detail.data}">
@@ -50,6 +50,7 @@
                 </template>
                 <button class="w-100 btn btn-lg btn-primary" x-show="!submitted" @click="if (!submitted){
                 $store.mutation.send(name,command);
+                $store.mutation.last_command = command;
                 $dispatch('submitted',command);submitted=true}" type="button">Submit
                 </button>
                 <button class="w-100 btn btn-lg btn-primary" x-show="submitted" disabled type="button">Submit

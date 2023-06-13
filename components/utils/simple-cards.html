@@ -1,0 +1,38 @@
+<template x-component="simple-cards">
+  <div class="row data-element" x-data="{data: []}"
+       @refresh="data = $api.getData()">
+    <template x-for="item in data">
+      <div class="col-lg-4">
+        <div class="card card-custom">
+          <div class="card-body">
+            <h5 class="card-title" x-text="item.name"></h5>
+            <p class="card-text" x-text="item.summary"></p>
+            <a x-bind:href="'/' + $prop('child-slug') + '?drn=' + item.drn" class="btn btn-primary">Open</a>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template x-if="$prop('command')">
+      <div class="col-1">
+        <div class="card border-light card-custom">
+          <div class="card-body" style="min-height:100px;">
+            <button class="btn btn-success btn-circle btn-xl vertical-center"
+                    :data-bs-target="'#modal_' + $prop('command')"
+                    data-bs-toggle="modal" >
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <script>
+      return {
+        getData(){
+          return fetch_data(this);
+        }
+      }
+    </script>
+  </div>
+</template>
