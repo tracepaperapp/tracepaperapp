@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+    <div id="traceGraph" width="500px" height="500px"></div>
+    <div height="100vh" id="traceLog"></div>
+    <button onclick="draw()">draw</button>
+</div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"
+        integrity="sha512-XHDcSyqhOoO2ocB7sKOCJEkUjw/pQCJViP1ynpy+EGh/LggzrP6U/V3a++LQTnZT7sCQKeHRyWHfhN2afjXjCg=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<script src="/js/trace-graph.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script>
+    var trace = [
+      {
+        "command": "Project.DeleteProject",
+        "event": "TrackAndTraceBreadcrumb",
+        "message": "",
+        "status": "success",
+        "timestamp": "2023-06-14T21:02:28Z",
+        "previous": "CleanupProject",
+        "component": "CleanupProject"
+      },
+      {
+        "command": "Project.DeleteProject",
+        "event": "TrackAndTraceBreadcrumb",
+        "message": "",
+        "status": "accepted",
+        "timestamp": "2023-06-14T21:02:28Z",
+        "previous": "CleanupProject",
+        "component": "DeleteProjectHandler"
+      },
+      {
+        "command": "TestSuiteConfig.Delete",
+        "event": "TrackAndTraceBreadcrumb",
+        "message": "",
+        "status": "accepted",
+        "timestamp": "2023-06-14T21:02:29Z",
+        "previous": "DeleteProjectHandler",
+        "component": "DeleteHandler"
+      },
+      {
+        "command": "TestSuiteConfig.Delete",
+        "event": "TrackAndTraceBreadcrumb",
+        "message": "",
+        "status": "success",
+        "timestamp": "2023-06-14T21:02:29Z",
+        "previous": "DeleteProjectHandler",
+        "component": "DeleteProjectHandler"
+      },
+      {
+        "command": "CleanupProject-Notifier",
+        "event": "TrackAndTraceBreadcrumb",
+        "message": "",
+        "status": "success",
+        "timestamp": "2023-06-14T21:02:27Z",
+        "previous": "appsync",
+        "component": "appsync"
+      },
+      {
+        "command": "CleanupProject-Notifier",
+        "event": "TrackAndTraceBreadcrumb",
+        "message": "",
+        "status": "accepted",
+        "timestamp": "2023-06-14T21:02:27Z",
+        "previous": "appsync",
+        "component": "CleanupProject"
+      },
+      {
+        "command": null,
+        "event": "CleanDeleteProjectRequested",
+        "message": null,
+        "status": "requested",
+        "timestamp": "2023-06-14T21:02:27Z",
+        "previous": null,
+        "component": null
+      }
+    ];
+    function draw(){
+    update_trace_diagram(trace)
+    }
+</script>
+</html>

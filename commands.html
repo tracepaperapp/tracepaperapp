@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="Tracepaper Tool" />
-    <title>Workspace</title>
+    <title>Commands</title>
     <link rel="icon" type="image/x-icon" href="/assets/draftsman-logo.png" />
     <script src="/js/configuration.js"></script>
     <script src="/js/draftsman.js"></script>
@@ -18,69 +18,62 @@
     <script src="/js/globals.js"></script>
 </head>
 <body class="d-flex flex-column h-100" x-data x-import="custom-navbar;
-                                                        commands/Project/create;
                                                         utils/simple-cards;
-                                                        utils/form-modal">
+                                                        custom-forms/command-form;
+                                                        commands/Command/create;">
 
 <main class="flex-shrink-0" x-data="{search: ''}">
 
     <!-- Configure navbar -->
     <ui-navbar :path="[
         ['Home','/'],
-        ['Workspace','/workspace?drn=' + Draftsman.fetch_query_parameter('drn')]
+        ['Workspace','/workspace?drn=' + get_drn(2)],
+        [get_project_name(),'/project?drn=' +get_drn(3)],
+        ['Commands','/commands?drn=' +get_drn(3)]
     ]" disable-domain-browser></ui-navbar>
 
     <!-- Import prepared query -->
-    <draftsman-query alias="data" x-include="/prepared-statements/workspace.txt" authenticated>
+    <draftsman-query alias="commands" x-include="/prepared-statements/command/commands.txt" authenticated>
     </draftsman-query>
 
-    <!-- Make sure the data is refreshed if a certain view is updated -->
-    <draftsman-notification message="updated" type="Project"
-                            @notification="
-                                if ($event.detail.identifier.startsWith(Draftsman.fetch_query_parameter('drn'))) {
-                                    Draftsman.force_reload_data();
-                                }">
-    </draftsman-notification>
-
     <!-- The body of this page -->
-    <div class="container data-element" x-data="{data: $store.data.get}"
-         @refresh="data = $store.data.get">
-        <h1><span x-text="data.name"></span> projects</h1>
+    <div class="container data-element" x-data="{commands: $store.commands.get}"
+         @refresh="commands = $store.commands.get">
+        <h1>Commands for: <span x-text="get_project_name()"></span></h1>
         <hr>
-        <ui-simple-cards alias="data"
-                         path="get.projects"
-                         command="initializeProject"
-                         child-slug="project"></ui-simple-cards>
+        <ui-simple-cards alias="commands"
+                         path="filter.resultset"
+                         command="create-command"
+                         child-slug="command"></ui-simple-cards>
     </div>
 
     <!-- Import a command -->
-    <ui-create-project command="initializeProject"></ui-create-project>
+    <ui-create-command command="create-command"></ui-create-command>
 
     <!-- Bind a form modal to the command -->
-    <ui-form-modal
-            alias="initializeProject"
-            title="Initialize a new project"
-            sort-keys="['name','documentation']"
-            :pre-fill="{'workspaceDrn' : Draftsman.fetch_query_parameter('drn')}"
-            hide="['workspaceDrn']"></ui-form-modal>
+    <ui-command-form
+            alias="create-command"
+            title="Initialize a new command"></ui-command-form>
 
     <!-- Reset form and close modal on specific trace -->
-    <draftsman-trace command="initializeProject"
-                     component="TestSuiteConfig.Create"
+    <draftsman-trace command="create-command"
+                     component="Command.Create"
                      status="success"
                      @trace="
                         Draftsman.empty_track_and_trace_log();
-                        $dispatch('setdata',{command: 'initializeProject',data:{} });
-                        $('#modal_initializeProject').modal('hide');">
+                        $dispatch('setdata',{command: 'create-command',data:{projectDrn: get_drn()} });
+                        $('#modal_create-command').modal('hide');">
     </draftsman-trace>
 
-    <!-- Clear cache & Navigate on view update, this view update is an effect of the command -->
-    <draftsman-notification message="updated" type="Project"
+    <!-- Make sure the data is refreshed if a certain view is updated -->
+    <draftsman-notification message="updated" type="Command"
                             @notification="
-        if ($event.detail.identifier === $store.mutation.last_command.workspaceDrn + ':' + $store.mutation.last_command.name){
-            Draftsman.clear_cache();
-            location = '/project?drn=' + $event.detail.identifier;
-        }">
+                                if ($event.detail.identifier === $store.mutation.last_command.projectDrn + ':command:' + $store.mutation.last_command.name){
+                                    Draftsman.clear_cache();
+                                    location = '/command?drn=' + $event.detail.identifier;
+                                } else if ($event.detail.identifier.startsWith(Draftsman.fetch_query_parameter('drn'))) {
+                                    Draftsman.force_reload_data();
+                                }">
     </draftsman-notification>
 
 </main>

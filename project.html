@@ -30,7 +30,7 @@
     <ui-navbar :path="[
         ['Home','/'],
         ['Workspace','/workspace?drn=' + get_drn(2)],
-        [project.name,'/project?drn=' +get_drn(3)]
+        [get_project_name(),'/project?drn=' +get_drn(3)]
     ]"></ui-navbar>
 
     <!-- Import prepared queries -->

@@ -8,8 +8,8 @@
                 :title="'Delete ' + project.name"
                 alias="delete"></ui-basic-modal>
 
-        <ui-trace-table
-                target="#modal_body_delete"></ui-trace-table>
+        <ui-trace-graph
+                target="#modal_body_delete"></ui-trace-graph>
 
         <template x-target="#modal_body_delete">
             <form>
@@ -20,7 +20,10 @@
                        placeholder="permanently delete"/>
                 <br>
                 <button class="w-100 btn btn-lg btn-outline-danger" :disabled="control.toLowerCase() != 'permanently delete' || submitted"
-                        @click="submitted=true;$store.mutation.send('delete',{drn: project.drn});" type="button">Permanently Delete
+                        @click="submitted=true;
+                                $store.mutation.send('delete',{drn: project.drn});
+                                $store.mutation.last_command = command;
+                                $dispatch('submitted',command)" type="button">Permanently Delete
                 </button>
             </form>
         </template>

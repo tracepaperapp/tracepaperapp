@@ -3,7 +3,7 @@
        x-init="data = $api.getData()"
        @refresh="data = $api.getData()">
     <template x-for="item in data">
-      <div class="col-lg-4">
+      <div class="col-lg-4" x-show="card_filter(search,item)">
         <div class="card card-custom">
           <div class="card-body">
             <h5 class="card-title" x-text="item.name"></h5>

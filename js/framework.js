@@ -58,6 +58,8 @@ function send_mutation(command,data){
                   event
                   message
                   status
+                  previous
+                  component
                   timestamp
                 }
               }`;
@@ -66,7 +68,7 @@ function send_mutation(command,data){
                 evaluate_trace_subscribers(command,data["onTrace"]);
             },variables={"correlationId":cid});
         }
-    },Draftsman.cleanEmpty(data),anonymous);
+    },data,anonymous);
 }
 
 function list_mutations(){

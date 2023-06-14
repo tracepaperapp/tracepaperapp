@@ -1,0 +1,11 @@
+query MyQuery($drn: String = "") {
+  Command {
+    filter(key_begins_with: $drn, limit: 1000) {
+      resultset {
+        drn
+        name
+        summary
+      }
+    }
+  }
+}

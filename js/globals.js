@@ -18,9 +18,20 @@ function get_drn(x){
     }
 }
 
+function get_project_name(){
+    return Draftsman.fetch_query_parameter('drn').split(':')[2];
+}
+
 function convert_to_html(markdown){
     var converter = new showdown.Converter();
     var html = converter.makeHtml(markdown);
     html = html.replaceAll('<img','<img style="width:100%;"');
     return html;
+}
+
+function card_filter(search,item){
+    if (typeof search === 'undefined' || search === ''){
+        return true;
+    }
+    return `${item.name} ${item.summary}`.toLowerCase().includes(search.toLowerCase());
 }

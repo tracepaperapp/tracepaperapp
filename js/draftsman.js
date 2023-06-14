@@ -41,6 +41,12 @@ script.setAttribute("src","https://unpkg.com/alpinejs");
 script.setAttribute("defer","true");
 document.head.appendChild(script);
 
+// Graph library
+var script = document.createElement("script");
+script.setAttribute("src","https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js");
+script.setAttribute("async","true");
+document.head.appendChild(script);
+
 setTimeout(function(){
     //Make sure Draftsman framework is imported.
     try {
