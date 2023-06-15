@@ -55,6 +55,7 @@ function update_trace_diagram(traces,id){
         } else {
             node.color = "#6E6EFD";
         }
+        console.log(node);
         nodes[trace.component] = node;
 
         var index = edges.findIndex(x => x.from===trace.previous && x.to===trace.component);
@@ -69,5 +70,6 @@ function update_trace_diagram(traces,id){
     var height = window.innerHeight * 0.5;
     $("#" + id).height(height);
     console.log(nodes,edges);
+    console.log("\n\n")
     draw_requests.push([nodes,edges,id]);
 }
