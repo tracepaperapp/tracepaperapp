@@ -5,10 +5,10 @@ please make sure you rename the file first.
 <template x-component="update-source-for-view">
   <div>
     <draftsman-mutation :command="$prop('command')"  authenticated>
-     mutation Update($drn: String = "", $aggregateDrn: String = "", $eventName: String = "", $keyField: String = "", $synchronizeDeletePolicy: Boolean = false, $processingStrategy: String = "", $dictionaryField: String = "", $mappings: [UpdateSourceForView_Mapping!] = []) {
+     mutation Update($drn: String = "", $aggregateDrn: String = "", $eventName: String = "", $keyField: String = "", $synchronizeDeletePolicy: Boolean = false, $processingStrategy: String = "", $dictionaryField: String = "", $scriptDrn: String = "", $handler: String = "", $mappings: [UpdateSourceForView_Mapping!] = []) {
        View{
          Source{
-           update(input: {drn: $drn,aggregateDrn: $aggregateDrn,eventName: $eventName,keyField: $keyField,synchronizeDeletePolicy: $synchronizeDeletePolicy,processingStrategy: $processingStrategy,dictionaryField: $dictionaryField,mappings: $mappings}) {
+           update(input: {drn: $drn,aggregateDrn: $aggregateDrn,eventName: $eventName,keyField: $keyField,synchronizeDeletePolicy: $synchronizeDeletePolicy,processingStrategy: $processingStrategy,dictionaryField: $dictionaryField,scriptDrn: $scriptDrn,handler: $handler,mappings: $mappings}) {
               correlationId
            }
          }
@@ -61,13 +61,29 @@ please make sure you rename the file first.
     "name": "processingStrategy",
     "title": "Processingstrategy",
     "type": "String",
-    "pattern": "^(item|dictionary)$",
+    "pattern": "^(item|dictionary|code)$",
     "placeholder": "",
     "default": ""
   },
   {
     "name": "dictionaryField",
     "title": "Dictionaryfield",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "scriptDrn",
+    "title": "Scriptdrn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "handler",
+    "title": "Handler",
     "type": "String",
     "pattern": "",
     "placeholder": "",

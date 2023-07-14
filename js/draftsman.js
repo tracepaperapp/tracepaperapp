@@ -56,4 +56,6 @@ setTimeout(function(){
             location.reload();
         }
     }
-},1000)
+},1000);
+
+var must_be_signed_in = false;

@@ -20,6 +20,9 @@ function draw_trace_diagram(nodes,edges,id){
         }
     };
     var network = new vis.Network(container, data, options);
+    network.on("hoverNode",function(params){
+        console.log(params);
+    });
     console.log(network);
     container.scrollIntoView();
 }
@@ -35,7 +38,7 @@ function update_trace_diagram(traces,id){
     var edges = [];
     traces.forEach(trace => {
         console.log(JSON.stringify(trace,null,2));
-        if (trace.component == null || trace.previous == null){
+        if (trace.component == null || trace.previous == null || trace.component == trace.previous){
             return;
         }
 

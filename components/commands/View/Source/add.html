@@ -5,10 +5,10 @@ please make sure you rename the file first.
 <template x-component="add-source-to-view">
   <div>
     <draftsman-mutation :command="$prop('command')"  authenticated>
-     mutation Add($drn: String = "", $aggregateDrn: String = "", $eventName: String = "", $keyField: String = "", $processingStrategy: String = "", $synchronizeDeletePolicy: Boolean = false, $dictionaryField: String = "", $mappings: [AddSourceToView_Mapping!] = []) {
+     mutation Add($drn: String = "", $aggregateDrn: String = "", $eventName: String = "", $keyField: String = "", $processingStrategy: String = "", $synchronizeDeletePolicy: Boolean = false, $dictionaryField: String = "", $scriptDrn: String = "", $handler: String = "", $mappings: [AddSourceToView_Mapping!] = []) {
        View{
          Source{
-           add(input: {drn: $drn,aggregateDrn: $aggregateDrn,eventName: $eventName,keyField: $keyField,processingStrategy: $processingStrategy,synchronizeDeletePolicy: $synchronizeDeletePolicy,dictionaryField: $dictionaryField,mappings: $mappings}) {
+           add(input: {drn: $drn,aggregateDrn: $aggregateDrn,eventName: $eventName,keyField: $keyField,processingStrategy: $processingStrategy,synchronizeDeletePolicy: $synchronizeDeletePolicy,dictionaryField: $dictionaryField,scriptDrn: $scriptDrn,handler: $handler,mappings: $mappings}) {
               correlationId
            }
          }
@@ -53,7 +53,7 @@ please make sure you rename the file first.
     "name": "processingStrategy",
     "title": "Processingstrategy",
     "type": "String",
-    "pattern": "^(item|dictionary)$",
+    "pattern": "^(item|dictionary|code)$",
     "placeholder": "",
     "default": ""
   },
@@ -68,6 +68,22 @@ please make sure you rename the file first.
   {
     "name": "dictionaryField",
     "title": "Dictionaryfield",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "scriptDrn",
+    "title": "Scriptdrn",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "handler",
+    "title": "Handler",
     "type": "String",
     "pattern": "",
     "placeholder": "",

@@ -5,10 +5,10 @@ please make sure you rename the file first.
 <template x-component="create-custom-code">
   <div>
     <draftsman-mutation :command="$prop('command')"  authenticated>
-     mutation Create($name: String = "", $functions: String = "", $source: String = "", $projectDrn: String = "") {
+     mutation Create($name: String = "", $functions: String = "", $viewFunctions: String = "", $source: String = "", $projectDrn: String = "") {
        Global{
          CustomCode{
-           create(input: {name: $name,functions: $functions,source: $source,projectDrn: $projectDrn}) {
+           create(input: {name: $name,functions: $functions,viewFunctions: $viewFunctions,source: $source,projectDrn: $projectDrn}) {
               correlationId
            }
          }
@@ -28,6 +28,14 @@ please make sure you rename the file first.
   {
     "name": "functions",
     "title": "Functions",
+    "type": "String",
+    "pattern": "^[0-z]+(;[0-z]+)*$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "viewFunctions",
+    "title": "Viewfunctions",
     "type": "String",
     "pattern": "^[0-z]+(;[0-z]+)*$",
     "placeholder": "",
