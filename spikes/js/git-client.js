@@ -3,10 +3,9 @@ const fs = new LightningFS('fs')
 
 const dir = '/project';
 const repo = 'https://github.com/tracepaperapp/test';
-//const proxy = 'https://nzws7sfoublzp25dtkegh3gj2y0gebje.lambda-url.eu-west-1.on.aws';
+//const proxy = 'https://nzws7sfoublzp25dtkegh3gj2y0gebje.lambda-url.eu-west-1.on.aws'; // Python lambda, loopt volgens mij vast op te grote berichten. Oplossing mischien gebruik van streaming i.c.m nodejs
 //const proxy = 'https://cors.isomorphic-git.org'; //Idealiter vervangen door eigen proxy
-//const proxy = "https://github.draftsman.io";
-const proxy = "http://95.179.147.132:3636"
+const proxy = "https://git.draftsman.io"
 
 document.addEventListener('alpine:init', async () => {
     await git.clone({ fs, http, dir, url: repo, corsProxy: proxy });
