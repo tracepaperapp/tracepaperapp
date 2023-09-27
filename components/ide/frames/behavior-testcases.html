@@ -1,0 +1,63 @@
+<template x-component="test-cases">
+    <template x-if="tab_state.flow" key="test-case-overview">
+        <div x-data="{tests: []}"
+             x-effect="let updated = tab_state.flow['test-case'];await sleep(1);if(tests!=updated){tests=updated}">
+
+            <div class="list-group">
+                <template x-for="testcase in tests" :key="testcase.att_name">
+                    <div class="list-group-item list-group-item-action"
+                         :file="session.tab + '#' + testcase.att_name"
+                         @click="Navigation.open_tab">
+
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1" x-text="testcase.att_name"></h5>
+                            <small>
+                        <span class="badge rounded-pill bg-secondary"
+                              x-cloak x-transition
+                              x-show="'att_expected-processing-status' in testcase && testcase['att_expected-processing-status'] != 'success'">
+                            Expects functional exception.
+                        </span>
+                            </small>
+                        </div>
+                        <p class="mb-1">
+
+                        <table class="table">
+                            <tr>
+                                <th>Trigger</th>
+                                <td x-text="testcase['att_trigger-event']"></td>
+                            </tr>
+                            <tr>
+                                <th>Expects domain events</th>
+                                <td x-text="testcase.expected.map(e => e['att_domain-event']).join()"></td>
+                            </tr>
+                            <tr>
+                                <th>Declares initial state</th>
+                                <td x-text="'state' in testcase"></td>
+                            </tr>
+                            <tr>
+                                <th>Checks result state</th>
+                                <td x-text="'expected-state' in testcase"></td>
+                            </tr>
+                        </table>
+                        </p>
+
+                    </div>
+                </template>
+            </div>
+
+            <div class="d-grid gap-2">
+                <a type="button"
+                   @click.debounce.stop="$dispatch('show-modal',{id: 'new-test-case'});"
+                   href="#"
+                   class="btn btn-outline-primary m-2">Add test case</a>
+            </div>
+
+            <div x-import="utils/prompt">
+                <ui-prompt id="new-test-case"
+                           title="Create new test case"
+                           @prompt-filled.debounce="Behavior.add_test_case($event.detail.value);"></ui-prompt>
+            </div>
+
+        </div>
+    </template>
+</template>

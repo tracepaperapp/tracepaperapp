@@ -1,0 +1,209 @@
+<!-- properties:
+entity-casing: pascal /camel
+business-key-enabled
+default-value-enabled
+optional-default-enabled
+pattern-enabled
+auto-fill-enabled
+events:
+  new-collection
+  remove-collection: name
+-->
+<template x-component="document-model">
+    <template x-if="tab_state.document_model" key="document-model">
+      <div class="row"
+           x-data="{
+        entity:{},schema: {}}"
+           x-effect="
+         if(!entity || entity.att_name != tab_state.document_selected_entity){
+            entity = Modeler.get_document_entity(tab_state.document_model,tab_state.nested_documents,tab_state.document_selected_entity);
+            schema = Modeler.get_json_schema(entity);}"
+           x-import="utils/editor-elements">
+
+        <div class="col-3">
+          <div class="d-grid gap-2">
+            <div class="btn-group-vertical">
+
+              <button type="button"
+                      @click.debounce="Navigation.toggle_document()"
+                      x-text="tab_state.document_mode == 'table' ? 'Switch to schema view' : 'Switch to table view'"
+                      class="btn btn-outline-primary"></button>
+
+              <button type="button"
+                      x-show="tab_state.document_mode == 'table' && !session.editing_disabled" x-transition x-cloak
+                      @click="$dispatch('new-collection')"
+                      class="btn btn-outline-primary">Create new collection</button>
+
+            </div>
+            <br>
+            <div class="btn-group-vertical"
+                 x-effect="let updated = make_sure_is_list(tab_state.nested_documents);await sleep(1);if(entities != updated){entities=updated}"
+                 x-data="{entities: []}">
+              <button type="button"
+                      @click="tab_state.document_selected_entity = 'root';entity = tab_state.document_model;"
+                      :class="tab_state.document_selected_entity == 'root' ? 'btn btn-primary' : 'btn btn-outline-primary'">Root</button>
+              <template x-for="entity_def in entities" :key="entity_def.att_name">
+                <button type="button"
+                        @click="console.trace(entity_def);
+                        tab_state.document_selected_entity = '';
+                        entity = {};
+                        tab_state.document_selected_entity = entity_def.att_name;
+                        entity = entity_def;
+                        console.trace(entity);"
+                        x-text="entity_def.att_name"
+                        :class="tab_state.document_selected_entity == entity_def.att_name ? 'btn btn-primary' : 'btn btn-outline-primary'"></button>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="col-9" x-show="tab_state.document_mode == 'table'" x-transition x-cloak>
+          <h6>
+            <template x-if="tab_state.document_selected_entity == 'root'">
+              <span>Root</span>
+            </template>
+            <template x-if="$prop('entity-casing').toLowerCase() == 'pascal' && tab_state.document_selected_entity != 'root'">
+              <ui-text-field :value="entity.att_name"
+                             validation-message="Must be PascalCased"
+                             @updated="entity.att_name = $event.detail.value;"
+                             :pattern="pascal_cased"></ui-text-field>
+            </template>
+            <template x-if="$prop('entity-casing').toLowerCase() == 'camel' && tab_state.document_selected_entity != 'root'">
+              <ui-text-field :value="entity.att_name"
+                             validation-message="Must be camelCased"
+                             @updated="entity.att_name = $event.detail.value;"
+                             :pattern="camel_cased"></ui-text-field>
+            </template>
+          </h6>
+          <table class="table" x-data="{fields: [],excluded: []}"
+                 x-effect="
+                  if(entity && entity.field){
+                    let updated_fields = entity.field.filter(field => field_types.includes(field.att_type));
+                    let updated_excluded = entity.field.filter(field => !field_types.includes(field.att_type));
+                    await sleep(1);
+                    if(fields != updated_fields){fields=updated_fields};
+                    if(excluded != updated_excluded){excluded=updated_excluded};
+                  }">
+            <thead>
+            <template x-if="$prop('business-key-enabled') && tab_state.document_selected_entity" :key="tab_state.document_selected_entity">
+              <tr>
+                <th><p>Business key</p></th>
+                <th>
+                  <ui-selection :value="entity['att_business-key']"
+                                :options="fields.filter(x => x.att_type == 'String').map(x => x.att_name).concat([''])"
+                                @updated="console.log('---->',$event);entity['att_business-key'] = $event.detail.value;"></ui-selection>
+
+                </th>
+              </tr>
+            </template>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <template x-if="$prop('default-value-enabled')">
+                <th>Default</th>
+              </template>
+              <template x-if="$prop('optional-default-enabled')">
+                <th>Optional</th>
+              </template>
+              <template x-if="$prop('pattern-enabled')">
+                <th>RegEx pattern</th>
+              </template>
+              <template x-if="$prop('auto-fill-enabled')">
+                <th>Use autofill</th>
+              </template>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="field in fields"
+                      :key="field.att_name + entity.att_name">
+              <tr>
+                <td>
+                  <ui-text-field :value="field.att_name"
+                                 validation-message="Must be lowercased or camelCased"
+                                 @updated="field.att_name = $event.detail.value;"
+                                 :pattern="lower_or_camel_cased"></ui-text-field>
+                </td>
+                <td>
+                  <ui-selection :value="field.att_type"
+                                :options="field_types"
+                                @updated="field.att_type = $event.detail.value;"></ui-selection>
+                </td>
+                <template x-if="$prop('default-value-enabled')">
+                  <td>
+                    <ui-text-field :value="field.att_default"
+                                   @updated="field.att_default = $event.detail.value;"></ui-text-field>
+                  </td>
+                </template>
+                <template x-if="$prop('optional-default-enabled')">
+                  <td>
+                    <ui-check-box label="is optional"
+                                  @updated="
+                                  if(!$event.detail.value){
+                                      delete field.att_default
+                                  }else{
+                                      field.att_default = ''
+                                  }
+                                 "
+                                  x-show="!session.editing_disabled"
+                                  :checked="'att_default' in field"></ui-check-box>
+                    <ui-text-field :value="field.att_default"
+                                   description="Default value: "
+                                   x-show="'att_default' in field"
+                                   @updated="field.att_default = $event.detail.value;"></ui-text-field>
+                  </td>
+                </template>
+                <template x-if="$prop('pattern-enabled')">
+                  <td x-data="{patterns: []}"
+                      x-effect="patterns = Patterns.list();patterns = patterns.map(x => '{{'+x+'}}');patterns.push('')">
+                    <ui-selection :value="field.att_pattern"
+                                  @updated="field.att_pattern = $event.detail.value;"
+                                  :options="patterns"></ui-selection>
+                  </td>
+                </template>
+                <template x-if="$prop('auto-fill-enabled')">
+                  <td>
+                    <ui-selection :value="field['att_auto-fill']"
+                                  @updated="
+                        if ($event.detail.value != ''){
+                            field['att_auto-fill'] = $event.detail.value;
+                        } else {
+                            delete field['att_auto-fill'];
+                        }
+                        "
+                                  :options="auto_fill_modes"></ui-selection>
+                  </td>
+                </template>
+                <td x-show="!session.editing_disabled">
+                  <button type="button" class="btn btn-outline-danger"
+                          @click="entity.field = entity.field.filter(x => x.att_name != field.att_name);">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </template>
+            <template x-for="field in excluded" :key="field.att_name">
+              <tr>
+                <td x-text="field.att_name"></td>
+                <td x-text="field.att_type"></td>
+              </tr>
+            </template>
+            </tbody>
+          </table>
+
+          <button type="button" class="btn btn-outline-success"
+                  x-show="!session.editing_disabled" x-cloak x-transition
+                  @click="blockingDecorator(entity.field.push({att_name: 'field-' + makeid(4), att_type: 'String'}));">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+
+          <button type="button" class="btn btn-outline-danger" x-show="tab_state.document_selected_entity != 'root' && !session.editing_disabled" x-transition x-cloak
+                  @click="$dispatch('remove-collection',{name: entity.att_name});">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+
+        </div>
+        <div class="col-9" x-show="tab_state.document_mode == 'json'" x-transition x-cloak>
+          <pre x-text="JSON.stringify(schema,null,2)"></pre>
+        </div>
+      </div>
+    </template>
+</template>

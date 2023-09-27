@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content=""/>
+    <title>Component showcase</title>
+    <script src="/js/configuration.js"></script>
+    <script src="/js/draftsman.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
+          integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Draftsman.set_query_mode("on-demand");
+            Draftsman.contains_teleports = true;
+        });
+    </script>
+</head>
+<body class="d-flex flex-column h-100" x-data="{search: $persist('').using(sessionStorage),
+        query: $persist('').using(sessionStorage)}" x-import="utils/basic-form;utils/basic-modal;utils/view-query-form;utils/tables;commands/User/create;commands/Project/initialize;views/Project/get;views/User/get;views/User/filter;views/Workspace/get">
+<main class="flex-shrink-0">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light" x-transition>
+        <div class="container px-5">
+            <a class="navbar-brand" href="/">
+                <img src="/assets/draftsman-logo.png" height="40px" alt="logo"/>
+                <b>Component showcase</b>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" target="_blank" href="/admin-console/graphiql">API</a></li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" @click="Draftsman.clear_cache();location.reload()">Clear cache</a>
+                    </li>
+                </ul>
+                <form class="d-flex" role="search">
+                    <input class="form-control me-2" type="search"
+                           x-model="search"
+                           placeholder="Search" aria-label="Search">
+                </form>
+            </div>
+        </div>
+    </nav>
+    <br>
+
+    <div class="container px-4">
+        <div class="row gx-5">
+            <div class="col-3">
+                <h1>Commands</h1>
+                <center>
+                
+                    <h6>User</h6>
+                    <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+                        
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" x-show="'createuser'.includes(search.toLowerCase())"
+                                    data-bs-target="#modal_createuser">
+                                CreateUser
+                            </button>
+                            <ui-create-user command="createuser"></ui-create-user>
+                            <ui-basic-modal
+                                        title="Command: CreateUser"
+                                        alias="createuser"></ui-basic-modal>
+                            <ui-trace-table target="#modal_body_createuser"></ui-trace-table>
+                            <ui-basic-form alias="createuser" target="#modal_body_createuser"></ui-basic-form>
+                        
+                    </div>
+                    <hr>
+                
+                    <h6>Project</h6>
+                    <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+                        
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" x-show="'initializeproject'.includes(search.toLowerCase())"
+                                    data-bs-target="#modal_initializeproject">
+                                InitializeProject
+                            </button>
+                            <ui-initialize-project command="initializeproject"></ui-initialize-project>
+                            <ui-basic-modal
+                                        title="Command: InitializeProject"
+                                        alias="initializeproject"></ui-basic-modal>
+                            <ui-trace-table target="#modal_body_initializeproject"></ui-trace-table>
+                            <ui-basic-form alias="initializeproject" target="#modal_body_initializeproject"></ui-basic-form>
+                        
+                    </div>
+                    <hr>
+                
+                </center>
+            </div>
+            <div class="col-7">
+                
+                <div x-show="query == 'Project.get'" x-cloak>
+                    <center id="projectget-header">
+                        <h1>Project.get</h1>
+                        <ui-view-query-form alias="projectget" target="#projectget-header"></ui-view-query-form>
+                    </center>
+                    <hr>
+                    <ui-project-get alias="projectget"></ui-project-get>
+
+                    <div id="projectget-container"></div>
+                    
+                    <ui-item-table alias="projectget"
+                                   path="get"
+                                   target="#projectget-container"></ui-item-table>
+                    
+                </div>
+                
+                <div x-show="query == 'User.get'" x-cloak>
+                    <center id="userget-header">
+                        <h1>User.get</h1>
+                        <ui-view-query-form alias="userget" target="#userget-header"></ui-view-query-form>
+                    </center>
+                    <hr>
+                    <ui-user-get alias="userget"></ui-user-get>
+
+                    <div id="userget-container"></div>
+                    
+                    <ui-item-table alias="userget"
+                                   path="get"
+                                   target="#userget-container"></ui-item-table>
+                    
+                </div>
+                
+                <div x-show="query == 'User.filter'" x-cloak>
+                    <center id="userfilter-header">
+                        <h1>User.filter</h1>
+                        <ui-view-query-form alias="userfilter" target="#userfilter-header"></ui-view-query-form>
+                    </center>
+                    <hr>
+                    <ui-user-filter alias="userfilter"></ui-user-filter>
+
+                    <div id="userfilter-container"></div>
+                    
+                    <ui-raw-data-list
+                            target="#userfilter-container"
+                            alias="userfilter"
+                            path="filter.resultset"></ui-raw-data-list>
+                    
+                </div>
+                
+                <div x-show="query == 'Workspace.get'" x-cloak>
+                    <center id="workspaceget-header">
+                        <h1>Workspace.get</h1>
+                        <ui-view-query-form alias="workspaceget" target="#workspaceget-header"></ui-view-query-form>
+                    </center>
+                    <hr>
+                    <ui-workspace-get alias="workspaceget"></ui-workspace-get>
+
+                    <div id="workspaceget-container"></div>
+                    
+                    <ui-item-table alias="workspaceget"
+                                   path="get"
+                                   target="#workspaceget-container"></ui-item-table>
+                    
+                </div>
+                
+            </div>
+            <div class="col-2">
+                <h1>Queries</h1>
+                <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'project.get'.includes(search.toLowerCase())"
+                            @click="query = 'Project.get'">Project.get</button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'user.get'.includes(search.toLowerCase())"
+                            @click="query = 'User.get'">User.get</button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'user.filter'.includes(search.toLowerCase())"
+                            @click="query = 'User.filter'">User.filter</button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'workspace.get'.includes(search.toLowerCase())"
+                            @click="query = 'Workspace.get'">Workspace.get</button>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

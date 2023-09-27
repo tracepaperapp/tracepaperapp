@@ -1,0 +1,15 @@
+<template x-component="documentation-element">
+  <div x-data="{edit:false}">
+    <p x-html="convertMarkdownToHtml(session.documentation.content)" x-show="!edit"></p>
+    <i class="fa-solid fa-pen-to-square" x-show="!edit && !session.editing_disabled" @click="if(!session.editing_disabled){edit = true;}"></i>
+
+    <form x-show="edit">
+      <div class="mb-3">
+        <textarea class="form-control" x-model="session.documentation.content" rows="10"></textarea>
+      </div>
+      <button type="button" class="btn btn-outline-primary"
+              @click="edit = false;">Close editor</button>
+    </form>
+
+  </div>
+</template>

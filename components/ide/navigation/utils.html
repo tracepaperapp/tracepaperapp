@@ -1,0 +1,17 @@
+<template x-component="section-title">
+  <h6 x-data="{id: '',active: false}"
+      x-effect="id = $prop('id');active = session.navigation[id];"
+      @click.stop="Navigation.toggle(id)" class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase">
+    <span x-text="$prop('title')" :class="{'bolded': active}"></span> <i class="fa-solid fa-caret-up" :style="active ? 'transform: rotate(180deg);' : ''" x-transition></i>
+  </h6>
+</template>
+<template x-component="nav-item">
+  <li class="nav-item">
+    <a class="nav-link d-flex align-items-center gap-2 active"
+       :file="$prop('file')"
+       @click="Navigation.open_tab"
+       x-text="$prop('title')"
+       href="#">
+    </a>
+  </li>
+</template>

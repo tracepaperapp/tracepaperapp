@@ -1,0 +1,50 @@
+<template x-component="workspace-selector">
+    <template x-if="Object.keys(context).length != 0 && !context.selected_workspace && !context.selected_project" key="workspace-selector">
+        <div>
+            <div x-cloak x-transition x-show="Object.keys(context).length != 0 && !context.selected_workspace && !context.selected_project">
+                <div class="container mt-5">
+                    <h1>Welcome to tracepaper</h1>
+                    <hr>
+                    <div class="row">
+                        <div class="col-2">
+                            <img
+                                    src="dummy.png"
+                                    width="100%"
+                                    onerror="this.src = get_lorem_picsum(this)" :id="context.username"/>
+                        </div>
+                        <div class="col-10">
+                            <h4>
+                                Hello <span x-text="context.fullName"></span>!
+                            </h4>
+                            <p>What are you working on today?</p>
+                        </div>
+                    </div>
+                    <br>
+
+                    <div class="row">
+                        <template x-for="workspace in context.workspace">
+                            <div class="col-4">
+                                <div class="card card-custom">
+                                    <div class="card-body">
+                                        <h5 class="card-title" x-text="workspace.name"></h5>
+                                        <p class="card-text">
+                                        <ul>
+                                            <li>Contains <span x-text="workspace.projects.length"></span> projects</li>
+                                            <li>And has <span x-text="workspace.iam.length"></span> collaborator<span x-show="workspace.iam.length > 1"></span></li>
+                                        </ul>
+                                        </p>
+                                        <div>
+                                        </div>
+                                        <button class="btn btn-primary"
+                                                :name="workspace.name"
+                                                @click="Context.open_workspace">Open</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

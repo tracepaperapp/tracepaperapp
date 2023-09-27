@@ -1,0 +1,17 @@
+<template x-component="command-sidebar">
+    <div>
+
+        <div x-import="utils/documentation-element">
+            <ui-documentation-element></ui-documentation-element>
+        </div>
+
+        <hr>
+
+        <div class="d-grid gap-2">
+            <button class="btn btn-outline-danger btn-block"
+                    :file="session.tab"
+                    @click.stop="session.command.att_mark_for_deletion = true;await sleep(10);Navigation.close_tab($event);">Delete</button>
+        </div>
+
+    </div>
+</template>

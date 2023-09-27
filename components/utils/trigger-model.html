@@ -1,0 +1,148 @@
+<template x-component="trigger-model">
+  <template x-if="tab_state.triggers" key="trigger-mappings">
+    <div x-import="utils/editor-elements"
+         x-data="{triggerDefinitions: []}"
+         x-effect="let updated = tab_state.triggers;await sleep(1);if(triggerDefinitions != updated){triggerDefinitions=updated}">
+
+      <template x-for="trigger in triggerDefinitions" :key="trigger.att_source">
+        <div class="row bordered-element" x-data="{event: {}}"
+             x-init="event = Events.get(trigger.att_source)">
+
+          <h4>
+            Trigger on: <span x-text="trigger.att_source"></span>
+          </h4>
+          <ui-documentation-icon subject="generic" key="trigger"></ui-documentation-icon>
+          <ui-trash-icon @delete.debounce="
+            $dispatch('remove-trigger',{source: trigger.att_source});
+            triggerDefinitions = triggerDefinitions.filter(x => x.att_source != trigger.att_source)"></ui-trash-icon>
+
+          <table class="table">
+            <thead>
+            <tr>
+              <th>Mappings for</th>
+              <td x-data="{triggers: []}" x-init="triggers = Events.list().map(x => x.att_name);if($prop('allow-expressions')){triggers.push('@');}">
+                <ui-selection :value="trigger.att_source"
+                              :options="triggers"
+                              x-show="!trigger.att_source.startsWith('@')" x-cloak x-transition
+                              @updated="$dispatch('changed-trigger-event',{source: trigger.att_source, update: $event.detail.value})"></ui-selection>
+                <ui-text-field
+                        :value="trigger.att_source"
+                        x-show="trigger.att_source.startsWith('@')" x-cloak x-transition
+                        @updated="$dispatch('changed-trigger-event',{source: trigger.att_source, update: $event.detail.value})"></ui-text-field>
+              </td>
+            </tr>
+
+            <tr x-show="!$prop('allow-expressions')" x-cloak x-transition>
+              <th>Business key</th>
+              <td x-data="{key_options: []}"
+                  x-watch="event"
+                  x-effect="let update = event.field.map(x => x.att_name).concat(event[NESTED].map(x => x.att_name)).concat([`#''`,'']);await sleep(1);if(key_options!=update){key_options=update}">
+                <ui-selection :value="trigger['att_key-field']"
+                              x-show="!('att_key-field' in trigger) || !trigger['att_key-field'].startsWith('#')" x-cloak x-transition
+                              :options="key_options"
+                              @updated.debounce="trigger['att_key-field'] = $event.detail.value;"></ui-selection>
+                <ui-text-field :value="trigger['att_key-field']"
+                               x-show="trigger['att_key-field'].startsWith('#')" x-cloak x-transition
+                               @updated.debounce="trigger['att_key-field'] = $event.detail.value;"></ui-text-field>
+              </td>
+            </tr>
+
+            <tr>
+              <th>Flow variable</th>
+              <th>Event Field</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="mapping in trigger.mapping">
+              <tr>
+                <td>
+                  <ui-text-field :value="mapping.att_target"
+                                 message="Must be lowercased or camelCased"
+                                 @updated.debounce="mapping.att_target = $event.detail.value;$dispatch('mapping-updated');"
+                                 :pattern="lower_or_camel_cased"></ui-text-field>
+                </td>
+                <td  x-data="{sourc_options: []}"
+                     x-watch="event"
+                     x-effect="let update = event.field.map(x => x.att_name).concat(event[NESTED].map(x => x.att_name)).concat([`#''`,'']);await sleep(1);if(sourc_options!=update){sourc_options=update}">
+                  <template x-if="!mapping.att_value.startsWith('#')">
+                    <ui-selection :value="mapping.att_value"
+                                  :options="sourc_options"
+                                  @updated.debounce="mapping.att_value = $event.detail.value;"></ui-selection>
+                  </template>
+                  <template x-if="mapping.att_value.startsWith('#')">
+                    <ui-text-field :value="mapping.att_value"
+                                   @updated.debounce="mapping.att_value = $event.detail.value;"></ui-text-field>
+                  </template>
+                </td>
+                <td x-show="!session.editing_disabled">
+                  <button type="button" class="btn btn-outline-danger"
+                          x-show="mapping.att_value != `#''`"
+                          @click="trigger.mapping = trigger.mapping.filter(x => x.att_target != mapping.att_target);$dispatch('mapping-updated');">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </template>
+            </tbody>
+          </table>
+
+          <div>
+            <button type="button" class="btn btn-outline-success"
+                    x-show="!session.editing_disabled" x-cloak x-transition
+                    @click="trigger.mapping.push({att_target: '', att_value: ''});$dispatch('mapping-updated')">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+
+        </div>
+      </template>
+
+      <div class="d-grid gap-2" x-data="{show_modal: false, search: ''}">
+        <button type="button"
+                @click="show_modal=true"
+                class="btn btn-outline-primary m-2">Add trigger</button>
+
+        <template x-if="show_modal">
+          <div>
+            <div class="overlay"></div>
+            <div class="prompt">
+              <h4> Add new trigger
+                <button type="button" @click="show_modal=false" class="btn-close float-end"></button>
+              </h4>
+
+              <div class="input-group mb-3">
+                    <span class="input-group-text" >
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                <input type="text" class="form-control"
+                       placeholder="search..." x-model="search"/>
+              </div>
+
+              <div class="list-group list-group-flush">
+                <template x-for="event in Events.list().map(x => x.att_name)" :key="event">
+                  <button type="button"
+                          @click="$dispatch('add-trigger',{event:event});show_modal=false;$dispatch('trigger-updated');"
+                          x-text="event"
+                          x-cloak x-transition x-show="search == '' || event.toLowerCase().includes(search.toLowerCase())"
+                          class="list-group-item list-group-item-action"></button>
+                </template>
+
+                <template x-if="$prop('allow-expressions')">
+                  <template x-for="expression in ['@afterDeployment','@cron(* * * * *)','@rate(1 minute)']">
+                    <button type="button"
+                            @click="$dispatch('add-trigger',{event:expression});show_modal=false;$dispatch('trigger-updated');"
+                            x-text="expression"
+                            class="list-group-item list-group-item-action"></button>
+                  </template>
+                </template>
+
+              </div>
+
+            </div>
+          </div>
+        </template>
+
+      </div>
+    </div>
+  </template>
+</template>

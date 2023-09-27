@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Command Concept",
+    "path": "/docs/command/00_command_concept.md"
+  },
+  {
+    "name": "Command Properties",
+    "path": "/docs/command/01_command_properties.md"
+  },
+  {
+    "name": "Command Message Schema",
+    "path": "/docs/command/02_message_schema.md"
+  }
+]

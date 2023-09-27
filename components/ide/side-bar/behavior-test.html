@@ -1,0 +1,34 @@
+<template x-component="behavior-test-sidebar">
+  <template x-if="tab_state.flow" key="behavior-test-sidebar">
+    <div>
+
+      <h6>
+        <span x-text="tab_state.aggregate.subdomain"></span>.<span x-text="tab_state.aggregate.root.att_name"></span>.<span x-text="tab_state.flow.att_name"></span>
+      </h6>
+
+      <div class="d-grid gap-2">
+        <div class="btn-group-vertical" role="group" aria-label="Basic outlined example">
+          <button type="button"
+                  :file="session.tab.split('#').at(0)"
+                  @click="Navigation.open_tab"
+                  class="btn btn-outline-primary">Behavior flow</button>
+          <button type="button" x-data="{expect_error: false}" x-effect="expect_error = 'att_expected-processing-status' in tab_state.testcase && tab_state.testcase['att_expected-processing-status'] != 'success'"
+                  @click.debounce="expect_error = !expect_error;tab_state.testcase['att_expected-processing-status'] = expect_error ? 'error' : 'success'"
+                  :class="expect_error ? 'btn btn-primary' : 'btn btn-outline-primary'">Expect functional error</button>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="d-grid gap-2">
+
+        <div class="btn-group-vertical">
+          <button class="btn btn-outline-danger btn-block"
+                  @click.stop="TestCase.remove">Delete</button>
+        </div>
+
+      </div>
+
+    </div>
+  </template>
+</template>

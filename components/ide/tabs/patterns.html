@@ -1,0 +1,74 @@
+<template x-component="patterns">
+    <template x-if="tab_state.patterns" key="pattern-container">
+        <div x-data="{search: ''}" x-import="utils/editor-elements">
+
+            <template x-if="tab_state.patterns.length != 0">
+                <div>
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" >
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                        <input type="text" class="form-control"
+                               placeholder="search..." x-model="search"/>
+                    </div>
+
+                    <div class="list-group"
+                         x-effect="let updated = tab_state.patterns;await sleep(1);if(patterns!=updated){patterns=updated}"
+                         x-data="{patterns:[]}">
+                        <template x-for="pattern in patterns" :key="pattern.att_name">
+                            <div class="list-group-item list-group-item-action"
+                                 x-data="{doc: 'patterns/' + pattern.att_name + '.md'}"
+                                 x-show="pattern.att_name.toLowerCase().includes(search.toLowerCase())
+                            || pattern.att_regex.toLowerCase().includes(search.toLowerCase())
+                            || documentation[doc].content.toLowerCase().includes(search.toLowerCase())">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1" x-text="pattern.att_name"></h5>
+                                    <small class="text-muted">
+                                        <i class="fa-solid fa-trash" @click="Patterns.remove(pattern.att_name)"></i>
+                                    </small>
+                                </div>
+                                <p class="mb-1">
+
+                                <h6 class="mb-1">
+                                    Regular expression
+                                </h6>
+                                <ui-text-field :value="pattern.att_name"
+                                               message="Must be PascalCased"
+                                               description="Reference:"
+                                               :pattern="pascal_cased"
+                                               @updated.debounce="Patterns.rename(pattern.att_name,$event.detail.value)"></ui-text-field>
+
+                                <ui-text-field  :value="pattern.att_regex"
+                                                description="Regular expression:"
+                                               @updated.debounce="pattern.att_regex = $event.detail.value;"></ui-text-field>
+
+                                <h6 class="mb-1">
+                                    Description
+                                </h6>
+                                <ui-text-area :value="documentation[doc].content"
+                                              @updated.debounce="documentation[doc].content = $event.detail.value;"></ui-text-area>
+                                </p>
+                            </div>
+                        </template>
+                    </div>
+            </template>
+            <br>
+            <button type="button" class="btn btn-outline-success"
+                    @click="$dispatch('show-modal',{id: 'new-pattern'});">
+                <i class="fa-solid fa-plus"></i> Create new pattern
+            </button>
+
+            <div x-import="utils/prompt">
+                <ui-prompt id="new-pattern"
+                           title="Create new pattern"
+                           @prompt-filled.debounce="Patterns.create($event.detail.value);await sleep(100);search = $event.detail.value;"></ui-prompt>
+            </div>
+
+            <br>
+            <small>Get some help at <a href="https://regexr.com/" target="_blank">regexr.com</a></small>
+        </div>
+
+        </div>
+    </template>
+    
+</template>

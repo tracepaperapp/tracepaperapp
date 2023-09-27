@@ -1,0 +1,17 @@
+<template x-component="code">
+  <template x-if="tab_state.code" key="code-container">
+    <div x-data="{editor: {},id: makeid(10)}">
+      <div :id="id" style="width: 100%;height:80vh;"
+           @code-updated.debounce.3000ms="tab_state.code.content = editor.getValue();"
+           x-effect="editor.setValue(tab_state.code.content,1);"
+           x-init="
+                  editor = ace.edit(id);
+                  editor.setTheme('ace/theme/github');
+                  editor.session.setMode('ace/mode/python');
+                  editor.setValue(tab_state.code.content,1);
+                  editor.session.on('change',function(){
+                    $dispatch('code-updated');
+                  });"></div>
+    </div>
+  </template>
+</template>

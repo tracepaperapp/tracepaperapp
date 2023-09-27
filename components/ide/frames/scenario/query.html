@@ -1,0 +1,149 @@
+<template x-component="query">
+  <div x-import="utils/editor-elements">
+
+    <!-- Query selector -->
+    <ui-selection-modal :value="activity.att_path"
+                        :options="Object.keys(tab_state.query_index).concat(['']);"
+                        description="Query: "
+                        modal-title="Select Query"
+                        @changed="
+                          activity.att_path = $event.detail.value;
+                          activity.att_view = tab_state.query_index[activity.att_path];
+                          Scenarios.change_view(activity);"></ui-selection-modal>
+
+    <p>
+      <span>View: </span>
+      <span x-text="activity.att_view"></span>
+    </p>
+
+    <!-- Filters/Input -->
+    <h6>Inputs</h6>
+    <table class="table" x-import="utils/editor-elements">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Value</th>
+      </tr>
+      </thead>
+      <tbody x-data="{inputs: []}"
+             x-effect="let updated = activity.input;await sleep(1);if(inputs!=updated){inputs=updated}">
+      <template x-for="(input,index) in activity.input" :key="input.att_name">
+        <tr>
+          <td x-text="input.att_name">
+          </td>
+          <td x-text="input.att_type">
+          </td>
+          <td x-show="!('att_value' in input) || (input.att_value.startsWith('#') && input.att_value.startsWith('#'))" x-cloak x-transition>
+            <ui-selection :value="input.att_value"
+                          :options="Scenarios.get_flow_variables()"
+                          @updated.debounce="input.att_value = $event.detail.value;"></ui-selection>
+          </td>
+          <td x-show="'att_value' in input && !input.att_value.startsWith('#') && !input.att_value.startsWith('#')" x-cloak x-transition>
+            <ui-text-field :value="input.att_value"
+                           @updated.debounce="input.att_value = $event.detail.value;"></ui-text-field>
+          </td>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+
+    <!-- Expected Values -->
+    <h6>Expected values</h6>
+    <table class="table" x-import="utils/editor-elements">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Value</th>
+      </tr>
+      </thead>
+      <tbody x-data="{expectations: []}"
+             x-effect="let updated = activity['expect-value'];await sleep(1);if(expectations!=updated){expectations=updated}">
+      <template x-for="(expectation,index) in expectations" :key="expectation.att_name">
+        <tr>
+          <td>
+            <ui-text-field :value="expectation.att_name"
+                           @updated.debounce="expectation.att_name = $event.detail.value;"></ui-text-field>
+          </td>
+          <td>
+            <ui-selection :value="expectation.att_type"
+                          :options="qa_variable_types"
+                          @updated.debounce="expectation.att_type = $event.detail.value;"></ui-selection>
+          </td>
+
+          <td x-show="!('att_value' in expectation) || (expectation.att_value.startsWith('#'))" x-cloak x-transition>
+            <ui-selection :value="expectation.att_value"
+                          :options="Scenarios.get_flow_variables()"
+                          @updated.debounce="expectation.att_value = $event.detail.value;"></ui-selection>
+          </td>
+          <td x-show="'att_value' in expectation && !expectation.att_value.startsWith('#')" x-cloak x-transition>
+            <ui-text-field :value="expectation.att_value"
+                           @updated.debounce="expectation.att_value = $event.detail.value;"></ui-text-field>
+          </td>
+
+          <td x-show="!session.editing_disabled">
+            <button type="button" class="btn btn-outline-danger"
+                    @click.debounce="activity['expect-value'].splice(index, 1);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-outline-success"
+            x-show="!session.editing_disabled" x-cloak x-transition
+            x-data="{block:false}"
+            @click.debounce="if(block){return};
+                block=true;
+                activity['expect-value'].push({att_name: '', att_type: 'String'});
+                block=false;">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <br><br>
+
+    <!-- Extract Values -->
+    <h6>Extract values</h6>
+    <table class="table" x-import="utils/editor-elements">
+      <thead>
+      <tr>
+        <th>Path</th>
+        <th>Variable Name</th>
+      </tr>
+      </thead>
+      <tbody x-data="{extractions: []}"
+             x-effect="let updated =  activity['extract-value'];await sleep(1);if(extractions!=updated){extractions=updated}">
+      <template x-for="(extraction,index) in extractions" :key="extraction.att_name">
+        <tr>
+          <td>
+            <ui-text-field :value="extraction.att_name"
+                           @updated.debounce="extraction.att_name = $event.detail.value;"></ui-text-field>
+          </td>
+          <td>
+            <ui-text-field :value="extraction['att_put-key']"
+                           @updated.debounce="extraction['att_put-key'] = $event.detail.value;"></ui-text-field>
+          </td>
+
+          <td x-show="!session.editing_disabled">
+            <button type="button" class="btn btn-outline-danger"
+                    @click="activity['extract-value'].splice(index, 1);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-outline-success"
+            x-show="!session.editing_disabled" x-cloak x-transition
+            x-data="{block:false}"
+            @click.debounce="if(block){return};
+                block=true;
+                activity['extract-value'].push({att_name: '', 'att_put-key': 'String'});
+                block=false;">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+  </div>
+</template>

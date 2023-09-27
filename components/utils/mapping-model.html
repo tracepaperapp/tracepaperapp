@@ -1,0 +1,193 @@
+<template x-component="mapping-model">
+  <template x-if="tab_state.handler" key="mapping-model">
+    <div class="row" x-import="utils/editor-elements">
+
+      <div class="col-3" x-watch="tab_state.event">
+        <div class="d-grid gap-2">
+          <div x-show="!('att_code' in tab_state.handler)" x-cloak x-transition>
+            <h6>Document</h6>
+            <div class="btn-group-vertical"
+                 x-data="{entities:[]}"
+                 x-effect="let updated = tab_state.aggregate.entities;await sleep(1);if(entities != updated){entities=updated}"
+                 x-show="tab_state.handler_mode == 'table'" x-transition x-cloak>
+              <button type="button"
+                      @click="
+                      tab_state.handler_selected_entity = 'root';
+                      tab_state.handler_entity = tab_state.aggregate.root;
+                      tab_state.handler_selected_source = 'root'"
+                      :class="tab_state.handler_selected_entity == 'root' ? 'btn btn-primary' : 'btn btn-outline-primary'">Root</button>
+              <template x-for="entity_def in entities" :key="entity_def.att_name">
+                <button type="button"
+                        @click="
+                        tab_state.handler_selected_entity = entity_def.att_name;
+                        tab_state.handler_entity = entity_def;
+                        tab_state.handler_selected_source = ''"
+                        :disabled="tab_state.event['nested-object'].length == 0"
+                        x-text="entity_def.att_name"
+                        :class="tab_state.handler_selected_entity == entity_def.att_name ? 'btn btn-primary' : 'btn btn-outline-primary'"></button>
+              </template>
+            </div>
+
+            <br>
+          </div>
+
+          <h6>Mapping type</h6>
+          <div class="btn-group-vertical">
+            <button type="button"
+                    @click="Aggregates.switch_handler_type()"
+                    x-text="'att_code' in tab_state.handler ? 'Custom Code' : 'Mapping Model'"
+                    class="btn btn-outline-primary"></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-6" x-show="!('att_code' in tab_state.handler)" x-cloak x-transition>
+        <table class="table" x-data="{source: {}, handler: {}}">
+          <thead x-effect="
+                if (tab_state.handler_selected_source == ''){return}
+                let sources = tab_state.event['nested-object'].filter(x => x.att_name == tab_state.handler_selected_source);
+                if (tab_state.handler_selected_source == 'root'){
+                  source = tab_state.event;
+                } else if (sources.length != 0){
+                  source = sources.at(0);
+                } else {
+                  source = tab_state.event['nested-object'].at(0);
+                }
+                if (tab_state.handler_selected_source == 'root'){
+                  handler = tab_state.handler;
+                } else {
+                  let handlers = tab_state.handler['nested-mapping'].filter(x => x.att_source == tab_state.handler_selected_source);
+                  if (handlers.length != 0){
+                    handler = handlers.at(0);
+                    handler.att_target = tab_state.handler_selected_entity;
+                  } else {
+                    handler = {
+                      att_source: tab_state.handler_selected_source,
+                      att_target: tab_state.handler_selected_entity,
+                      'att_business-key': source.field.at(0).att_name,
+                      mapping: []
+                    };
+                    tab_state.handler['nested-mapping'].push(handler);
+                  }
+                }">
+          <template x-if="tab_state.handler_selected_source != 'root'">
+            <tr>
+              <th>Business key</th>
+              <th>
+                <ui-selection :value="handler['att_business-key']"
+                              :options="source.field.map(x => x.att_name).concat([''])"
+                              @updated="handler['att_business-key'] = $event.detail.value;"></ui-selection>
+
+              </th>
+            </tr>
+          </template>
+          <tr>
+            <th>Document Field</th>
+            <th>Mapping</th>
+            <th>Event Field</th>
+          </tr>
+          </thead>
+          <tbody x-data="{fields: []}" x-effect="let updated = tab_state.handler_entity.field;await sleep(1);if(fields!=updated){fields=updated}">
+          <template x-for="field in fields" :key="field.att_name">
+            <tr x-data="{mapping: null}"
+                x-effect="
+                let updated = handler.mapping.filter(x => x.att_target == field.att_name).at(0);
+                await sleep(1);
+                if(mapping!=updated){mapping=updated}
+                console.trace(mapping);
+            ">
+              <td x-text="field.att_name"></td>
+              <template x-if="!mapping">
+                <td>
+                  <ui-selection value="unmapped"
+                                :options="mapper_operands"
+                                @updated="
+                                if($event.detail.value == 'unmapped'){return}
+
+                                if (tab_state.handler_selected_source != 'root' && !('att_target' in handler)){
+                                  let new_handler = {
+                                    att_source: tab_state.handler_selected_source,
+                                    att_target: tab_state.handler_selected_entity,
+                                    'att_business-key': ''
+                                  };
+                                  tab_state.handler[NESTED_MAPPING].push(new_handler);
+                                  handler = new_handler;
+                                  mapping = {};
+                                }
+                                if($event.detail.value != 'unmapped' && !mapping){
+                                  let sources = source.field.filter(x => x.att_name == field.att_name);
+                                  let value = sources.length != 0 ? sources.at(0).att_name : '';
+
+                                  mapping = {att_target: field.att_name, att_operand: $event.detail.value, att_value: value};
+                                  handler.mapping.push(mapping);
+                                }"></ui-selection>
+
+                </td>
+              </template>
+              <template x-if="mapping">
+                <td>
+                  <ui-selection :value="mapping.att_operand"
+                                :options="mapper_operands"
+                                @updated.debounce="
+                                if($event.detail.value == 'unmapped'){
+                                  handler.mapping = handler.mapping.filter(x => x.att_target != field.att_name);
+                                }else{mapping.att_operand = $event.detail.value;}"></ui-selection>
+                </td>
+              </template>
+              <template x-if="mapping">
+                <td>
+                  <ui-selection :value="mapping.att_value"
+                                :options="source.field.map(x => x.att_name).concat([''])"
+                                @updated="mapping.att_value = $event.detail.value;"></ui-selection>
+
+                </td>
+              </template>
+            </tr>
+          </template>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-3" x-show="!('att_code' in tab_state.handler)" x-cloak x-transition>
+        <h6>Event</h6>
+        <div class="d-grid gap-2"
+             x-effect="let updated = tab_state.event['nested-object'];await sleep(1);if(event_entities != updated){event_entities=updated}"
+             x-data="{event_entities: []}">
+          <div class="btn-group-vertical" x-show="tab_state.handler_mode == 'table'" x-transition x-cloak>
+            <div x-effect="if(tab_state.handler_selected_source == ''){
+            let entities = tab_state.event['nested-object'].filter(x => x.att_name == tab_state.handler_selected_entity);
+            if (entities.length != 0){
+              tab_state.handler_selected_source = entities.at(0).att_name;
+            }
+          }"></div>
+            <button type="button"
+                    @click="tab_state.handler_selected_source = 'root'"
+                    :disabled="tab_state.handler_selected_entity != 'root'"
+                    :class="tab_state.handler_selected_source == 'root' ? 'btn btn-primary' : 'btn btn-outline-primary'">Root</button>
+            <template x-for="entity in event_entities" :key="entity.att_name">
+              <button type="button"
+                      @click="tab_state.handler_selected_source = entity.att_name;"
+                      x-text="entity.att_name"
+                      :disabled="tab_state.handler_selected_entity == 'root'"
+                      :class="tab_state.handler_selected_source == entity.att_name ? 'btn btn-primary' : 'btn btn-outline-primary'"></button>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <template x-if="'att_code' in tab_state.handler">
+        <div class="col-9" x-data="{editor: {},id: makeid(10)}">
+          <div :id="id" style="width: 100%;height:20vh;"
+               @code-updated.debounce.3000ms="tab_state.handler.att_code = editor.getValue().replaceAll('\n','|LB|');"
+               x-init="
+                editor = ace.edit(id);
+                editor.setTheme('ace/theme/github');
+                editor.session.setMode('ace/mode/python');
+                editor.setValue(tab_state.handler.att_code.replaceAll('|LB|','\n'),1);
+                editor.session.on('change',function(){
+                  $dispatch('code-updated');
+                });"></div>
+        </div>
+      </template>
+
+    </div>
+  </template>
+</template>

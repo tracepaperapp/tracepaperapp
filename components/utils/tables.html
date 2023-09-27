@@ -1,0 +1,166 @@
+<template x-component="item-table">
+    <div class="data-element" x-data="{data: $api.get()}"
+               @refresh="data = $api.get()">
+        <script>
+            return {
+                get(){
+                    try {
+                        var data = Alpine.store(this.$prop('alias'));
+                        this.$prop('path').split('.').forEach(key =>{
+                            data = data[key];
+                        });
+                        return data;
+                    } catch {
+                        return {};
+                    }
+                }
+            }
+        </script>
+        <template :x-target="$prop('target')" :alias="$prop('alias')">
+        <table class="table">
+            <template x-for="(key,value) in data">
+                <tr>
+                    <th x-text="key"></th>
+                    <td x-text="value"></td>
+                </tr>
+            </template>
+        </table>
+    </template>
+    </div>
+</template>
+<template x-component="collection-table">
+    <div class="data-element" x-data="{show: $api.at_least_one(),headers: $api.get_headers(), rows: $api.get_rows()}"
+               @refresh="headers = $api.get_headers();rows = $api.get_rows();show = $api.at_least_one();">
+       <script>
+            return {
+                get_raw_data(){
+                    try {
+                        var data = Alpine.store(this.$prop('alias'));
+                        this.$prop('path').split('.').forEach(key =>{
+                            data = data[key];
+                        });
+                        return data;
+                    } catch {
+                        return [];
+                    }
+                },
+                get_headers(){
+                    var data = this.get_raw_data();
+                    if (data.length != 0){
+                        return Object.keys(data.at(0));
+                    } else {
+                        return [];
+                    }
+                },
+                get_rows(){
+                    var data = this.get_raw_data();
+                    var rows= data.map(row => {
+                        let headers = this.get_headers();
+                        return headers.map(key => row[key]);
+                    });
+                    return rows;
+                },
+                at_least_one(){
+                    return this.get_raw_data().length != 0;
+                }
+            }
+        </script>
+        <template :x-target="$prop('target')">
+    <div x-show="show" class="table-responsive">
+        <table class="table">
+            <thead>
+            <tr>
+                <template x-for="key in headers">
+                    <th scope="col" x-text="key"></th>
+                </template>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="row in rows">
+                <tr>
+                    <template x-for="cell in row">
+                        <td x-text="cell"></td>
+                    </template>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+    </template>
+    </div>
+</template>
+<template x-component="trace-table">
+    <template :x-target="$prop('target')">
+       <div class="table-responsive">
+    <table class="table" x-show="$store.trace.length != 0" x-cloak>
+        <thead>
+            <tr>
+                <th scope="col">Timestamp</th>
+                <th scope="col">Command/Event</th>
+                <th scope="col">Status</th>
+                <th scope="col">Message</th>
+            </tr>
+        </thead>
+        <tbody>
+        <template x-for="message in $store.trace">
+            <tr x-transition>
+                <th scope="row" x-html="message.timestamp.replace('Z','').replace('T',' ')"></th>
+                <td x-html="message.command != '' ? message.command : message.event"></td>
+                <td x-html="message.status"></td>
+                <td x-html="message.message"></td>
+            </tr>
+        </template>
+        </tbody>
+    </table>
+    </div>
+    </template>
+</template>
+<template x-component="raw-data-list">
+    <div class="data-element" @refresh="data = $api.get();"
+         x-data="{data: $api.get(), alias: $prop('alias'), pk: $prop('pk')}">
+
+         <script>
+          return {
+            get(){
+                try {
+                        var data = Alpine.store(this.$prop('alias'));
+                        if (this.$prop('alias') == "aggregatedomaineventfilter")
+                        console.log(data);
+                        this.$prop('path').split('.').forEach(key =>{
+                            data = data[key];
+                        });
+                        if (this.$prop('alias') == "aggregatedomaineventfilter")
+                        console.log(data);
+                        return data;
+                    } catch {
+                        return [];
+                    }
+            }
+          }
+      </script>
+
+        <template :x-target="$prop('target')">
+    <div class="accordion" :id="'accordion' + alias">
+        <template x-for="(item,index) in data">
+            <div class="accordion-item" x-data="{id: item[pk] ? pk : 'key' }">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse"
+                  :data-bs-target="'#collapse_' + alias + index"
+                  aria-expanded="true"
+                  :aria-controls="' collapse_' + alias + index">
+              <p  x-text="item[id]"
+                  style="text-overflow: ellipsis;width:100%;white-space: nowrap;overflow: hidden;"></p>
+          </button>
+        </h2>
+        <div :id="'collapse_' + alias + index" class="accordion-collapse collapse" :data-bs-parent="'#accordion' + alias">
+          <div class="accordion-body">
+              <pre x-text="JSON.stringify(item,null,2);"></pre>
+          </div>
+        </div>
+      </div>
+        </template>
+    </div>
+    </template>
+    </div>
+</template>

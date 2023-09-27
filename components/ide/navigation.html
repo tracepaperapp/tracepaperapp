@@ -1,0 +1,27 @@
+<template x-component="navigation">
+    <div class="bg-tracepaper-tertiary"
+         tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+
+        <div class="overflow-y-auto" x-import="
+            ide/navigation/main;
+            ide/navigation/commands;
+            ide/navigation/subdomains;
+            ide/navigation/views;
+            ide/navigation/projections;
+            ide/navigation/notifiers;
+            ide/navigation/global;
+            ide/navigation/scenarios">
+            <ui-main-navigation></ui-main-navigation>
+            <hr class="my-3">
+            <ui-command-navigation></ui-command-navigation>
+            <ui-subdomain-navigation></ui-subdomain-navigation>
+            <ui-view-navigation></ui-view-navigation>
+            <ui-projection-navigation></ui-projection-navigation>
+            <ui-notifier-navigation></ui-notifier-navigation>
+            <ui-global-navigation></ui-global-navigation>
+            <hr class="my-3">
+            <ui-scenario-navigation></ui-scenario-navigation>
+        </div>
+        <br>
+    </div>
+</template>

@@ -1,0 +1,38 @@
+<template x-component="aggregate-sidebar">
+    <div>
+
+        <div class="d-grid gap-2">
+            <div class="btn-group-vertical">
+                <button :class="tab_state.view == 'document' ? 'btn btn-primary btn-block' : 'btn btn-outline-primary btn-block'"
+                        @click.stop="Aggregates.change_view('document')">Document</button>
+                <button :class="tab_state.view == 'behavior' ? 'btn btn-primary btn-block' : 'btn btn-outline-primary btn-block'"
+                        @click.stop="Aggregates.change_view('behavior')">Behavior</button>
+                <button :class="tab_state.view == 'events' ? 'btn btn-primary btn-block' : 'btn btn-outline-primary btn-block'"
+                        @click.stop="Aggregates.change_view('events')">Domain Events</button>
+            </div>
+        </div>
+
+        <hr>
+        <div x-import="utils/documentation-element">
+            <ui-documentation-element></ui-documentation-element>
+        </div>
+
+        <hr>
+
+        <div class="d-grid gap-2" x-import="utils/prompt">
+
+            <div class="btn-group-vertical">
+                <button class="btn btn-outline-danger btn-block"
+                        @click.stop="$dispatch('show-modal',{id: 'rename-aggregate'})">Rename</button>
+
+                <button class="btn btn-outline-danger btn-block"
+                        @click.stop="Aggregates.remove">Delete</button>
+            </div>
+
+            <ui-prompt id="rename-aggregate"
+                       title="Rename aggregate"
+                       @prompt-filled.debounce="Aggregates.rename($event.detail.value);"></ui-prompt>
+        </div>
+
+    </div>
+</template>

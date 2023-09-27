@@ -1,0 +1,51 @@
+<template x-component="roles">
+    <div x-import="utils/editor-elements">
+
+        <div class="row">
+            <div class="col-8">
+                <template x-if="meta.roles">
+                    <ul class="list-group list-group-flush"
+                        x-init="roles = meta.roles"
+                        x-effect="
+                            let updated = meta.roles;
+                            await sleep(1);
+                            if(roles!=updated){roles=updated}
+                            updated = Expressions.list();
+                            await sleep(1);
+                            if(expressions!=updated){expressions=updated}"
+                        x-data="{roles: [],expressions:[]}">
+                        <template x-for="item in roles" :key="item">
+                            <li class="list-group-item">
+                                <span x-text="item"></span>
+                                <i @click="meta.roles = meta.roles.filter(r => r != item);roles = meta.roles;"
+                                   class="fa-solid fa-trash float-end"></i>
+                            </li>
+                        </template>
+                        <template x-for="item in expressions" :key="item.att_name">
+                            <li class="list-group-item" x-show="item.att_type == 'ActorEventRole'" x-cloak x-transition>
+                                <span x-text="'#global.' + item.att_name + '(' + item.att_input.replaceAll(';',', ') + ')'"></span>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+            </div>
+        </div>
+
+        <br>
+        <button type="button" class="btn btn-outline-success"
+                @click="$dispatch('show-modal',{id: 'new-role'});">
+            <i class="fa-solid fa-plus"></i> Register new role
+        </button>
+
+        <div x-import="utils/prompt">
+            <ui-prompt id="new-role"
+                       title="Register new role"
+                       @prompt-filled.debounce="Modeler.register_role($event.detail.value);"></ui-prompt>
+        </div>
+
+        <br>
+
+    </div>
+
+    </div>
+</template>

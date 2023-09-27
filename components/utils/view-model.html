@@ -1,0 +1,128 @@
+<template x-component="view-model-attributes">
+    <div class="row" x-import="utils/editor-elements"
+         x-data="{fields: [], key: '', options: [],show_modal: false}">
+        <div x-effect="
+            let updated = tab_state.view.field;
+            await sleep(1);
+            if(fields!=updated){
+                fields=updated;
+                if (fields.length == 0){return}
+                options = fields.filter(x => x.att_type == 'String').map(x => x.att_name);
+                options.push('');
+                let pk = fields.filter(x => 'att_pk' in x && x.att_pk == 'true');
+                if(pk.length != 0){
+                    key = pk.at(0).att_name;
+                }
+            };"></div>
+        <div class="col-12">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th><p>Business key</p></th>
+                    <th>
+                        <template x-if="typeof options !== 'undefined'">
+                            <ui-selection :value="key"
+                                          :options="options"
+                                          @updated.debounce="Views.change_primary_key($event.detail.value);"></ui-selection>
+                        </template>
+                    </th>
+                </tr>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                </tr>
+                </thead>
+                <tbody>
+                <template x-for="field in fields.filter(field => view_field_types.includes(field.att_type));"
+                          :key="field.att_name">
+                    <tr>
+                        <td>
+                            <ui-text-field :value="field.att_name"
+                                           message="Must be lowercased or camelCased"
+                                           @updated.debounce="field.att_name = $event.detail.value;"
+                                           :pattern="lower_or_camel_cased"></ui-text-field>
+                        </td>
+                        <td>
+                            <ui-selection :value="field.att_type"
+                                          :options="view_field_types"
+                                          @updated.debounce="field.att_type = $event.detail.value;"></ui-selection>
+                        </td>
+                        <td x-show="!session.editing_disabled">
+                            <button type="button" class="btn btn-outline-danger"
+                                    @click.debounce="tab_state.view.field = tab_state.view.field.filter(x => x.att_name != field.att_name);">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </template>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-outline-success"
+                    x-show="!session.editing_disabled" x-cloak x-transition
+                    @click.debounce="Views.add_field()">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+            <button type="button" class="btn btn-outline-primary"
+                    x-show="!session.editing_disabled" x-cloak x-transition
+                    @click="show_modal = true"><span x-text="label['view.copy-button']"></span>
+            </button>
+            <template x-if="show_modal">
+                <div>
+                    <div class="overlay"></div>
+                    <div class="prompt" x-data="{search: ''}">
+                        <h4>Copy attributes from Aggregate document
+                            <button type="button" @click="show_modal=false" class="btn-close float-end"></button>
+                        </h4>
+
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input type="text" class="form-control"
+                                   placeholder="search..." x-model="search"/>
+                        </div>
+
+                        <div class="list-group list-group-flush">
+                            <template x-for="document in Views.get_aggregate_documents()"
+                                      :key="document">
+                                <button type="button"
+                                        @click="show_modal = false;Views.copy_aggregate_document_attributes(document);"
+                                        x-text="document"
+                                        x-cloak x-transition
+                                        x-show="search == '' || document.toLowerCase().includes(search.toLowerCase())"
+                                        class="list-group-item list-group-item-action"></button>
+                            </template>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
+<template x-component="view-model-relations">
+    <div class="row" x-import="utils/editor-elements"
+         x-data="{fields: []}">
+        <div x-effect="let updated = tab_state.view.field;await sleep(1);if(fields!=updated){fields=updated;}"></div>
+        <div class="col-12">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Relation Type</th>
+                </tr>
+                </thead>
+                <tbody>
+                <template x-for="field in fields.filter(field => !view_field_types.includes(field.att_type));"
+                          :key="field.att_name">
+                    <tr>
+                        <td x-text="field.att_name"></td>
+                        <td x-text="field.att_type"></td>
+                    </tr>
+                </template>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</template>

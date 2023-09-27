@@ -1,0 +1,30 @@
+<template x-component="aggregate-navigation">
+  <div class="sidebar-navigation-group"
+       :class="{'navigation-highlight': session.navigation[subdomain + '.' + aggregate.root.att_name]}"
+       x-import="ide/navigation/utils">
+
+    <ui-section-title :id="subdomain + '.' + aggregate.root.att_name" :title="aggregate.root.att_name"></ui-section-title>
+
+    <div x-show="session.navigation[subdomain + '.' + aggregate.root.att_name]" x-collapse x-transition x-cloak>
+      <div>
+        <ul class="nav flex-column" x-import="ide/navigation/aggregate">
+              <ui-nav-item title="Root"
+                       :file="'domain/' + aggregate.subdomain + '/' + aggregate.root.att_name + '/root.xml'"></ui-nav-item>
+
+              <hr class="my-3">
+              <template x-for="flow in aggregate.flows">
+                  <ui-nav-item :title="flow.att_name"
+                               :file="'domain/' + aggregate.subdomain + '/' + aggregate.root.att_name + '/behavior-flows/' + flow.att_name + '.xml'"></ui-nav-item>
+              </template>
+          <li class="nav-item" x-import="utils/prompt">
+            <a class="nav-link d-flex align-items-center gap-2 active"
+               @click.debounce.self="Behavior.create_new(aggregate)"
+               href="#">
+              <i class='fa-solid fa-plus'></i> New behavior flow
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</template>

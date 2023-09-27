@@ -1,0 +1,22 @@
+<template x-component="set-variable">
+  <table class="table" x-import="utils/editor-elements">
+    <tbody>
+      <tr>
+        <th>Flow variable name</th>
+        <td>
+          <ui-text-field :value="processor.att_name"
+                         validation-message="Must be camel cased"
+                         :pattern="camel_cased"
+                         @updated.debounce="processor.att_name = $event.detail.value;"></ui-text-field>
+          </td>
+      </tr>
+    <tr>
+      <th>Expression</th>
+      <td>
+        <ui-text-field :value="processor.att_expression"
+        @updated.debounce="processor.att_expression = $event.detail.value;"></ui-text-field>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</template>

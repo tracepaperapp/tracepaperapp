@@ -1,0 +1,46 @@
+<template x-component="scenario-set-variables">
+  <div>
+    <table class="table" x-import="utils/editor-elements">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Value</th>
+      </tr>
+      </thead>
+      <tbody x-data="{inputs: []}"
+             x-effect="let updated = activity.input;await sleep(1);if(inputs!=updated){inputs=updated}">
+      <template x-for="(input,index) in inputs" :key="input.att_name">
+        <tr>
+          <td>
+            <ui-text-field :value="input.att_name"
+                           :pattern="camel_cased"
+                           @updated.debounce="input.att_name = $event.detail.value;"></ui-text-field>
+          </td>
+          <td>
+            <ui-selection :value="input.att_type"
+                          :options="qa_variable_types"
+                          @updated.debounce="input.att_type = $event.detail.value;if(input.att_type && !input.att_value){input.att_value = `[{'key':'value'}]`};"></ui-selection>
+          </td>
+          <td>
+            <ui-text-field :value="input.att_value"
+                           @updated.debounce="input.att_value = $event.detail.value;"></ui-text-field>
+          </td>
+          <td x-show="!session.editing_disabled">
+            <button type="button" class="btn btn-outline-danger"
+                    @click.debounce="activity.input.splice(index, 1);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-outline-success"
+            x-show="!session.editing_disabled" x-cloak x-transition
+            x-data="{block:false}"
+            @click.debounce="Scenarios.add_input(activity)">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+  </div>
+</template>

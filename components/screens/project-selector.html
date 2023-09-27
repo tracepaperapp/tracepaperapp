@@ -1,0 +1,170 @@
+<template x-component="project-selector">
+    <div x-import="commands/Project/initialize;utils/trace-graph" x-data="{show_modal: false}">
+      <div x-cloak x-transition x-show="Object.keys(context).length != 0 && context.selected_workspace && !context.selected_project">
+        <div class="container mt-5">
+          <h1>Workspace: <span x-text="context.selected_workspace.name"></span></h1>
+          <small @click="Context.close_workspace"><i class="fa-solid fa-arrow-left"></i></small>
+          <hr>
+
+          <div class="row">
+            <template x-for="project in context.selected_workspace.projects">
+              <div class="col-3">
+                <div class="card card-custom">
+                  <div class="card-body">
+                    <h5 class="card-title" x-text="project.name"></h5>
+                    <button class="btn btn-primary"
+                            :drn="project.drn"
+                            @click="Context.open_project">Open</button>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <div class="col-3">
+              <button type="button"
+                      @click="show_modal=true;"
+                      class="btn btn-outline-primary m-2">Start new project</button>
+            </div>
+          </div>
+
+          <div class="container">
+            <div>
+
+              <div x-show="show_modal">
+                <div x-data="{submitted: false}">
+                  <div class="overlay"></div>
+                  <div class="prompt">
+                    <h4>Start new project
+                      <button type="button" @click="show_modal=false" class="btn-close float-end"></button>
+                    </h4>
+
+                    <div x-show="submitted" x-cloak x-transition id="new-project-trace"></div>
+                    <ui-trace-graph target="#new-project-trace"></ui-trace-graph>
+
+                    <div x-data="{command: {
+                          workspaceDrn: '',
+                          name: '',
+                          modelRepo: '',
+                          codeRepo: '',
+                          guiRepo: ''
+                        }, active: ''}"
+                         x-show="!submitted" x-cloak x-transition
+                         x-effect="command.workspaceDrn = context.selected_workspace.drn;active='name'">
+
+                      <div class="mb-3" x-show="active == 'name'"
+                           x-cloak x-transition>
+                        <div class="progress">
+                          <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                               aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <p>Name your project:</p>
+                        <input type="text"
+                               class="form-control"
+                               placeholder="ProjectName"
+                               @keyup.enter="show = false;active = 'model';"
+                               x-model="command.name"/>
+                        <small x-show="!command.name.match(pascal_cased)" x-cloak x-transition
+                               class="red-text">Must be PascalCased</small>
+                      </div>
+
+                      <div class="mb-3" x-show="active == 'model'"
+                           x-cloak x-transition>
+                        <small @click="active = 'name'"><i class="fa-solid fa-arrow-left"></i></small>
+                        <div class="progress">
+                          <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                        </div>
+                        <p>Provide a GitHub repository for versioning your Domain model.
+                          Make sure to invite the <i>draftsman-io</i> user as collaborator with <b>write</b> privileges.</p>
+                        <input type="text"
+                               class="form-control"
+                               placeholder="https://github.com/your-subscription/model-repository"
+                               @keyup.enter="show = false;active = 'code';"
+                               x-model="command.modelRepo"/>
+                        <small x-show="!command.modelRepo.match(github_url)" x-cloak x-transition
+                               class="red-text">Must be a GitHub repository URL</small>
+
+                      </div>
+
+                      <div class="mb-3" x-show="active == 'code'"
+                           x-cloak x-transition>
+                        <small @click="active = 'model'"><i class="fa-solid fa-arrow-left"></i></small>
+                        <div class="progress">
+                          <div class="progress-bar" role="progressbar" style="width: 50%;" aria-valuenow="50"
+                               aria-valuemin="0" aria-valuemax="100">50%</div>
+                        </div>
+                        <p>Provide a GitHub repository used for delivering the backend application.
+                          Make sure to invite the <i>draftsman-io</i> user as collaborator with <b>write</b> privileges.</p>
+                        <input type="text"
+                               class="form-control"
+                               placeholder="https://github.com/your-subscription/backend-code-repository"
+                               @keyup.enter="show = false;active = 'gui';"
+                               x-model="command.codeRepo"/>
+                        <small x-show="!command.codeRepo.match(github_url)" x-cloak x-transition
+                               class="red-text">Must be a GitHub repository URL</small>
+
+                      </div>
+
+                      <div class="mb-3" x-show="active == 'gui'"
+                           x-cloak x-transition>
+                        <small @click="active = 'code'"><i class="fa-solid fa-arrow-left"></i></small>
+                        <div class="progress">
+                          <div class="progress-bar" role="progressbar" style="width: 75%;" aria-valuenow="75"
+                               aria-valuemin="0" aria-valuemax="100">75%</div>
+                        </div>
+                        <p>Provide a GitHub repository used for delivering the GUI assist framework.
+                          Make sure to invite the <i>draftsman-io</i> user as collaborator with <b>write</b> privileges.</p>
+                        <input type="text"
+                               class="form-control"
+                               placeholder="https://github.com/your-subscription/gui-repository"
+                               @keyup.enter="show = false;active = 'submit';"
+                               x-model="command.guiRepo"/>
+                        <small x-show="!command.guiRepo.match(github_url)" x-cloak x-transition
+                               class="red-text">Must be a GitHub repository URL</small>
+
+                      </div>
+                      <div class="mb-3" x-show="active == 'submit'"
+                           x-cloak x-transition>
+                        <small @click="active = 'gui'"><i class="fa-solid fa-arrow-left"></i></small>
+                        <div class="progress">
+                          <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100"
+                               aria-valuemin="0" aria-valuemax="100">100%</div>
+                        </div>
+                        <p>About to create a new project <b x-text="command.name"></b>.
+                          It will use the following GitHub repositories for storage of model and artifacts:
+                        <table>
+                          <tr>
+                            <th>Model repository</th>
+                            <td x-text="command.modelRepo"></td>
+                          </tr>
+                          <tr>
+                            <th>Backend Application repository</th>
+                            <td x-text="command.codeRepo"></td>
+                          </tr>
+                          <tr>
+                            <th>Frontend framework</th>
+                            <td x-text="command.guiRepo"></td>
+                          </tr>
+                        </table>
+                        </p>
+                        <button class="w-100 btn btn-lg btn-primary" x-show="!submitted"
+                                @click="$store.mutation.send('initialize-project',command);submitted=true;" type="button">Create
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ui-initialize-project command="initialize-project"></ui-initialize-project>
+      <draftsman-trace command="initialize-project"
+                       component="Project.Create"
+                       status="success"
+                       @trace="Context.reload;show_modal=false;">
+      </draftsman-trace>
+    </div>
+</template>

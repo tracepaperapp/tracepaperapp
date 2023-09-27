@@ -1,0 +1,180 @@
+<template x-component="documentation-icon">
+    <a href="#"
+       @click="Documentation.open($prop('subject'),$prop('key'))"
+       class="documentation-icon"><i class="fa-solid fa-question"></i></a>
+</template>
+<template x-component="trash-icon">
+    <a href="#"
+       x-show="!session.editing_disabled"
+       @click="$dispatch('delete')"
+       class="trash-icon"><i class="fa-solid fa-trash"></i></a>
+</template>
+
+<template x-component="check-box">
+    <div class="form-check" x-data="{id: uuidv4()}">
+        <input class="form-check-input" type="checkbox"
+               :checked="$prop('checked')" :id="id"
+               @change="$dispatch('updated',{ value: $el.checked });Navigation.soft_reload_tab();"/>
+        <label class="form-check-label" :for="id" x-text="$prop('label')"></label>
+    </div>
+</template>
+
+<template x-component="text-field">
+    <div x-data="{value: '', pattern: null}"
+         x-effect="value = $prop('value');pattern = $prop('pattern')">
+        <div x-show="!session.editing_disabled" x-cloak x-transition>
+            <div class="row">
+                <div class="col-2" x-show="$prop('description')" x-cloak x-transition>
+                    <span x-text="$prop('description')" class="form-text"></span>
+                </div>
+                <div class="col-10">
+                    <input class="form-control" type="text"
+                           @change="
+                    if(check_pattern(value,pattern)){
+                        $dispatch('updated',{ value: value });
+                        Navigation.soft_reload_tab();
+                    }"
+                           x-model="value"/>
+                    <small class="red-text" x-text="$prop('validation-message')" x-show="!value.match($prop('pattern'))"
+                           x-cloak x-transition></small>
+                </div>
+            </div>
+        </div>
+        <div x-show="session.editing_disabled" x-cloak x-transition>
+            <span x-text="value"></span>
+        </div>
+    </div>
+</template>
+
+<template x-component="text-area">
+    <div x-data="{value: $prop('value'), description: $prop('description')? $prop('description') : '', edit:false, pattern: $prop('pattern') ? $prop('pattern') : null}">
+
+        <p @click="if(!session.editing_disabled){edit = true;}" x-show="!edit">
+            <span x-show="description" x-text="description"></span><span x-text="value" x-show="!$prop('use-pre-tag')" x-cloak x-transition></span>
+            <template x-if="$prop('use-pre-tag')">
+                <pre x-text="value" x-show="$prop('use-pre-tag')" x-cloak x-transition></pre>
+            </template>
+            &nbsp;<i class="fa-solid fa-pen-to-square float-end" x-show="!session.editing_disabled"></i>
+        </p>
+
+        <div class="input-group mb-3" x-show="edit">
+            <textarea
+                    class="form-control"
+                    x-model="value"></textarea>
+            <button class="btn btn-outline-success" type="button" @click="
+                    edit = false;$dispatch('updated',{ value: value });Navigation.soft_reload_tab();">Save</button>
+        </div>
+        <div x-effect="if(!edit){console.trace(session.last_updated);value = $prop('value');}"></div>
+    </div>
+</template>
+
+<template x-component="selection">
+    <div x-data="{value: '', description: '', options: []}"
+         @soft-reload.document.debounce="value = $prop('value');options = $prop('options')"
+         x-effect="value = $prop('value');
+         description = $prop('description')? $prop('description') : '';
+         options = [];
+         await sleep(100);
+         options = $prop('options')">
+        <div x-show="!session.editing_disabled" x-cloak x-transition>
+            <div class="row">
+                <div class="col-2" x-show="$prop('description')">
+                    <span x-text="$prop('description')" class="form-text"></span>
+                </div>
+                <div class="col-10">
+                    <select class="form-select custom-select"
+                            @change="await sleep(10);$dispatch('updated',{ value: value });Navigation.soft_reload_tab();"
+                            x-model="value">
+                        <template x-for="option in make_sure_is_list(options)" :key="option">
+                            <option :value="option"
+                                    :selected="option == value" x-text="option"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div x-show="session.editing_disabled" x-cloak x-transition>
+            <span x-text="value"></span>
+        </div>
+    </div>
+</template>
+
+<template x-component="role-selector">
+    <div x-data="{value: '', options: [],expressions: []}"
+         x-effect="
+            value = $prop('value');
+            options = [];
+            meta.roles.forEach(x => options.push(x));
+            expressions = Expressions.list();
+            expressions.filter(x => x.att_type == 'ActorEventRole').forEach(x => {
+                options.push(`#global.${x.att_name}(${x.att_input.replaceAll(';',', ')})`);
+            });
+            options.push('')">
+        <template x-if="value.startsWith('#')">
+            <ui-text-field :value="value"></ui-text-field>
+        </template>
+        <template x-if="!value.startsWith('#')">
+            <ui-selection :value="value" :options="options"></ui-selection>
+        </template>
+    </div>
+</template>
+
+<template x-component="debugger">
+    <pre x-text="JSON.stringify($prop('data'),null,2)"></pre>
+</template>
+<template x-component="selection-modal">
+    <div x-data="{value: $prop('value'), description: $prop('description')? $prop('description') : '', edit:false, options: [],search: ''}">
+
+        <span @click="if(!session.editing_disabled){edit = true;}" x-show="!edit">
+            <span x-show="description" x-text="description"></span><span x-text="value"></span>
+            &nbsp;<i class="fa-solid fa-pen-to-square float-end" x-show="!session.editing_disabled"></i>
+        </span>
+
+        <template x-if="edit">
+            <div>
+                <div class="overlay"></div>
+                <div class="prompt">
+                    <h4>
+                        <span x-text="$prop('modal-title')"></span>
+                        <button type="button" @click="edit=false" class="btn-close float-end"></button>
+                    </h4>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" >
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" class="form-control"
+                               placeholder="search..." x-model="search"/>
+                    </div>
+
+                    <div class="list-group list-group-flush" @click="await sleep(10);edit=false;$dispatch('command-updated');">
+                        <template x-for="value in options" :key="value">
+                            <button type="button"
+                                    @click="$dispatch('changed',{ value: value });setTimeout(function(){edit = false},500);"
+                                    x-show="value.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition
+                                    class="list-group-item list-group-item-action">
+                                <span x-text="value"></span>
+                                <span class="badge bg-primary rounded-pill float-end"
+                                      x-show="value == $prop('value')" x-cloak x-transition>selected</span>
+                            </button>
+                        </template>
+                    </div>
+
+                </div>
+            </div>
+        </template>
+
+        <div
+                x-init="
+        setInterval(function(){
+            if (!value){
+                value = $prop('value');
+            }
+            options = $prop('options');
+            if ($prop('verbose-log')){
+                console.log($prop('value'),$prop('options'));
+            }
+        },500)"></div>
+        <div x-effect="if(!edit){console.trace(session.last_updated);value = $prop('value');}"></div>
+    </div>
+</template>

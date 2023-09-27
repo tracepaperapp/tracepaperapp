@@ -1,0 +1,87 @@
+<template x-component="scenario-mutation">
+  <div>
+    <table class="table" x-import="utils/editor-elements" >
+      <tbody>
+        <tr>
+          <th>
+            Command
+          </th>
+          <td>
+            <ui-selection-modal :value="tab_state.commands.reverse_index[activity.att_path]"
+                                :options="Object.keys(tab_state.commands.index).concat([''])"
+                                modal-title="Select command"
+                                @changed="Scenarios.change_command(activity,$event.detail.value);"></ui-selection-modal>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h6>Inputs</h6>
+    <table class="table" x-import="utils/editor-elements">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Value</th>
+      </tr>
+      </thead>
+      <tbody x-data="{inputs: []}"
+             x-effect="let updated = activity.input;await sleep(1);if(inputs!=updated){inputs=updated}">
+      <template x-for="(input,index) in inputs" :key="input.att_name">
+        <tr>
+          <td x-text="input.att_name">
+          </td>
+          <td x-text="input.att_type">
+          </td>
+          <td x-show="!('att_value' in input) || (input.att_value.startsWith('#') && input.att_value.startsWith('#'))" x-cloak x-transition>
+            <ui-selection :value="input.att_value"
+                          :options="Scenarios.get_flow_variables()"
+                           @updated.debounce="input.att_value = $event.detail.value;"></ui-selection>
+          </td>
+          <td x-show="'att_value' in input && !input.att_value.startsWith('#') && !input.att_value.startsWith('#')" x-cloak x-transition>
+            <ui-text-field :value="input.att_value"
+                          @updated.debounce="input.att_value = $event.detail.value;"></ui-text-field>
+          </td>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+    <h6>Expected Invocations</h6>
+    <table class="table" x-import="utils/editor-elements">
+      <thead>
+      <tr>
+        <th>Flow</th>
+        <th>Result</th>
+      </tr>
+      </thead>
+      <tbody x-data="{traces: []}"
+             x-effect="let updated = activity['expected-trace'];await sleep(1);if(traces!=updated){traces=updated}">
+      <template x-for="(trace,index) in traces" :key="trace.att_command">
+        <tr>
+          <td x-data="{index: []}" x-init="index = Scenarios.get_component_index();">
+            <ui-selection-modal :value="trace.att_command"
+                                :options="index"
+                                modal-title="Select behavior flow for status check"
+                                @changed.debounce="trace.att_command = $event.detail.value;"></ui-selection-modal>
+          </td>
+          <td>
+            <ui-selection :value="trace.att_status"
+                          :options="['success','error']"
+                          @updated.debounce="trace.att_status = $event.detail.value;"></ui-selection>
+          </td>
+          <td x-show="!session.editing_disabled">
+            <button type="button" class="btn btn-outline-danger"
+                    @click="activity['expected-trace'].splice(index, 1);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-outline-success"
+            x-show="!session.editing_disabled" x-cloak x-transition
+            @click.debounce="Scenarios.append_expectation(activity);">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+  </div>
+</template>

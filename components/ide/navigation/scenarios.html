@@ -1,0 +1,28 @@
+<template x-component="scenario-navigation">
+  <div class="sidebar-navigation-group"
+       :class="{'navigation-highlight': session.navigation.scenario}"
+       x-import="ide/navigation/utils">
+
+    <ui-section-title id="scenario" title="Quality Gate"></ui-section-title>
+
+    <div x-show="session.navigation.scenario" x-collapse x-transition x-cloak>
+      <div>
+        <ul class="nav flex-column" x-data="{scenarios: []}"
+            x-effect="let updated = session.scenario_names;await sleep(1);if(scenarios!=updated){scenarios=updated}">
+          <template x-for="scenario in scenarios" :key="scenario">
+            <ui-nav-item :title="scenario"
+                         :file="'scenarios/' + scenario + '.xml'"></ui-nav-item>
+          </template>
+
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center gap-2 active"
+               @click.debounce.self="Scenarios.create"
+               href="#">
+              <i class='fa-solid fa-plus'></i> New functional scenario
+            </a>
+          </li>
+        </ul>
+      </div>
+
+  </div>
+</template>

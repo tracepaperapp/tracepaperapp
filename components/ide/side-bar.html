@@ -1,0 +1,121 @@
+<template x-component="side-bar">
+  <div x-data="{has_diagram: false}">
+
+    <div class="alert alert-primary" role="alert">
+      <h4 x-text="session.type in label ? label[session.type] : session.type"></h4>
+      <small x-text="session.tab.replace('/root.xml','').replace('.xml','').replaceAll('/',' / ')"></small>
+    </div>
+
+    <div x-show="session.tab in report && report[session.tab].length != 0" x-cloak x-transition>
+      <div class="alert alert-danger" role="alert">
+        <ul class="list-group list-group-flush">
+         <template x-for="issue in report[session.tab]">
+           <li class="list-group-item list-group-item-danger" x-text="issue"></li>
+         </template>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Diagram -->
+    <div x-data="{present: false, directed: false}" x-show="present"
+         x-effect="console.trace(session.tab);present = Diagram.isPresent();
+         if(present){Diagram.draw()}"x-cloak x-transition>
+      <div class="d-grid gap-2" x-import="project-diagram">
+        <ui-diagram></ui-diagram>
+
+        <div class="btn-group dropdown" x-show="session.diagram_links" x-cloak x-transition>
+          <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            Linked components
+          </button>
+          <ul class="dropdown-menu">
+            <template x-for="link in session.diagram_links">
+              <li x-data="{name: ''}"
+                  x-show="name" x-cloak x-transition
+                  x-init="name = Navigation.get_tabname(link)"><a
+                      :class="link == session.tab ? 'dropdown-item active' : 'dropdown-item'"
+                      :aria-current="link == session.tab"
+                      @click.stop="Navigation.execute_open_tab(link)"
+                      x-text="name"
+                      href="#"></a></li>
+            </template>
+          </ul>
+        </div>
+
+        <hr>
+      </div>
+    </div>
+
+    <template x-if="session.tab == 'README.md'" key="readme">
+      <div x-show="session.tab == 'README.md'"x-cloak x-transition x-import="ide/side-bar/project-readme">
+        <ui-project-readme-sidebar></ui-project-readme-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'command'" key="command">
+      <div x-show="session.type == 'command'" x-cloak x-transition x-import="ide/side-bar/command">
+        <ui-command-sidebar></ui-command-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'subdomain'" key="subdomain">
+      <div x-show="session.type == 'subdomain'" x-cloak x-transition x-import="ide/side-bar/subdomain">
+        <ui-subdomain-sidebar></ui-subdomain-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'aggregate'" key="aggregate">
+      <div x-show="session.type == 'aggregate'" x-cloak x-transition x-import="ide/side-bar/aggregate">
+        <ui-aggregate-sidebar></ui-aggregate-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'documentation'" key="documentation">
+      <div x-show="session.type == 'documentation'" x-cloak x-transition x-import="ide/side-bar/documentation">
+        <ui-documentation-sidebar></ui-documentation-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'behavior'" key="behavior">
+      <div x-show="session.type == 'behavior'" x-cloak x-transition x-import="ide/side-bar/behavior">
+        <ui-behavior-sidebar></ui-behavior-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'testcase'" key="behavior">
+      <div x-show="session.type == 'testcase'" x-cloak x-transition x-import="ide/side-bar/behavior-test">
+        <ui-behavior-test-sidebar></ui-behavior-test-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'view'" key="view">
+      <div x-show="session.type == 'view'" x-cloak x-transition x-import="ide/side-bar/view">
+        <ui-view-sidebar></ui-view-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'notifier'" key="notifier">
+      <div x-show="session.type == 'notifier'" x-cloak x-transition x-import="ide/side-bar/notifier">
+        <ui-notifier-sidebar></ui-notifier-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'code'" key="code">
+      <div x-show="session.type == 'code'" x-cloak x-transition x-import="ide/side-bar/code">
+        <ui-code-sidebar></ui-code-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'scenario'" key="scenario">
+      <div x-show="session.type == 'scenario'" x-cloak x-transition x-import="ide/side-bar/scenario">
+        <ui-scenario-sidebar></ui-scenario-sidebar>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'projection'" key="projection">
+      <div x-show="session.type == 'projection'" x-cloak x-transition x-import="ide/side-bar/projection">
+        <ui-projection-sidebar></ui-projection-sidebar>
+      </div>
+    </template>
+
+  </div>
+</template>

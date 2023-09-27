@@ -1,0 +1,89 @@
+<template x-component="canvas">
+  <div x-import="utils/document-model;utils/mapping-model">
+
+    <template x-if="session.tab.endsWith('README.md')" key="readme">
+      <div x-show="session.tab.endsWith('README.md')" x-cloak x-transition x-import="ide/tabs/project-readme">
+        <ui-project-readme></ui-project-readme>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'command'" key="comand">
+      <div x-show="session.type == 'command'" x-cloak x-transition x-import="ide/tabs/command">
+        <ui-command></ui-command>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'aggregate'" key="aggregate">
+      <div x-show="session.type == 'aggregate'" x-cloak x-transition x-import="ide/tabs/aggregate">
+        <ui-aggregate></ui-aggregate>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'documentation'" key="documentation">
+      <div x-show="session.type == 'documentation'" x-cloak x-transition x-import="ide/tabs/documentation">
+        <ui-documentation></ui-documentation>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'behavior'" key="documentation">
+      <div x-show="session.type == 'behavior'" x-cloak x-transition x-import="ide/tabs/behavior">
+        <ui-behavior></ui-behavior>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'testcase'" key="testcase">
+      <div x-show="session.type == 'testcase'" x-cloak x-transition x-import="ide/tabs/behavior-test">
+        <ui-behavior-test></ui-behavior-test>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'view'" key="view">
+      <div x-show="session.type == 'view'" x-cloak x-transition x-import="ide/tabs/view">
+        <ui-view></ui-view>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'notifier'" key="notifier">
+      <div x-show="session.type == 'notifier'" x-cloak x-transition x-import="ide/tabs/notifier">
+        <ui-notifier></ui-notifier>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'code'" key="code">
+      <div x-show="session.type == 'code'" x-cloak x-transition x-import="ide/tabs/code">
+        <ui-code></ui-code>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'patterns'" key="patterns">
+      <div x-show="session.type == 'patterns'" x-cloak x-transition x-import="ide/tabs/patterns">
+        <ui-patterns></ui-patterns>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'expressions'" key="expressions">
+      <div x-show="session.type == 'expressions'" x-cloak x-transition x-import="ide/tabs/expressions">
+        <ui-expressions></ui-expressions>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'roles'" key="roles">
+      <div x-show="session.type == 'roles'" x-cloak x-transition x-import="ide/tabs/roles">
+        <ui-roles></ui-roles>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'scenario'" key="scenario">
+      <div x-show="session.type == 'scenario'" x-cloak x-transition x-import="ide/tabs/scenario">
+        <ui-scenario></ui-scenario>
+      </div>
+    </template>
+
+    <template x-if="session.type == 'projection'" key="projection">
+      <div x-show="session.type == 'projection'" x-cloak x-transition x-import="ide/tabs/projection">
+        <ui-projection></ui-projection>
+      </div>
+    </template>
+
+  </div>
+</template>

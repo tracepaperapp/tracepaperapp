@@ -1,0 +1,58 @@
+<template x-component="view-query-form">
+    <div x-data="{filter: $persist({}).using(expiringStorage).as($prop('alias')), name: $prop('alias'), fields: $api.get()}"
+         @setdata.window="if($event.detail.alias == name){filter = $event.detail.data}"
+         class="form-element"
+         @refresh="fields = $api.get();">
+        <template :x-target="$prop('target')">
+            <form>
+                <div class="row">
+                    <template x-for="field in fields">
+                        <div class="col-3 mb-3">
+                            <label :for="name + field.name"
+                                   class="form-label"
+                                   x-text="field.title"></label>
+                            <template x-if="field.type == 'String'">
+                                <input type="text"
+                                       class="form-control"
+                                       x-model="filter[field.name]"
+                                       :id="name + field.name"/>
+                            </template>
+                            <template x-if="field.type == 'Int' || field.type == 'Float'">
+                                <input type="number"
+                                       class="form-control"
+                                       x-model="filter[field.name]"
+                                       :id="name + field.name"/>
+                            </template>
+                            <template x-if="field.type == 'Boolean'">
+                                <select class="form-select"
+                                        :id="name + field.name"
+                                        x-model="filter[field.name]"
+                                        aria-label="Default select example">
+                                  <option selected>-select-</option>
+                                  <option value="true">true</option>
+                                  <option value="false">false</option>
+                                </select>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <button class="w-100 btn btn-lg btn-outline-success"
+                        @click="Draftsman.reload_data(name,filter,true);" type="button">Search
+                </button>
+            </form>
+        </template>
+
+        <script>
+      return {
+        get(){
+          var forms = Alpine.store("forms");
+          if (this.$prop("alias") in forms){
+          return JSON.parse(forms[this.$prop("alias")]);
+          }
+          return [];
+        }
+      }
+
+        </script>
+    </div>
+</template>

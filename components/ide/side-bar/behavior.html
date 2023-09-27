@@ -1,0 +1,54 @@
+<template x-component="behavior-sidebar">
+    <template x-if="tab_state.flow" key="flow-sidebar">
+        <div>
+
+            <h6><span x-text="tab_state.aggregate.subdomain"></span>.<span x-text="tab_state.aggregate.root.att_name"></span></h6>
+
+            <div class="d-grid gap-2" x-data="{create:false}"
+                 x-effect="
+             create = 'att_create-command' in tab_state.flow && tab_state.flow['att_create-command'] == 'true'">
+                <div class="btn-group-vertical" role="group" aria-label="Basic outlined example">
+                    <button type="button"
+                            @click.debounce="create = !create;tab_state.flow['att_create-command'] = create ? 'true' : 'false';await Aggregate.update(tab.data.subdomain,aggregate);"
+                            :class="create ? 'btn btn-primary' : 'btn btn-outline-primary'">Create flow</button>
+                </div>
+            </div><br>
+
+            <div class="d-grid gap-2">
+                <div class="btn-group-vertical" role="group" aria-label="Basic outlined example">
+                    <button type="button"
+                            @click="tab_state.view = 'trigger'"
+                            :class="tab_state.view == 'trigger' ? 'btn btn-primary' : 'btn btn-outline-primary'">Triggers</button>
+                    <button type="button"
+                            @click="tab_state.view = 'flow'"
+                            :class="tab_state.view == 'flow' ? 'btn btn-primary' : 'btn btn-outline-primary'">Flow</button>
+                    <button type="button"
+                            @click="tab_state.view = 'test'"
+                            :class="tab_state.view == 'test' ? 'btn btn-primary' : 'btn btn-outline-primary'">Test Cases</button>
+                </div>
+            </div>
+
+            <hr>
+
+            <div x-import="utils/documentation-element">
+                <ui-documentation-element></ui-documentation-element>
+            </div>
+
+            <hr>
+            <div class="d-grid gap-2" x-import="utils/prompt">
+
+                <div class="btn-group-vertical">
+                    <button class="btn btn-outline-danger btn-block"
+                            @click.stop="$dispatch('show-modal',{id: 'rename-flow'})">Rename</button>
+
+                    <button class="btn btn-outline-danger btn-block"
+                            @click.stop="Behavior.remove">Delete</button>
+                </div>
+
+                <ui-prompt id="rename-flow"
+                           title="Rename behavior flow"
+                           @prompt-filled.debounce="Behavior.rename($event.detail.value);"></ui-prompt>
+            </div>
+        </div>
+    </template>
+</template>

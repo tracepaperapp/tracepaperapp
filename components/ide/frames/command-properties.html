@@ -1,0 +1,62 @@
+<template x-component="command-properties">
+    <table class="table">
+        <tbody x-data="{name: '', objectName: ''}">
+        <tr>
+            <th>API Namespace</th>
+            <td>
+                <ui-text-field
+                        :value="tab_state.command['att_graphql-namespace']"
+                        :pattern="graphql_namespace"
+                        @updated="tab_state.command['att_graphql-namespace'] = $event.detail.value;"
+                        validation-message="Must be PascalCased words optionaly separated by dots. e.g. Namespace, NameSpace, NameSpace.SubSpace are all valid."></ui-text-field>
+            </td>
+        </tr>
+        <tr>
+            <th>API Method Name</th>
+            <td>
+                <ui-text-field
+                        :value="tab_state.command['att_graphql-name']"
+                        :pattern="camel_cased"
+                        @updated="tab_state.command['att_graphql-name'] = $event.detail.value;"
+                        validation-message="Must be camelCased"></ui-text-field>
+            </td>
+        </tr>
+        <tr>
+            <th>Name</th>
+            <td x-text="tab_state.command.att_name.replace('Requested','')"
+                x-effect="tab_state.command.att_name = capitalizeFirstLetter(tab_state.command['att_graphql-name'])
+                + tab_state.command['att_graphql-namespace'].replaceAll('.','') + 'Requested';">
+            </td>
+        </tr>
+        <tr>
+            <th>Event Name</th>
+            <td x-text="tab_state.command.att_name"></td>
+        </tr>
+        <tr>
+            <th>Authorization Method</th>
+            <td>
+                <ui-selection :value="tab_state.command.att_authorization"
+                              :options="auth_types"
+                              @updated="tab_state.command.att_authorization = $event.detail.value;"></ui-selection>
+            </td>
+        </tr>
+        <tr x-show="tab_state.command.att_authorization == 'role'">
+            <th>Required Role</th>
+            <td>
+                <ui-role-selector
+                        :value="tab_state.command.att_role"
+                        @updated="tab_state.command.att_role = $event.detail.value;"></ui-role-selector>
+            </td>
+        </tr>
+        <tr x-show="tab_state.command.att_authorization == 'user'">
+            <th>Username field</th>
+            <td>
+                <ui-selection :value="tab_state.command['att_username-field']"
+                              :options="tab_state.command.field ? tab_state.command.field.map(x => x.att_name) : []"
+                              @updated="tab_state.command['att_username-field'] = $event.detail.value;"></ui-selection>
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+</template>

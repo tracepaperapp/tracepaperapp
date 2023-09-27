@@ -1,0 +1,28 @@
+<template x-component="scenario-sidebar">
+  <template x-if="tab_state.scenario">
+    <div>
+
+      <div x-import="utils/documentation-element">
+        <ui-documentation-element></ui-documentation-element>
+      </div>
+
+      <hr>
+
+      <div class="d-grid gap-2" x-import="utils/prompt">
+
+        <div class="btn-group-vertical">
+          <button class="btn btn-outline-danger btn-block"
+                  @click.stop="$dispatch('show-modal',{id: 'rename-scenario'})">Rename</button>
+
+          <button class="btn btn-outline-danger btn-block"
+                  @click.stop="Scenarios.remove">Delete</button>
+        </div>
+
+        <ui-prompt id="rename-scenario"
+                   title="Rename scenario"
+                   @prompt-filled.debounce="Scenarios.rename($event.detail.value);"></ui-prompt>
+      </div>
+
+    </div>
+  </template>
+</template>

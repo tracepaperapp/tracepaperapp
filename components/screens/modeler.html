@@ -1,0 +1,48 @@
+<template x-component="modeler">
+    <template x-if="Object.keys(context).length != 0 && context.selected_workspace && context.selected_project" key="modeler">
+        <div x-import="ide/navbar;ide/navigation;ide/tab-bar;ide/canvas;ide/side-bar;">
+            <div x-show="Object.keys(context).length != 0 && context.selected_workspace && context.selected_project" x-cloak
+                 x-transition>
+                <div>
+
+                    <ui-navbar></ui-navbar>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="sidebar border col-lg-2 border-right p-0 bg-tracepaper-tertiary" height="100%">
+                                <ui-navigation></ui-navigation>
+                            </div>
+                            <main class="col-lg-10">
+                                <div :style="'height:' + (window.innerHeight - 48) + 'px'">
+                                    <ui-tab-bar></ui-tab-bar>
+
+                                    <div style="overflow-y: auto;overflow-x: hidden;">
+                                        <div class="row" style="height: 85vh">
+                                            <div class="col-8">
+                                                <ui-canvas></ui-canvas>
+                                            </div>
+                                            <div class="col-4" style="overflow-y: auto;overflow-x: hidden;">
+                                                <ui-side-bar></ui-side-bar>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </main>
+                        </div>
+                    </div>
+
+
+                    <template x-if="session.exception">
+                        <div class="exception-message">
+                            <div>
+                                <br>
+                                <div class="alert alert-danger" role="alert" x-html="session.exception"></div>
+                            </div>
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

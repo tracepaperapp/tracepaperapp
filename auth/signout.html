@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SignOut</title>
+    <meta name="theme-color" content="#7952b3">
+    <link href="/css/signin.css" rel="stylesheet">
+    <link href="/css/bootstrap.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css"
+          integrity="sha512-YWzhKL2whUzgiheMoBFwW8CKV4qpHQAEuvilg9FAn5VJUDwKZZxkJNuGM4XkWuk94WCrrwslk8yWNGmY1EduTA=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+    <script src="/js/alpine-persist.js"></script>
+    <script src="/js/bootstrap.js"></script>
+    <script defer src="/js/alpine.js"></script>
+    <script src="/js/constants.js"></script>
+    <script src="/js/draftsman.js"></script>
+  </head>
+  <body class="text-center">
+
+<main class="form-signin">
+  <div x-init="signout()">
+    <img class="mb-4" src="/img/Compass.png" alt="" width="72">
+    <h1 class="h3 mb-3 fw-normal">Signout User</h1>
+    <p class="mt-5 mb-3 text-muted">&copy; Copyright 2020-<script>document.write(new Date().getFullYear())</script>, Draftsman.io</p>
+  </div>
+</main>
+  </body>
+
+  <script src="/js/amazon-cognito-identity.min.js"></script>
+  <script src="/js/authentication.js"></script>
+  <script>
+  function signout(){
+    let cognitoUser = getUser(localStorage["_x_username"]);
+    cognitoUser.signOut();
+    localStorage.clear();
+    sessionStorage.clear();
+    location = "/";
+  }
+  </script>
+</html>

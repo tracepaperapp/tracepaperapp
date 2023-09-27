@@ -1,0 +1,161 @@
+<template x-component="behavior-test">
+    <template x-if="tab_state.testcase" key="behavior-test-container">
+        <div x-import="utils/editor-elements">
+            <!-- document = TestCase.get_aggregate_document(aggregate);"-->
+
+            <div>
+
+                <h2>
+                    <ui-text-field
+                            :value="tab_state.testcase.att_name"
+                            validation-message="Must be PascalCased"
+                            :pattern="pascal_cased"
+                            @updated.debounce="TestCase.rename($event.detail.value);"></ui-text-field>
+                </h2>
+                <!-- Initial State -->
+                <div class="bordered-element">
+                    <h4>Initial state</h4>
+                    <ui-text-area :value="'state' in tab_state.testcase && tab_state.testcase.state != '' && tab_state.testcase.state.replaceAll(' ','').replaceAll('\n','') != '{}' ? tab_state.testcase.state : TestCase.get_aggregate_document()"
+                                  use-pre-tag
+                                  @updated.debounce="TestCase.update_state($event.detail.value)"></ui-text-area>
+                    <span class="badge rounded-pill bg-primary" x-show="'state' in tab_state.testcase" x-cloak x-transition>Configured</span>
+                    <span class="badge rounded-pill bg-secondary" x-show="!('state' in tab_state.testcase)" x-cloak x-transition>Not Configured</span>
+                </div>
+
+                <!-- Trigger -->
+                <div class="bordered-element">
+                    <h4>
+                        Trigger:
+                        <ui-selection :value="tab_state.testcase['att_trigger-event']"
+                                      :options="tab_state.flow.trigger.map(x => x.att_source)"
+                                      @updated.debounce="TestCase.change_trigger($event.detail.value);"></ui-selection>
+                    </h4>
+
+                    <table class="table">
+                        <tbody x-data="{inputs: []}"
+                               x-effect="let updated = tab_state.testcase.input;await sleep(1);if(inputs!=updated){inputs=updated}">
+                        <template x-for="input in inputs" :key="input.att_name">
+                            <tr>
+                                <th>
+                                    <span x-text="input.att_name"></span>
+                                    <small> (<span x-text="input.att_type"></span>)</small>
+                                </th>
+                                <td>
+                                    <template x-if="input.att_type != 'NestedObject'">
+                                        <ui-text-field :value="input.att_value"
+                                                       @updated.debounce="input.att_value = $event.detail.value;"></ui-text-field>
+                                    </template>
+                                    <template x-if="input.att_type == 'NestedObject'">
+                                        <ui-text-area :value="input['#text']"
+                                                      use-pre-tag
+                                                      @updated.debounce="input['#text'] = $event.detail.value;"></ui-text-area>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Expected Events -->
+                <div x-data="{expected: []}"
+                     x-effect="let updated = tab_state.testcase.expected;await sleep(1);if(expected!=updated){expected=updated}">
+                    <template x-for="event in expected" :key="event['att_domain-event']">
+                        <div class="row bordered-element" @delete.debounce="tab_state.testcase.expected = tab_state.testcase.expected.filter(x => x['att_domain-event'] != event['att_domain-event']);">
+                            <h4>
+                                Expected Domain Event
+                            </h4>
+                            <ui-documentation-icon subject="behavior" key="expected_event"></ui-documentation-icon>
+                            <ui-trash-icon @deleted.debounce=""></ui-trash-icon>
+                            <h6>
+                                <ui-selection :value="event['att_domain-event']"
+                                              :options="tab_state.aggregate.events.map(x => x.att_name).concat(['- reload event variables -'])"
+                                              @updated.debounce="event = TestCase.update_expected_event(event,$event.detail.value);"></ui-selection>
+                            </h6>
+                            <table class="table">
+                                <tbody>
+                                <template x-for="field in event.field" :key="field.att_name">
+                                    <tr>
+                                        <th>
+                                            <span x-text="field.att_name"></span>&nbsp;
+                                            (<span x-text="field.att_type"></span>)
+                                        </th>
+                                        <td>
+                                            <ui-text-field :value="field.att_value"
+                                                           @updated.debounce="field.att_value = $event.detail.value;"></ui-text-field>
+
+                                        </td>
+                                        <td x-show="!session.editing_disabled">
+                                            <button type="button" class="btn btn-outline-danger"
+                                                    @click="event.field = event.field.filter(x => x.att_name != field.att_name);">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Insert event assertion -->
+                <div class="d-grid gap-2" x-data="{show_modal: false, search: ''}">
+                    <button type="button"
+                            @click="show_modal=true"
+                            class="btn btn-outline-primary m-2">Add expected domain event</button>
+
+                    <template x-if="show_modal">
+                        <div>
+                            <div class="overlay"></div>
+                            <div class="prompt">
+                                <h4> Assert expected domain event
+                                    <button type="button" @click="show_modal=false" class="btn-close float-end"></button>
+                                </h4>
+
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" >
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                                    <input type="text" class="form-control"
+                                           placeholder="search..." x-model="search"/>
+                                </div>
+
+                                <div class="list-group list-group-flush"
+                                     x-data="{events: []}"
+                                     x-effect="let updated = tab_state.aggregate.events;await sleep(1);if(events!=updated){events=updated}">
+                                    <template x-for="event in events" :key="event">
+                                        <button type="button"
+                                                @click="TestCase.insert_event_assertion(event.att_name);show_modal=false;"
+                                                x-text="event.att_name"
+                                                x-cloak x-transition x-show="search == '' || event.att_name.toLowerCase().includes(search.toLowerCase())"
+                                                class="list-group-item list-group-item-action"></button>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </div>
+                    </template>
+
+                </div>
+
+
+                <!-- Expected State -->
+                <div class="bordered-element">
+                    <h4>Expected result state</h4>
+                    <h6>Business key:</h6>
+                    <ui-text-field :value="'expected-state' in tab_state.testcase ? tab_state.testcase['expected-state']['att_pk'] : ''"
+                                   @updated.debounce="TestCase.update_expected_state_key($event.detail.value);"></ui-text-field>
+                    <ui-text-area :value="'expected-state' in tab_state.testcase && '#text' in tab_state.testcase['expected-state'] ? tab_state.testcase['expected-state']['#text'] : TestCase.get_aggregate_document()"
+                                  use-pre-tag
+                                  @updated.debounce="TestCase.update_expected_state($event.detail.value);"></ui-text-area>
+                    <span class="badge rounded-pill bg-primary" x-show="'expected-state' in tab_state.testcase" x-cloak x-transition>Configured</span>
+                    <span class="badge rounded-pill bg-secondary" x-show="!('expected-state' in tab_state.testcase)" x-cloak x-transition>Not Configured</span>
+                </div>
+
+            </div>
+
+            <br>
+        </div>
+    </template>
+</template>

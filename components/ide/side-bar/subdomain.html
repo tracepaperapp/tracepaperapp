@@ -1,0 +1,19 @@
+<template x-component="subdomain-sidebar">
+    <div>
+
+        <div class="d-grid gap-2" x-import="utils/prompt">
+
+            <button class="btn btn-outline-danger btn-block"
+                    @click.stop="$dispatch('show-modal',{id: 'rename-subdomain'})">Rename</button>
+
+            <button class="btn btn-outline-danger btn-block"
+                    :file="session.tab"
+                    @click.stop="Subdomains.remove">Delete</button>
+
+            <ui-prompt id="rename-subdomain"
+                       title="Rename subdomain"
+                       @prompt-filled.debounce="Subdomains.rename($event.detail.value);"></ui-prompt>
+        </div>
+
+    </div>
+</template>

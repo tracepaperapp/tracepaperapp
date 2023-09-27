@@ -1,0 +1,26 @@
+<template x-component="code-sidebar">
+    <template x-if="tab_state.code" key="flow-sidebar">
+        <div>
+
+            <div x-import="utils/documentation-element">
+                <ui-documentation-element></ui-documentation-element>
+            </div>
+
+            <hr>
+            <div class="d-grid gap-2" x-import="utils/prompt">
+
+                <div class="btn-group-vertical">
+                    <button class="btn btn-outline-danger btn-block"
+                            @click.stop="$dispatch('show-modal',{id: 'rename-module'})">Rename</button>
+
+                    <button class="btn btn-outline-danger btn-block"
+                            @click.stop="Code.remove">Delete</button>
+                </div>
+
+                <ui-prompt id="rename-module"
+                           title="Rename module"
+                           @prompt-filled.debounce="Code.rename($event.detail.value);"></ui-prompt>
+            </div>
+        </div>
+    </template>
+</template>

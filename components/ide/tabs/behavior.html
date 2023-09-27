@@ -1,0 +1,37 @@
+<template x-component="behavior">
+  <template x-if="tab_state.flow" key="behavior-model-container">
+    <div x-import="utils/editor-elements">
+      <h2 x-text="tab_state.flow.att_name"></h2>
+      <hr>
+
+      <div x-import="ide/frames/behavior-flow;ide/frames/behavior-testcases">
+
+        <template x-if="tab_state.view == 'trigger'" key="behavior-trigger">
+          <div x-show="tab_state.view == 'trigger'" x-transition x-cloak>
+            <div x-import="utils/trigger-model">
+              <ui-trigger-model
+                      @mapping-updated.debounce="Behavior.equalize_trigger_flowvars"
+                      @changed-trigger-event.debounce="Behavior.update_trigger($event.detail.source,$event.detail.update);"
+                      @remove-trigger.debounce="Behavior.remove_trigger($event.detail.source);"
+                      @add-trigger.debounce="Behavior.add_trigger($event.detail.event);"></ui-trigger-model>
+            </div>
+          </div>
+        </template>
+
+        <template x-if="tab_state.view == 'flow'" key="behavior-flow">
+          <div x-show="tab_state.view == 'flow'" x-transition x-cloak>
+            <ui-flow></ui-flow>
+          </div>
+        </template>
+
+        <template x-if="tab_state.view == 'test'" key="behavior-test">
+          <div x-show="tab_state.view == 'test''" x-transition x-cloak>
+            <ui-test-cases></ui-test-cases>
+          </div>
+        </template>
+
+      </div>
+
+    </div>
+  </template>
+</template>

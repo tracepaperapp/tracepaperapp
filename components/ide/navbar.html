@@ -1,0 +1,157 @@
+<template x-component="navbar">
+
+  <div x-data="{history: [], message: ''}">
+    <header class="navbar sticky-top bg-tracepaper-dark navbar-dark flex-md-nowrap p-0 shadow">
+      <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white" href="#" @click="Context.close_project">
+        Tracepaper
+      </a>
+
+      <div class="d-flex">
+
+        <small class="text-white">
+          Last pulled:
+          <span x-text="moment(session.last_pulled).calendar()"></span>
+          <span x-show="session.staged_files.length != 0" x-cloak x-transition>
+             [syncing suspended]
+          </span>
+        </small>
+        &nbsp;
+
+        <button x-show="Validation.has_issues" class="btn btn-danger me-3" type="button" data-bs-toggle="modal" data-bs-target="#reportDialog">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </button>
+
+        <button x-show="session.staged_files.length != 0" class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#commitDialog">Commit
+          <span x-text="session.staged_files.length"></span>
+          changed file<span x-show="session.staged_files.length > 1">s</span> to remote</button>
+        &nbsp;
+        <button type="button"
+                class="btn btn-outline-primary me-3"
+                data-bs-toggle="modal"
+                @click="history = FileSystem.get_history()"
+                data-bs-target="#historyDialog"><i class="fa-solid fa-clock-rotate-left"></i></button>
+
+      </div>
+
+    </header>
+
+    <div class="modal fade" id="commitDialog"
+         data-bs-backdrop="static" data-bs-keyboard="false"
+         tabindex="-1" aria-labelledby="commitDialogLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="commitDialogLabel">Commit changed files</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <ul class="list-group list-group-flush">
+              <table class="table">
+                <template x-for="file in session.staged_files" :key="file">
+                  <tr>
+                    <td x-text="await FileSystem.file_status(file)"></td>
+                    <td x-text="file"></td>
+                    <td>
+                      <p @click="await FileSystem.remove_from_staging(file)">
+                        <i class="fa-solid fa-ban" style="color: #91959c;"></i>
+                      </p>
+                    </td>
+                  </tr>
+                </template>
+              </table>
+            </ul>
+            <textarea x-model="message" class="form-control"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button data-bs-dismiss="modal" type="button" @click="FileSystem.clean_and_pull"
+                    class="btn btn-outline-danger">Revert all</button>
+            <button class="btn btn-success disabled" x-show="message == '' || message == undefined" disabled>Commit</button>
+            <button data-bs-dismiss="modal" type="button" @click="FileSystem.commit(message)"
+                    class="btn btn-success" x-show="message != '' && message != undefined">Commit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="historyDialog"
+         data-bs-backdrop="static" data-bs-keyboard="false"
+         tabindex="-1" aria-labelledby="historyDialogLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="historyDialogLabel">History</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <ul class="list-group list-group-flush">
+
+              <table class="table">
+                <tbody>
+                <template x-for="commit in history">
+                  <tr>
+                    <th scope="row" x-text="crc32(commit.oid)"></th>
+                    <td x-text="moment(commit.commit.author.timestamp*1000).fromNow();"></td>
+                    <td x-text="commit.commit.author.name"></td>
+                    <td x-text="commit.commit.message"></td>
+                    <td>
+                      <button type="button"
+                              class="btn btn-outline-info btn-sm"
+                              data-bs-dismiss="modal"
+                              @click="await FileSystem.checkout_commit(commit)"><i class="fa-solid fa-arrow-down"></i> checkout</button>
+                    </td>
+                  </tr>
+                </template>
+                </tbody>
+              </table>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="reportDialog"
+         data-bs-backdrop="static" data-bs-keyboard="false"
+         tabindex="-1" aria-labelledby="reportDialogLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reportDialogLabel">Model issues</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
+            <table class="table">
+              <tr>
+                <th>Model File</th>
+                <th>Issues</th>
+              </tr>
+              <template x-for="key in Object.keys(report)" :key="key">
+                <tr x-show="report[key].length != 0">
+                  <td x-text="key"></td>
+                  <td>
+                    <ul class="list-group list-group-flush">
+                      <template x-for="issue in report[key]">
+                        <li class="list-group-item" x-text="issue"></li>
+                      </template>
+                    </ul>
+                  </td>
+                  <td>
+                    <button type="button"
+                            class="btn btn-link"
+                            data-bs-dismiss="modal"
+                            :file="key"
+                            @click="Navigation.open_tab"
+                            aria-label="Close">
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</template>

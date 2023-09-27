@@ -1,0 +1,7 @@
+<template x-component="create-iam-group">
+  <div x-import="utils/editor-elements">
+    <ui-selection :value="activity['att_group-name'].replace('#flow.','')"
+                  :options="Notifiers.get_flow_variables(stored)"
+                  @updated.debounce="activity['att_group-name'] = '#flow.' + $event.detail.value;$dispatch('flow-updated');"></ui-selection>
+  </div>
+</template>

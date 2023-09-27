@@ -1,0 +1,39 @@
+<template x-component="command">
+  <div x-import="ide/frames/command-properties;utils/editor-elements">
+
+    <h2 x-text="tab_state.command.att_name.replace('Requested','')"></h2>
+    <ui-documentation-icon subject="command" key="command_concept"></ui-documentation-icon>
+    <hr>
+
+    <div class="bordered-element">
+      <h4>Properties</h4>
+      <ui-documentation-icon subject="command" key="command_properties"></ui-documentation-icon>
+      <div class="row">
+        <div class="col-12">
+          <ui-command-properties></ui-command-properties>
+        </div>
+      </div>
+    </div>
+
+    <div class="row bordered-element">
+      <h4>
+        Message Schema
+      </h4>
+      <ui-documentation-icon subject="command" key="message_schema"></ui-documentation-icon>
+
+
+        <ui-document-model
+                :id="session.tab + '-command-document'"
+                entity-casing="camel"
+                optional-default-enabled
+                pattern-enabled
+                auto-fill-enabled
+                @new-collection.debounce="Commands.add_element_collection()"
+                @remove-collection.debounce="Commands.remove_element_collection($event.detail.name)"></ui-document-model>
+
+    </div>
+
+    <br>
+    <br>
+  </div>
+</template>

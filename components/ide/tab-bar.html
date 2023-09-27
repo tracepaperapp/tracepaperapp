@@ -1,0 +1,41 @@
+<template x-component="tab-bar">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+
+        <div>
+            <ul class="nav nav-tabs"
+                x-effect="let updated = session.tabs;await sleep(1);if(tabs != updated){tabs=updated}"
+                x-data="{tabs: []}">
+                <template x-for="tab in tabs" :key="tab">
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           :class="session.tab == tab ? 'active' : ''"
+                           aria-current="page" href="#"
+                           :file="tab"
+                           @click.stop="Navigation.open_tab">
+                            <span x-text="Navigation.get_tabname(tab)"></span>&nbsp;
+                            <button type="button" class="btn-close"
+                                    :file="tab"
+                                    @click.stop="Navigation.close_tab"
+                                    aria-label="Close"></button>
+                        </a>
+                    </li>
+                </template>
+                <li class="nav-item dropdown" x-show="session.tab_history.length != 0">
+                    <a class="nav-link dropdown-toggle"
+                       data-bs-toggle="dropdown" href="#"
+                       role="button" aria-expanded="false"><i class="fa-solid fa-clock-rotate-left"></i></a>
+                    <ul class="dropdown-menu">
+                        <template x-for="tab in session.tab_history">
+                            <li><a
+                                    class="dropdown-item"
+                                    x-text="Navigation.get_tabname(tab)"
+                                    :file="tab"
+                                    @click.stop="Navigation.open_tab"
+                                    href="#"></a></li>
+                        </template>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</template>

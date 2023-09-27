@@ -1,0 +1,82 @@
+<template x-component="view-relations">
+  <template x-if="tab_state.view">
+    <div class="row bordered-element">
+      <h4>Relations</h4>
+      <ui-documentation-icon subject="view" key="relations"></ui-documentation-icon>
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Field name</th>
+          <th>Relation type</th>
+          <th>Referenced view</th>
+          <th>Foreign Key</th>
+          <th>Authorization Method</th>
+          <th>Required Role</th>
+        </tr>
+        </thead>
+        <tbody x-data="{references: []}"
+               x-effect="let updated = tab_state.view.field.filter(x => !view_field_types.includes(x.att_type));console.log(updated);await sleep(1);if(references!=updated){references=updated}">
+        <template x-for="ref in references" :key="ref.att_name">
+          <tr>
+            <td>
+              <ui-text-field :value="ref.att_name"
+                             @updated.debounce="ref.att_name = $event.detail.value;"
+                             validation-message="Must be camelCased"
+                             :pattern="camel_cased"></ui-text-field>
+            </td>
+            <td>
+              <ui-selection :value="ref.att_type"
+                            :options="view_relations"
+                            @updated.debounce="ref.att_type = $event.detail.value;"></ui-selection>
+            </td>
+            <td x-data="{views: []}" x-effect="let updated = Views.list().map(x => x.att_name);await sleep(1);if(views!=updated){views=updated}">
+              <ui-selection :value="ref.att_ref"
+                            :options="views"
+                            @updated.debounce="ref.att_ref = $event.detail.value;"></ui-selection>
+            </td>
+            <td>
+              <span x-show="ref.att_type == 'ObjectList'">n.a.</span>
+              <div x-show="ref.att_type != 'ObjectList'"
+                   x-data="{keys: []}"
+                   x-effect="let updated = tab_state.view.field.filter(x => x.att_type == 'String').map(x => x.att_name).concat(['#canonical']);
+                             await sleep(1);
+                             if(keys!=updated){keys=updated}">
+                <ui-selection :value="ref['att_foreign-key']"
+                              :options="keys"
+                              @updated.debounce="ref['att_foreign-key'] = $event.detail.value;"></ui-selection>
+              </div>
+            </td>
+            <td>
+              <span x-show="ref.att_type == 'ObjectList'">inherit from API query</span>
+              <div x-show="ref.att_type != 'ObjectList'">
+                <ui-selection :value="ref.att_authorization == 'authenticated' ? 'inherit from API query' : 'role'"
+                              :options="['inherit from API query','role']"
+                              @updated.debounce="ref.att_authorization = $event.detail.value == 'inherit from API query' ? 'authenticated' : 'role';if(ref.att_authorization == 'authenticated'){ref.att_role = ''};"></ui-selection>
+              </div>
+            </td>
+            <td>
+              <span x-show="ref.att_authorization != 'role'">n.a.</span>
+              <div x-show="ref.att_authorization == 'role'">
+                <ui-role-selector
+                        :value="ref.att_role"
+                        @updated.debounce="ref.att_role = $event.detail.value;"></ui-role-selector>
+              </div>
+            </td>
+            <td x-show="!session.editing_disabled">
+              <button type="button" class="btn btn-outline-danger"
+                      @click.debounce="tab_state.view.field = tab_state.view.field.filter(x => x.att_name != ref.att_name);">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </template>
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-outline-success"
+              x-show="!session.editing_disabled" x-cloak x-transition
+              @click.debounce="Views.add_relation();">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+  </template>
+</template>

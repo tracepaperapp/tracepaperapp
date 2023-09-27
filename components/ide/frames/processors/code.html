@@ -1,0 +1,25 @@
+<template x-component="code-processor">
+  <table class="table" x-import="utils/editor-elements">
+    <tbody>
+      <tr>
+        <th>Module</th>
+        <td>
+          <ui-selection :value="processor.att_file.replace('lib/','').replace('.py','')"
+                        :options="Code.list_modules()"
+                        @updated.debounce="
+                        processor.att_file = 'lib/' + $event.detail.value + '.py';
+                        let methods = Code.get_methods(processor.att_file);
+                        processor.att_handler = methods.at(0);"></ui-selection>
+        </td>
+      </tr>
+    <tr>
+      <th>Method</th>
+      <td>
+        <ui-selection :value="processor.att_handler"
+          :options="Code.get_methods(processor.att_file)"
+          @updated.debounce="att_handler = $event.detail.value;"></ui-selection>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</template>

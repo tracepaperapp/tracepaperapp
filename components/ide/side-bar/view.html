@@ -1,0 +1,45 @@
+<template x-component="view-sidebar">
+    <template x-if="tab_state.view" key="flow-sidebar">
+        <div>
+
+            <div class="d-grid gap-2">
+                <div class="btn-group-vertical" role="group" aria-label="Basic outlined example">
+                    <button type="button"
+                            @click="tab_state.mode = 'model'"
+                            :class="tab_state.mode == 'model' ? 'btn btn-primary' : 'btn btn-outline-primary'">Data Model</button>
+                    <button type="button"
+                            @click="tab_state.mode = 'source'"
+                            :class="tab_state.mode == 'source' ? 'btn btn-primary' : 'btn btn-outline-primary'">Data Sources</button>
+                    <button type="button"
+                            @click="tab_state.mode = 'relation'"
+                            :class="tab_state.mode == 'relation' ? 'btn btn-primary' : 'btn btn-outline-primary'">Relations</button>
+                    <button type="button"
+                            @click="tab_state.mode = 'api'"
+                            :class="tab_state.mode == 'api' ? 'btn btn-primary' : 'btn btn-outline-primary'">API Exposure</button>
+                </div>
+            </div>
+
+            <hr>
+
+            <div x-import="utils/documentation-element">
+                <ui-documentation-element></ui-documentation-element>
+            </div>
+
+            <hr>
+            <div class="d-grid gap-2" x-import="utils/prompt">
+
+                <div class="btn-group-vertical">
+                    <button class="btn btn-outline-danger btn-block"
+                            @click.stop="$dispatch('show-modal',{id: 'rename-view'})">Rename</button>
+
+                    <button class="btn btn-outline-danger btn-block"
+                            @click.stop="Views.remove">Delete</button>
+                </div>
+
+                <ui-prompt id="rename-view"
+                           title="Rename view"
+                           @prompt-filled.debounce="Views.rename($event.detail.value);"></ui-prompt>
+            </div>
+        </div>
+    </template>
+</template>

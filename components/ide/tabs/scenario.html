@@ -1,0 +1,106 @@
+<template x-component="scenario">
+  <template x-if="tab_state.scenario" key="scenario-container">
+    <div x-data="{scenario: {}}"
+         x-import="utils/editor-elements"
+         x-effect="let updated = tab_state.scenario;await sleep(1);if(scenario!=updated){scenario=updated}">
+
+      <div class="list-group">
+        <template x-for="(activity,index) in scenario.activity" :key="activity.att_id">
+
+          <div href="#" class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1">
+                <span x-text="index + 1"></span>:&nbsp;
+                <span x-text="label['qa.' + activity.att_type]"></span>
+              </h5>
+              <small class="text-muted">
+                <button
+                        @click="arraymove(scenario.activity, index, index - 1);$dispatch('scenario-updated');"
+                        x-show="index != 0"
+                        class="indigo-text btn btn-link"><i class="fa-solid fa-arrow-up"></i></button>
+                <button
+                        @click="arraymove(scenario.activity, index, index + 1);$dispatch('scenario-updated');"
+                        x-show="index != (scenario.activity.length -1)"
+                        class="indigo-text btn btn-link"><i class="fa-solid fa-arrow-down"></i></button>
+                &nbsp;&nbsp;
+                <button
+                        x-show="!session.editing_disabled"
+                        @click="scenario.activity.splice(index, 1);$dispatch('scenario-updated');"
+                        class="red-text btn btn-link"><i class="fa-solid fa-trash"></i></button>
+              </small>
+            </div>
+            <hr>
+
+            <p class="mb-1">
+
+              <ui-text-area :value="activity.att_description"
+                            description="Note: "
+                            @updated.debounce="activity.att_description = $event.detail.value;"></ui-text-area>
+
+              <!-- Set variables -->
+            <div x-import="ide/frames/scenario/set-variable">
+              <template x-if="activity.att_type == 'set-variables'">
+                <ui-scenario-set-variables></ui-scenario-set-variables>
+              </template>
+            </div>
+
+            <!-- Mutation -->
+            <div x-import="ide/frames/scenario/mutation">
+              <template x-if="activity.att_type == 'mutation'">
+                <ui-scenario-mutation></ui-scenario-mutation>
+              </template>
+            </div>
+
+            <!-- Wait -->
+            <div x-import="ide/frames/scenario/wait">
+              <template x-if="activity.att_type == 'wait'">
+                <ui-wait></ui-wait>
+              </template>
+            </div>
+
+            <!-- Query -->
+            <div x-import="ide/frames/scenario/query">
+              <template x-if="activity.att_type == 'query'">
+                <ui-query></ui-query>
+              </template>
+            </div>
+
+            </p>
+
+          </div>
+        </template>
+      </div>
+
+      <div class="d-grid gap-2" x-data="{show_modal: false, reference: makeid(8)}">
+        <a type="button"
+           @click="show_modal=true"
+           :href="'#' + reference"
+           class="btn btn-outline-primary m-2">Append test activity</a>
+
+        <template x-if="show_modal">
+          <div>
+            <div class="overlay"></div>
+            <div class="prompt" :id="reference">
+              <h4> Append test activity
+                <button type="button" @click="show_modal=false" class="btn-close float-end"></button>
+              </h4>
+
+              <div class="list-group list-group-flush" @click="await sleep(10);show_modal=false;$dispatch('scenario-updated');">
+                <template x-for="type in qa_activity_types" :key="type">
+                  <button type="button"
+                          @click="Scenario.append_activity(scenario,type)"
+                          x-text="label['qa.' + type]"
+                          class="list-group-item list-group-item-action">
+                  </button>
+                </template>
+              </div>
+
+            </div>
+          </div>
+        </template>
+
+      </div>
+
+    </div>
+  </template>
+</template>

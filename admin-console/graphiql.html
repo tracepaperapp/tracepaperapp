@@ -1,0 +1,70 @@
+<html lang="en-us">
+  <head>
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <title>API explorer</title>
+    <meta name="title" content="API explorer" />
+    <script src="/js/configuration.js"></script>
+    <script src="/js/cache.js"></script>
+    <script src="/admin-console/dist/configuration.js"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/8.0.20/jsrsasign-all-min.js"></script>
+  </head>
+  <body>
+
+  <style>
+    .mainContent {
+      display: 'none';
+      opacity: 0;
+      transition: opacity .20s linear;
+    }
+    .mainContent.show {
+      display: 'block';
+      opacity: 1;
+      transition: opacity .20s linear;
+    }
+    .custom-button {
+      position:absolute;
+      right:10px;
+      top:55px;
+    }
+    </style>
+
+  <div id="loading">
+    <div class="page-loading" style="
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      font-family: sans-serif;
+      justify-content: center;
+      z-index:10;
+      ">
+        <span class="" style="
+        font-size: 2em;
+        margin-top: -3em;
+        color: #848484;
+        ">
+        Loading...
+      </span>
+    </div>
+  </div>
+  <div class="custom-button" x-data="{}">
+    <button
+            @click="sessionStorage['prevLoc'] = location;location = '/auth/signin'">
+      <span x-text="TOKEN ? 'Refresh' : 'Fetch'"></span> User token
+    </button>
+    <button
+            x-show="TOKEN"
+            @click="cacheJS.removeByKey('token');location.reload();">
+      Switch to anonymous mode
+    </button>
+  </div>
+
+  <div id="content" class="mainContent"></div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+
+    <link rel="stylesheet" href="/admin-console/dist/main.css" charset="UTF-8"/>
+    <script src="/admin-console/dist/vendor.js" charset="UTF-8"></script>
+    <script src="/admin-console/dist/main.js" charset="UTF-8"></script>
+  </body>
+</html>

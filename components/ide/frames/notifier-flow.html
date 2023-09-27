@@ -1,0 +1,23 @@
+<template x-component="notifier-flow">
+  <div>
+
+    <div x-import="ide/frames/activities/create-iam-group">
+      <template x-if="activity.att_type == 'create-iam-group'">
+        <ui-create-iam-group></ui-create-iam-group>
+      </template>
+    </div>
+
+    <div x-import="ide/frames/activities/assign-iam-group">
+      <template x-if="activity.att_type == 'add-user-to-iam-group'">
+        <ui-assign-iam-group></ui-assign-iam-group>
+      </template>
+    </div>
+
+    <div x-import="ide/frames/activities/set-variable">
+      <template x-if="activity.att_type == 'set-variable'">
+        <ui-activity-set-variable></ui-activity-set-variable>
+      </template>
+    </div>
+
+  </div>
+</template>

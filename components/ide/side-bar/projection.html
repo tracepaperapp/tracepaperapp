@@ -1,0 +1,21 @@
+<template x-component="projection-sidebar">
+    <template x-if="tab_state.projection" key="projection-sidebar">
+        <div>
+
+            <div x-import="utils/documentation-element">
+                <ui-documentation-element></ui-documentation-element>
+            </div>
+
+            <hr>
+            <div class="d-grid gap-2">
+
+                <div class="btn-group-vertical">
+
+                    <button class="btn btn-outline-danger btn-block"
+                            @click.stop="Projections.remove">Delete</button>
+                </div>
+
+            </div>
+        </div>
+    </template>
+</template>

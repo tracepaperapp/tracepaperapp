@@ -1,0 +1,38 @@
+<template x-component="main-navigation">
+  <div>
+    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-body-secondary text-uppercase">
+      <span x-text="session.projectName"></span>
+    </h6>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2 active"
+           file="README.md"
+           @click="Navigation.open_tab"
+           aria-current="page" href="#">
+          About
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2 active"
+           file="documentation/"
+           @click="Navigation.open_tab"
+           aria-current="page" href="#">
+          Documentation
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2 active"
+           aria-current="page" href="#not-implemented">
+          Pipelines
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2 active"
+           @click="if(confirm('This will delete all local data!')){clear_storage()}"
+           aria-current="page" href="#">
+          Clear local storage
+        </a>
+      </li>
+    </ul>
+  </div>
+</template>

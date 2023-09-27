@@ -1,0 +1,20 @@
+<template x-component="validator">
+  <table class="table" x-import="utils/editor-elements">
+    <tbody>
+      <tr>
+        <th>Condition</th>
+        <td>
+          <ui-text-field :value="processor.att_condition"
+                         @updated.debounce="processor.att_condition = $event.detail.value;"></ui-text-field>
+          </td>
+      </tr>
+    <tr>
+      <th>Exception message</th>
+      <td>
+        <ui-text-field :value="processor.att_exception"
+        @updated.debounce="processor.att_exception = $event.detail.value;"></ui-text-field>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</template>

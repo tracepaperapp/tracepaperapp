@@ -1,0 +1,187 @@
+<template x-component="notifier">
+    <div x-data="{show_modal: false, nested: false}" x-import="utils/editor-elements;">
+
+        <!-- Header -->
+        <h2 x-text="tab_state.notifier.att_name">
+        </h2>
+
+        <hr>
+
+        <div x-show="tab_state.mode == 'trigger'" x-transition x-cloak>
+            <div x-import="utils/trigger-model">
+                <ui-trigger-model
+                        allow-expressions
+                        @mapping-updated.debounce="Notifiers.equalize_trigger_flowvars"
+                        @changed-trigger-event.debounce="Notifiers.update_trigger($event.detail.source,$event.detail.update);"
+                        @remove-trigger.debounce="Notifiers.remove_trigger($event.detail.source);"
+                        @add-trigger.debounce="Notifiers.add_trigger($event.detail.event);"></ui-trigger-model>
+            </div>
+        </div>
+
+        <div x-show="tab_state.mode == 'flow'" x-transition x-cloak>
+
+            <div class="list-group"
+                 x-effect="let updated = tab_state.notifier.activity;await sleep(1);if(activities!=updated){activities=updated}"
+                 x-data="{activities:[]}">
+                <template x-for="(activity,index) in activities" :key="activity.att_id">
+                    <div href="#" class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">
+                                <span x-text="index + 1"></span>:&nbsp;
+                                <span x-text="label['notifier.' + activity.att_type]"></span>
+                            </h5>
+                            <small class="text-muted">
+                                <button
+                                        @click="activity['att_fail-silent'] = 'att_fail-silent' in activity && activity['att_fail-silent'] == 'true' ? 'false' : 'true';"
+                                        class="indigo-text btn btn-link">
+                                    <span x-show="'att_fail-silent' in activity && activity['att_fail-silent'] == 'true'">fail silent</span>
+                                    <s x-show="!('att_fail-silent' in activity) || activity['att_fail-silent'] == 'false'">fail
+                                        silent</s>
+                                </button>
+                                <button
+                                        @click="arraymove(tab_state.notifier.activity, index, index - 1);"
+                                        x-show="index != 0"
+                                        class="indigo-text btn btn-link"><i class="fa-solid fa-arrow-up"></i></button>
+                                <button
+                                        @click="arraymove(tab_state.notifier.activity, index, index + 1);"
+                                        x-show="index != (tab_state.notifier.activity.length -1)"
+                                        class="indigo-text btn btn-link"><i class="fa-solid fa-arrow-down"></i></button>
+                                &nbsp;&nbsp;
+                                <button
+                                        x-show="!session.editing_disabled"
+                                        @click="tab_state.notifier.activity.splice(index, 1);"
+                                        class="red-text btn btn-link"><i class="fa-solid fa-trash"></i></button>
+                            </small>
+                        </div>
+                        <p class="mb-1" x-import="ide/frames/notifier-flow">
+                            <div x-data="{stored: {}}">
+                            <ui-notifier-flow></ui-notifier-flow>
+                        </div>
+
+
+                            <template x-if="activity.att_type == 'loop'">
+                        <div class="row">
+                            <div class="col-4">
+                                <ui-selection :value="activity.att_array.replace('#flow.','')"
+                                              description="Source array: "
+                                              :options="Notifiers.get_flow_variables()"
+                                              @updated.debounce="activity.att_array = '#flow.' + $event.detail.value;"></ui-selection>
+                                <div class="d-grid gap-2">
+                                    <a type="button"
+                                       @click="show_modal=true;nested=activity;"
+                                       class="btn btn-outline-primary m-2">Append activity</a>
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <div class="list-group">
+                                    <template x-for="(nested_activity,index) in activity.activity" :key="nested_activity.att_id">
+                                        <div href="#" class="list-group-item" x-data="{stored:activity}" x-effect="stored = activity">
+
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h5 class="mb-1">
+                                                    <span x-text="index + 1"></span>:&nbsp;
+                                                    <span x-text="label['notifier.' + nested_activity.att_type]"></span>
+                                                </h5>
+                                                <small class="text-muted">
+                                                    <button
+                                                            @click="nested_activity['att_fail-silent'] = 'att_fail-silent' in nested_activity && nested_activity['att_fail-silent'] == 'true' ? 'false' : 'true';$dispatch('flow-updated');"
+                                                            class="indigo-text btn btn-link">
+                                                        <span x-show="'att_fail-silent' in nested_activity && nested_activity['att_fail-silent'] == 'true'">fail silent</span>
+                                                        <s x-show="!('att_fail-silent' in nested_activity) || nested_activity['att_fail-silent'] == 'false'">fail
+                                                            silent</s>
+                                                    </button>
+                                                    <button
+                                                            @click="arraymove(activity.activity, index, index - 1);$dispatch('flow-updated');"
+                                                            x-show="index != 0"
+                                                            class="indigo-text btn btn-link"><i
+                                                            class="fa-solid fa-arrow-up"></i></button>
+                                                    <button
+                                                            @click="arraymove(activity.activity, index, index + 1);$dispatch('flow-updated');"
+                                                            x-show="index != (activity.activity.length -1)"
+                                                            class="indigo-text btn btn-link"><i
+                                                            class="fa-solid fa-arrow-down"></i></button>
+                                                    &nbsp;&nbsp;
+                                                    <button
+                                                            x-show="!session.editing_disabled"
+                                                            @click="activity.activity.splice(index, 1);$dispatch('flow-updated');"
+                                                            class="red-text btn btn-link"><i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </small>
+                                            </div>
+                                            <p class="mb-1" x-import="ide/frames/notifier-flow" x-data="{tempStore: {}}">
+                                                <div @sync-activity.debounce="activity.activity = activity.activity.map(x => {
+                                                    if (x.att_id == tempStore.att_id){
+                                                        return tempStore;
+                                                    } else {
+                                                        return x;
+                                                    }
+                                                });console.trace(activity);">
+                                                    <div x-data="{activity: nested_activity}" @flow-updated.debounce.stop="console.trace(activity);tempStore = activity;console.trace(tempStore);$dispatch('sync-activity')">
+                                                        <ui-notifier-flow></ui-notifier-flow>
+                                                    </div>
+                                                </div>
+                                            </p>
+
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                </template>
+                </p>
+
+            </div>
+</template>
+</div>
+
+<div class="d-grid gap-2" x-data="{search: ''}">
+
+    <a type="button"
+       @click="show_modal=true;nested=false;"
+       class="btn btn-outline-primary m-2">Append activity</a>
+
+    <template x-if="show_modal">
+        <div>
+            <div class="overlay"></div>
+            <div class="prompt" :id="reference">
+                <h4> Insert activity
+                    <button type="button" @click="show_modal=false" class="btn-close float-end"></button>
+                </h4>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" class="form-control"
+                           placeholder="search..." x-model="search"/>
+                </div>
+
+                <div class="list-group list-group-flush">
+
+                    <template x-for="type in notifier_activity_types.filter( x => !nested || x != 'loop')" :key="type">
+                        <button type="button"
+                                @click="
+                                    show_modal=false;
+                                    if(nested){
+                                        Notifiers.add_activity(nested,type);
+                                    }else{
+                                        Notifiers.add_activity(tab_state.notifier,type);
+                                    }"
+                                x-cloak x-transition
+                                x-show="search == '' || label['notifier.' + type].toLowerCase().includes(search.toLowerCase())"
+                                x-text="label['notifier.' + type]"
+                                class="list-group-item list-group-item-action">
+                        </button>
+                    </template>
+                </div>
+
+            </div>
+        </div>
+    </template>
+
+</div>
+
+</div>
+<br><br>
+</div>
+</template>

@@ -1,0 +1,25 @@
+query MyQuery($key: ID = "") {
+  User {
+    get(key: $key) {
+      username
+      fullName
+      workspace {
+        name
+        drn
+        iam {
+            username
+            businessRole
+        }
+        projects {
+          drn
+          name
+          repositories {
+            name
+            status
+            url
+          }
+        }
+      }
+    }
+  }
+}
