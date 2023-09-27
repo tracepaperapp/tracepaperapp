@@ -1,9 +1,0 @@
-query MyQuery($drn: String = "") {
-  Event {
-    filter(key_begins_with: $drn, limit: 1000) {
-      resultset {
-        drn
-      }
-    }
-  }
-}

@@ -1,9 +1,0 @@
-query MyQuery($drn: String = "") {
-  Global {
-    filter(key_begins_with: $drn, componentType_equals: "pattern", limit: 1000) {
-      resultset {
-        name
-      }
-    }
-  }
-}
