@@ -125,7 +125,11 @@ async function get_proxy_token(){
             console.log("expired")
             proxy_token = "";
         }
-        session.editing_disabled = data.scope.privelige == "read";
+        if (data.scope.privelige == "read"){
+            Session.disable_editing();
+        }else{
+            Session.enable_editing();
+        }
     }
     if (proxy_token == ""){
         let data = await Draftsman.query(fetch_token_query,{projectDrn:localStorage.project});

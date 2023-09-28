@@ -209,6 +209,7 @@
             <div x-data="{editor: {},id: makeid(10)}">
               <div :id="id" style="width: 100%;height:20vh;"
                    @code-updated.debounce.3000ms="handler['#text'] = editor.getValue();"
+                   x-effect="editor.setReadOnly(session.editing_disabled);"
                    x-init="
                   editor = ace.edit(id);
                   editor.setTheme('ace/theme/github');

@@ -1200,6 +1200,13 @@ window.Session = {
         clear_exception_timer = setTimeout(function(){
             session.exception = "";
         },5000);
+    },
+    disable_editing: function(){
+        session.editing_disabled = true;
+        session.hide_edit_button = true;
+    },
+    enable_editing: function(){
+        session.hide_edit_button = false;
     }
 };
 

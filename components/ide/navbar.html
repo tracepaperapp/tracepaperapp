@@ -31,6 +31,14 @@
                 @click="history = FileSystem.get_history()"
                 data-bs-target="#historyDialog"><i class="fa-solid fa-clock-rotate-left"></i></button>
 
+        <button type="button"
+                class="btn btn-outline-primary me-3"
+                x-show="!session.hide_edit_button" x-transition x-cloak
+                @click.debounce="session.editing_disabled = !session.editing_disabled">
+          <i x-show="session.editing_disabled" x-transition x-cloak class="fa-regular fa-pen-to-square"></i>
+          <i x-show="!session.editing_disabled" x-transition x-cloak class="fa-regular fa-eye"></i>
+        </button>
+
       </div>
 
     </header>

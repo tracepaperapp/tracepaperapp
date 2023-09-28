@@ -37,7 +37,7 @@
             <hr>
             <div class="d-grid gap-2" x-import="utils/prompt">
 
-                <div class="btn-group-vertical">
+                <div x-show="!session.editing_disabled" x-cloak x-transition class="btn-group-vertical">
                     <button class="btn btn-outline-danger btn-block"
                             @click.stop="$dispatch('show-modal',{id: 'rename-flow'})">Rename</button>
 
