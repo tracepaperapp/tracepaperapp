@@ -19,5 +19,23 @@
       </template>
     </div>
 
+    <div x-import="ide/frames/activities/call-internal-api">
+      <template x-if="activity.att_type == 'call-internal-api'">
+        <ui-activity-call-internal-api></ui-activity-call-internal-api>
+      </template>
+    </div>
+
+    <div x-import="ide/frames/activities/code">
+      <template x-if="activity.att_type == 'code'">
+        <ui-activity-code></ui-activity-code>
+      </template>
+    </div>
+
+    <div x-import="ide/frames/activities/http">
+      <template x-if="activity.att_type == 'HTTP'">
+        <ui-activity-http></ui-activity-http>
+      </template>
+    </div>
+
   </div>
 </template>

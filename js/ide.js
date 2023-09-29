@@ -2626,19 +2626,27 @@ window.Notifiers = {
                 flowVars.push(activity.att_name);
             }
             if (activity.att_type == 'code'){
-                let content = code[activity.att_file];
-                let method_detected = false;
-                content.split("\n").forEach(line => {
-                    if (line.startsWith(`def ${processor.att_handler}(flow):`)){
-                        method_detected = true;
-                    } else if (line.startsWith("def")){
-                        method_detected = false;
-                    }
-                    if (method_detected && line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)){
+                if ('att_code' in activity){
+                    let content = activity.att_code;
+                    content.split("|LB|").filter(line => line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)).forEach(line => {
                         let variable = line.replace("flow.","").split("=").at(0).trim();
                         flowVars.push(variable);
-                    }
-                });
+                    });
+                } else {
+                    let content = code[activity.att_file];
+                    let method_detected = false;
+                    content.split("\n").forEach(line => {
+                        if (line.startsWith(`def ${activity.att_handler}(flow):`)){
+                            method_detected = true;
+                        } else if (line.startsWith("def")){
+                            method_detected = false;
+                        }
+                        if (method_detected && line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)){
+                            let variable = line.replace("flow.","").split("=").at(0).trim();
+                            flowVars.push(variable);
+                        }
+                    });
+                }
             }
         }
         tab_state.notifier.activity.forEach(activity => {
