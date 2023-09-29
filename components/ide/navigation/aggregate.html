@@ -16,7 +16,7 @@
                   <ui-nav-item :title="flow.att_name"
                                :file="'domain/' + aggregate.subdomain + '/' + aggregate.root.att_name + '/behavior-flows/' + flow.att_name + '.xml'"></ui-nav-item>
               </template>
-          <li class="nav-item" x-import="utils/prompt">
+          <li class="nav-item" x-show="!session.editing_disabled" x-cloak x-transition x-import="utils/prompt">
             <a class="nav-link d-flex align-items-center gap-2 active"
                @click.debounce.self="Behavior.create_new(aggregate)"
                href="#">

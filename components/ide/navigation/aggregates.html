@@ -18,7 +18,7 @@
             <ui-aggregate-navigation></ui-aggregate-navigation>
           </template>
 
-          <li class="nav-item" x-import="utils/prompt">
+          <li class="nav-item" x-show="!session.editing_disabled" x-cloak x-transition x-import="utils/prompt">
             <a class="nav-link d-flex align-items-center gap-2 active"
                @click.debounce.self="Aggregates.create_new(subdomain)"
                href="#">

@@ -229,6 +229,7 @@
          x-data="{show_modal: false, search: '',selected_aggregate: ''}">
       <button type="button"
               @click="show_modal=true;selected_aggregate='';"
+              x-show="!session.editing_disabled" x-cloak x-transition
               class="btn btn-outline-primary m-2">Add data source</button>
 
       <template x-if="show_modal">

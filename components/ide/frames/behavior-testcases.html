@@ -46,10 +46,10 @@
             </div>
 
             <div class="d-grid gap-2">
-                <a type="button"
+                <button
                    @click.debounce.stop="$dispatch('show-modal',{id: 'new-test-case'});"
-                   href="#"
-                   class="btn btn-outline-primary m-2">Add test case</a>
+                   x-show="!session.editing_disabled" x-cloak x-transition
+                   class="btn btn-outline-primary m-2">Add test case</button>
             </div>
 
             <div x-import="utils/prompt">

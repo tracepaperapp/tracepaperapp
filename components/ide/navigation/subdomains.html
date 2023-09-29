@@ -12,7 +12,7 @@
             <ui-aggregates-navigation :subdomain="subdomain"></ui-aggregates-navigation>
           </template>
 
-          <li class="nav-item">
+          <li x-show="!session.editing_disabled" x-cloak x-transition class="nav-item">
             <a class="nav-link d-flex align-items-center gap-2 active"
                @click.debounce.self="Subdomains.create_new()"
                href="#">

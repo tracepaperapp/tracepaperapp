@@ -126,6 +126,7 @@
          x-data="{show_modal: false}">
       <button type="button"
               @click="show_modal=true;selected_aggregate='';"
+              x-show="!session.editing_disabled" x-cloak x-transition
               class="btn btn-outline-primary m-2">Add query to API</button>
 
       <template x-if="show_modal">

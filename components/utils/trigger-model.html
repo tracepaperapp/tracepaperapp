@@ -100,6 +100,7 @@
       <div class="d-grid gap-2" x-data="{show_modal: false, search: ''}">
         <button type="button"
                 @click="show_modal=true"
+                x-show="!session.editing_disabled" x-cloak x-transition
                 class="btn btn-outline-primary m-2">Add trigger</button>
 
         <template x-if="show_modal">

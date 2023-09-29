@@ -9,6 +9,7 @@
              create = 'att_create-command' in tab_state.flow && tab_state.flow['att_create-command'] == 'true'">
                 <div class="btn-group-vertical" role="group" aria-label="Basic outlined example">
                     <button type="button"
+                            :disabled="session.editing_disabled"
                             @click.debounce="create = !create;tab_state.flow['att_create-command'] = create ? 'true' : 'false';await Aggregate.update(tab.data.subdomain,aggregate);"
                             :class="create ? 'btn btn-primary' : 'btn btn-outline-primary'">Create flow</button>
                 </div>

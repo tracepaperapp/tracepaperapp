@@ -49,10 +49,10 @@
             </div>
 
             <div class="d-grid gap-2">
-                <a type="button"
+                <button
                    @click="Behavior.create_new(tab_state.aggregate)"
-                   href="#"
-                   class="btn btn-outline-primary m-2">Create behavior flow</a>
+                   x-show="!session.editing_disabled" x-cloak x-transition
+                   class="btn btn-outline-primary m-2">Create behavior flow</button>
             </div>
 
         </div>

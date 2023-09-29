@@ -14,7 +14,7 @@
                          :file="'projections/' + projection + '.xml'"></ui-nav-item>
           </template>
 
-          <li class="nav-item">
+          <li x-show="!session.editing_disabled" x-cloak x-transition class="nav-item">
             <a class="nav-link d-flex align-items-center gap-2 active"
                @click.debounce.self="Projections.create_new"
                href="#">

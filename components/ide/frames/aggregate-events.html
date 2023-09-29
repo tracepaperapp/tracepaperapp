@@ -20,8 +20,8 @@
                         <template x-for="event_def in events" :key="event_def.att_name">
                             <li><a @click="Aggregates.select_event(event_def);" class="dropdown-item" href="#events" x-text="event_def.att_name"></a></li>
                         </template>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a @click="$dispatch('show-modal',{id: 'new-domain-event'})"
+                        <li x-show="!session.editing_disabled" x-cloak x-transition ><hr class="dropdown-divider"></li>
+                        <li x-show="!session.editing_disabled" x-cloak x-transition ><a @click="$dispatch('show-modal',{id: 'new-domain-event'})"
                                class="dropdown-item" href="#events">Create new domain event</a></li>
                     </ul>
 
@@ -48,14 +48,6 @@
                     :event="tab_state.event"
                     :handler="tab_state.handler"
                     :model="tab_state.aggregate"></ui-mapping-model>
-        </div>
-
-
-        <div class="d-grid gap-2">
-            <a type="button"
-               @click=""
-               href="#"
-               class="btn btn-outline-primary m-2">Create domain event</a>
         </div>
 
     </div>

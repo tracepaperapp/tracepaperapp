@@ -16,7 +16,7 @@
 
           </template>
 
-          <li class="nav-item">
+          <li class="nav-item" x-show="!session.editing_disabled" x-cloak x-transition>
             <a class="nav-link d-flex align-items-center gap-2 active"
                @click.debounce.self="Code.create_new"
                href="#">

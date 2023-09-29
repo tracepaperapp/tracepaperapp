@@ -23,7 +23,7 @@
                             || documentation[doc].content.toLowerCase().includes(search.toLowerCase())">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1" x-text="pattern.att_name"></h5>
-                                    <small class="text-muted">
+                                    <small class="text-muted" x-show="!session.editing_disabled" x-cloak x-transition>
                                         <i class="fa-solid fa-trash" @click="Patterns.remove(pattern.att_name)"></i>
                                     </small>
                                 </div>
@@ -54,6 +54,7 @@
             </template>
             <br>
             <button type="button" class="btn btn-outline-success"
+                    x-show="!session.editing_disabled" x-cloak x-transition
                     @click="$dispatch('show-modal',{id: 'new-pattern'});">
                 <i class="fa-solid fa-plus"></i> Create new pattern
             </button>

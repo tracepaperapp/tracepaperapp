@@ -33,6 +33,7 @@
                             <small class="text-muted">
                                 <button
                                         @click="activity['att_fail-silent'] = 'att_fail-silent' in activity && activity['att_fail-silent'] == 'true' ? 'false' : 'true';"
+                                        :disabled="session.editing_disabled"
                                         class="indigo-text btn btn-link">
                                     <span x-show="'att_fail-silent' in activity && activity['att_fail-silent'] == 'true'">fail silent</span>
                                     <s x-show="!('att_fail-silent' in activity) || activity['att_fail-silent'] == 'false'">fail
@@ -40,11 +41,11 @@
                                 </button>
                                 <button
                                         @click="arraymove(tab_state.notifier.activity, index, index - 1);"
-                                        x-show="index != 0"
+                                        x-show="!session.editing_disabled && index != 0"
                                         class="indigo-text btn btn-link"><i class="fa-solid fa-arrow-up"></i></button>
                                 <button
                                         @click="arraymove(tab_state.notifier.activity, index, index + 1);"
-                                        x-show="index != (tab_state.notifier.activity.length -1)"
+                                        x-show="!session.editing_disabled && index != (tab_state.notifier.activity.length -1)"
                                         class="indigo-text btn btn-link"><i class="fa-solid fa-arrow-down"></i></button>
                                 &nbsp;&nbsp;
                                 <button
@@ -67,9 +68,9 @@
                                               :options="Notifiers.get_flow_variables()"
                                               @updated.debounce="activity.att_array = '#flow.' + $event.detail.value;"></ui-selection>
                                 <div class="d-grid gap-2">
-                                    <a type="button"
+                                    <button x-show="!session.editing_disabled" x-cloak x-transition
                                        @click="show_modal=true;nested=activity;"
-                                       class="btn btn-outline-primary m-2">Append activity</a>
+                                       class="btn btn-outline-primary m-2">Append activity</button>
                                 </div>
                             </div>
                             <div class="col-8">
@@ -85,6 +86,7 @@
                                                 <small class="text-muted">
                                                     <button
                                                             @click="nested_activity['att_fail-silent'] = 'att_fail-silent' in nested_activity && nested_activity['att_fail-silent'] == 'true' ? 'false' : 'true';$dispatch('flow-updated');"
+                                                            :disabled="session.editing_disabled"
                                                             class="indigo-text btn btn-link">
                                                         <span x-show="'att_fail-silent' in nested_activity && nested_activity['att_fail-silent'] == 'true'">fail silent</span>
                                                         <s x-show="!('att_fail-silent' in nested_activity) || nested_activity['att_fail-silent'] == 'false'">fail
@@ -92,17 +94,17 @@
                                                     </button>
                                                     <button
                                                             @click="arraymove(activity.activity, index, index - 1);$dispatch('flow-updated');"
-                                                            x-show="index != 0"
+                                                            x-show="!session.editing_disabled && index != 0"
                                                             class="indigo-text btn btn-link"><i
                                                             class="fa-solid fa-arrow-up"></i></button>
                                                     <button
                                                             @click="arraymove(activity.activity, index, index + 1);$dispatch('flow-updated');"
-                                                            x-show="index != (activity.activity.length -1)"
+                                                            x-show="!session.editing_disabled && index != (activity.activity.length -1)"
                                                             class="indigo-text btn btn-link"><i
                                                             class="fa-solid fa-arrow-down"></i></button>
                                                     &nbsp;&nbsp;
                                                     <button
-                                                            x-show="!session.editing_disabled"
+                                                            x-show="!session.editing_disabled" x-cloak x-transition
                                                             @click="activity.activity.splice(index, 1);$dispatch('flow-updated');"
                                                             class="red-text btn btn-link"><i class="fa-solid fa-trash"></i>
                                                     </button>
@@ -136,9 +138,9 @@
 
 <div class="d-grid gap-2" x-data="{search: ''}">
 
-    <a type="button"
+    <button x-show="!session.editing_disabled" x-cloak x-transition
        @click="show_modal=true;nested=false;"
-       class="btn btn-outline-primary m-2">Append activity</a>
+       class="btn btn-outline-primary m-2">Append activity</button>
 
     <template x-if="show_modal">
         <div>

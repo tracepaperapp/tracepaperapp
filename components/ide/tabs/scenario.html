@@ -16,15 +16,15 @@
               <small class="text-muted">
                 <button
                         @click="arraymove(scenario.activity, index, index - 1);$dispatch('scenario-updated');"
-                        x-show="index != 0"
+                        x-show="!session.editing_disabled && index != 0"
                         class="indigo-text btn btn-link"><i class="fa-solid fa-arrow-up"></i></button>
                 <button
                         @click="arraymove(scenario.activity, index, index + 1);$dispatch('scenario-updated');"
-                        x-show="index != (scenario.activity.length -1)"
+                        x-show="!session.editing_disabled && index != (scenario.activity.length -1)"
                         class="indigo-text btn btn-link"><i class="fa-solid fa-arrow-down"></i></button>
                 &nbsp;&nbsp;
                 <button
-                        x-show="!session.editing_disabled"
+                        x-show="!session.editing_disabled" x-cloak x-transition
                         @click="scenario.activity.splice(index, 1);$dispatch('scenario-updated');"
                         class="red-text btn btn-link"><i class="fa-solid fa-trash"></i></button>
               </small>
@@ -74,7 +74,7 @@
       <div class="d-grid gap-2" x-data="{show_modal: false, reference: makeid(8)}">
         <a type="button"
            @click="show_modal=true"
-           :href="'#' + reference"
+           x-show="!session.editing_disabled" x-cloak x-transition
            class="btn btn-outline-primary m-2">Append test activity</a>
 
         <template x-if="show_modal">

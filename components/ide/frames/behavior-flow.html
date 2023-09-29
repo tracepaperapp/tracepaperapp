@@ -66,10 +66,10 @@
             </div>
 
             <div class="d-grid gap-2" x-data="{show_modal: false, reference: makeid(8)}">
-                <a type="button"
+                <button
                    @click="show_modal=true"
-                   :href="'#' + reference"
-                   class="btn btn-outline-primary m-2">Append processor</a>
+                   x-show="!session.editing_disabled" x-cloak x-transition
+                   class="btn btn-outline-primary m-2">Append processor</button>
 
                 <template x-if="show_modal">
                     <div>

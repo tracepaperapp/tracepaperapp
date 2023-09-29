@@ -17,7 +17,7 @@
                         <template x-for="item in roles" :key="item">
                             <li class="list-group-item">
                                 <span x-text="item"></span>
-                                <i @click="meta.roles = meta.roles.filter(r => r != item);roles = meta.roles;"
+                                <i x-show="!session.editing_disabled" x-cloak x-transition @click="meta.roles = meta.roles.filter(r => r != item);roles = meta.roles;"
                                    class="fa-solid fa-trash float-end"></i>
                             </li>
                         </template>
@@ -33,6 +33,7 @@
 
         <br>
         <button type="button" class="btn btn-outline-success"
+                x-show="!session.editing_disabled" x-cloak x-transition
                 @click="$dispatch('show-modal',{id: 'new-role'});">
             <i class="fa-solid fa-plus"></i> Register new role
         </button>
