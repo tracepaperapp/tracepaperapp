@@ -106,7 +106,7 @@ function fromStream(stream) {
 var proxy_token = "";
 var proxy_token_expiry = new Date();
 const fetch_token_query = `
-query MyQuery($projectDrn: String = "") {
+query FetchToken($projectDrn: String = "") {
   RepositoryToken {
     get(projectDrn: $projectDrn) {
       project

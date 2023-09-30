@@ -30,11 +30,7 @@
                   @updated.debounce="activity['att_load-json'] = $event.detail.value;$dispatch('flow-updated')"
                   description="Deserialize json: "
                   :options="boolean_text"></ui-selection>
-
-    <ui-selection :value="activity.att_body"
-                  @updated.debounce="activity.att_body = $event.detail.value;$dispatch('flow-updated')"
-                  description="Body: "
-                  :options="Notifiers.get_flow_variables(stored)"></ui-selection>
+    
     <ui-text-area
             :value="activity.att_body.replaceAll('|LB|','\n')"
             use-pre-tag

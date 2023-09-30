@@ -216,6 +216,17 @@ async function pull_model(){
 
 var hard_deletes = [];
 var hard_writes = {};
+
+const trigger_build = `
+mutation TriggerBuild($drn: String = "") {
+  Project {
+    build(input: {drn: $drn}) {
+      correlationId
+    }
+  }
+}
+`;
+
 window.FileSystem = {
     hardWrite: function(path,content){
         hard_writes[path] = content;
@@ -295,6 +306,10 @@ window.FileSystem = {
         await reload_model();
         await sleep(100);
         Navigation.hard_reload_tab();
+        if (session.trigger_build_after_commit){
+            let data = await Draftsman.query(trigger_build,{drn:localStorage.project});
+            console.log(data);
+        }
     },
     get_history: async function(){
         return await git.log({fs,dir:dir});
