@@ -50,5 +50,14 @@
                     :model="tab_state.aggregate"></ui-mapping-model>
         </div>
 
+
+        <div class="d-grid gap-2">
+            <button
+               @click="$dispatch('show-modal',{id: 'new-domain-event'})"
+               href="#"
+               x-show="!session.editing_disabled && tab_state.aggregate.events.length == 0" x-cloak x-transition
+               class="btn btn-outline-primary m-2">Create domain event</button>
+        </div>
+
     </div>
 </template>

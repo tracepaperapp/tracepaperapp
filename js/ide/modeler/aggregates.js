@@ -40,6 +40,7 @@ window.Aggregates = {
             entities: entities,
             handlers: handlers,
             subdomain: path.split('/')[1],
+            name: path.split('/')[2],
             path: path
         });
     },
@@ -127,9 +128,10 @@ window.Aggregates = {
             Session.show_exception("Aggregate name must be PascalCased");
             return;
         }
-        let oldPath = "domain/" + session.aggregate.subdomain + "/" + session.aggregate.root.att_name + "/";
-        let newPath = "domain/" + session.aggregate.subdomain + "/" + name + "/";
-        session.aggregate.root.att_name = name;
+        let oldPath = "domain/" + tab_state.aggregate.subdomain + "/" + tab_state.aggregate.root.att_name + "/";
+        let newPath = "domain/" + tab_state.aggregate.subdomain + "/" + name + "/";
+        tab_state.aggregate.root.att_name = name;
+        tab_state.aggregate.name = name;
         Object.keys(model).filter(key => key.startsWith(oldPath)).forEach(key => {
             model[key.replace(oldPath,newPath)] = model[key];
             delete model[key];
@@ -162,6 +164,19 @@ window.Aggregates = {
         delete model[path];
         delete documentation[path];
         Navigation.reload_tab();
+    }),
+    rename_collection: blockingDecorator(function(oldName,newName){
+        setTimeout(function(){
+            let root = session.tab.replace("root.xml","entities/");
+            let oldPath = root + oldName;
+            let newPath = root + newName;
+            console.log(oldPath,newPath);
+            model[newPath + ".xml"] = model[oldPath + ".xml"];
+            delete model[oldPath + ".xml"];
+            documentation[newPath + ".md"] = documentation[oldPath + ".md"];
+            delete documentation[oldPath + ".md"];
+            Aggregates.load(session.tab);
+        },1000);
     }),
     add_collection_to_event: blockingDecorator(function(){
         if (tab_state.nested_documents.filter(x => x.att_name == "newEntity").length != 0){
@@ -200,20 +215,28 @@ window.Aggregates = {
         if (handlers.length != 0){
             tab_state.handler = handlers.at(0);
         }else{
-            tab_state.handler = {
+            let handler = {
                 att_on: tab_state.selected_event,
                 mapping: [],
                 "nested-mapping": []
             };
             let path = tab_state.aggregate.path.replace("root.xml",`event-handlers/${event.att_name}.xml`);
             model[path] = {};
-            model[path][HANDLER] = tab_state.handler;
+            model[path][HANDLER] = handler;
+            tab_state.handler = model[path][HANDLER];
         }
         if(!tab_state.handler_selected_entity){
             tab_state.handler_selected_entity = "root";
             tab_state.handler_entity = tab_state.aggregate.root;
         }
     }),
+    sync_handler: function(){
+        let path = tab_state.aggregate.path.replace("root.xml",`event-handlers/${tab_state.event.att_name}.xml`);
+        if (!(path in model)){
+            model[path] = {};
+        }
+        model[path][HANDLER] = tab_state.handler;
+    },
     switch_handler_type: blockingDecorator(function(){
         if ('att_code' in tab_state.handler){
           delete tab_state.handler.att_code;
@@ -285,6 +308,7 @@ document.addEventListener('tracepaper:model:loaded', async () => {
 
 document.addEventListener('tracepaper:model:prepare-save', () => {
     Aggregates.list().forEach(aggregate => {
+        aggregate.root.att_name = aggregate.name;
         aggregate.handlers.forEach(handler => {
             try{
             let path = aggregate.path.replace("root.xml",`event-handlers/${handler.att_on}.xml`);
@@ -297,6 +321,9 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                 obj[HANDLER] = handler;
                 FileSystem.hardWrite(path, obj);
             }
+//            if(handler.att_on == "BuildUpdated"){
+//                console.log(handler);
+//            }
             }catch(err){alert(err)}
         });
     });

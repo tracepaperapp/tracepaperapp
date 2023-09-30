@@ -114,6 +114,9 @@ window.Modeler = {
                 if (initializer){
                     initializer(element);
                 }
+                if ("att_name" in model[key][root]){
+                    model[key][root]["att_name"] = key.split("/").at(-1).replace(".xml","");
+                }
                 return element;
             });
     },

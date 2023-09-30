@@ -64,13 +64,13 @@ events:
             <template x-if="$prop('entity-casing').toLowerCase() == 'pascal' && tab_state.document_selected_entity != 'root'">
               <ui-text-field :value="entity.att_name"
                              validation-message="Must be PascalCased"
-                             @updated="entity.att_name = $event.detail.value;"
+                             @updated.stop="$dispatch('rename-collection',{oldName:entity.att_name, newName:$event.detail.value});await sleep(100);entity.att_name = $event.detail.value;"
                              :pattern="pascal_cased"></ui-text-field>
             </template>
             <template x-if="$prop('entity-casing').toLowerCase() == 'camel' && tab_state.document_selected_entity != 'root'">
               <ui-text-field :value="entity.att_name"
                              validation-message="Must be camelCased"
-                             @updated="entity.att_name = $event.detail.value;"
+                             @updated.stop="$dispatch('rename-collection',{oldName:entity.att_name, newName:$event.detail.value});await sleep(100);entity.att_name = $event.detail.value;"
                              :pattern="camel_cased"></ui-text-field>
             </template>
           </h6>
@@ -191,7 +191,7 @@ events:
 
           <button type="button" class="btn btn-outline-success"
                   x-show="!session.editing_disabled" x-cloak x-transition
-                  @click="blockingDecorator(entity.field.push({att_name: 'field-' + makeid(4), att_type: 'String'}));">
+                  @click.debounce.stop="blockingDecorator(entity.field.push({att_name: 'field-' + makeid(4), att_type: 'String'}));">
             <i class="fa-solid fa-plus"></i>
           </button>
 

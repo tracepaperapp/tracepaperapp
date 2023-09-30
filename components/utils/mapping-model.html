@@ -1,6 +1,6 @@
 <template x-component="mapping-model">
   <template x-if="tab_state.handler" key="mapping-model">
-    <div class="row" x-import="utils/editor-elements">
+    <div class="row" @sync-handler.debounce="Aggregates.sync_handler()" x-import="utils/editor-elements">
 
       <div class="col-3" x-watch="tab_state.event">
         <div class="d-grid gap-2">
@@ -75,7 +75,7 @@
               <th>
                 <ui-selection :value="handler['att_business-key']"
                               :options="source.field.map(x => x.att_name).concat([''])"
-                              @updated="handler['att_business-key'] = $event.detail.value;"></ui-selection>
+                              @updated.debounce="handler['att_business-key'] = $event.detail.value;$dispatch('sync-handler')"></ui-selection>
 
               </th>
             </tr>
@@ -100,10 +100,11 @@
                 <td>
                   <ui-selection value="unmapped"
                                 :options="mapper_operands"
-                                @updated="
+                                @updated.debounce="
                                 if($event.detail.value == 'unmapped'){return}
 
-                                if (tab_state.handler_selected_source != 'root' && !('att_target' in handler)){
+                                if (tab_state.handler_selected_source != 'root'
+                                  && tab_state.handler[NESTED_MAPPING].filter(x => x.att_target == tab_state.handler_selected_entity).length == 0){
                                   let new_handler = {
                                     att_source: tab_state.handler_selected_source,
                                     att_target: tab_state.handler_selected_entity,
@@ -114,12 +115,15 @@
                                   mapping = {};
                                 }
                                 if($event.detail.value != 'unmapped' && !mapping){
-                                  let sources = source.field.filter(x => x.att_name == field.att_name);
-                                  let value = sources.length != 0 ? sources.at(0).att_name : '';
+                                  let value = '';
+                                  try{
+                                    let sources = source.field.filter(x => x.att_name == field.att_name);
+                                    value = sources.length != 0 ? sources.at(0).att_name : '';
+                                  }catch{}
 
                                   mapping = {att_target: field.att_name, att_operand: $event.detail.value, att_value: value};
                                   handler.mapping.push(mapping);
-                                }"></ui-selection>
+                                }$dispatch('sync-handler')"></ui-selection>
 
                 </td>
               </template>
@@ -130,14 +134,14 @@
                                 @updated.debounce="
                                 if($event.detail.value == 'unmapped'){
                                   handler.mapping = handler.mapping.filter(x => x.att_target != field.att_name);
-                                }else{mapping.att_operand = $event.detail.value;}"></ui-selection>
+                                }else{mapping.att_operand = $event.detail.value;};$dispatch('sync-handler')"></ui-selection>
                 </td>
               </template>
               <template x-if="mapping">
                 <td>
                   <ui-selection :value="mapping.att_value"
                                 :options="source.field.map(x => x.att_name).concat([''])"
-                                @updated="mapping.att_value = $event.detail.value;"></ui-selection>
+                                @updated.debounce="mapping.att_value = $event.detail.value;$dispatch('sync-handler')"></ui-selection>
 
                 </td>
               </template>

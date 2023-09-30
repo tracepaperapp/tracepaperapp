@@ -12,6 +12,7 @@
                 entity-casing="camel"
                 business-key-enabled
                 @new-collection.debounce="Aggregates.add_element_collection()"
+                @rename-collection.debounce="Aggregates.rename_collection($event.detail.oldName,$event.detail.newName)"
                 @remove-collection.debounce="Aggregates.remove_element_collection($event.detail.name)"></ui-document-model>
 
     </div>
