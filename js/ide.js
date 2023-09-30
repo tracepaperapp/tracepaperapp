@@ -1853,19 +1853,27 @@ window.Behavior = {
                 flowVars.push(processor.att_name);
             }
             if (processor.att_type == 'code'){
-                let content = code[processor.att_file];
-                let method_detected = false;
-                content.split("\n").forEach(line => {
-                    if (line.startsWith(`def ${processor.att_handler}(flow):`)){
-                        method_detected = true;
-                    } else if (line.startsWith("def")){
-                        method_detected = false;
-                    }
-                    if (method_detected && line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)){
+                if (processor.att_code){
+                    let content = processor.att_code;
+                    content.split("|LB|").filter(line => line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)).forEach(line => {
                         let variable = line.replace("flow.","").split("=").at(0).trim();
                         flowVars.push(variable);
-                    }
-                });
+                    });
+                }else{
+                    let content = code[processor.att_file];
+                    let method_detected = false;
+                    content.split("\n").forEach(line => {
+                        if (line.startsWith(`def ${processor.att_handler}(flow):`)){
+                            method_detected = true;
+                        } else if (line.startsWith("def")){
+                            method_detected = false;
+                        }
+                        if (method_detected && line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)){
+                            let variable = line.replace("flow.","").split("=").at(0).trim();
+                            flowVars.push(variable);
+                        }
+                    });
+                }
             }
         });
         return flowVars;
@@ -1880,11 +1888,13 @@ window.Behavior = {
                 att_value: flowVars.includes(x.att_name) ? "#flow." + x.att_name : ''
             };
         });
-
-        processor.mapping.concat(event["nested-object"].map(x => {
+        console.log(event);
+        processor.mapping = processor.mapping.concat(event["nested-object"].map(x => {
+            console.log(x.att_name);
+            console.log(flowVars.includes(x.att_name));
             return {
                att_target: x.att_name,
-               att_value: flowVars.includes(x.att_name) ? "#flow." + x.att_name : '#[]'
+               att_value: flowVars.includes(x.att_name) ? "#flow." + x.att_name : ''
            };
         }));
     }),
