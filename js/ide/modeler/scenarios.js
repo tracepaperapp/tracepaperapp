@@ -203,6 +203,16 @@ window.Scenarios = {
             });
         }
         activity.input = updated_value;
+    }),
+    append_activity: blockingDecorator(function(type){
+         tab_state.scenario.activity.push({
+            att_type: type,
+            att_id: makeid(6),
+            input: [],
+            "expected-trace": [],
+            "expect-value": [],
+            "extract-value": []
+        });
     })
 }
 

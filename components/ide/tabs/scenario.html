@@ -88,7 +88,7 @@
               <div class="list-group list-group-flush" @click="await sleep(10);show_modal=false;$dispatch('scenario-updated');">
                 <template x-for="type in qa_activity_types" :key="type">
                   <button type="button"
-                          @click="Scenario.append_activity(scenario,type)"
+                          @click="Scenarios.append_activity(type)"
                           x-text="label['qa.' + type]"
                           class="list-group-item list-group-item-action">
                   </button>
@@ -100,7 +100,7 @@
         </template>
 
       </div>
-
+      <br>
     </div>
   </template>
 </template>
