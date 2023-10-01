@@ -737,9 +737,9 @@ var hard_deletes = [];
 var hard_writes = {};
 
 const trigger_build = `
-mutation TriggerBuild($drn: String = "") {
+mutation TriggerBuild($buildId: String = "", $drn: String = "") {
   Project {
-    build(input: {drn: $drn}) {
+    build(input: {drn: $drn, buildId: $buildId}) {
       correlationId
     }
   }
@@ -826,7 +826,8 @@ window.FileSystem = {
         await sleep(100);
         Navigation.hard_reload_tab();
         if (session.trigger_build_after_commit){
-            let data = await Draftsman.query(trigger_build,{drn:localStorage.project});
+            let buildId = moment().format("YYYY-MM-DD[T]hh:mm")
+            let data = await Draftsman.query(trigger_build,{drn:localStorage.project,buildId:buildId});
             console.log(data);
         }
     },
