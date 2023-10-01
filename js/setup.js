@@ -29,7 +29,7 @@ document.addEventListener('alpine:init', async () => {
 
     Draftsman.contains_teleports = false;
     Draftsman.set_variable('key',JSON.parse(localStorage["_x_username"]));
-    //Draftsman.disable_cache_for_page();
+    Draftsman.disable_cache_for_page();
     session = Alpine.reactive(session);
     model = Alpine.reactive(model);
     code = Alpine.reactive(code);
