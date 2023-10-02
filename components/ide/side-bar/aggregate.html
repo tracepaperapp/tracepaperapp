@@ -9,6 +9,8 @@
                         @click.stop="Aggregates.change_view('behavior')">Behavior</button>
                 <button :class="tab_state.view == 'events' ? 'btn btn-primary btn-block' : 'btn btn-outline-primary btn-block'"
                         @click.stop="Aggregates.change_view('events')">Domain Events</button>
+                <button :class="tab_state.view == 'settings' ? 'btn btn-primary btn-block' : 'btn btn-outline-primary btn-block'"
+                        @click.stop="Aggregates.change_view('settings')">Settings</button>
             </div>
         </div>
 

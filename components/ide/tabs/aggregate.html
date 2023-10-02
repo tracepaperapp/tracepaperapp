@@ -6,7 +6,11 @@
       <ui-documentation-icon subject="aggregate" key="overview"></ui-documentation-icon>
       <hr>
 
-      <div x-import="ide/frames/aggregate-data-model;ide/frames/aggregate-events;ide/frames/aggregate-behavior">
+      <div x-import="
+        ide/frames/aggregate-data-model;
+        ide/frames/aggregate-events;
+        ide/frames/aggregate-behavior;
+        ide/frames/aggregate-settings;">
 
         <div x-show="tab_state.view == 'document'" x-transition x-cloak>
           <ui-data-model></ui-data-model>
@@ -18,6 +22,10 @@
 
         <div x-show="tab_state.view == 'events'" x-transition x-cloak>
           <ui-aggregate-events></ui-aggregate-events>
+        </div>
+
+        <div x-show="tab_state.view == 'settings'" x-transition x-cloak>
+          <ui-aggregate-settings></ui-aggregate-settings>
         </div>
 
         <div x-effect="Aggregates.load_document_model(tab_state.view, tab_state.selected_event)"></div>

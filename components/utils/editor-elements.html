@@ -46,6 +46,30 @@
     </div>
 </template>
 
+<template x-component="range">
+    <div x-data="{value: ''}"
+         x-effect="value = $prop('value');">
+        <div x-show="!session.editing_disabled" x-cloak x-transition>
+            <div class="row">
+                <div class="col-2" x-show="$prop('description')" x-cloak x-transition>
+                    <span x-text="$prop('description')" class="form-text"></span>
+                </div>
+                <div class="col-10">
+                    <input class="form-control" type="number"
+                           :min="$prop('min')" :max="$prop('max')"
+                           @change="
+                        $dispatch('updated',{ value: value });
+                        Navigation.soft_reload_tab();"
+                           x-model="value"/>
+                </div>
+            </div>
+        </div>
+        <div x-show="session.editing_disabled" x-cloak x-transition>
+            <span x-text="value"></span>
+        </div>
+    </div>
+</template>
+
 <template x-component="text-area">
     <div x-data="{value: $prop('value'), description: $prop('description')? $prop('description') : '', edit:false, pattern: $prop('pattern') ? $prop('pattern') : null}">
 

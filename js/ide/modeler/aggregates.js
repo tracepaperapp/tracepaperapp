@@ -33,6 +33,10 @@ window.Aggregates = {
             });
         });
 
+        if (!root["att_event-ttl"]){root["att_event-ttl"] = -1};
+        if (!root["att_snapshot-interval"]){root["att_snapshot-interval"] = 100};
+        if (!root["att_backup-interval-days"]){root["att_backup-interval-days"] = 0};
+        if(!root["att_backup-ttl-days"]){root["att_backup-ttl-days"] = 0};
         return Alpine.reactive({
             root: root,
             events: events,
@@ -309,6 +313,9 @@ document.addEventListener('tracepaper:model:loaded', async () => {
 document.addEventListener('tracepaper:model:prepare-save', () => {
     Aggregates.list().forEach(aggregate => {
         aggregate.root.att_name = aggregate.name;
+        if (aggregate.root['att_backup-interval-days'] == 0){
+            aggregate.root['att_backup-ttl-days'] = 0;
+        }
         aggregate.handlers.forEach(handler => {
             try{
             let path = aggregate.path.replace("root.xml",`event-handlers/${handler.att_on}.xml`);
