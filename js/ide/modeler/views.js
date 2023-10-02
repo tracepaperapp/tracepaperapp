@@ -36,12 +36,15 @@ window.Views = {
         view.query.forEach( query => {
             query[QUERY_FILTER] = make_sure_is_list(query[QUERY_FILTER]);
         });
+        if (!view["att_data-retention-days"]){view["att_data-retention-days"] = -1}
+        if (!view["att_exclude-notification"]){view["att_exclude-notification"] = "false"}
         return view;
     },
     load: function(file){
         tab_state.view = Views.get(file);
         let doc = file.replace('.xml','.md')
         Modeler.load_documentation(doc);
+        tab_state.has_key = tab_state.view.field.filter(x => 'att_pk' in x && x.att_pk == 'true').length != 0;
         session.type = "view";
         if(!tab_state.mode){tab_state.mode="model"};
     },

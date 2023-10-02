@@ -1,0 +1,33 @@
+<template x-component="view-settings">
+  <template x-if="tab_state.view" key="view-settings">
+    <div class="bordered-element" x-import="utils/editor-elements">
+      <h4>View settings</h4>
+      <table class="table" aria-describedby="aggregate settings">
+        <tr>
+          <th>Data retention</th>
+          <td>
+            <ui-range :value="tab_state.view['att_data-retention-days']"
+                      @updated.debounce="tab_state.view['att_data-retention-days'] = $event.detail.value"
+                      min="-1" max="36500"></ui-range>
+            <small x-show="tab_state.view['att_data-retention-days'] == -1" x-cloak x-transition>View object is stored indefinitely</small>
+            <small x-show="tab_state.view['att_data-retention-days'] != -1" x-cloak x-transition>
+              The view object is stored for
+              <span x-text="tab_state.view['att_data-retention-days']"></span> days
+              <span x-show="tab_state.view['att_data-retention-days'] > 30" x-cloak x-transition>(
+              <span x-text="moment().add(tab_state.view['att_data-retention-days'], 'days').fromNow().replace('in','')"></span>)
+              </span>
+            </small>
+          </td>
+        </tr>
+        <tr>
+          <th>Exclude from notification mechanism</th>
+          <td>
+            <ui-selection :value="tab_state.view['att_exclude-notification']"
+                       @updated.debounce="tab_state.view['att_exclude-notification'] = $event.detail.value"
+                       :options="boolean_text"></ui-selection>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </template>
+</template>

@@ -30,6 +30,11 @@
                 </div>
             </template>
 
+            <template x-if="tab_state.mode == 'settings'" key="settings">
+                <div x-show="tab_state.mode == 'settings'" x-cloak x-transition x-import="ide/frames/view-settings">
+                    <ui-view-settings></ui-view-settings>
+                </div>
+            </template>
 
             <br>
             <br>

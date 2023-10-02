@@ -2,7 +2,7 @@
   <template x-if="tab_state.aggregate" key="aggregate-settings">
     <div class="bordered-element" x-import="utils/editor-elements">
       <h4>Aggregate settings</h4>
-      <table class="table">
+      <table class="table" aria-describedby="aggregate settings">
         <tr>
           <th>Event retention</th>
           <td>
@@ -46,7 +46,7 @@
                       min="0" max="36500"></ui-range>
             <small x-show="tab_state.aggregate.root['att_backup-ttl-days'] == 0" x-cloak x-transition>The exports have no expiration.</small>
             <small x-show="tab_state.aggregate.root['att_backup-ttl-days'] != 0" x-cloak x-transition>
-              The exports are stored for:
+              The exports are stored for
               <span x-text="tab_state.aggregate.root['att_backup-ttl-days']"></span> days
               <span x-show="tab_state.aggregate.root['att_backup-ttl-days'] > 30" x-cloak x-transition>(
               <span x-text="moment().add(tab_state.aggregate.root['att_backup-ttl-days'], 'days').fromNow().replace('in','')"></span>)

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content=""/>
+    <title>Component showcase</title>
+    <script src="/js/configuration.js"></script>
+    <script src="/js/draftsman.js"></script>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Draftsman.disable_cache_for_page();
+        });
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
+          integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" defer></script>
+</head>
+<body>
+    <div x-data="{}">
+
+        <table class="table" aria-describedby="build info">
+            <tr>
+                <th>Build ID</th>
+                <td x-text="$store.build.get.drn"></td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td x-text="$store.build.get.status"></td>
+            </tr>
+        </table>
+        <table class="table" aria-describedby="logs">
+            <template x-for="log in $store.build.get.logs" :key="log.timestamp">
+                <tr>
+                    <th x-text="log.timestamp"></th>
+                    <td x-show="!log.message.startsWith('base64:')">
+                        <pre x-html="log.message"></pre>
+                    </td>
+                    <td x-show="log.message.startsWith('base64:')">
+                        <pre x-html="atob(log.message.replace('base64:',''))"></pre>
+                    </td>
+
+                </tr>
+            </template>
+        </table>
+        <draftsman-query alias="build" x-include="/prepared-statements/get-build.txt" authenticated>
+        </draftsman-query>
+    </div>
+</body>
+</html>

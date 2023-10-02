@@ -8,14 +8,20 @@
                             @click="tab_state.mode = 'model'"
                             :class="tab_state.mode == 'model' ? 'btn btn-primary' : 'btn btn-outline-primary'">Data Model</button>
                     <button type="button"
+                            x-show="tab_state.has_key" x-cloak x-transition
                             @click="tab_state.mode = 'source'"
                             :class="tab_state.mode == 'source' ? 'btn btn-primary' : 'btn btn-outline-primary'">Data Sources</button>
                     <button type="button"
                             @click="tab_state.mode = 'relation'"
                             :class="tab_state.mode == 'relation' ? 'btn btn-primary' : 'btn btn-outline-primary'">Relations</button>
                     <button type="button"
+                            x-show="tab_state.has_key" x-cloak x-transition
                             @click="tab_state.mode = 'api'"
                             :class="tab_state.mode == 'api' ? 'btn btn-primary' : 'btn btn-outline-primary'">API Exposure</button>
+                    <button type="button"
+                            x-show="tab_state.has_key" x-cloak x-transition
+                            @click="tab_state.mode = 'settings'"
+                            :class="tab_state.mode == 'settings' ? 'btn btn-primary' : 'btn btn-outline-primary'">Settings</button>
                 </div>
             </div>
 
