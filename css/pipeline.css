@@ -1,0 +1,117 @@
+.progressbar-wrapper {
+      background: #fff;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 5px;
+}
+
+.progressbar li {
+      list-style-type: none;
+      width: 20%;
+      float: left;
+      font-size: 12px;
+      position: relative;
+      text-align: center;
+      text-transform: uppercase;
+      color: #7d7d7d;
+}
+
+.progressbar li:before {
+    width: 60px;
+    height: 60px;
+    content: "";
+    line-height: 60px;
+    border: 2px solid #7d7d7d;
+    display: block;
+    text-align: center;
+    margin: 0 auto 3px auto;
+    border-radius: 50%;
+    position: relative;
+    z-index: 2;
+    background-color: #fff;
+}
+.progressbar li:after {
+     width: 100%;
+     height: 2px;
+     content: '';
+     position: absolute;
+     background-color: #7d7d7d;
+     top: 30px;
+     left: -50%;
+     z-index: 0;
+}
+.progressbar li:first-child:after {
+     content: none;
+}
+
+.progressbar li.active {
+    color: #6C8EBF;
+    font-weight: bold;
+}
+.progressbar li.active:before {
+    border-color: #DAE8FC;
+    background: #6C8EBF;
+ }
+.progressbar li.active + li:after {
+    background-color: #DAE8FC;
+}
+
+.progressbar li.active:before {
+    background: #DAE8FC  url(user.svg) no-repeat center center;
+    background-size: 60%;
+    animation-name: color;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes color {
+  0% {
+    background-color: #DAE8FC;
+  }
+  50% {
+    background-color: #6C8EBF;
+  }
+  100 {
+    background-color: #DAE8FC;
+  }
+}
+
+.progressbar li.done {
+    color: #82B366;
+    font-weight: bold;
+}
+.progressbar li.done:before {
+    border-color: #D5E8D4;
+    background: #82B366;
+ }
+.progressbar li.done + li:after {
+    background-color: #D5E8D4;
+}
+
+.progressbar li.done:before {
+    background: #D5E8D4  url(user.svg) no-repeat center center;
+    background-size: 60%;
+}
+
+.progressbar li.error {
+    color: #B85450;
+    font-weight: bold;
+}
+.progressbar li.error:before {
+    border-color: #F8CECC;
+    background: #B85450;
+ }
+.progressbar li.error + li:after {
+    background-color: #F8CECC;
+}
+
+.progressbar li.error:before {
+    background: #F8CECC  url(user.svg) no-repeat center center;
+    background-size: 60%;
+}
+
+
+.progressbar li::before {
+    background: #fff url(user.svg) no-repeat center center;
+    background-size: 60%;
+}

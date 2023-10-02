@@ -829,6 +829,7 @@ window.FileSystem = {
             let buildId = moment().format("YYYY-MM-DD[T]hh:mm")
             let data = await Draftsman.query(trigger_build,{drn:localStorage.project,buildId:buildId});
             console.log(data);
+            Navigation.execute_open_tab("build/" + localStorage.project + ":" +buildId);
         }
     },
     get_history: async function(){
@@ -1079,6 +1080,8 @@ window.Navigation = {
             return file.replace("lib/","").replace(".py","");
         } else if (file.startsWith("scenarios/")){
             return file.replace("scenarios/","").replace(".xml","");
+        } else if (file.startsWith("build/")){
+            return "Build";
         } else if (file == "patterns/"){
             return "Patterns";
         } else if (file == "expressions/"){
@@ -1112,6 +1115,8 @@ window.Navigation = {
             Code.load(file);
         } else if (file.startsWith("scenarios/")){
             Scenarios.load(file);
+        } else if (file.startsWith("build/")){
+            session.type = "build";
         } else if (file == "patterns/"){
             Patterns.load();
         } else if (file == "expressions/"){
@@ -1187,7 +1192,7 @@ document.addEventListener('tracepaper:model:loaded', async () => {
     let files = await FileSystem.listFiles();
     files = files.concat(Object.keys(model));
     files = files.concat(Object.keys(documentation));
-    session.tabs.map(x=> x.split("#").at(0)).filter(x=> !files.includes(x) && !x.startsWith("documentation/") && !["patterns/","expressions/","roles/"].includes(x)).forEach(tab=> {
+    session.tabs.map(x=> x.split("#").at(0)).filter(x=> !files.includes(x) && !x.startsWith("documentation/") && !x.startsWith("build/") && !["patterns/","expressions/","roles/"].includes(x)).forEach(tab=> {
         try{
             console.log("auto close tab:",tab);
             Navigation.execute_close_tab(tab);

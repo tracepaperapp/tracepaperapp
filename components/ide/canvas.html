@@ -85,5 +85,11 @@
       </div>
     </template>
 
+    <template x-if="session.type == 'build'" key="build">
+      <div x-show="session.type == 'build'" x-cloak x-transition x-import="ide/tabs/build">
+        <ui-build></ui-build>
+      </div>
+    </template>
+
   </div>
 </template>

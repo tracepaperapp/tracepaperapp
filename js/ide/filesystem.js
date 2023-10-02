@@ -310,6 +310,7 @@ window.FileSystem = {
             let buildId = moment().format("YYYY-MM-DD[T]hh:mm")
             let data = await Draftsman.query(trigger_build,{drn:localStorage.project,buildId:buildId});
             console.log(data);
+            Navigation.execute_open_tab("build/" + localStorage.project + ":" +buildId);
         }
     },
     get_history: async function(){

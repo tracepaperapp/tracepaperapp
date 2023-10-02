@@ -4,10 +4,10 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta name="description" content=""/>
-    <title>Component showcase</title>
+    <title>Build log</title>
     <script src="/js/configuration.js"></script>
     <script src="/js/draftsman.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" async></script>
     <script>
         document.addEventListener('alpine:init', () => {
             Draftsman.disable_cache_for_page();
@@ -17,12 +17,115 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
           integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="/css/pipeline.css"/>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </head>
 <body>
-    <div x-data="{}">
+<script>
+    window.progression = [
+        "Accepted",                             //0
+        "Conversion in progress",               //1
+        "Conversion Failed",                    //2
+        "Converted",                            //3
+        "Source Checkout SUCCEEDED",            //4
+        "Package Package STARTED",              //5
+        "Package Package FAILED",               //6
+        "Package Package SUCCEEDED",            //7
+        "PACKAGE CREATED",                      //8
+        "DeployStaging Execute STARTED",        //9
+        "DeployStaging Prepare STARTED",        //10
+        "DeployStaging Prepare FAILED",         //11
+        "DeployStaging Execute FAILED",         //12
+        "DeployStaging Execute SUCCEEDED",      //13
+        "QualityGate ExecuteTests STARTED",     //14
+        "QualityGate ExecuteTests FAILED",      //15
+        "QualityGate ExecuteTests SUCCEEDED",   //16
+        "DeployProduction Prepare STARTED",     //17
+        "DeployProduction Execute STARTED",     //18
+        "DeployProduction Prepare FAILED",      //19
+        "DeployProduction Execute FAILED",      //20
+        "DeployProduction Execute SUCCEEDED"    //21
+    ]
+</script>
+    <div x-data="{logs: [], stages: {}}"
+         x-effect="
+            if (!$store.build){return};
+            logs = $store.build.get.logs;
+            logs.sort((a,b) => b.timestamp-a.timestamp);
+            let status = progression.indexOf($store.build.get.status);
 
-        <table class="table" aria-describedby="build info">
+            stages = {
+                'converter':'',
+                'package': '',
+                'staging': '',
+                'qa': '',
+                'production': ''
+            }
+
+            if (status < 2){
+                stages.converter = 'active';
+            }
+            if (status == 2){
+                stages.converter = 'error';
+            }
+            if (status > 2){
+                stages.converter = 'done';
+            }
+
+            if (status > 3 && status < 6){
+                stages.package = 'active';
+            }
+            if (status == 6){
+                stages.package = 'error';
+            }
+            if (status > 6){
+                stages.package = 'done';
+            }
+
+            if (status > 6 && status < 11){
+                stages.staging = 'active';
+            }
+            if (status == 11 || status == 12){
+                stages.staging = 'error';
+            }
+            if (status > 12){
+                stages.staging = 'done';
+            }
+
+            if (status == 14){
+                stages.qa = 'active';
+            }
+            if (status == 15){
+                stages.qa = 'error';
+            }
+            if (status > 15){
+                stages.qa = 'done';
+            }
+
+            if (status > 15 && status < 19){
+                stages.production = 'active';
+            }
+            if (status == 19 || status == 20){
+                stages.production = 'error';
+            }
+            if (status == 21){
+                stages.production = 'done';
+            }
+
+            ">
+
+        <!-- http://cssstars.com/steps-progress-bar-only-with-css/ -->
+        <div class="progressbar-wrapper">
+            <ul class="progressbar">
+                <li :class="stages.converter">Prepare Source</li>
+                <li :class="stages.package">Package</li>
+                <li :class="stages.staging">Deploy Staging</li>
+                <li :class="stages.qa">Quality Gate</li>
+                <li :class="stages.production">Deploy Production</li>
+            </ul>
+        </div>
+
+        <table class="table" aria-describedby="logs">
             <tr>
                 <th>Build ID</th>
                 <td x-text="$store.build.get.drn"></td>
@@ -31,23 +134,23 @@
                 <th>Status</th>
                 <td x-text="$store.build.get.status"></td>
             </tr>
-        </table>
-        <table class="table" aria-describedby="logs">
-            <template x-for="log in $store.build.get.logs" :key="log.timestamp">
+            <template x-for="log in logs" :key="log.timestamp">
                 <tr>
-                    <th x-text="log.timestamp"></th>
+                    <th x-text="moment(Number(log.timestamp)*1000).format('YYYY-MM-DD h:mm:ss')"></th>
                     <td x-show="!log.message.startsWith('base64:')">
                         <pre x-html="log.message"></pre>
                     </td>
                     <td x-show="log.message.startsWith('base64:')">
                         <pre x-html="atob(log.message.replace('base64:',''))"></pre>
                     </td>
-
                 </tr>
             </template>
         </table>
         <draftsman-query alias="build" x-include="/prepared-statements/get-build.txt" authenticated>
         </draftsman-query>
+        <draftsman-notification message="updated" type="Build"
+                                @notification="if(Draftsman.fetch_query_parameter('key') == $event.detail.identifier){await Draftsman.force_reload_data();}">
+        </draftsman-notification>
     </div>
 </body>
 </html>
