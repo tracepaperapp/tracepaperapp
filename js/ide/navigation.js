@@ -129,7 +129,7 @@ window.Navigation = {
         } else if (file.startsWith("scenarios/")){
             Scenarios.load(file);
         } else if (file.startsWith("build/")){
-            session.type = "build";
+            Builds.load();
         } else if (file == "patterns/"){
             Patterns.load();
         } else if (file == "expressions/"){

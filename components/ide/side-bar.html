@@ -117,5 +117,11 @@
       </div>
     </template>
 
+    <template x-if="session.type == 'build'" key="build">
+      <div x-show="session.type == 'build'" x-cloak x-transition x-import="ide/side-bar/build">
+        <ui-build-sidebar></ui-build-sidebar>
+      </div>
+    </template>
+
   </div>
 </template>
