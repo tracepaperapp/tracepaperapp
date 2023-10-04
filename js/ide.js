@@ -1149,6 +1149,10 @@ window.Navigation = {
             Object.keys(tab_state).forEach(key => {delete tab_state[key]});
             Object.keys(data).forEach(key => {tab_state[key] = data[key]});
             Navigation.load_data_in_tab(file);
+            setTimeout(function(){
+                console.log(data.scrollposition);
+                document.getElementById("main-canvas").scrollTo(0,data.scrollposition);
+            },100);
         },
     fresh_reload: function(file){
             session.tab = file;

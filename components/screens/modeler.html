@@ -19,7 +19,9 @@
                                 <div :style="'height:' + (window.innerHeight - 48) + 'px'">
                                     <ui-tab-bar></ui-tab-bar>
 
-                                    <div style="overflow-y: auto;overflow-x: hidden;">
+                                    <div id="main-canvas" x-init="setInterval(function(){
+                                        tab_state.scrollposition = $el.scrollTop;
+                                    },1000);" style="overflow-y: auto;overflow-x: hidden;">
                                         <div class="row" style="height: 85vh">
                                             <div class="col-8">
                                                 <ui-canvas></ui-canvas>
