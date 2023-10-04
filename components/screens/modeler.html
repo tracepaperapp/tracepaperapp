@@ -1,6 +1,6 @@
 <template x-component="modeler">
     <template x-if="Object.keys(context).length != 0 && context.selected_workspace && context.selected_project" key="modeler">
-        <div x-import="ide/navbar;ide/navigation;ide/tab-bar;ide/canvas;ide/side-bar;">
+        <div x-import="ide/navbar;ide/navigation;ide/tab-bar;ide/canvas;ide/side-bar;" style="overflow-y: hidden;overflow-x: hidden;">
             <div x-show="Object.keys(context).length != 0 && context.selected_workspace && context.selected_project" x-cloak
                  x-transition>
                 <div>
@@ -8,8 +8,12 @@
                     <ui-navbar></ui-navbar>
                     <div class="container-fluid">
                         <div class="row">
-                            <div class="sidebar border col-lg-2 border-right p-0 bg-tracepaper-tertiary" height="100%">
-                                <ui-navigation></ui-navigation>
+                            <div class="sidebar border col-lg-2 border-right p-0 bg-tracepaper-tertiary">
+                                <div style="height:90vh;overflow-y: scroll;overflow-x: hidden;direction: rtl">
+                                    <div style="direction:ltr;">
+                                        <ui-navigation></ui-navigation>
+                                    </div>
+                                </div>
                             </div>
                             <main class="col-lg-10">
                                 <div :style="'height:' + (window.innerHeight - 48) + 'px'">
