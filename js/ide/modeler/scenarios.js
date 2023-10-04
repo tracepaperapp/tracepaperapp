@@ -84,13 +84,17 @@ window.Scenarios = {
         });
         let updated_value = [];
 
+        let variables = Scenarios.get_flow_variables();
         command.field.filter(x => !("att_auto-fill" in x)).forEach(field => {
             if (field.att_name in inputs){
                 updated_value.push(inputs[field.att_name]);
             } else {
+                let potential_variable = variables.filter(x => `#${field.att_name}#` == x);
+                let value = potential_variable.length != 0 ? potential_variable.at(0) : '';
                 updated_value.push({
                     att_name: field.att_name,
-                    att_type: field.att_type
+                    att_type: field.att_type,
+                    att_value: value
                 });
             }
         });
@@ -212,6 +216,14 @@ window.Scenarios = {
             "expected-trace": [],
             "expect-value": [],
             "extract-value": []
+        });
+    }),
+    load_variables: blockingDecorator(function(activity,fields){
+        let registered = activity.input.map(x => x.att_name);
+        fields.forEach(field => {
+            if (!registered.includes(field.att_name)){
+                activity.input.push({att_name: field.att_name, att_type: 'String', att_value: ''});
+            }
         });
     })
 }

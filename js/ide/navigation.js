@@ -2,7 +2,7 @@
 var navigation_block = false;
 setInterval(function(){
     navigation_block = false;
-    if (Object.keys(tab_state).length != 0){
+    if (Object.keys(tab_state).length > 1){
         localStorage[session.tab] = JSON.stringify(tab_state);
     }
 },1000);

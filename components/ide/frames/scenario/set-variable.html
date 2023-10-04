@@ -1,5 +1,5 @@
 <template x-component="scenario-set-variables">
-  <div>
+  <div x-data="{show_modal: false}">
     <table class="table" x-import="utils/editor-elements">
       <thead>
       <tr>
@@ -42,5 +42,41 @@
             @click.debounce="Scenarios.add_input(activity)">
       <i class="fa-solid fa-plus"></i>
     </button>
+    <button type="button" class="btn btn-outline-primary"
+            x-show="!session.editing_disabled" x-cloak x-transition
+            @click="show_modal = true">Copy variables
+    </button>
+    <template x-if="show_modal">
+      <div>
+        <div class="overlay"></div>
+        <div class="prompt" x-data="{search: ''}">
+          <h4>
+            Copy variables
+            <button type="button" @click="show_modal=false" class="btn-close float-end"></button>
+          </h4>
+
+          <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+            <input type="text" class="form-control"
+                   placeholder="search..." x-model="search"/>
+          </div>
+
+          <div class="list-group list-group-flush">
+            <template x-for="command in Commands.list"
+                      :key="command.att_name">
+              <button type="button"
+                      @click="show_modal = false;Scenarios.load_variables(activity,command.field)"
+                      x-text="'Command: ' + command.att_name"
+                      x-cloak x-transition
+                      x-show="search == '' || command.att_name.toLowerCase().includes(search.toLowerCase())"
+                      class="list-group-item list-group-item-action"></button>
+            </template>
+          </div>
+
+        </div>
+      </div>
+    </template>
   </div>
 </template>

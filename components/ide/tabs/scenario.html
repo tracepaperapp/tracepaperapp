@@ -11,6 +11,7 @@
               <button class="accordion-button collapsed"
                       type="button"
                       data-bs-toggle="collapse"
+                      @click="tab_state.selected = activity.att_id"
                       :data-bs-target="'#' + activity.att_id + 'body'"
                       aria-expanded="true"
                       :aria-controls="activity.att_id + 'body'">
@@ -34,7 +35,7 @@
               </button>
             </h2>
             <div :id="activity.att_id + 'body'"
-                 class="accordion-collapse collapse"
+                 :class="tab_state.selected == activity.att_id ? 'accordion-collapse collapse show' : 'accordion-collapse collapse'"
                  :aria-labelledby="activity.att_id + 'heading'"
                  data-bs-parent="#scenario-container">
               <div class="accordion-body">
