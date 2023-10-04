@@ -65,6 +65,10 @@ window.Commands = {
                 Navigation.execute_open_tab(path);
             },500);
         }
+    }),
+    remove: blockingDecorator(function(){
+        delete model[session.tab];
+        delete documentation[session.tab.replace(".xml",".md")];
     })
 }
 

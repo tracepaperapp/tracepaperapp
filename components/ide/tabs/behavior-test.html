@@ -2,7 +2,6 @@
     <template x-if="tab_state.testcase" key="behavior-test-container">
         <div x-import="utils/editor-elements">
             <!-- document = TestCase.get_aggregate_document(aggregate);"-->
-
             <div>
 
                 <h2>
@@ -12,6 +11,22 @@
                             :pattern="pascal_cased"
                             @updated.debounce="TestCase.rename($event.detail.value);"></ui-text-field>
                 </h2>
+                <hr>
+
+                <div x-show="file in logs"
+                     x-effect="file = session.tab.replace('.xml#','-') + '.log';"
+                     x-data="{ show_logs: false, file: '' }"
+                     class="bordered-element">
+                    <h4 @click.debounce="show_logs = !show_logs">
+                        Last execution log
+                        <i class="fa-solid fa-caret-up"
+                           :style="show_logs ? 'transform: rotate(180deg);' : ''" x-transition></i>
+                    </h4>
+                    <p x-show="show_logs" x-collapse>
+                        <pre x-show="show_logs" x-html="logs[file]"></pre>
+                    </p>
+                </div>
+
                 <!-- Initial State -->
                 <div class="bordered-element">
                     <h4>Initial state</h4>

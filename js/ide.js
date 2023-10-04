@@ -640,7 +640,7 @@ async function save_model_to_disk(){
         //Cleanup
         let files = await FileSystem.listFiles();
         await files.filter(
-                file => file != "meta.json" && !(file in documentation) && !(file in model) && !(file in code)
+                file => file != "meta.json" && !(file in documentation) && !(file in model) && !(file in code) && !(file in logs)
             ).forEach(async file => {
             isRefactored = true;
             await FileSystem.delete(file);
@@ -680,6 +680,8 @@ async function load_file(file){
     }
     else if(file.endsWith(".md")){
         documentation[file] = {content:content};
+    }else if(file.endsWith(".log")){
+        logs[file] = content;
     }
     else {
         console.log(file,content);
@@ -2143,6 +2145,7 @@ window.Builds = {
         let data = await Draftsman.query(builds_query,{key_begins_with:localStorage.project});
         let builds = data.Build.filter.resultset;
         builds.sort((a,b) => b.lastEvent-a.lastEvent);
+        tab_state.builds = builds;
         return builds;
     },
     open_build: blockingDecorator(function(drn){
@@ -2265,6 +2268,10 @@ window.Commands = {
                 Navigation.execute_open_tab(path);
             },500);
         }
+    }),
+    remove: blockingDecorator(function(){
+        delete model[session.tab];
+        delete documentation[session.tab.replace(".xml",".md")];
     })
 }
 

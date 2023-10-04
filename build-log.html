@@ -27,24 +27,26 @@
         "Conversion in progress",               //1
         "Conversion Failed",                    //2
         "Converted",                            //3
-        "Source Checkout SUCCEEDED",            //4
+        "Source Checkout STARTED",              //4
         "Package Package STARTED",              //5
         "Package Package FAILED",               //6
         "Package Package SUCCEEDED",            //7
         "PACKAGE CREATED",                      //8
         "DeployStaging Execute STARTED",        //9
         "DeployStaging Prepare STARTED",        //10
-        "DeployStaging Prepare FAILED",         //11
-        "DeployStaging Execute FAILED",         //12
-        "DeployStaging Execute SUCCEEDED",      //13
-        "QualityGate ExecuteTests STARTED",     //14
-        "QualityGate ExecuteTests FAILED",      //15
-        "QualityGate ExecuteTests SUCCEEDED",   //16
-        "DeployProduction Prepare STARTED",     //17
-        "DeployProduction Execute STARTED",     //18
-        "DeployProduction Prepare FAILED",      //19
-        "DeployProduction Execute FAILED",      //20
-        "DeployProduction Execute SUCCEEDED"    //21
+        "DeployStaging Prepare SUCCEEDED",      //11
+        "DeployStaging Prepare FAILED",         //12
+        "DeployStaging Execute FAILED",         //13
+        "DeployStaging Execute SUCCEEDED",      //14
+        "QualityGate ExecuteTests STARTED",     //15
+        "QualityGate ExecuteTests FAILED",      //16
+        "QualityGate ExecuteTests SUCCEEDED",   //17
+        "DeployProduction Prepare STARTED",     //18
+        "DeployProduction Execute STARTED",     //19
+        "DeployProduction Prepare SUCCEEDED",   //20
+        "DeployProduction Prepare FAILED",      //21
+        "DeployProduction Execute FAILED",      //22
+        "DeployProduction Execute SUCCEEDED"    //23
     ]
 </script>
     <div x-data="{logs: [], stages: {}}"
@@ -52,7 +54,11 @@
             if (!$store.build){return};
             logs = $store.build.get.logs;
             logs.sort((a,b) => b.timestamp-a.timestamp);
-            let status = progression.indexOf($store.build.get.status);
+            let status = $store.build.get.status;
+            if (status == 'Source Checkout SUCCEEDED'){
+                status = 'Source Checkout STARTED';
+            }
+            status = progression.indexOf(status);
 
             stages = {
                 'converter':'',
@@ -82,33 +88,33 @@
                 stages.package = 'done';
             }
 
-            if (status > 6 && status < 11){
+            if (status > 6 && status < 12){
                 stages.staging = 'active';
             }
-            if (status == 11 || status == 12){
+            if (status == 12 || status == 13){
                 stages.staging = 'error';
             }
-            if (status > 12){
+            if (status > 13){
                 stages.staging = 'done';
             }
 
-            if (status == 14){
+            if (status == 15){
                 stages.qa = 'active';
             }
-            if (status == 15){
+            if (status == 16){
                 stages.qa = 'error';
             }
-            if (status > 15){
+            if (status > 16){
                 stages.qa = 'done';
             }
 
-            if (status > 15 && status < 19){
+            if (status > 16 && status < 21){
                 stages.production = 'active';
             }
-            if (status == 19 || status == 20){
+            if (status == 21 || status == 22){
                 stages.production = 'error';
             }
-            if (status == 21){
+            if (status == 23){
                 stages.production = 'done';
             }
 
@@ -133,6 +139,10 @@
             <tr>
                 <th>Status</th>
                 <td x-text="$store.build.get.status"></td>
+            </tr>
+            <tr x-show="!$store.build || !$store.build.get || !$store.build.get.status" x-cloak x-transition>
+                <th>Build Queued</th>
+                <td>waiting for build agent...</td>
             </tr>
             <template x-for="log in logs" :key="log.timestamp">
                 <tr>

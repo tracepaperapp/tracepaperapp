@@ -121,7 +121,7 @@ async function save_model_to_disk(){
         //Cleanup
         let files = await FileSystem.listFiles();
         await files.filter(
-                file => file != "meta.json" && !(file in documentation) && !(file in model) && !(file in code)
+                file => file != "meta.json" && !(file in documentation) && !(file in model) && !(file in code) && !(file in logs)
             ).forEach(async file => {
             isRefactored = true;
             await FileSystem.delete(file);
@@ -161,6 +161,8 @@ async function load_file(file){
     }
     else if(file.endsWith(".md")){
         documentation[file] = {content:content};
+    }else if(file.endsWith(".log")){
+        logs[file] = content;
     }
     else {
         console.log(file,content);

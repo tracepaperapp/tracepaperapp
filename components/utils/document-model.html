@@ -90,8 +90,7 @@ events:
                 <th>
                   <ui-selection :value="entity['att_business-key']"
                                 :options="fields.filter(x => x.att_type == 'String').map(x => x.att_name).concat([''])"
-                                @updated="console.log('---->',$event);entity['att_business-key'] = $event.detail.value;"></ui-selection>
-
+                                @updated="entity['att_business-key'] = $event.detail.value;"></ui-selection>
                 </th>
               </tr>
             </template>

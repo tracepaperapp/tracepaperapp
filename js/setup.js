@@ -10,6 +10,7 @@ var model = {};
 var code = {};
 var meta = {};
 var documentation = {};
+var logs = {};
 var label = {};
 var context = {};
 var report = {};

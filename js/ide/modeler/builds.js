@@ -27,6 +27,7 @@ window.Builds = {
         let data = await Draftsman.query(builds_query,{key_begins_with:localStorage.project});
         let builds = data.Build.filter.resultset;
         builds.sort((a,b) => b.lastEvent-a.lastEvent);
+        tab_state.builds = builds;
         return builds;
     },
     open_build: blockingDecorator(function(drn){
