@@ -7,8 +7,8 @@ query MyQuery($key: ID = "") {
         name
         drn
         iam {
-            username
-            businessRole
+          username
+          businessRole
         }
         projects {
           drn
@@ -17,6 +17,10 @@ query MyQuery($key: ID = "") {
             name
             status
             url
+          }
+          pipelines {
+            pipelineName
+            stackId
           }
         }
       }
