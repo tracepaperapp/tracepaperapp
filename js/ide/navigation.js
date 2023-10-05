@@ -53,6 +53,33 @@ window.Navigation = {
         let file = get_attribute(event,"file");
         Navigation.execute_close_tab(file);
     },
+    close_tabs_left: function(tab){
+        let tabs = [];
+        let detected = false;
+        session.tabs.forEach(x=>{
+            if (detected || x == tab){
+                tabs.push(x);
+                detected = true;
+            }
+        });
+        session.tabs = tabs;
+    },
+    close_other: function(tab){
+        session.tabs = session.tabs.filter(x => x == tab);
+    },
+    close_tabs_right: function(tab){
+        let tabs = [];
+        let detected = true;
+        session.tabs.forEach(x=>{
+            if (detected){
+                tabs.push(x);
+            }
+            if (x == tab){
+                detected = false;
+            }
+        });
+        session.tabs = tabs;
+    },
     execute_close_tab: function(file){
         let index = session.tabs.indexOf(file);
         session.tabs = session.tabs.filter(x => x != file);

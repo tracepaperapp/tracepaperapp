@@ -610,7 +610,9 @@ async function save_model_to_disk(){
         document.dispatchEvent(new CustomEvent('tracepaper:model:prepare-save'));
         await sleep(100);
         let isRefactored = false;
-        await FileSystem.write("meta.json",JSON.stringify(meta,null,2));
+        if (meta && meta.roles){
+            await FileSystem.write("meta.json",JSON.stringify(meta,null,2));
+        }
         await Object.entries(documentation).forEach(async entry => {
             await FileSystem.write(entry[0],entry[1].content);
         });
@@ -1041,6 +1043,33 @@ window.Navigation = {
     close_tab: function(event){
         let file = get_attribute(event,"file");
         Navigation.execute_close_tab(file);
+    },
+    close_tabs_left: function(tab){
+        let tabs = [];
+        let detected = false;
+        session.tabs.forEach(x=>{
+            if (detected || x == tab){
+                tabs.push(x);
+                detected = true;
+            }
+        });
+        session.tabs = tabs;
+    },
+    close_other: function(tab){
+        session.tabs = session.tabs.filter(x => x == tab);
+    },
+    close_tabs_right: function(tab){
+        let tabs = [];
+        let detected = true;
+        session.tabs.forEach(x=>{
+            if (detected){
+                tabs.push(x);
+            }
+            if (x == tab){
+                detected = false;
+            }
+        });
+        session.tabs = tabs;
     },
     execute_close_tab: function(file){
         let index = session.tabs.indexOf(file);

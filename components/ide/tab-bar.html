@@ -6,18 +6,27 @@
                 x-effect="let updated = session.tabs;await sleep(1);if(tabs != updated){tabs=updated}"
                 x-data="{tabs: []}">
                 <template x-for="tab in tabs" :key="tab">
-                    <li class="nav-item">
+                    <li class="nav-item relative" x-data="{showContextMenu:false}">
                         <a class="nav-link"
                            :class="session.tab == tab ? 'active' : ''"
                            aria-current="page" href="#"
                            :file="tab"
-                           @click.stop="Navigation.open_tab">
+                           @contextmenu="$event.preventDefault();showContextMenu=true;"
+                           @close-menu.window="showContextMenu=false;"
+                           @click.stop="Navigation.open_tab($event);$dispatch('close-menu');">
                             <span x-text="Navigation.get_tabname(tab)"></span>&nbsp;
                             <button type="button" class="btn-close"
                                     :file="tab"
                                     @click.stop="Navigation.close_tab"
                                     aria-label="Close"></button>
                         </a>
+                        <div x-show="showContextMenu" class="mt-2" x-transition x-cloak>
+                            <div class="btn-group-vertical btn-group-sm" role="group" @click.away="showContextMenu=false">
+                                <button type="button" @click.debounce="showContextMenu=false;Navigation.close_tabs_left(tab)" class="btn btn-outline-primary">Close tabs on the Left</button>
+                                <button type="button" @click.debounce="showContextMenu=false;Navigation.close_other(tab)" class="btn btn-outline-primary">Close other</button>
+                                <button type="button" @click.debounce="showContextMenu=false;Navigation.close_tabs_right(tab)" class="btn btn-outline-primary">Close tabs on the Right</button>
+                            </div>
+                        </div>
                     </li>
                 </template>
                 <li class="nav-item dropdown" x-show="session.tab_history.length != 0">

@@ -91,7 +91,9 @@ async function save_model_to_disk(){
         document.dispatchEvent(new CustomEvent('tracepaper:model:prepare-save'));
         await sleep(100);
         let isRefactored = false;
-        await FileSystem.write("meta.json",JSON.stringify(meta,null,2));
+        if (meta && meta.roles){
+            await FileSystem.write("meta.json",JSON.stringify(meta,null,2));
+        }
         await Object.entries(documentation).forEach(async entry => {
             await FileSystem.write(entry[0],entry[1].content);
         });
