@@ -68,6 +68,9 @@
         "DeployProduction Execute FAILED",      //22
         "DeployProduction Execute SUCCEEDED"    //23
     ]
+    function convert_links(message){
+        return message.replace("#link.","<a target='_blank' href='").replace(".link#","'>AWS pipeline</a>")
+    }
 </script>
     <div x-data="{logs: [], stages: {}}"
          x-effect="
@@ -160,21 +163,21 @@
                 <th>Status</th>
                 <td x-text="$store.build.get.status"></td>
             </tr>
-            <tr x-show="!$store.build || !$store.build.get || !$store.build.get.status" x-cloak x-transition>
-                <th>Build Queued</th>
-                <td>waiting for build agent...</td>
-            </tr>
             <template x-for="log in logs" :key="log.timestamp">
                 <tr>
                     <th x-text="moment(Number(log.timestamp)*1000).format('YYYY-MM-DD h:mm:ss')"></th>
                     <td x-show="!log.message.startsWith('base64:')">
-                        <pre x-html="log.message"></pre>
+                        <pre x-html="convert_links(log.message)"></pre>
                     </td>
                     <td x-show="log.message.startsWith('base64:')">
                         <pre x-html="atob(log.message.replace('base64:',''))"></pre>
                     </td>
                 </tr>
             </template>
+            <tr x-show="!$store.build || !$store.build.get || !$store.build.get.status" x-cloak x-transition>
+                <th>Build Queued</th>
+                <td>waiting for build agent...</td>
+            </tr>
         </table>
         <draftsman-query alias="build" x-include="/prepared-statements/get-build.txt" authenticated>
         </draftsman-query>
