@@ -46,6 +46,7 @@ function load_context(){
     }
     if (context.selected_project){
         context.repository = context.selected_project.repositories.filter(x => x.name == "model").at(0).url;
+        context.code_repo = context.selected_project.repositories.filter(x => x.name == "code").at(0).url;
     }
     document.dispatchEvent(new CustomEvent('tracepaper:context:changed'));
 }
@@ -1540,10 +1541,10 @@ window.regions = [
 window.create_pipeline = function(region){
     let url = 'https://' + region.code + '.console.aws.amazon.com/cloudformation/home?region='
         + region.code + '#/stacks/create/review?templateURL=https://s3.eu-central-1.amazonaws.com/templates.draftsman.io/draftsman-application-pipeline-v5.yml&stackName='
-        + session.projectName + '-main-pipeline&param_GithubWorkspace='
-        + context.repository.split('/').at(-2).toLowerCase() + '&param_RepositoryName='
-        + context.repository.split('/').at(-1).toLowerCase() + '&param_RepositoryBranch=main&param_ProjectName='
-        + session.projectName + '&param_DRN='
+        + session.projectName.toLowerCase() + '-main-pipeline&param_GithubWorkspace='
+        + context.code_repo.split('/').at(-2).toLowerCase() + '&param_RepositoryName='
+        + context.code_repo.split('/').at(-1).toLowerCase() + '&param_RepositoryBranch=main&param_ProjectName='
+        + session.projectName.toLowerCase() + '&param_DRN='
         + localStorage.project + '&param_GraphQL=' + api_url + '&param_APIKEY=' + api_key;
     window.open(url, '_blank');
 }
