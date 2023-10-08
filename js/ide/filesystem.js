@@ -57,6 +57,9 @@ window.clear_storage = async function(force=false){
 
 async function reload_model(){
     clearInterval(auto_save);
+    while (save_model_to_disk_block){
+        await sleep(10);
+    }
     await load_model();
     auto_save = setInterval(save_model_to_disk,1000);
 }
