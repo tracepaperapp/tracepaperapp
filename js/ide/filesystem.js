@@ -168,6 +168,7 @@ async function load_file(file){
         documentation[file] = {content:content};
     }else if(file.endsWith(".log")){
         logs[file] = content;
+        localStorage[file] = content;
     }
     else {
         console.log(file,content);

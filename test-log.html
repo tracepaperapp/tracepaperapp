@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content=""/>
+    <title>Test log</title>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
+    <script src="/js/log-reader.js"></script>
+</head>
+<body>
+    <div x-data="{log: ''}"
+         x-init="log = localStorage[location.hash.replace('#','')]">
+        <pre x-html="log"></pre>
+    </div>
+</body>
+</html>
