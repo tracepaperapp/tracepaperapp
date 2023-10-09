@@ -236,6 +236,7 @@ mutation TriggerBuild($buildId: String = "", $drn: String = "") {
 `;
 
 window.FileSystem = {
+    sync_model: sync_model,
     hardWrite: function(path,content){
         hard_writes[path] = content;
     },
