@@ -191,3 +191,25 @@ document.addEventListener('tracepaper:model:loaded', async () => {
     Notifiers.load_navigation();
     setTimeout(Notifiers.load_navigation,1000);
 });
+
+document.addEventListener('tracepaper:model:prepare-save', () => {
+    if (!("notifiers/InitializeSystemUser.xml" in model)){
+        model["notifiers/InitializeSystemUser.xml"] = {
+            notifier: {
+                att_name: "InitializeSystemUser",
+                trigger: {
+                    att_source: "@afterDeployment",
+                    mapping: {
+                        att_target: "dummy",
+                        att_value: "#''"
+                    }
+                },
+                activity: {
+                    att_type: "iam-create-systemuser",
+                    "att_fail-silent": "true",
+                    att_id:"vMB9LZ"
+                }
+            }
+        }
+    }
+});

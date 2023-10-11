@@ -163,3 +163,19 @@ document.addEventListener('tracepaper:model:loaded', async () => {
         Modeler.initialize();
     }catch{}
 });
+document.addEventListener('tracepaper:model:prepare-save', () => {
+    if (!("config.xml" in model)){
+        model["config.xml"] = {
+            draftsman: {
+                "att_project-name": context.selected_project.name,
+                "att_xmlns": "https://tracepaper.draftsman.io",
+                "functional-scenarios": {
+                    "att_clean-db": "true",
+                    "att_clean-iam": "true",
+                    "att_minimum-event-coverage": 80,
+                    "att_minimum-view-coverage": 80
+                }
+            }
+        };
+    }
+});

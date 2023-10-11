@@ -191,7 +191,6 @@ window.Navigation = {
                 return;
             }
             setTimeout(function(){
-                console.log(data.scrollposition);
                 document.getElementById("main-canvas").scrollTo(0,data.scrollposition);
             },100);
         },

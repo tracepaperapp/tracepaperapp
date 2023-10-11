@@ -1,0 +1,17 @@
+<!--
+This file is managed by the tracepaper modeler, if you want to customize this command
+please make sure you rename the file first.
+-->
+<template x-component="authorizeUser-workspace">
+  <div>
+    <draftsman-mutation :command="$prop('command')"  authenticated>
+mutation MyMutation($businessRole: String = "", $drn: String = "", $username: String = "") {
+  Workspace {
+    authorizeUser(input: {drn: $drn, username: $username, businessRole: $businessRole}) {
+      correlationId
+    }
+  }
+}
+    </draftsman-mutation>
+  </div>
+</template>

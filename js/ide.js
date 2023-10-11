@@ -603,10 +603,6 @@ async function write_model_element(file,content){
 
 async function save_model_to_disk(){
     if (save_model_to_disk_block){return}else{save_model_to_disk_block = true}
-    if (Object.keys(model).length == 0 || Object.keys(documentation).length == 0){
-        console.error("Model is empty, nothing to save.");
-        return;
-    }
     try{
         for (var member in report) delete report[member];
         hard_deletes = [];
@@ -670,28 +666,32 @@ async function save_model_to_disk(){
 }
 
 async function load_file(file){
-    let content = await FileSystem.read(file);
-    file_check[file] = content;
-    if (file == "meta.json"){
-        let data = JSON.parse(content);
-        Object.assign(meta,data);
-        meta.roles = make_sure_is_list(meta.roles);
-    }
-    else if (file.endsWith(".xml")){
-        content = parser.parse(content);
-        model[file] = content;
-    }
-    else if (file.endsWith(".py")){
-        code[file] = {content:content};
-    }
-    else if(file.endsWith(".md")){
-        documentation[file] = {content:content};
-    }else if(file.endsWith(".log")){
-        logs[file] = content;
-        localStorage[file] = content;
-    }
-    else {
-        console.log(file,content);
+    try{
+        let content = await FileSystem.read(file);
+            file_check[file] = content;
+            if (file == "meta.json"){
+                let data = JSON.parse(content);
+                Object.assign(meta,data);
+                meta.roles = make_sure_is_list(meta.roles);
+            }
+            else if (file.endsWith(".xml")){
+                content = parser.parse(content);
+                model[file] = content;
+            }
+            else if (file.endsWith(".py")){
+                code[file] = {content:content};
+            }
+            else if(file.endsWith(".md")){
+                documentation[file] = {content:content};
+            }else if(file.endsWith(".log")){
+                logs[file] = content;
+                localStorage[file] = content;
+            }
+            else {
+                console.log(file,content);
+            }
+    }catch(err){
+        console.log("Could not load file:",file,err);
     }
 }
 
@@ -1188,7 +1188,6 @@ window.Navigation = {
                 return;
             }
             setTimeout(function(){
-                console.log(data.scrollposition);
                 document.getElementById("main-canvas").scrollTo(0,data.scrollposition);
             },100);
         },
@@ -2050,6 +2049,9 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
         if (aggregate.root['att_backup-interval-days'] == 0){
             aggregate.root['att_backup-ttl-days'] = 0;
         }
+        aggregate.root.field.forEach(field => {
+            delete field.att_pk;
+        });
         aggregate.handlers.forEach(handler => {
             try{
             let path = aggregate.path.replace("root.xml",`event-handlers/${handler.att_on}.xml`);
@@ -2939,6 +2941,22 @@ document.addEventListener('tracepaper:model:loaded', async () => {
         Modeler.initialize();
     }catch{}
 });
+document.addEventListener('tracepaper:model:prepare-save', () => {
+    if (!("config.xml" in model)){
+        model["config.xml"] = {
+            draftsman: {
+                "att_project-name": context.selected_project.name,
+                "att_xmlns": "https://tracepaper.draftsman.io",
+                "functional-scenarios": {
+                    "att_clean-db": "true",
+                    "att_clean-iam": "true",
+                    "att_minimum-event-coverage": 80,
+                    "att_minimum-view-coverage": 80
+                }
+            }
+        };
+    }
+});
 
 window.Notifiers = {
     list: function(){
@@ -3131,6 +3149,28 @@ window.Notifiers = {
 document.addEventListener('tracepaper:model:loaded', async () => {
     Notifiers.load_navigation();
     setTimeout(Notifiers.load_navigation,1000);
+});
+
+document.addEventListener('tracepaper:model:prepare-save', () => {
+    if (!("notifiers/InitializeSystemUser.xml" in model)){
+        model["notifiers/InitializeSystemUser.xml"] = {
+            notifier: {
+                att_name: "InitializeSystemUser",
+                trigger: {
+                    att_source: "@afterDeployment",
+                    mapping: {
+                        att_target: "dummy",
+                        att_value: "#''"
+                    }
+                },
+                activity: {
+                    att_type: "iam-create-systemuser",
+                    "att_fail-silent": "true",
+                    att_id:"vMB9LZ"
+                }
+            }
+        }
+    }
 });
 
 window.Patterns = {

@@ -119,7 +119,7 @@
                        placeholder="search..." x-model="search"/>
               </div>
 
-              <div class="list-group list-group-flush">
+              <div class="list-group list-group-flush" style="overflow-y: auto;overflow-x: hidden;height:80vh;">
                 <template x-for="event in Events.list().map(x => x.att_name)" :key="event">
                   <button type="button"
                           @click="$dispatch('add-trigger',{event:event});show_modal=false;$dispatch('trigger-updated');"

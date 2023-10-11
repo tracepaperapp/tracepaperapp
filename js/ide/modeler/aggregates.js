@@ -316,6 +316,9 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
         if (aggregate.root['att_backup-interval-days'] == 0){
             aggregate.root['att_backup-ttl-days'] = 0;
         }
+        aggregate.root.field.forEach(field => {
+            delete field.att_pk;
+        });
         aggregate.handlers.forEach(handler => {
             try{
             let path = aggregate.path.replace("root.xml",`event-handlers/${handler.att_on}.xml`);

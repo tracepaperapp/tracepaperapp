@@ -83,10 +83,6 @@ async function write_model_element(file,content){
 
 async function save_model_to_disk(){
     if (save_model_to_disk_block){return}else{save_model_to_disk_block = true}
-    if (Object.keys(model).length == 0 || Object.keys(documentation).length == 0){
-        console.error("Model is empty, nothing to save.");
-        return;
-    }
     try{
         for (var member in report) delete report[member];
         hard_deletes = [];
@@ -150,28 +146,32 @@ async function save_model_to_disk(){
 }
 
 async function load_file(file){
-    let content = await FileSystem.read(file);
-    file_check[file] = content;
-    if (file == "meta.json"){
-        let data = JSON.parse(content);
-        Object.assign(meta,data);
-        meta.roles = make_sure_is_list(meta.roles);
-    }
-    else if (file.endsWith(".xml")){
-        content = parser.parse(content);
-        model[file] = content;
-    }
-    else if (file.endsWith(".py")){
-        code[file] = {content:content};
-    }
-    else if(file.endsWith(".md")){
-        documentation[file] = {content:content};
-    }else if(file.endsWith(".log")){
-        logs[file] = content;
-        localStorage[file] = content;
-    }
-    else {
-        console.log(file,content);
+    try{
+        let content = await FileSystem.read(file);
+            file_check[file] = content;
+            if (file == "meta.json"){
+                let data = JSON.parse(content);
+                Object.assign(meta,data);
+                meta.roles = make_sure_is_list(meta.roles);
+            }
+            else if (file.endsWith(".xml")){
+                content = parser.parse(content);
+                model[file] = content;
+            }
+            else if (file.endsWith(".py")){
+                code[file] = {content:content};
+            }
+            else if(file.endsWith(".md")){
+                documentation[file] = {content:content};
+            }else if(file.endsWith(".log")){
+                logs[file] = content;
+                localStorage[file] = content;
+            }
+            else {
+                console.log(file,content);
+            }
+    }catch(err){
+        console.log("Could not load file:",file,err);
     }
 }
 

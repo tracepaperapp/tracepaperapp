@@ -46,6 +46,7 @@ function send_mutation(command,data){
                     tmp = tmp[key];
                 }
             }
+            console.log(cid);
             add_trace({
               command: command,
               status: "pending",

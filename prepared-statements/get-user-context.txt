@@ -6,9 +6,13 @@ query MyQuery($key: ID = "") {
       workspace {
         name
         drn
+        subscriptionType
         iam {
           username
           businessRole
+          user {
+            fullName
+          }
         }
         projects {
           drn
