@@ -16,6 +16,12 @@
                     let url = 'https://' + pipeline.stackId.split(':')[3] + '.console.aws.amazon.com/codesuite/codepipeline/pipelines/' + pipeline.pipelineName + '/view';
                     window. open(url, '_blank')"
                     class="btn btn-outline-primary">Open AWS pipeline</button>
+            <button
+                    x-show="context.selected_project.pipelines.length != 0" x-cloak x-transition
+                    class="btn btn-outline-primary"
+                    @click="if(context.selected_project.pipelines.length == 0){return;};let pipeline = context.selected_project.pipelines.at(0);
+                        let url = 'https://' + pipeline.stackId.split(':')[3] + '.console.aws.amazon.com/dynamodbv2/home?region=' + pipeline.stackId.split(':')[3] + '#edit-item?itemMode=2&pk=QA-Scenario-Execution-Report&route=ROUTE_ITEM_EXPLORER&sk=&table='+ pipeline.pipelineName +'-cache';
+                        window. open(url, '_blank');">Quality gate report</button>
             <button type="button"
                     x-show="url.includes('/test-log/#')" x-cloak x-transition
                     :disabled="loading"
