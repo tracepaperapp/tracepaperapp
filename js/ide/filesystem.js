@@ -33,7 +33,6 @@ document.addEventListener('tracepaper:context:changed', async () => {
             await connect_repository();
         }catch(err){
             console.error(err);
-            alert(err);
         }
         await load_model();
         auto_save = setInterval(save_model_to_disk,1000);

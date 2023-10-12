@@ -336,10 +336,7 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                 obj[HANDLER] = handler;
                 FileSystem.hardWrite(path, obj);
             }
-//            if(handler.att_on == "BuildUpdated"){
-//                console.log(handler);
-//            }
-            }catch(err){alert(err)}
+            }catch(err){console.error(err)}
         });
     });
 });
