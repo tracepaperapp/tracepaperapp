@@ -11,6 +11,12 @@
                     class="btn btn-outline-primary">Create AWS pipeline</button>
 
             <button type="button"
+                    x-show="context.selected_project.pipelines.length != 0" x-cloak x-transition
+                    @click="if(context.selected_project.pipelines.length == 0){return;};let pipeline = context.selected_project.pipelines.at(0);
+                    let url = 'https://' + pipeline.stackId.split(':')[3] + '.console.aws.amazon.com/codesuite/codepipeline/pipelines/' + pipeline.pipelineName + '/view';
+                    window. open(url, '_blank')"
+                    class="btn btn-outline-primary">Open AWS pipeline</button>
+            <button type="button"
                     x-show="url.includes('/test-log/#')" x-cloak x-transition
                     :disabled="loading"
                     @click="loading=true;

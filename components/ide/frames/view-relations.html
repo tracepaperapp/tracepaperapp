@@ -38,7 +38,7 @@
               <span x-show="ref.att_type == 'ObjectList'">n.a.</span>
               <div x-show="ref.att_type != 'ObjectList'"
                    x-data="{keys: []}"
-                   x-effect="let updated = tab_state.view.field.filter(x => x.att_type == 'String').map(x => x.att_name).concat(['#canonical']);
+                   x-effect="let updated = tab_state.view.field.filter(x => x.att_type == 'String' || x.att_type == 'StringList').map(x => x.att_name).concat(['#canonical']);
                              await sleep(1);
                              if(keys!=updated){keys=updated}">
                 <ui-selection :value="ref['att_foreign-key']"

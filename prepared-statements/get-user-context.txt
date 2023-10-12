@@ -26,6 +26,18 @@ query MyQuery($key: ID = "") {
             pipelineName
             stackId
           }
+          deployments {
+              apiEndpoint
+              apiId
+              apiKey
+              domainName
+              drn
+              eventBus
+              propertyVault
+              key
+              stackId
+              userPoolId
+            }
         }
       }
     }

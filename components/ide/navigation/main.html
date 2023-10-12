@@ -30,6 +30,14 @@
       </li>
       <li class="nav-item">
         <a class="nav-link d-flex align-items-center gap-2 active"
+           file="deployments/"
+           @click="Navigation.open_tab"
+           aria-current="page" href="#">
+          Deployments
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2 active"
            @click="if(confirm('This will delete all local data!')){clear_storage()}"
            aria-current="page" href="#">
           Clear local storage

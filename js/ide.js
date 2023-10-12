@@ -1147,6 +1147,8 @@ window.Navigation = {
             return "Expressions";
         } else if (file == "roles/"){
             return "Roles";
+        } else if (file == "deployments/"){
+            return "Deployments";
         } else {
             return file.split("/").at(-1);
         }
@@ -1182,6 +1184,8 @@ window.Navigation = {
             Expressions.load();
         } else if (file == "roles/"){
             session.type = "roles";
+        } else if (file == "deployments/"){
+            session.type = "deployments";
         } else if (file.startsWith("documentation")){
             Documentation.load(file);
         }
@@ -1257,7 +1261,7 @@ document.addEventListener('tracepaper:model:loaded', async () => {
     let files = await FileSystem.listFiles();
     files = files.concat(Object.keys(model));
     files = files.concat(Object.keys(documentation));
-    session.tabs.map(x=> x.split("#").at(0)).filter(x=> !files.includes(x) && !x.startsWith("documentation/") && !x.startsWith("build/") && !["patterns/","expressions/","roles/"].includes(x)).forEach(tab=> {
+    session.tabs.map(x=> x.split("#").at(0)).filter(x=> !files.includes(x) && !x.startsWith("documentation/") && !x.startsWith("build/") && !["patterns/","expressions/","roles/","deployments/"].includes(x)).forEach(tab=> {
         try{
             console.log("auto close tab:",tab);
             Navigation.execute_close_tab(tab);

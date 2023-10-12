@@ -91,5 +91,11 @@
       </div>
     </template>
 
+    <template x-if="session.type == 'deployments'" key="deployments">
+      <div x-show="session.type == 'deployments'" x-cloak x-transition x-import="ide/tabs/deployments">
+        <ui-deployments></ui-deployments>
+      </div>
+    </template>
+
   </div>
 </template>
