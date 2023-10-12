@@ -18,6 +18,7 @@ window.Scenarios = {
     },
     get: function(file){
         let scenario = model[file]["scenario"];
+        console.log(scenario);
         scenario.activity = make_sure_is_list(tab_state.scenario.activity);
         scenario.activity.forEach(activity => {
                     activity.input = make_sure_is_list(activity.input);
@@ -28,7 +29,9 @@ window.Scenarios = {
         return scenario;
     },
     load: function(file){
+        console.log(file);
         tab_state.scenario = Scenarios.get(file);
+        console.log(tab_state.scenario);
 
         let doc = file.replace('.xml','.md')
         Modeler.load_documentation(doc);
