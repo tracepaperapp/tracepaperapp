@@ -28,10 +28,11 @@
             Linked components
           </button>
           <ul class="dropdown-menu">
-            <template x-for="link in session.diagram_links">
-              <li x-data="{name: ''}"
+            <template x-for="link in session.diagram_links" :key="link">
+              <li x-data="{name: Navigation.get_tabname(link)}"
                   x-show="name" x-cloak x-transition
-                  x-init="name = Navigation.get_tabname(link)"><a
+                  x-effect="name = Navigation.get_tabname(link)">
+                <a
                       :class="link == session.tab ? 'dropdown-item active' : 'dropdown-item'"
                       :aria-current="link == session.tab"
                       @click.stop="Navigation.execute_open_tab(link)"
