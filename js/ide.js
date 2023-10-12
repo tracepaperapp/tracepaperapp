@@ -2052,6 +2052,11 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
         aggregate.root.field.forEach(field => {
             delete field.att_pk;
         });
+        aggregate.entities.forEach(entity => {
+            entity.field.forEach(field => {
+                delete field.att_pk;
+            });
+        });
         aggregate.handlers.forEach(handler => {
             try{
             let path = aggregate.path.replace("root.xml",`event-handlers/${handler.att_on}.xml`);
@@ -3303,6 +3308,13 @@ document.addEventListener('tracepaper:model:loaded', async () => {
 
 
 window.Scenarios = {
+    list: function(){
+        let resultset = [];
+        Object.keys(model).filter(key => key.startsWith('scenarios/') && key.endsWith(".xml")).forEach(key => {
+            resultset.push(Scenarios.get(key));
+        });
+        return resultset;
+    },
     load_navigation: function(){
         let scenario_names = [];
         session.scenario_names = scenario_names;
@@ -3312,15 +3324,19 @@ window.Scenarios = {
         });
         session.scenario_names = scenario_names;
     },
+    get: function(file){
+        let scenario = model[file]["scenario"];
+        scenario.activity = make_sure_is_list(tab_state.scenario.activity);
+        scenario.activity.forEach(activity => {
+                    activity.input = make_sure_is_list(activity.input);
+                    activity["expected-trace"] = make_sure_is_list(activity["expected-trace"]);
+                    activity["expect-value"] = make_sure_is_list(activity["expect-value"]);
+                    activity["extract-value"] = make_sure_is_list(activity["extract-value"]);
+                });
+        return scenario;
+    },
     load: function(file){
-        tab_state.scenario = model[file]["scenario"];
-        tab_state.scenario.activity = make_sure_is_list(tab_state.scenario.activity);
-        tab_state.scenario.activity.forEach(activity => {
-            activity.input = make_sure_is_list(activity.input);
-            activity["expected-trace"] = make_sure_is_list(activity["expected-trace"]);
-            activity["expect-value"] = make_sure_is_list(activity["expect-value"]);
-            activity["extract-value"] = make_sure_is_list(activity["extract-value"]);
-        });
+        tab_state.scenario = Scenarios.get(file);
 
         let doc = file.replace('.xml','.md')
         Modeler.load_documentation(doc);
@@ -3534,6 +3550,24 @@ window.Scenarios = {
 document.addEventListener('tracepaper:model:loaded', async () => {
     Scenarios.load_navigation();
     setTimeout(Scenarios.load_navigation,1000);
+});
+
+document.addEventListener('tracepaper:model:prepare-save', () => {
+
+    Scenarios.list().forEach(scenario => {
+        scenario.activity.forEach(activity => {
+          let expect = [];
+          let checks = [];
+          make_sure_is_list(activity["expect-value"]).forEach(assertion => {
+            if (assertion["att_name"] != ""
+                && !checks.includes(assertion["att_name"])){
+                    expect.push(assertion);
+                    checks.push(assertion["att_name"]);
+                }
+          });
+          activity["expect-value"] = expect;
+        });
+    });
 });
 
 

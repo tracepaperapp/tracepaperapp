@@ -97,7 +97,7 @@
             x-data="{block:false}"
             @click.debounce="if(block){return};
                 block=true;
-                activity['expect-value'].push({att_name: '', att_type: 'String'});
+                activity['expect-value'].push({att_name: 'field-' + makeid(6), att_type: 'String'});
                 block=false;">
       <i class="fa-solid fa-plus"></i>
     </button>

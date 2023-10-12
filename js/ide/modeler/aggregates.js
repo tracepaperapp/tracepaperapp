@@ -319,6 +319,11 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
         aggregate.root.field.forEach(field => {
             delete field.att_pk;
         });
+        aggregate.entities.forEach(entity => {
+            entity.field.forEach(field => {
+                delete field.att_pk;
+            });
+        });
         aggregate.handlers.forEach(handler => {
             try{
             let path = aggregate.path.replace("root.xml",`event-handlers/${handler.att_on}.xml`);
