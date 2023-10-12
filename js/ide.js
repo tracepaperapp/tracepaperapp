@@ -1018,6 +1018,29 @@ window.addEventListener(
 );
 
 window.Navigation = {
+    filter_tabs: function(search){
+        return Object.keys(model)
+            .filter(x => x.toLowerCase().includes(search.toLowerCase()))
+            .filter(x => {
+                if (x.startsWith("commands/")){
+                    return true;
+                } else if (x.startsWith("notifiers/")){
+                   return true;
+               }else if (x.startsWith("views/")){
+                   return true;
+               }else if (x.startsWith("projections/")){
+                                   return true;
+               }else if (x.startsWith("scenarios/")){
+                   return true;
+               }else if (x.startsWith("domain/") && x.endsWith("root.xml")){
+                   return true;
+               }else if (x.startsWith("domain/") && x.includes("/behavior-flows/")){
+                   return true;
+               }else{
+                    return false;
+               }
+            });
+    },
     toggle: function(section){
         if(navigation_block){return}else{navigation_block=true}
         if (session.navigation[section]){

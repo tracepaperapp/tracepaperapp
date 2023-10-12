@@ -1,10 +1,16 @@
 <template x-component="navbar">
 
-  <div x-data="{history: [], message: ''}">
+  <div x-data="{history: [], message: '',search:''}">
     <header class="navbar sticky-top bg-tracepaper-dark navbar-dark flex-md-nowrap p-0 shadow">
       <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white" href="#" @click="Context.close_project">
         Tracepaper
       </a>
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <input class="form-control form-control-sm" x-model="search" type="search" placeholder="Search" aria-label="Search">
+        </li>
+      </ul>
 
       <div class="d-flex">
 
@@ -42,6 +48,35 @@
       </div>
 
     </header>
+
+    <template x-if="search != ''">
+      <div>
+        <div class="overlay"></div>
+        <div class="prompt">
+          <h4>
+            Open model
+          </h4>
+
+          <div class="input-group mb-3">
+            <span class="input-group-text" >
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" class="form-control"
+                   placeholder="search..." x-model="search"/>
+          </div>
+          <div class="list-group list-group-flush">
+            <template x-for="file in Navigation.filter_tabs(search)" :key="file">
+              <button type="button"
+                      @click="search = '';Navigation.execute_open_tab(file)"
+                      x-text="file"
+                      class="list-group-item list-group-item-action">
+              </button>
+            </template>
+          </div>
+
+        </div>
+      </div>
+    </template>
 
     <div class="modal fade" id="commitDialog"
          data-bs-backdrop="static" data-bs-keyboard="false"
