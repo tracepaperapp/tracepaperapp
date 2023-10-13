@@ -115,7 +115,7 @@
         <div x-show="query.att_type != 'get'">
           <button type="button" class="btn btn-outline-success"
                   x-show="!session.editing_disabled" x-cloak x-transition
-                  @click.debounce="query['filter-clause'].push({'att_field-name': '', att_operand: 'equals'})">
+                  @click.debounce="blockingDecorator(function(){query['filter-clause'].push({'att_field-name': '', att_operand: 'equals'})})">
             <i class="fa-solid fa-plus"></i>
           </button>
         </div>

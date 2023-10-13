@@ -28,7 +28,7 @@
       </thead>
       <tbody x-data="{inputs: []}"
              x-effect="let updated = activity.input;await sleep(1);if(inputs!=updated){inputs=updated}">
-      <template x-for="(input,index) in activity.input" :key="input.att_name">
+      <template x-for="(input,index) in inputs" :key="input.att_name">
         <tr>
           <td x-text="input.att_name">
           </td>
@@ -95,10 +95,9 @@
     <button type="button" class="btn btn-outline-success"
             x-show="!session.editing_disabled" x-cloak x-transition
             x-data="{block:false}"
-            @click.debounce="if(block){return};
-                block=true;
+            @click.debounce="blockingDecorator(function(){
                 activity['expect-value'].push({att_name: 'field-' + makeid(6), att_type: 'String'});
-                block=false;">
+                })">
       <i class="fa-solid fa-plus"></i>
     </button>
 
@@ -139,10 +138,9 @@
     <button type="button" class="btn btn-outline-success"
             x-show="!session.editing_disabled" x-cloak x-transition
             x-data="{block:false}"
-            @click.debounce="if(block){return};
-                block=true;
+            @click.debounce="blockingDecorator(function(){
                 activity['extract-value'].push({att_name: '', 'att_put-key': 'String'});
-                block=false;">
+                })">
       <i class="fa-solid fa-plus"></i>
     </button>
   </div>

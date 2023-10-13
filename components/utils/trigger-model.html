@@ -89,7 +89,7 @@
           <div>
             <button type="button" class="btn btn-outline-success"
                     x-show="!session.editing_disabled" x-cloak x-transition
-                    @click="trigger.mapping.push({att_target: '', att_value: ''});$dispatch('mapping-updated')">
+                    @click="blockingDecorator(function(){trigger.mapping.push({att_target: '', att_value: ''});$dispatch('mapping-updated')})">
               <i class="fa-solid fa-plus"></i>
             </button>
           </div>

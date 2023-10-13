@@ -60,6 +60,13 @@
                 </td>
               </tr>
               <tr>
+                <th>Logging</th>
+                <td>
+                  <a target="_blank"
+                     :href="'https://'+deployment.stackId.split(':')[3]+'.console.aws.amazon.com/cloudwatch/home?region='+deployment.stackId.split(':')[3]+'#logsV2:log-groups$3FlogGroupNameFilter$3D'+deployment.eventBus">open</a>
+                </td>
+              </tr>
+              <tr>
                 <th>Tables</th>
                 <td>
                   <a target="_blank" :href="'https://' + deployment.stackId.split(':')[3]
