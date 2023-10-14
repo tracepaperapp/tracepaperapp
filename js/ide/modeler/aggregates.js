@@ -71,7 +71,7 @@ window.Aggregates = {
             Aggregates.load_document_model(tab_state.view);
         }catch{}
         try{
-            Aggregates.select_event(tab_state.event);
+            Aggregates.force_select_event(tab_state.event);
         }catch(err){console.error("--->",err)}
     },
     load_document_model: function(view, selected_event=""){
@@ -204,9 +204,11 @@ window.Aggregates = {
         tab_state.view = "";
         setTimeout(function(){tab_state.view = view},100);
     }),
-    select_event: blockingDecorator(function(event){
+    force_select_event: function(event){
         if (tab_state.aggregate.events.filter(x => x.att_name == event.att_name).length == 0){
             event = null;
+        } else {
+            event = tab_state.aggregate.events.filter(x => x.att_name == event.att_name).at(0);
         }
         if (event){
             tab_state.selected_event = event.att_name;
@@ -233,6 +235,9 @@ window.Aggregates = {
             tab_state.handler_selected_entity = "root";
             tab_state.handler_entity = tab_state.aggregate.root;
         }
+    },
+    select_event: blockingDecorator(function(event){
+        Aggregates.force_select_event(event);
     }),
     sync_handler: function(){
         let path = tab_state.aggregate.path.replace("root.xml",`event-handlers/${tab_state.event.att_name}.xml`);
@@ -341,6 +346,14 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
 
         //Validation
         Validation.must_be_camel_cased(aggregate.path,aggregate.root.field,"Document field","att_name")
-
+        aggregate.entities.forEach(entity => {
+            Validation.must_be_camel_cased(aggregate.path,entity.field,`Document collection (${entity.att_name}) field`,"att_name")
+        });
+        aggregate.events.forEach(event=>{
+            Validation.must_be_camel_cased(aggregate.path,event.field,`Field in event (${event.att_name})`,"att_name");
+            event[NESTED].forEach(nested => {
+                Validation.must_be_camel_cased(aggregate.path,nested.field,`Field in event (${event.att_name}) collection (${nested.att_name})`,"att_name");
+            });
+        })
     });
 });

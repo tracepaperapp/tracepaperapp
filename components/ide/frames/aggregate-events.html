@@ -1,7 +1,6 @@
 <template x-component="aggregate-events">
     <div x-import="utils/editor-elements">
 
-        <div x-effect="if(!tab_state.selected_event){Aggregates.select_event()}"></div>
         <ui-prompt id="new-domain-event"
                    title="Add new domain event to project"
                    @prompt-filled.debounce="Aggregates.create_new_event($event.detail.value)"></ui-prompt>
@@ -24,7 +23,6 @@
                         <li x-show="!session.editing_disabled" x-cloak x-transition ><a @click="$dispatch('show-modal',{id: 'new-domain-event'})"
                                class="dropdown-item" href="#events">Create new domain event</a></li>
                     </ul>
-
                 </div>
             </h4>
             <ui-documentation-icon subject="aggregate" key="data_model"></ui-documentation-icon>
