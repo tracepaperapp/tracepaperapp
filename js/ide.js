@@ -1762,6 +1762,7 @@ window.Validation = {
         report[file].push(issue);
     },
     has_issues: function(){
+        session.trigger_build_after_commit = Object.values(report).filter(x => x.length != 0).length == 0;
         return Object.values(report).filter(x => x.length != 0).length != 0;
     }
 };

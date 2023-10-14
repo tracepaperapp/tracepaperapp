@@ -107,9 +107,14 @@
           </div>
           <div class="modal-footer">
             <div class="form-check">
+              <span x-show="Validation.has_issues()" x-cloak x-transition>
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                solve issues to enable the build
+              </span>
               <input class="form-check-input" type="checkbox"
+                     :disabled="Validation.has_issues()"
                      x-model="session.trigger_build_after_commit" id="flexCheckDefault">
-              <label class="form-check-label" for="flexCheckDefault">
+              <label class="form-check-label" for="flexCheckDefault" x-show="!Validation.has_issues()" x-cloak x-transition>
                 Trigger Build
               </label>
             </div>
