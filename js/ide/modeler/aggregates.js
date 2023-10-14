@@ -338,5 +338,9 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
             }
             }catch(err){console.error(err)}
         });
+
+        //Validation
+        Validation.must_be_camel_cased(aggregate.path,aggregate.root.field,"Document field","att_name")
+
     });
 });

@@ -111,7 +111,7 @@
                 </table>
                 <button type="button" class="btn btn-outline-success"
                         x-show="!session.editing_disabled" x-cloak x-transition
-                        @click="blockingDecorator(tab_state.projection.input.push({att_name: 'field-' + makeid(4), att_type: 'String',att_required: 'true'}));">
+                        @click="blockingDecorator(function(){tab_state.projection.input.push({att_name: 'field-' + makeid(4), att_type: 'String',att_required: 'true'})});">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </div>

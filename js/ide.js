@@ -1745,6 +1745,16 @@ window.get_lorem_picsum = function(el){
 }
 
 window.Validation = {
+    must_be_camel_cased: function(path,element,fieldName,key){
+        make_sure_is_list(element).forEach(x => {
+            if (key){
+                x = x[key];
+            }
+            if (!x.match(camel_cased)){
+                Validation.register(path,`${fieldName} ${x} must be camelCased`);
+            }
+        });
+    },
     register: function(file,issue){
         if (!(file in report)){
             report[file] = [];
@@ -2097,6 +2107,10 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
             }
             }catch(err){console.error(err)}
         });
+
+        //Validation
+        Validation.must_be_camel_cased(aggregate.path,aggregate.root.field,"Document field","att_name")
+
     });
 });
 
