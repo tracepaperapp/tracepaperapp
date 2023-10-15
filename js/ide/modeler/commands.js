@@ -109,14 +109,6 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                     if (name != command.att_name && trigger.att_source == name){
                         trigger.att_source = command.att_name;
                     }
-                   if (trigger.att_source == command.att_name){
-                       trigger.mapping.forEach(mapping => {
-                        if (!mapping.att_value.startsWith("#") && !fields.includes(mapping.att_value)){
-                            let path = aggregate.path.replace("root.xml","behavior-flows/") + flow.att_name + ".xml";
-                            Validation.register(path,`Trigger ${trigger.att_source} maps a non existing command-field '${mapping.att_value}' to flow variable '${mapping.att_target}'`);
-                        }
-                       });
-                   }
                 });
             });
         });

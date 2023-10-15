@@ -45,6 +45,7 @@ function load_context(){
         context.selected_project = context.selected_workspace.projects.filter(x => x.drn == localStorage.project).at(0);
     }
     if (context.selected_project){
+        reset_proxy_token();
         context.repository = context.selected_project.repositories.filter(x => x.name == "model").at(0).url;
         context.code_repo = context.selected_project.repositories.filter(x => x.name == "code").at(0).url;
     }
@@ -2312,10 +2313,7 @@ window.Behavior = {
                 att_value: flowVars.includes(x.att_name) ? "#flow." + x.att_name : ''
             };
         });
-        console.log(event);
         processor.mapping = processor.mapping.concat(event["nested-object"].map(x => {
-            console.log(x.att_name);
-            console.log(flowVars.includes(x.att_name));
             return {
                att_target: x.att_name,
                att_value: flowVars.includes(x.att_name) ? "#flow." + x.att_name : ''
@@ -2332,11 +2330,11 @@ window.Behavior = {
             new_processor.att_file = "";
             new_processor.att_handler = "";
         } else if (type == "validator") {
-            new_processor.att_condition = "";
-            new_processor.att_exception = "";
+            new_processor.att_condition = "1 == 1";
+            new_processor.att_exception = "My log message {flow.requestor}";
         } else if (type == "set-variable") {
             new_processor.att_name = "";
-            new_processor.att_expression = "";
+            new_processor.att_expression = "flow.identity.lower()";
         }
         tab_state.flow.processor.push(new_processor);
     }),
@@ -2375,15 +2373,16 @@ window.TestCase = {
         tab_state.testcase.input = TestCase.convert_event_to_inputs(tab_state.testcase,event);
     }),
     convert_event_to_inputs: function(testcase,event){
-        console.log(event);
         let inputs = event.field.map(x => {return {att_name: x.att_name, att_value: TestCase.get_input_value(testcase,x.att_name), att_type: x.att_type};});
         inputs = inputs.concat(event["nested-object"].map(x => {return {att_name: x.att_name, "#text": TestCase.get_input_value(testcase,x.att_name,true,event), att_type:"NestedObject"};}))
         return inputs;
     },
     get_input_value: function(testcase,inputName,nested=false,event=null){
         let input = testcase.input.filter(x => x.att_name == inputName);
-        if (input.length != 0){
+        if (input.length != 0 && !nested){
             return input.at(0).att_value;
+        } else if(input.length != 0 && nested){
+            return input.at(0)["#text"];
         } else if (nested){
             let template = [];
             let nested_object = {};
@@ -2522,6 +2521,88 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                     delete testcase.state;
                 }
             });
+        });
+    });
+
+    //Validation
+    Aggregates.list().forEach(aggregate => {
+        aggregate.flows.forEach(flow => {
+            try{
+                let path = aggregate.path.replace("root.xml","behavior-flows/") + flow.att_name + ".xml";
+                if (flow.trigger.length == 0){
+                    Validation.register(path,`No trigger configured`);
+                }
+                flow.trigger.forEach(trigger => {
+                    let event = Events.get(trigger.att_source);
+                    let fields = event.field.map(x => x.att_name);
+                    fields = fields.concat(event[NESTED].map(x => x.att_name));
+                    trigger.mapping.forEach(mapping => {
+                        if (!mapping.att_value.startsWith("#") && !fields.includes(mapping.att_value)){
+                            Validation.register(path,`Trigger ${trigger.att_source} maps a non existing command-field '${mapping.att_value}' to flow variable '${mapping.att_target}'`);
+                        }
+                     });
+                     Validation.must_be_camel_cased(path,trigger.mapping,`Flow variable`,"att_target")
+                     if (!trigger["att_key-field"].startsWith("#") && !fields.includes(trigger["att_key-field"])){
+                         Validation.register(path,`Trigger ${trigger.att_source} uses a non existing command-field as business key`);
+                         trigger["att_key-field"] = "";
+                     }
+                });
+                if (flow.processor.length == 0){
+                    Validation.register(path,`No processors configured`);
+                }
+                flow.processor.forEach(processor => {
+                    if (processor.att_type == "emit-event"){
+                        processor.mapping.filter(x => x.att_value == "#flow.").forEach(mapping => {
+                            Validation.register(path,`Emit event [${processor.att_ref}] must map a flow variable to field [${mapping.att_target}]`);
+                        });
+                        let event = Events.get(processor.att_ref);
+                        let fields = event.field.map(x => x.att_name);
+                        fields = fields.concat(event[NESTED].map(x => x.att_name));
+                        processor.mapping = processor.mapping.filter(x => fields.includes(x.att_target));
+                        fields.filter(x => !processor.mapping.map(x => x.att_target).includes(x)).forEach(field => {
+                            processor.mapping.push({
+                                att_target: field,
+                                att_value: "#flow."
+                            });
+                        });
+                    } else if (processor.att_type == "code") {
+                        if (!processor.att_file && !processor.att_handler && !processor.att_code){
+                            Validation.register(path,"Python code processor must refrence a global module & method, or define inline code");
+                        }
+                    } else if (processor.att_type == "validator") {
+                        if (!processor.att_condition || !processor.att_exception){
+                            Validation.register(path,"Validation processor must must have a condition and an exception message configured, exception is triggered if the condition is false");
+                        }
+                    } else if (processor.att_type == "set-variable") {
+                        if (!processor.att_name || !processor.att_expression || !processor.att_name.match(camel_cased)){
+                            Validation.register(path,"A set variable processor must have a variable name and expression configured");
+                        }
+                    }
+                });
+                if (flow[TEST].length == 0){
+                    Validation.register(path,`No test cases defined`);
+                }
+                flow[TEST].forEach(test => {
+                    let test_path = path + "#" + test.att_name;
+                    let event = Events.get(test["att_trigger-event"]);
+                    test.input = TestCase.convert_event_to_inputs(test,event);
+                    test.input.filter(x => !x.att_value && !x["#text"]).forEach(input => {
+                        Validation.register(test_path,`Input [${input.att_name}] is not set`);
+                    });
+                    test.expected.forEach(expected_event => {
+                        try{
+                            let event = Events.get(expected_event["att_domain-event"]);
+                            let fields = event.field.map(x => x.att_name);
+                            expected_event.field.filter(field => !fields.includes(field.att_name)).forEach(field => {
+                                Validation.register(test_path,`Event assertion [${event.att_name}] references an unknown field [${field.att_name}]`);
+                            });
+                            expected_event.field.filter(x => !x.att_value).forEach(x => {
+                                Validation.register(test_path,`No expected value configured for field [${x.att_name}] in event [${event.att_name}]`);
+                            });
+                        }catch{}
+                    });
+                });
+            }catch{}
         });
     });
 });
@@ -2721,14 +2802,6 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                     if (name != command.att_name && trigger.att_source == name){
                         trigger.att_source = command.att_name;
                     }
-                   if (trigger.att_source == command.att_name){
-                       trigger.mapping.forEach(mapping => {
-                        if (!mapping.att_value.startsWith("#") && !fields.includes(mapping.att_value)){
-                            let path = aggregate.path.replace("root.xml","behavior-flows/") + flow.att_name + ".xml";
-                            Validation.register(path,`Trigger ${trigger.att_source} maps a non existing command-field '${mapping.att_value}' to flow variable '${mapping.att_target}'`);
-                        }
-                       });
-                   }
                 });
             });
         });

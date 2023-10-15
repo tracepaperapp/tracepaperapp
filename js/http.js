@@ -104,7 +104,9 @@ function fromStream(stream) {
  */
 
 var proxy_token = "";
-var proxy_token_expiry = new Date();
+window.reset_proxy_token = function(){
+    proxy_token = "";
+}
 const fetch_token_query = `
 query FetchToken($projectDrn: String = "") {
   RepositoryToken {

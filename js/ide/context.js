@@ -45,6 +45,7 @@ function load_context(){
         context.selected_project = context.selected_workspace.projects.filter(x => x.drn == localStorage.project).at(0);
     }
     if (context.selected_project){
+        reset_proxy_token();
         context.repository = context.selected_project.repositories.filter(x => x.name == "model").at(0).url;
         context.code_repo = context.selected_project.repositories.filter(x => x.name == "code").at(0).url;
     }
