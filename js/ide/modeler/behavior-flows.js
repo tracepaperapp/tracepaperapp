@@ -425,7 +425,12 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                         processor.mapping.filter(x => x.att_value == "#flow.").forEach(mapping => {
                             Validation.register(path,`Emit event [${processor.att_ref}] must map a flow variable to field [${mapping.att_target}]`);
                         });
-                        let event = Events.get(processor.att_ref);
+                        try{
+                            let event = Events.get(processor.att_ref);
+                        }catch{
+                            Validation.register(path,`Emit event references an undefined event [${processor.att_ref}]`);
+                            return;
+                        }
                         let fields = event.field.map(x => x.att_name);
                         fields = fields.concat(event[NESTED].map(x => x.att_name));
                         processor.mapping = processor.mapping.filter(x => fields.includes(x.att_target));
@@ -435,6 +440,9 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                                 att_value: "#flow."
                             });
                         });
+                        if(event.att_source != aggregate.subdomain + "." + aggregate.root.att_name){
+                            Validation.register(path,`Emit event references [${processor.att_ref}] which is mapped to an other aggregate [${event.att_source}]`);
+                        }
                     } else if (processor.att_type == "code") {
                         if (!processor.att_file && !processor.att_handler && !processor.att_code){
                             Validation.register(path,"Python code processor must refrence a global module & method, or define inline code");
