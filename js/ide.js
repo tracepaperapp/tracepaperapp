@@ -4070,3 +4070,86 @@ document.addEventListener('tracepaper:model:loaded', async () => {
     Views.load_navigation();
     setTimeout(Views.load_navigation,1000);
 });
+
+document.addEventListener('tracepaper:model:prepare-save', () => {
+    // Refactor & Validate
+    Views.list().forEach(view => {
+        let path = "views/" + view.att_name + ".xml"
+        //Fields
+        Validation.must_be_camel_cased(path,view.field,"View field","att_name")
+
+        //Check primary key
+        if (view.field.filter(x => x.att_pk == "true").length != 0 && view[SNAPSHOT_HANDLER].length == 0 && view[CUSTOM_HANDLER].length == 0){
+            Validation.register(path, "This view has a primary key configured but no datasource");
+        }
+
+        //Relations
+        let keys = Object.keys(model);
+        view.field.filter(x => view_relations.includes(x.att_type)).forEach(ref => {
+            let key = `views/${ref.att_ref}.xml`;
+            if (!keys.includes(key)){
+                Validation.register(path,`Has a ${ref.att_type} relation configured that references an unknown view ${ref.att_ref}`)
+            }
+        });
+
+        //Snapshot handler
+        view[SNAPSHOT_HANDLER].forEach(handler => {
+            try{
+                    let aggregate = null;
+                    let fields = view.field.map(x => x.att_name);
+                    try{
+                        aggregate = Aggregates.get(`domain/${handler["att_sub-domain"]}/${handler.att_aggregate}/root.xml`);
+                    }catch{
+                        Validation.register(path,`Datasource refrences a non existing aggregate ${handler['att_sub-domain']}.${handler.att_aggregate}`)
+                        return;
+                    }
+
+                    //Remove unknown targets
+                    handler.mapping = handler.mapping.filter(x => fields.includes(x.att_target));
+
+                    let aggregate_fields = aggregate.root.field.map(x => x.att_name);
+                    aggregate_fields = aggregate_fields.concat(aggregate.entities.map(x => x.att_name));
+                    handler.mapping.filter(x => !aggregate_fields.includes(x.att_value)).forEach(mapping=>{
+                        Validation.register(path,`Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps an unknown document field [${mapping.att_value}] to view field [${mapping.att_target}]`);
+                    });
+                    handler.mapping.filter(x => x.att_operand == "convert_items").forEach(mapping => {
+                        let source_fields = aggregate.entities.filter(x => x.att_name == mapping.att_value).at(0).field.map(x => x.att_name);
+                        let ref = view.field.filter(x => x.att_name == mapping.att_target).at(0).att_ref;
+                        ref = Views.get(`views/${ref}.xml`);
+                        let target_fields = ref.field.filter(x => view_field_types.concat(["ObjectList"]).includes(x.att_type)).map(x => x.att_name);
+                        let nested = JSON.parse(mapping.att_template.replaceAll("value[","").replaceAll("]",""));
+                        Object.keys(nested).forEach(target => {
+                            if (!target_fields.includes(target)){
+                                Validation.register(path,`
+                                    Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps to an unknown nested view field
+                                    [${mapping.att_target}.${target}]`)
+                            }
+                            if (!source_fields.includes(nested[target])){
+                                Validation.register(path,`
+                                    Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps an unknown document collection field
+                                    [${mapping.att_value}.${nested[target]}] to [${mapping.att_target}.${target}]`)
+                            }
+                        });
+                    });
+            }catch{}
+                });
+
+        //Custom handler
+        view[CUSTOM_HANDLER].forEach(handler => {
+            let aggregate = null;
+            try{
+                aggregate = Aggregates.get(`domain/${handler["att_sub-domain"]}/${handler.att_aggregate}/root.xml`);
+            }catch{
+                Validation.register(path,`Datasource refrences a non existing aggregate ${handler['att_sub-domain']}.${handler.att_aggregate}`)
+                return;
+            }
+            if(!handler["#text"] && (!handler["att_python-file"] || !handler.att_method)){
+                Validation.register(path,`
+                    Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] is not correctly configured`);
+            }
+            if (handler["att_python-file"] && handler.att_method){
+                //TODO check if module and method exist
+            }
+        });
+    });
+});

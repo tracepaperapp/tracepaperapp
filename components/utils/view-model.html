@@ -38,7 +38,7 @@
                     <tr>
                         <td>
                             <ui-text-field :value="field.att_name"
-                                           message="Must be lowercased or camelCased"
+                                           validation-message="Must be lowercased or camelCased"
                                            @updated.debounce="field.att_name = $event.detail.value;"
                                            :pattern="lower_or_camel_cased"></ui-text-field>
                         </td>
