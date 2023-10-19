@@ -1,7 +1,7 @@
 <template x-component="deployments">
-  <div>
+  <div x-data="{deployments: []}" x-effect="let updated = context.selected_project.deployments;await sleep(1);if(deployments!=updated){deployments=updated}">
 
-    <template x-for="deployment in context.selected_project.deployments" :key="deployment.drn">
+    <template x-for="deployment in deployments" :key="deployment.drn">
       <div class="bordered-element">
         <h4 x-text="deployment.eventBus"></h4>
         <ui-documentation-icon subject="deployment" key="main"></ui-documentation-icon>
