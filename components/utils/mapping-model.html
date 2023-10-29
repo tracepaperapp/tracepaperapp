@@ -41,7 +41,7 @@
         </div>
       </div>
       <div class="col-6" x-show="!('att_code' in tab_state.handler)" x-cloak x-transition>
-        <table class="table" x-data="{source: {}, handler: {}}">
+        <table aria-description="data" class="table" x-data="{source: {}, handler: {}}">
           <thead x-effect="
                 if (tab_state.handler_selected_source == ''){return}
                 let sources = tab_state.event['nested-object'].filter(x => x.att_name == tab_state.handler_selected_source);

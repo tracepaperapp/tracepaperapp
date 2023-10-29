@@ -38,7 +38,7 @@
                 <div class="card card-custom">
                   <div class="card-body">
                     <h5 class="card-title">Access management</h5>
-                    <table class="table">
+                    <table aria-description="data" class="table">
                       <template x-for="user in context.selected_workspace.iam">
                         <tr>
                           <td>
@@ -173,7 +173,7 @@
                         </div>
                         <p>About to create a new project <b x-text="command.name"></b>.
                           It will use the following GitHub repositories for storage of model and artifacts:
-                        <table>
+                        <table aria-description="data">
                           <tr>
                             <th>Model repository</th>
                             <td x-text="command.modelRepo"></td>

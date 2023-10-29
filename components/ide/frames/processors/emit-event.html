@@ -1,6 +1,6 @@
 <template x-component="emit-event">
   <div x-data="{expanded: $persist(false).as(processor.att_id + '-emit-processor')}">
-    <table class="table">
+    <table aria-description="data" class="table">
       <tbody>
       <tr>
         <th>Event</th>
@@ -14,7 +14,7 @@
     </table>
     <button class="btn btn-outline-primary" @click="expanded = !expanded"
       x-text="expanded ? 'hide mapping' : 'show mapping'"></button>
-    <table class="table" x-import="utils/editor-elements"  x-show="expanded" x-collapse>
+    <table aria-description="data" class="table" x-import="utils/editor-elements"  x-show="expanded" x-collapse>
       <thead>
       <tr>
         <th>Event Field</th>

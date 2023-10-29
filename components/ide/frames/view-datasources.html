@@ -26,7 +26,7 @@
           <ui-documentation-icon subject="view" key="data_source"></ui-documentation-icon>
           <ui-trash-icon @delete.debounce="Views.remove_data_source(handler);"></ui-trash-icon>
 
-          <table class="table">
+          <table aria-description="data" class="table">
             <tbody>
             <tr>
               <th>Business key</th>
@@ -65,7 +65,7 @@
             </tbody>
           </table>
           <br>
-          <table class="table">
+          <table aria-description="data" class="table">
             <thead>
             <tr>
               <th>View field</th>
@@ -134,7 +134,7 @@
                           mapping.att_template.replace('{','').replace('}','').split(',').forEach(x => {
                             template[x.split(':').at(0).replaceAll('&quot;','')] = x.split(':').at(1).split('&quot;').at(1);
                           })">
-                    <table class="table">
+                    <table aria-description="data" class="table">
                       <thead>
                       <tr>
                         <th>View Field</th>
@@ -174,7 +174,7 @@
           <ui-documentation-icon subject="view" key="custom_data_source"></ui-documentation-icon>
           <ui-trash-icon @delete.debounce="Views.remove_data_source(handler);"></ui-trash-icon>
 
-          <table class="table">
+          <table aria-description="data" class="table">
             <tbody>
             <tr>
               <th>Type</th>

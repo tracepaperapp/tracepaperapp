@@ -15,7 +15,7 @@
                 Projections.rename(new_name);"></div>
                 <div class="row">
                     <div class="col-12">
-                        <table class="table">
+                        <table aria-description="data" class="table">
                             <tbody x-data="{name: ''}">
                             <tr>
                                 <th>API Namespace</th>
@@ -70,7 +70,7 @@
 
             <div class="bordered-element">
                 <h4>Arguments</h4>
-                <table class="table"
+                <table aria-description="data" class="table"
                        x-data="{inputs: []}"
                        x-effect="let updated = tab_state.projection.input;await sleep(1);if(inputs!=updated){inputs=updated}">
                     <thead>

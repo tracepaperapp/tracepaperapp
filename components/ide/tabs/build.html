@@ -1,6 +1,7 @@
 <template x-component="build">
   <template x-if="session.tab.split('/').at(1)" key="build-container">
-      <iframe id="buildframe" :src="'/build-log?key=' + session.tab.split('/').at(1)" style="width:100%;height:80vh"></iframe>
+      <iframe id="buildframe" title="build-log"
+              :src="'/build-log?key=' + session.tab.split('/').at(1)" style="width:100%;height:80vh"></iframe>
   </template>
   <div x-init="await sleep(1000);if(!session.tab.split('/').at(1)){
     Navigation.execute_open_tab('build/' + tab_state.builds.at(0).drn)}"></div>

@@ -16,7 +16,7 @@
             $dispatch('remove-trigger',{source: trigger.att_source});
             triggerDefinitions = triggerDefinitions.filter(x => x.att_source != trigger.att_source)"></ui-trash-icon>
 
-          <table class="table">
+          <table aria-description="data" class="table">
             <thead>
             <tr>
               <th>Mappings for</th>

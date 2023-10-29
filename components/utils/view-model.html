@@ -15,7 +15,7 @@
                 }
             };"></div>
         <div class="col-12">
-            <table class="table">
+            <table aria-description="data" class="table">
                 <thead>
                 <tr>
                     <th><p>Business key</p></th>
@@ -105,7 +105,7 @@
          x-data="{fields: []}">
         <div x-effect="let updated = tab_state.view.field;await sleep(1);if(fields!=updated){fields=updated;}"></div>
         <div class="col-12">
-            <table class="table">
+            <table aria-description="data" class="table">
                 <thead>
                 <tr>
                     <th>Name</th>

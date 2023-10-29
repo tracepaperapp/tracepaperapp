@@ -89,7 +89,7 @@
           </div>
           <div class="modal-body">
             <ul class="list-group list-group-flush">
-              <table class="table">
+              <table aria-description="data" class="table">
                 <template x-for="file in session.staged_files" :key="file">
                   <tr>
                     <td x-text="await FileSystem.file_status(file)"></td>
@@ -140,7 +140,7 @@
           <div class="modal-body">
             <ul class="list-group list-group-flush">
 
-              <table class="table">
+              <table aria-description="data" class="table">
                 <tbody>
                 <template x-for="commit in history">
                   <tr>
@@ -175,7 +175,7 @@
           </div>
           <div class="modal-body">
 
-            <table class="table">
+            <table aria-description="data" class="table">
               <tr>
                 <th>Model File</th>
                 <th>Issues</th>

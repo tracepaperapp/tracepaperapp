@@ -46,7 +46,7 @@
                                       @updated.debounce="TestCase.change_trigger($event.detail.value);"></ui-selection>
                     </h4>
 
-                    <table class="table">
+                    <table aria-description="data" class="table">
                         <tbody x-data="{inputs: []}"
                                x-effect="let updated = tab_state.testcase.input;await sleep(1);if(inputs!=updated){inputs=updated}">
                         <template x-for="input in inputs" :key="input.att_name">
@@ -88,7 +88,7 @@
                                               @updated.debounce="event = TestCase.update_expected_event(event,$event.detail.value);"></ui-selection>
                             </h6>
 
-                            <table class="table">
+                            <table aria-description="data" class="table">
                                 <tbody x-data="{fields: []}" x-effect="let updated = make_sure_is_list(event.field);await sleep(1);if(fields != updated){fields=updated}">
                                 <template x-for="field in fields" >
                                     <tr>

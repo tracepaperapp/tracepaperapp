@@ -74,7 +74,7 @@ events:
                              :pattern="camel_cased"></ui-text-field>
             </template>
           </h6>
-          <table class="table" x-data="{fields: [],excluded: []}"
+          <table aria-description="data" class="table" x-data="{fields: [],excluded: []}"
                  x-effect="
                   if(entity && entity.field){
                     let updated_fields = entity.field.filter(field => field_types.includes(field.att_type));

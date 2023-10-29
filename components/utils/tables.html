@@ -17,7 +17,7 @@
             }
         </script>
         <template :x-target="$prop('target')" :alias="$prop('alias')">
-        <table class="table">
+        <table aria-description="data" class="table">
             <template x-for="(key,value) in data">
                 <tr>
                     <th x-text="key"></th>
@@ -67,7 +67,7 @@
         </script>
         <template :x-target="$prop('target')">
     <div x-show="show" class="table-responsive">
-        <table class="table">
+        <table aria-description="data" class="table">
             <thead>
             <tr>
                 <template x-for="key in headers">
@@ -92,7 +92,7 @@
 <template x-component="trace-table">
     <template :x-target="$prop('target')">
        <div class="table-responsive">
-    <table class="table" x-show="$store.trace.length != 0" x-cloak>
+    <table aria-description="data" class="table" x-show="$store.trace.length != 0" x-cloak>
         <thead>
             <tr>
                 <th scope="col">Timestamp</th>
