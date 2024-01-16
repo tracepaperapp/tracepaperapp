@@ -24,6 +24,9 @@ window.Scenarios = {
                     activity["expected-trace"] = make_sure_is_list(activity["expected-trace"]);
                     activity["expect-value"] = make_sure_is_list(activity["expect-value"]);
                     activity["extract-value"] = make_sure_is_list(activity["extract-value"]);
+                    if (!activity.att_id){
+                        activity.att_id = makeid(6);
+                    }
                 });
         return scenario;
     },

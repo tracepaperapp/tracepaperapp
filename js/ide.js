@@ -642,7 +642,13 @@ async function save_model_to_disk(){
         //Cleanup
         let files = await FileSystem.listFiles();
         await files.filter(
-                file => file != "meta.json" && !(file in documentation) && !(file in model) && !(file in code) && !(file in logs)
+                file => file != "meta.json"
+                    && file != ".gitignore"
+                    && !(file in documentation)
+                    && !(file in model)
+                    && !(file in code)
+                    && !(file in logs)
+                    && !(file in templates)
             ).forEach(async file => {
             isRefactored = true;
             await FileSystem.delete(file);
@@ -680,6 +686,9 @@ async function load_file(file){
             }
             else if (file.endsWith(".py")){
                 code[file] = {content:content};
+            }
+            else if(file.startsWith("templates/")){
+                templates[file] = {content:content};
             }
             else if(file.endsWith(".md")){
                 documentation[file] = {content:content};
@@ -2143,6 +2152,9 @@ window.Behavior = {
         flow.processor = make_sure_is_list(flow.processor);
         flow.processor.forEach(processor => {
             processor.mapping = make_sure_is_list(processor.mapping);
+            if (!processor.att_id){
+                processor.att_id = makeid(5);
+            }
         });
         flow[TEST] = make_sure_is_list(flow[TEST]);
         flow[TEST].forEach(test => {
@@ -3112,6 +3124,9 @@ window.Notifiers = {
         notifier.activity = make_sure_is_list(notifier.activity);
         notifier.activity.forEach(activity=> {
             activity.activity = make_sure_is_list(activity.activity);
+            if(!activity.att_id){
+                activity.att_id = makeid(6);
+            }
         });
         notifier.att_file_path = path;
         return notifier;
@@ -3464,6 +3479,9 @@ window.Scenarios = {
                     activity["expected-trace"] = make_sure_is_list(activity["expected-trace"]);
                     activity["expect-value"] = make_sure_is_list(activity["expect-value"]);
                     activity["extract-value"] = make_sure_is_list(activity["extract-value"]);
+                    if (!activity.att_id){
+                        activity.att_id = makeid(6);
+                    }
                 });
         return scenario;
     },
@@ -3767,6 +3785,12 @@ document.addEventListener('tracepaper:model:loaded', async () => {
     session.subdomain_names = Subdomains.list();
 });
 
+window.Templates = {
+    list: function(){
+        return Object.keys(templates).map(x => x.replace("templates/",""));
+    }
+}
+
 window.Views = {
     list: function(){
         return Object.keys(model).filter(key => key.startsWith("views/")).map(key => Views.get(key));
@@ -3798,8 +3822,16 @@ window.Views = {
         view[SNAPSHOT_HANDLER].forEach( handler => {
             handler.mapping = make_sure_is_list(handler.mapping);
             handler.delete = make_sure_is_list(handler.delete);
+            if (!handler.att_id){
+                handler.att_id = makeid(6);
+            }
         });
         view[CUSTOM_HANDLER] = make_sure_is_list(view[CUSTOM_HANDLER]);
+        view[CUSTOM_HANDLER].forEach( handler => {
+            if (!handler.att_id){
+                handler.att_id = makeid(6);
+            }
+        });
         view.query = make_sure_is_list(view.query);
         view.query.forEach( query => {
             query[QUERY_FILTER] = make_sure_is_list(query[QUERY_FILTER]);
@@ -4079,7 +4111,9 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
         Validation.must_be_camel_cased(path,view.field,"View field","att_name")
 
         //Check primary key
-        if (view.field.filter(x => x.att_pk == "true").length != 0 && view[SNAPSHOT_HANDLER].length == 0 && view[CUSTOM_HANDLER].length == 0){
+        if (view.field.filter(x => x.att_pk == "true").length != 0
+            && view[SNAPSHOT_HANDLER].length == 0
+            && view[CUSTOM_HANDLER].length == 0){
             Validation.register(path, "This view has a primary key configured but no datasource");
         }
 
@@ -4095,44 +4129,44 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
         //Snapshot handler
         view[SNAPSHOT_HANDLER].forEach(handler => {
             try{
-                    let aggregate = null;
-                    let fields = view.field.map(x => x.att_name);
-                    try{
-                        aggregate = Aggregates.get(`domain/${handler["att_sub-domain"]}/${handler.att_aggregate}/root.xml`);
-                    }catch{
-                        Validation.register(path,`Datasource refrences a non existing aggregate ${handler['att_sub-domain']}.${handler.att_aggregate}`)
-                        return;
-                    }
+                let aggregate = null;
+                let fields = view.field.map(x => x.att_name);
+                try{
+                    aggregate = Aggregates.get(`domain/${handler["att_sub-domain"]}/${handler.att_aggregate}/root.xml`);
+                }catch{
+                    Validation.register(path,`Datasource refrences a non existing aggregate ${handler['att_sub-domain']}.${handler.att_aggregate}`)
+                    return;
+                }
 
-                    //Remove unknown targets
-                    handler.mapping = handler.mapping.filter(x => fields.includes(x.att_target));
+                //Remove unknown targets
+                handler.mapping = handler.mapping.filter(x => fields.includes(x.att_target));
 
-                    let aggregate_fields = aggregate.root.field.map(x => x.att_name);
-                    aggregate_fields = aggregate_fields.concat(aggregate.entities.map(x => x.att_name));
-                    handler.mapping.filter(x => !aggregate_fields.includes(x.att_value)).forEach(mapping=>{
-                        Validation.register(path,`Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps an unknown document field [${mapping.att_value}] to view field [${mapping.att_target}]`);
-                    });
-                    handler.mapping.filter(x => x.att_operand == "convert_items").forEach(mapping => {
-                        let source_fields = aggregate.entities.filter(x => x.att_name == mapping.att_value).at(0).field.map(x => x.att_name);
-                        let ref = view.field.filter(x => x.att_name == mapping.att_target).at(0).att_ref;
-                        ref = Views.get(`views/${ref}.xml`);
-                        let target_fields = ref.field.filter(x => view_field_types.concat(["ObjectList"]).includes(x.att_type)).map(x => x.att_name);
-                        let nested = JSON.parse(mapping.att_template.replaceAll("value[","").replaceAll("]",""));
-                        Object.keys(nested).forEach(target => {
-                            if (!target_fields.includes(target)){
-                                Validation.register(path,`
-                                    Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps to an unknown nested view field
-                                    [${mapping.att_target}.${target}]`)
-                            }
-                            if (!source_fields.includes(nested[target])){
-                                Validation.register(path,`
-                                    Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps an unknown document collection field
-                                    [${mapping.att_value}.${nested[target]}] to [${mapping.att_target}.${target}]`)
-                            }
-                        });
-                    });
-            }catch{}
+                let aggregate_fields = aggregate.root.field.map(x => x.att_name);
+                aggregate_fields = aggregate_fields.concat(aggregate.entities.map(x => x.att_name));
+                handler.mapping.filter(x => !aggregate_fields.includes(x.att_value)).forEach(mapping=>{
+                    Validation.register(path,`Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps an unknown document field [${mapping.att_value}] to view field [${mapping.att_target}]`);
                 });
+                handler.mapping.filter(x => x.att_operand == "convert_items").forEach(mapping => {
+                    let source_fields = aggregate.entities.filter(x => x.att_name == mapping.att_value).at(0).field.map(x => x.att_name);
+                    let ref = view.field.filter(x => x.att_name == mapping.att_target).at(0).att_ref;
+                    ref = Views.get(`views/${ref}.xml`);
+                    let target_fields = ref.field.filter(x => view_field_types.concat(["ObjectList"]).includes(x.att_type)).map(x => x.att_name);
+                    let nested = JSON.parse(mapping.att_template.replaceAll("value[","").replaceAll("]",""));
+                    Object.keys(nested).forEach(target => {
+                        if (!target_fields.includes(target)){
+                            Validation.register(path,`
+                                Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps to an unknown nested view field
+                                [${mapping.att_target}.${target}]`)
+                        }
+                        if (!source_fields.includes(nested[target])){
+                            Validation.register(path,`
+                                Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps an unknown document collection field
+                                [${mapping.att_value}.${nested[target]}] to [${mapping.att_target}.${target}]`)
+                        }
+                    });
+                });
+            }catch{}
+        });
 
         //Custom handler
         view[CUSTOM_HANDLER].forEach(handler => {

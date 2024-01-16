@@ -13,6 +13,9 @@ window.Behavior = {
         flow.processor = make_sure_is_list(flow.processor);
         flow.processor.forEach(processor => {
             processor.mapping = make_sure_is_list(processor.mapping);
+            if (!processor.att_id){
+                processor.att_id = makeid(5);
+            }
         });
         flow[TEST] = make_sure_is_list(flow[TEST]);
         flow[TEST].forEach(test => {

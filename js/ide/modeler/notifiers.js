@@ -16,6 +16,9 @@ window.Notifiers = {
         notifier.activity = make_sure_is_list(notifier.activity);
         notifier.activity.forEach(activity=> {
             activity.activity = make_sure_is_list(activity.activity);
+            if(!activity.att_id){
+                activity.att_id = makeid(6);
+            }
         });
         notifier.att_file_path = path;
         return notifier;

@@ -43,6 +43,18 @@
       </template>
     </div>
 
+    <div x-import="ide/frames/activities/fetch-property">
+      <template x-if="activity.att_type == 'fetch-property'">
+        <ui-activity-fetch-property></ui-activity-fetch-property>
+      </template>
+    </div>
+
+    <div x-import="ide/frames/activities/render-template">
+      <template x-if="activity.att_type == 'render-template'">
+        <ui-activity-render-template></ui-activity-render-template>
+      </template>
+    </div>
+
     <div x-import="utils/editor-elements">
       <ui-text-field
               :value="activity.att_condition"

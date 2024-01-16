@@ -45,7 +45,14 @@
                                 description="Note: "
                                 @updated.debounce="activity.att_description = $event.detail.value;"></ui-text-area>
 
-                  <!-- Set variables -->
+                <!-- Grant role -->
+                <div x-import="ide/frames/scenario/grant-role">
+                  <template x-if="activity.att_type == 'grant-role'">
+                    <ui-scenario-grant-role></ui-scenario-grant-role>
+                  </template>
+                </div>
+
+                <!-- Set variables -->
                 <div x-import="ide/frames/scenario/set-variable">
                   <template x-if="activity.att_type == 'set-variables'">
                     <ui-scenario-set-variables></ui-scenario-set-variables>

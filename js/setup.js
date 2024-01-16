@@ -8,6 +8,7 @@ $vui.config.importMap = {
 
 var model = {};
 var code = {};
+var templates = {};
 var meta = {};
 var documentation = {};
 var logs = {};
