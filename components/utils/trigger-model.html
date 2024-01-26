@@ -63,10 +63,10 @@
                 </td>
                 <td  x-data="{sourc_options: []}"
                      x-watch="event"
-                     x-effect="let update = event.field.map(x => x.att_name).concat(event[NESTED].map(x => x.att_name)).concat([`#''`,'']);await sleep(1);if(sourc_options!=update){sourc_options=update}">
+                     x-effect="let update = event.field.map(x => x.att_name).concat(event[NESTED].map(x => x.att_name));await sleep(1);if(sourc_options!=update){sourc_options=update}">
                   <template x-if="!mapping.att_value.startsWith('#')">
                     <ui-selection :value="mapping.att_value"
-                                  :options="sourc_options"
+                                  :options="sourc_options.concat([`#''`,''])"
                                   @updated.debounce="mapping.att_value = $event.detail.value;"></ui-selection>
                   </template>
                   <template x-if="mapping.att_value.startsWith('#')">

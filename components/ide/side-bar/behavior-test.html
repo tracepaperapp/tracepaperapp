@@ -14,7 +14,11 @@
                   class="btn btn-outline-primary">Behavior flow</button>
           <button type="button" x-data="{expect_error: false}" x-effect="expect_error = 'att_expected-processing-status' in tab_state.testcase && tab_state.testcase['att_expected-processing-status'] != 'success'"
                   @click.debounce="expect_error = !expect_error;tab_state.testcase['att_expected-processing-status'] = expect_error ? 'error' : 'success'"
-                  :disabled="session.editing_disabled"
+                  x-show="!session.editing_disabled"
+                  :class="expect_error ? 'btn btn-primary' : 'btn btn-outline-primary'">Expect functional error</button>
+          <button type="button" x-data="{expect_error: false}" x-effect="expect_error = 'att_expected-processing-status' in tab_state.testcase && tab_state.testcase['att_expected-processing-status'] != 'success'"
+                  x-show="session.editing_disabled"
+                  disabled
                   :class="expect_error ? 'btn btn-primary' : 'btn btn-outline-primary'">Expect functional error</button>
         </div>
       </div>

@@ -42,7 +42,7 @@ const qa_activity_types = [
     "wait",
 //    "view-store-update",
     "set-variables",
-//    "grant-role",
+    "grant-role",
 //    "refresh-view-store"
 ]
 
@@ -52,11 +52,11 @@ const notifier_activity_types = [
       "add-user-to-iam-group",
       "remove-user-from-iam-group",
       "retrieve-email-from-iam",
-//      "render-template",
+      "render-template",
 //      "send-email",
 //      "send-graphql-notification",
 //      "write-file",
-//      "fetch-property",
+      "fetch-property",
 //      "get-token",
 //      "get-systemuser-token",
       "iam-create-systemuser",

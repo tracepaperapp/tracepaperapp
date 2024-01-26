@@ -4,6 +4,7 @@ business-key-enabled
 default-value-enabled
 optional-default-enabled
 pattern-enabled
+enable-string-list-type
 auto-fill-enabled
 events:
   new-collection
@@ -13,6 +14,7 @@ events:
     <template x-if="tab_state.document_model" key="document-model">
       <div class="row"
            x-data="{
+           document_types: $prop('enable-string-list-type') ? view_field_types : field_types,
         entity:{},schema: {}}"
            x-effect="
          if(!entity || entity.att_name != tab_state.document_selected_entity){
@@ -77,8 +79,8 @@ events:
           <table aria-description="data" class="table" x-data="{fields: [],excluded: []}"
                  x-effect="
                   if(entity && entity.field){
-                    let updated_fields = entity.field.filter(field => field_types.includes(field.att_type));
-                    let updated_excluded = entity.field.filter(field => !field_types.includes(field.att_type));
+                    let updated_fields = entity.field.filter(field => document_types.includes(field.att_type));
+                    let updated_excluded = entity.field.filter(field => !document_types.includes(field.att_type));
                     await sleep(1);
                     if(fields != updated_fields){fields=updated_fields};
                     if(excluded != updated_excluded){excluded=updated_excluded};
@@ -123,7 +125,7 @@ events:
                 </td>
                 <td>
                   <ui-selection :value="field.att_type"
-                                :options="field_types"
+                                :options="document_types"
                                 @updated="field.att_type = $event.detail.value;"></ui-selection>
                 </td>
                 <template x-if="$prop('default-value-enabled')">

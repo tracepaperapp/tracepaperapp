@@ -72,14 +72,19 @@
                           @updated.debounce="expectation.att_type = $event.detail.value;"></ui-selection>
           </td>
 
-          <td x-show="!('att_value' in expectation) || (expectation.att_value.startsWith('#'))" x-cloak x-transition>
+          <td x-show="(expectation.att_type != 'Boolean' && !('att_value' in expectation)) || (expectation.att_value.startsWith('#'))" x-cloak x-transition>
             <ui-selection :value="expectation.att_value"
                           :options="Scenarios.get_flow_variables()"
                           @updated.debounce="expectation.att_value = $event.detail.value;"></ui-selection>
           </td>
-          <td x-show="'att_value' in expectation && !expectation.att_value.startsWith('#')" x-cloak x-transition>
+          <td x-show="'att_value' in expectation && !expectation.att_value.startsWith('#') &&expectation.att_type != 'Boolean' " x-cloak x-transition>
             <ui-text-field :value="expectation.att_value"
                            @updated.debounce="expectation.att_value = $event.detail.value;"></ui-text-field>
+          </td>
+          <td x-show="expectation.att_type == 'Boolean'" x-cloak x-transition x-init="if(expectation.att_type == 'Boolean' && !('att_value' in expectation)){expectation.att_value = 'false'}">
+            <ui-selection :value="expectation.att_value"
+                          :options="boolean_text"
+                          @updated.debounce="expectation.att_value = $event.detail.value;"></ui-selection>
           </td>
 
           <td x-show="!session.editing_disabled">
@@ -143,5 +148,67 @@
                 })">
       <i class="fa-solid fa-plus"></i>
     </button>
+
+    <br><br>
+
+    <!-- Data Remediation's -->
+    <h6>Data Remediation's</h6>
+    <table aria-description="data" class="table" x-import="utils/editor-elements">
+      <thead>
+      <tr>
+        <th>Subdomain</th>
+        <th>Aggregate</th>
+        <th>Identifier</th>
+      </tr>
+      </thead>
+      <tbody x-data="{remediations: []}"
+             x-effect="let updated =  activity['data-remediation'];await sleep(1);if(remediations!=updated){remediations=updated}">
+      <template x-for="(remediation,index) in remediations" :key="JSON.stringify(remediation)">
+        <tr>
+          <td>
+            <ui-selection :value="remediation.att_domain"
+                          :options="Subdomains.list()"
+                          @updated.debounce="remediation.att_domain = $event.detail.value;remediation.att_aggregate = session.aggregates[remediation.att_domain].at(0).name"></ui-selection>
+          </td>
+          <td>
+            <ui-selection :value="remediation.att_aggregate"
+                          :options="session.aggregates[remediation.att_domain].map(x  => x.name)"
+                          @updated.debounce="remediation.att_aggregate = $event.detail.value;"></ui-selection>
+          </td>
+
+          <td x-show="!remediation.att_identifier || (remediation.att_identifier.startsWith('#') && remediation.att_identifier.endsWith('#'))" x-cloak x-transition>
+            <ui-selection :value="remediation.att_identifier"
+                          :options="Scenarios.get_flow_variables().concat(['-value-'])"
+                          @updated.debounce="remediation.att_identifier = $event.detail.value;"></ui-selection>
+          </td>
+
+          <td x-show="remediation.att_identifier && !remediation.att_identifier.startsWith('#') && !remediation.att_identifier.endsWith('#')" x-cloak x-transition>
+            <ui-text-field :value="remediation.att_identifier"
+                           @updated.debounce="remediation.att_identifier = $event.detail.value;"></ui-text-field>
+          </td>
+
+          <td x-show="!session.editing_disabled">
+            <button type="button" class="btn btn-outline-danger"
+                    @click="activity['data-remediation'].splice(index, 1);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-outline-success"
+            x-show="!session.editing_disabled" x-cloak x-transition
+            x-data="{block:false}"
+            @click.debounce="blockingDecorator(function(){
+                let sub = Subdomains.list().at(0);
+                activity['data-remediation'].push({
+                  att_domain: sub,
+                  att_aggregate: session.aggregates[sub].at(0).name,
+                  att_identifier: ''});
+                })">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
   </div>
 </template>

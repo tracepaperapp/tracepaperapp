@@ -2,7 +2,7 @@
   <table aria-description="data" class="table" x-import="utils/editor-elements">
     <tbody>
       <tr>
-        <th>Condition</th>
+        <th>Test <small>If the test fails an exception is thrown</small></th>
         <td>
           <ui-text-field :value="processor.att_condition"
                          @updated.debounce="processor.att_condition = $event.detail.value;"></ui-text-field>

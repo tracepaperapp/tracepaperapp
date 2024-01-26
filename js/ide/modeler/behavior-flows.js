@@ -52,6 +52,10 @@ window.Behavior = {
         Behavior.load(path.at(0));
         session.type = "testcase";
         tab_state.testcase = tab_state.flow[TEST].filter(x => x.att_name == path.at(1)).at(0);
+
+        //Reconvert trigger to inputs
+        let event = Events.get(tab_state.testcase['att_trigger-event']);
+        tab_state.testcase.input = TestCase.convert_event_to_inputs(tab_state.testcase,event);
     },
     rename: blockingDecorator(function(name){
         if (!name.match(pascal_cased)){
@@ -158,7 +162,7 @@ window.Behavior = {
                         flowVars.push(variable);
                     });
                 }else{
-                    let content = code[processor.att_file];
+                    let content = code[processor.att_file].content;
                     let method_detected = false;
                     content.split("\n").forEach(line => {
                         if (line.startsWith(`def ${processor.att_handler}(flow):`)){
