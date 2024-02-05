@@ -3216,10 +3216,11 @@ window.Notifiers = {
         });
     },
     update_trigger: blockingDecorator(function(source,update){
+        let trigger = tab_state.notifier.trigger.filter(x => x.att_source == source).at(0);
+        trigger.att_source = update;
         try{
             let event = Events.get(update);
             let mappings = {};
-            let trigger = tab_state.notifier.trigger.filter(x => x.att_source == source).at(0);
             trigger.mapping.forEach(x => {
                 mappings[x.att_value] = x;
             });
@@ -3227,9 +3228,8 @@ window.Notifiers = {
             Object.keys(mappings).filter(x => x.startsWith('#')).forEach(
                 x => trigger.mapping.push(mappings[x])
             );
-            trigger.att_source = update;
-            Notifiers.equalize_trigger_flowvars();
         }catch(err){console.error(err)}
+        Notifiers.equalize_trigger_flowvars();
     }),
     add_trigger: blockingDecorator(function(source){
         let trigger = {att_source: source,mapping:[]};

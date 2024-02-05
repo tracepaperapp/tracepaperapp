@@ -129,7 +129,7 @@
                 </template>
 
                 <template x-if="$prop('allow-expressions')">
-                  <template x-for="expression in ['@afterDeployment','@cron(* * * * *)','@rate(1 minute)']">
+                  <template x-for="expression in ['@afterDeployment','@cron(* * * * * *)','@rate(1 minute)']">
                     <button type="button"
                             @click="$dispatch('add-trigger',{event:expression});show_modal=false;$dispatch('trigger-updated');"
                             x-text="expression"
