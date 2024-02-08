@@ -2514,6 +2514,9 @@ window.TestCase = {
                 delete tab_state.testcase['expected-state']["#text"];
             } else {
                 tab_state.testcase['expected-state']["#text"] = json;
+                if (!tab_state.testcase['expected-state']["att_pk"]){
+                    tab_state.testcase['expected-state']["att_pk"] = "functional-key";
+                }
             }
             if (Object.keys(tab_state.testcase['expected-state']).length === 0){
                 delete tab_state.testcase['expected-state'];
