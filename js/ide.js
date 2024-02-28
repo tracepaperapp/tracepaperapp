@@ -3939,7 +3939,11 @@ window.Views = {
     }),
     add_mapping: blockingDecorator(function(handler,field,operand,aggregate){
             console.log("--->",handler,field,operand,aggregate)
-            let value = aggregate.root.field.filter(x => x.att_name == field.att_name).length != 0 ? field.att_name : aggregate.field.at(0).att_name;
+            let collection = aggregate.root;
+            if (handler.att_processor == "dictionary" && handler.att_dictionary){
+                collection = aggregate.entities.filter(x => x.att_name == handler.att_dictionary).at(0);
+            }
+            let value = collection.field.filter(x => x.att_name == field.att_name).length != 0 ? field.att_name : collection.field.at(0).att_name;
             handler.mapping.push({
                 att_target: field.att_name,
                 att_operand: operand,
@@ -4150,6 +4154,9 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                 handler.mapping = handler.mapping.filter(x => fields.includes(x.att_target));
 
                 let aggregate_fields = aggregate.root.field.map(x => x.att_name);
+                if (handler.att_processor == "dictionary" && handler.att_dictionary){
+                    aggregate_fields = aggregate.entities.filter(x => x.att_name == handler.att_dictionary).at(0).field.map(x => x.att_name);
+                }
                 aggregate_fields = aggregate_fields.concat(aggregate.entities.map(x => x.att_name));
                 handler.mapping.filter(x => !aggregate_fields.includes(x.att_value)).forEach(mapping=>{
                     Validation.register(path,`Datasource [${aggregate.subdomain}.${aggregate.root.att_name}] maps an unknown document field [${mapping.att_value}] to view field [${mapping.att_target}]`);
