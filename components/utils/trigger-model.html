@@ -36,7 +36,15 @@
               <th>Business key</th>
               <td x-data="{key_options: []}"
                   x-watch="event"
-                  x-effect="let update = event.field.map(x => x.att_name).concat(event[NESTED].map(x => x.att_name)).concat([`#''`,'']);await sleep(1);if(key_options!=update){key_options=update}">
+                  x-effect="
+                    let update = event.field.map(x => x.att_name)
+                      .concat(event[NESTED].map(x => x.att_name));
+                    expressions = Expressions.list();
+                    expressions.filter(x => x.att_type == 'TriggerKeyField').forEach(x => {
+                        update.push(`#global.${x.att_name}(${x.att_input.replaceAll(';',', ')})`);
+                    });
+                    update = update.concat([`#''`,'']);
+                    await sleep(1);if(key_options!=update){key_options=update}">
                 <ui-selection :value="trigger['att_key-field']"
                               x-show="!('att_key-field' in trigger) || !trigger['att_key-field'].startsWith('#')" x-cloak x-transition
                               :options="key_options"

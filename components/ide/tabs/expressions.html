@@ -20,6 +20,7 @@
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1" x-text="expression.att_name"></h5>
                                 <small class="text-muted" x-show="!session.editing_disabled" x-cloak x-transition>
+                                    <ui-documentation-icon-inline subject="expressions" :key="expression.att_type"></ui-documentation-icon-inline>
                                     <i class="fa-solid fa-trash" @click.debounce="Expressions.remove(expression.att_name)"></i>
                                 </small>
                             </div>
@@ -28,7 +29,7 @@
                             <h6 class="mb-1" x-data="{
                                 options: {
                                     'API authorization expression' : 'ActorEventRole',
-                                    'View updater key expression' : 'TriggerKeyField'
+                                    'Trigger key expression' : 'TriggerKeyField'
                                 }
                             }">
                             <ui-text-field :value="expression.att_name"

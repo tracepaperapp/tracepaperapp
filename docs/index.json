@@ -18,5 +18,13 @@
   {
     "name": "Command Message Schema",
     "path": "/docs/command/02_message_schema.md"
+  },
+  {
+    "name": "API authorization expression",
+    "path": "/docs/expressions/00_ActorEventRole.md"
+  },
+  {
+    "name": "Trigger key expression",
+    "path": "/docs/expressions/01_TriggerKeyField.md"
   }
 ]

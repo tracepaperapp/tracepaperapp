@@ -103,6 +103,10 @@ select.form-control:focus {
     color: #5A67D8;
 }
 
+.documentation-icon-inline {
+    color: #5A67D8;
+}
+
 .trash-icon {
     position: relative;
     bottom: 58px;

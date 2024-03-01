@@ -157,7 +157,7 @@ window.Notifiers = {
                         flowVars.push(variable);
                     });
                 } else {
-                    let content = code[activity.att_file];
+                    let content = code[activity["att_python-file"]].content;
                     let method_detected = false;
                     content.split("\n").forEach(line => {
                         if (line.startsWith(`def ${activity.att_handler}(flow):`)){

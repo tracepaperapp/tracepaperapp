@@ -3,6 +3,13 @@
        @click="Documentation.open($prop('subject'),$prop('key'))"
        class="documentation-icon"><i class="fa-solid fa-question"></i></a>
 </template>
+
+<template x-component="documentation-icon-inline">
+    <a href="#"
+       @click="Documentation.open($prop('subject'),$prop('key'))"
+       class="documentation-icon-inline"><i class="fa-solid fa-question"></i></a>
+</template>
+
 <template x-component="trash-icon">
     <a href="#"
        x-show="!session.editing_disabled"

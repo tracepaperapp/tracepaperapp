@@ -273,10 +273,10 @@ var DiagramData = {
         DiagramData.add_notifier_trigger(notifier.att_name,notifier);
         DiagramData.links.push(path);
         notifier.activity.filter(x => x.att_type == "code").forEach(x => {
-            var module = x.att_file.replace("lib/","").replace(".py"," (Python)");
+            var module = x["att_python-file"].replace("lib/","").replace(".py"," (Python)");
             DiagramData.add_node(module,"dependency");
-            DiagramData.add_edge(notifier,module,"",true);
-            DiagramData.links.push(x.att_file);
+            DiagramData.add_edge(notifier.att_name,module,"",true);
+            DiagramData.links.push(x["att_python-file"]);
         });
     },
     add_notifier_trigger: function(reference,flow){

@@ -1,7 +1,7 @@
 
 window.Code = {
     list_modules: function(){
-        return Object.keys(code).map(key => key.replace("lib/","").replace(".py",""));
+        return Object.keys(code).map(key => key.replace("lib/","").replace(".py","")).concat("");
     },
     get_methods: function(module,filter="(flow):"){
         return code[module].content.split("\n").filter(x => x.startsWith("def ") && x.endsWith(filter))
