@@ -31,7 +31,16 @@
             <tr>
               <th>Business key</th>
               <td x-data="{options: []}"
-                  x-effect="let updated = aggregate.root.field.filter(x => x.att_type == 'String').map(x => x.att_name);await sleep(1);if(options!=updated){options=updated}">
+                  x-watch="aggregate"
+                  x-effect="
+                    let updated = aggregate.root.field.filter(x => x.att_type == 'String')
+                      .map(x => x.att_name);
+                    expressions = Expressions.list();
+                    expressions.filter(x => x.att_type == 'TriggerKeyField').forEach(x => {
+                        updated.push(`#global.${x.att_name}(${x.att_input.replaceAll(';',', ')})`);
+                    });
+                    updated = updated.concat([`#''`,'']);
+                    await sleep(1);if(options!=updated){options=updated}">
 
                 <ui-selection :value="handler['att_key-mapping']"
                               :options="options"

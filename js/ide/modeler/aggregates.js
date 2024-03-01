@@ -275,16 +275,17 @@ window.Aggregates = {
         }
         let aggregate = tab_state.aggregate;
         let path = aggregate.path.replace("root.xml",`events/${name}.xml`);
+        console.log(aggregate);
         let event = {
           att_name: name,
           att_source: `${aggregate.subdomain}.${aggregate.root.att_name}`,
           att_type: "DomainEvent",
-          field:[{
-            att_name: "newField",
-            att_type: "String"
-          }],
-          "nested-object": []
+          field: JSON.parse(JSON.stringify(aggregate.root.field.filter(x => field_types.includes(x.att_type)))),
+          "nested-object": JSON.parse(JSON.stringify(aggregate.entities))
         }
+        event["nested-object"].forEach(nested => {
+            nested.field = nested.field.filter(x => field_types.includes(x.att_type));
+        });
         model[path] = {event:event};
         Navigation.fresh_reload(aggregate.path);
         tab_state.view = 'events';
