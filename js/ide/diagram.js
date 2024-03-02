@@ -49,9 +49,18 @@ window.Diagram = {
         if(session.tab == "README.md"){
             Object.keys(model).filter(x => !x.includes("/behavior-flows/")).forEach(x => DiagramData.add_element(x));
         } else if (session.tab.startsWith("domain/") && session.tab.endsWith("/README.md")){
-            Object.keys(model).filter(x => x.startsWith(session.tab.replace("README.md","")) && x.endsWith("root.xml")).forEach(x => DiagramData.add_element(x));
+            Object.keys(model)
+                .filter(x => x.startsWith(session.tab.replace("README.md","")) && x.endsWith("root.xml"))
+                .forEach(x => {
+                    try{
+                        DiagramData.add_aggregate(x,false);
+                    }catch(err){
+                        console.error(err);
+                    }
+                });
+            DiagramData.add_view_edges();
         } else {
-            DiagramData.add_element(session.tab);
+            DiagramData.add_element(session.tab,true);
         }
         draw_diagram();
         }catch{}
@@ -67,12 +76,12 @@ var DiagramData = {
         DiagramData.edges = {};
         DiagramData.links = [];
     },
-    add_element: function(path){
+    add_element: function(path,detailed=false){
         try{
             if (path.startsWith("commands/")){
                 DiagramData.add_command(path,true);
             } else if (path.startsWith("domain/") && path.endsWith("/root.xml")){
-                DiagramData.add_aggregate(path)
+                DiagramData.add_aggregate(path,detailed)
             } else if (path.startsWith("domain/") && path.includes("/behavior-flows/")){
                 DiagramData.add_behavior(path);
             } else if (path.startsWith("views/")){
@@ -110,17 +119,28 @@ var DiagramData = {
             DiagramData.add_event_subscribers(name,command.att_name);
         }
     },
-    add_aggregate: function(path){
+    add_aggregate: function(path,detailed=false){
         let aggregate = Aggregates.get(path);
-        DiagramData.links.push(path)
-        let reference = aggregate.subdomain + "." + aggregate.root.att_name;
-        DiagramData.add_node(reference,"aggregate");
-        aggregate.flows.forEach(flow => {
-            DiagramData.add_behavior_trigger(reference,flow);
-            DiagramData.add_behavior_dependency(reference,flow);
-            DiagramData.add_behavior_subscribers(reference,flow);
-            DiagramData.add_behavior_view_listners(reference,aggregate.subdomain,aggregate.root.att_name);
-        });
+        if (detailed){
+            aggregate.flows.forEach(flow => {
+                DiagramData.add_node(flow.att_name,"behavior");
+                DiagramData.add_behavior_trigger(flow.att_name,flow);
+                DiagramData.add_behavior_dependency(flow.att_name,flow);
+                DiagramData.add_behavior_subscribers(flow.att_name,flow);
+                DiagramData.add_behavior_view_listners(flow.att_name,aggregate.subdomain,aggregate.root.att_name);
+            });
+        }else{
+            DiagramData.links.push(path)
+            let reference = aggregate.subdomain + "." + aggregate.root.att_name;
+            DiagramData.add_node(reference,"aggregate");
+            aggregate.flows.forEach(flow => {
+                DiagramData.add_behavior_trigger(reference,flow);
+                DiagramData.add_behavior_dependency(reference,flow);
+                DiagramData.add_behavior_subscribers(reference,flow);
+                DiagramData.add_behavior_view_listners(reference,aggregate.subdomain,aggregate.root.att_name);
+            });
+        }
+        DiagramData.add_view_edges();
     },
 
     add_behavior: function(path){
@@ -130,6 +150,7 @@ var DiagramData = {
         DiagramData.add_behavior_dependency(flow.att_name,flow);
         DiagramData.add_behavior_subscribers(flow.att_name,flow);
         DiagramData.add_behavior_view_listners(flow.att_name,path.split("/").at(1),path.split("/").at(2));
+        DiagramData.add_view_edges();
     },
     add_behavior_trigger: function(reference,flow){
         let events = Events.list();
@@ -205,7 +226,13 @@ var DiagramData = {
             });
         });
     },
-
+    add_view_edges: function(){
+        Views.list().forEach(view => {
+            view.field.filter(x => !view_field_types.includes(x.att_type)).forEach(ref => {
+                DiagramData.add_edge(view.att_name,ref.att_ref,ref.att_type,[5,7]);
+            });
+        });
+    },
     add_view: function(path){
         let view = Views.get(path);
         DiagramData.add_node(view.att_name,"view");
