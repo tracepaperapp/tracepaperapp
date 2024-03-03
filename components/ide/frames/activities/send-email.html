@@ -1,0 +1,24 @@
+<template x-component="activity-send-email">
+  <div x-import="utils/editor-elements">
+    <ui-selection :value="activity.att_sender.replace('#flow.','')"
+                  description="Sender: "
+                  :options="Notifiers.get_flow_variables(stored)"
+                  @updated.debounce="activity.att_sender = '#flow.' + $event.detail.value;$dispatch('flow-updated');"></ui-selection>
+    <ui-selection :value="activity.att_receiver.replace('#flow.','')"
+                  description="Receiver: "
+                  :options="Notifiers.get_flow_variables(stored)"
+                  @updated.debounce="activity.att_receiver = '#flow.' + $event.detail.value;$dispatch('flow-updated');"></ui-selection>
+    <ui-selection :value="activity.att_subject.replace('#flow.','')"
+                  description="Subject: "
+                  :options="Notifiers.get_flow_variables(stored)"
+                  @updated.debounce="activity.att_subject = '#flow.' + $event.detail.value;$dispatch('flow-updated');"></ui-selection>
+    <ui-selection :value="activity.att_text.replace('#flow.','')"
+                  description="Text: "
+                  :options="Notifiers.get_flow_variables(stored)"
+                  @updated.debounce="activity.att_text = '#flow.' + $event.detail.value;$dispatch('flow-updated');"></ui-selection>
+    <ui-selection :value="activity.att_html.replace('#flow.','')"
+                  description="HTML: "
+                  :options="Notifiers.get_flow_variables(stored)"
+                  @updated.debounce="activity.att_html = '#flow.' + $event.detail.value;$dispatch('flow-updated');"></ui-selection>
+  </div>
+</template>

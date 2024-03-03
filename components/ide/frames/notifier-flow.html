@@ -43,6 +43,12 @@
       </template>
     </div>
 
+    <div x-import="ide/frames/activities/send-email">
+      <template x-if="activity.att_type == 'send-email'">
+        <ui-activity-send-email></ui-activity-send-email>
+      </template>
+    </div>
+
     <div x-import="ide/frames/activities/fetch-property">
       <template x-if="activity.att_type == 'fetch-property'">
         <ui-activity-fetch-property></ui-activity-fetch-property>

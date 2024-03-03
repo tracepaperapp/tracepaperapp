@@ -59,6 +59,13 @@
                             </template>
                         </div>
 
+                        <!-- update-key -->
+                        <div x-import="ide/frames/processors/update-key">
+                            <template x-if="processor.att_type == 'update-key'">
+                                <ui-update-key></ui-update-key>
+                            </template>
+                        </div>
+
                         </p>
 
                     </div>

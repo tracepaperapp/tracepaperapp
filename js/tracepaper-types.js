@@ -20,7 +20,7 @@ const view_filter_types = ["equals","not_equals","less_than","greater_than","les
 const auto_fill_modes = ['','username','uuid'];
 const auth_types = ['authenticated','role','user','anonymous'];
 const mapper_operands = ["unmapped","set","add","subtract"];
-const behavior_processor_types = ["emit-event","code","validator","set-variable"]; // TODO: ["dmn","create-text-patch","update-key"]
+const behavior_processor_types = ["emit-event","code","validator","set-variable","update-key"]; // TODO: ["dmn","create-text-patch","update-key"]
 const http_methods = ["GET", "POST", "PATCH", "HEAD", "OPTIONS", "DELETE", "PUT"];
 const editor_options = {
    mode: {
@@ -53,7 +53,7 @@ const notifier_activity_types = [
       "remove-user-from-iam-group",
       "retrieve-email-from-iam",
       "render-template",
-//      "send-email",
+      "send-email",
 //      "send-graphql-notification",
 //      "write-file",
       "fetch-property",
