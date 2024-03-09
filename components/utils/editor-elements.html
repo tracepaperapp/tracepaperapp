@@ -27,8 +27,9 @@
 </template>
 
 <template x-component="text-field">
-    <div x-data="{value: '', pattern: null}"
-         x-effect="value = $prop('value');pattern = $prop('pattern')">
+    <div x-data="{value: null, pattern: null}"
+         @soft-reload.document.debounce="value = $prop('value');pattern = $prop('pattern');"
+         x-effect="await sleep(1);if(!value){value = $prop('value')};if(pattern == null){pattern = $prop('pattern')}">
         <div x-show="!session.editing_disabled" x-cloak x-transition>
             <div class="row">
                 <div class="col-2" x-show="$prop('description')" x-cloak x-transition>
@@ -54,8 +55,9 @@
 </template>
 
 <template x-component="range">
-    <div x-data="{value: ''}"
-         x-effect="value = $prop('value');">
+    <div x-data="{value: null}"
+         @soft-reload.document.debounce="value = $prop('value');"
+         x-effect="if(value==null){value = $prop('value');}">
         <div x-show="!session.editing_disabled" x-cloak x-transition>
             <div class="row">
                 <div class="col-2" x-show="$prop('description')" x-cloak x-transition>
@@ -78,7 +80,8 @@
 </template>
 
 <template x-component="text-area">
-    <div x-data="{value: $prop('value'), description: $prop('description')? $prop('description') : '', edit:false, pattern: $prop('pattern') ? $prop('pattern') : null}">
+    <div x-data="{value: null, description: $prop('description')? $prop('description') : '', edit:false, pattern: $prop('pattern') ? $prop('pattern') : null}"
+         @soft-reload.document.debounce="value = $prop('value');">
 
         <p @click="if(!session.editing_disabled){edit = true;}" x-show="!edit">
             <span x-show="description" x-text="description"></span><span x-text="value" x-show="!$prop('use-pre-tag')" x-cloak x-transition></span>
@@ -100,13 +103,9 @@
 </template>
 
 <template x-component="selection">
-    <div x-data="{value: '', description: '', options: []}"
-         @soft-reload.document.debounce="value = $prop('value');options = $prop('options')"
-         x-effect="value = $prop('value');
-         description = $prop('description')? $prop('description') : '';
-         options = [];
-         await sleep(100);
-         options = $prop('options')">
+    <div x-data="{value: null, description: ''}"
+         @soft-reload.document.debounce="value = $prop('value');
+         description = $prop('description')? $prop('description') : '';">
         <div x-show="!session.editing_disabled" x-cloak x-transition>
             <div class="row">
                 <div class="col-2" x-show="$prop('description')">
@@ -116,7 +115,7 @@
                     <select class="form-select custom-select"
                             @change="await sleep(10);$dispatch('updated',{ value: value });Navigation.soft_reload_tab();"
                             x-model="value">
-                        <template x-for="option in make_sure_is_list(options)" :key="option">
+                        <template x-for="option in make_sure_is_list($prop('options'))" :key="option">
                             <option :value="option"
                                     :selected="option == value" x-text="option"></option>
                         </template>
@@ -131,9 +130,9 @@
 </template>
 
 <template x-component="role-selector">
-    <div x-data="{value: '', options: [],expressions: []}"
+    <div x-data="{value: null, options: [],expressions: []}"
+         @soft-reload.document.debounce="value = $prop('value');"
          x-effect="
-            value = $prop('value');
             options = [];
             meta.roles.forEach(x => options.push(x));
             expressions = Expressions.list();
@@ -154,7 +153,8 @@
     <pre x-text="JSON.stringify($prop('data'),null,2)"></pre>
 </template>
 <template x-component="selection-modal">
-    <div x-data="{value: $prop('value'), description: $prop('description')? $prop('description') : '', edit:false, options: [],search: ''}">
+    <div x-data="{value: '', description: '', edit:false, options: [],search: ''}"
+         @soft-reload.document.debounce="value = $prop('value');if($prop('description')){decsription=$prop('description')}">
 
         <span @click="if(!session.editing_disabled){edit = true;}" x-show="!edit">
             <span x-show="description" x-text="description"></span><span x-text="value"></span>

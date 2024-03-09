@@ -1251,8 +1251,13 @@ window.Navigation = {
                 return;
             }
             setTimeout(function(){
+                document.dispatchEvent(new CustomEvent('soft-reload'));
                 document.getElementById("main-canvas").scrollTo(0,data.scrollposition);
             },100);
+            setTimeout(function(){
+                document.dispatchEvent(new CustomEvent('soft-reload'));
+                document.getElementById("main-canvas").scrollTo(0,data.scrollposition);
+            },500);
         },
     fresh_reload: function(file){
             session.tab = file;
