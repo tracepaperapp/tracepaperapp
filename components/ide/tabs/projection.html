@@ -61,6 +61,14 @@
                                                   @updated="tab_state.projection.att_return = $event.detail.value;"></ui-selection>
                                 </td>
                             </tr>
+                            <tr>
+                                <th>Return type</th>
+                                <td x-effect="if(!tab_state.projection['att_return-type']){tab_state.projection['att_return-type'] = 'single object'}">
+                                    <ui-selection :value="tab_state.projection['att_return-type']"
+                                                  @updated="tab_state.projection['att_return-type'] = $event.detail.value;"
+                                                  :options="['single object','result set']"></ui-selection>
+                                </td>
+                            </tr>
                             </tbody>
 
                         </table>

@@ -103,8 +103,9 @@
 </template>
 
 <template x-component="selection">
-    <div x-data="{value: null, description: ''}"
+    <div x-data="{value: null, description: '',options:[]}"
          @soft-reload.document.debounce="value = $prop('value');
+         options = $prop('options');
          description = $prop('description')? $prop('description') : '';">
         <div x-show="!session.editing_disabled" x-cloak x-transition>
             <div class="row">
@@ -115,7 +116,7 @@
                     <select class="form-select custom-select"
                             @change="await sleep(10);$dispatch('updated',{ value: value });Navigation.soft_reload_tab();"
                             x-model="value">
-                        <template x-for="option in make_sure_is_list($prop('options'))" :key="option">
+                        <template x-for="option in make_sure_is_list(options)" :key="option">
                             <option :value="option"
                                     :selected="option == value" x-text="option"></option>
                         </template>
