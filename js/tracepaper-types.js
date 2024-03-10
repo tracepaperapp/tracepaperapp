@@ -106,6 +106,10 @@ def transform(arguments, username):
     # Or combining the two filter methods, so you can filter within a subset
     data = Query('ViewName').get_items("key_starts_with_this_value").equals('key','value').between('key',0,100).run()
 
+    # Filters are by standard apended with an "and" operator, you could switch to an "or" operator
+    data = Query('ViewName').get_items(key="key_starts_with_this_value",filter_chain_method="or").equals('key','value').between('key',0,100).run()
+
     # You can program data transformations with the aid of Python programming
+    # Make sure you add all fields that are defined in the return view object definition
     return {"field_name": "value"}
 `;
