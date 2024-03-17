@@ -2753,6 +2753,12 @@ window.Code = {
 }
 
 window.Commands = {
+    get_attribute_sources: function(){
+        let sources = [];
+        sources = sources.concat(Commands.list());
+        sources = sources.concat(Aggregates.list());
+        return sources;
+    },
     load_commands: function(){
         session.command_names = [];
         Object.keys(model).filter(key => key.startsWith('commands/')).forEach(key => {
@@ -2805,10 +2811,7 @@ window.Commands = {
                 "att_name": "NewFunctionRequested",
                 "att_authorization": "authenticated",
                 "att_type": "ActorEvent",
-                "field": [{
-                    "att_name": "myField",
-                    "att_type": "String"
-                }],
+                "field": [],
                 NESTED: []
             }
         });
@@ -2817,6 +2820,21 @@ window.Commands = {
             setTimeout(function(){
                 Navigation.execute_open_tab(path);
             },500);
+        }
+    }),
+    copy_attributes: blockingDecorator(function(source){
+        if (source.att_name){
+            tab_state.command.field = tab_state.command.field.concat(source.field);
+            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source["nested-object"]);
+        } else {
+            console.log(source);
+            tab_state.command.field = tab_state.command.field.concat(source.root.field.filter(x => field_types.includes(x.att_type)));
+            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source.entities.map(entity => {
+                return {
+                    "att_name": entity.att_name,
+                    "field": entity.field.filter(x => field_types.includes(x.att_type))
+                }
+            }));
         }
     }),
     remove: blockingDecorator(function(){

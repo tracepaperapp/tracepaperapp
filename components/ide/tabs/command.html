@@ -15,21 +15,54 @@
       </div>
     </div>
 
-    <div class="row bordered-element">
+    <div class="row bordered-element" x-data="{show_modal: false, sources: []}">
       <h4>
         Message Schema
       </h4>
       <ui-documentation-icon subject="command" key="message_schema"></ui-documentation-icon>
 
+      <ui-document-model
+              :id="session.tab + '-command-document'"
+              entity-casing="camel"
+              optional-default-enabled
+              pattern-enabled
+              auto-fill-enabled
+              @new-collection.debounce="Commands.add_element_collection()"
+              @remove-collection.debounce="Commands.remove_element_collection($event.detail.name)"></ui-document-model>
 
-        <ui-document-model
-                :id="session.tab + '-command-document'"
-                entity-casing="camel"
-                optional-default-enabled
-                pattern-enabled
-                auto-fill-enabled
-                @new-collection.debounce="Commands.add_element_collection()"
-                @remove-collection.debounce="Commands.remove_element_collection($event.detail.name)"></ui-document-model>
+      <button class="btn btn-sm btn-outline-primary btn-m2"
+              @click="sources = Commands.get_attribute_sources();show_modal = true;">
+        <i class="fa-solid fa-file-import"></i> copy attributes from other model
+      </button>
+
+      <template x-if="show_modal">
+        <div>
+          <div class="overlay"></div>
+          <div class="prompt">
+            <h4> Copy attributes from:
+              <button type="button" @click="show_modal=false" class="btn-close float-end"></button>
+            </h4>
+
+            <div class="list-group list-group-flush"
+                 @click="await sleep(10);show_modal=false;">
+              <template x-for="source in sources" :key="source.att_name ? source.att_name : source.name">
+                <button type="button"
+                        @click="Commands.copy_attributes(source)"
+                        class="list-group-item list-group-item-action">
+                  <span x-text="source.att_name ? source.att_name.replace('Requested','') : source.name"></span>
+                  <span x-show="source.att_name"
+                        x-cloak x-transition
+                        class="badge bg-primary float-end">Command</span>
+                  <span x-show="source.name"
+                        x-cloak x-transition
+                        class="badge bg-secondary float-end">Aggregate</span>
+                </button>
+              </template>
+            </div>
+
+          </div>
+        </div>
+      </template>
 
     </div>
 

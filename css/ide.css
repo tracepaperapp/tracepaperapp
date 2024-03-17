@@ -181,6 +181,8 @@ select.form-control:focus {
     left: 50%;
     width: 50vw;
     min-height: 50vh;
+    max-height: 90vh;
+    overflow: auto;
     transform: translate(-50%, -50%);
     opacity: 1 !important;
     padding: 10px;
