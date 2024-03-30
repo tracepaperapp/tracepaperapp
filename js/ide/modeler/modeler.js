@@ -174,7 +174,20 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                     "att_clean-iam": "true",
                     "att_minimum-event-coverage": 80,
                     "att_minimum-view-coverage": 80
-                }
+                },
+                "events": [{
+                    "event": {
+                        att_name: "FileUploaded",
+                        att_type: "DomainEvent",
+                        att_source: "appsync",
+                        field: [
+                            {att_name: "bucket", att_type: "String"},
+                            {att_name: "uri", att_type: "String"},
+                            {att_name: "location", att_type: "String"},
+                            {att_name: "username", att_type: "String"}
+                        ]
+                    }
+                }]
             }
         };
     }

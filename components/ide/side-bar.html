@@ -19,7 +19,7 @@
     <!-- Diagram -->
     <div x-data="{present: false, directed: false}" x-show="present"
          x-effect="console.trace(session.tab);present = Diagram.isPresent();
-         if(present){Diagram.draw()}"x-cloak x-transition>
+         if(present){Diagram.draw();setTimeout(function(){Diagram.draw()},500)}"x-cloak x-transition>
       <div class="d-grid gap-2" x-import="project-diagram">
         <ui-diagram></ui-diagram>
 

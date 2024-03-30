@@ -94,7 +94,7 @@ window.Diagram = {
     draw: function(){
         if (draw_diagram_block){return}else{draw_diagram_block=true}
         Diagram.execute_draw();
-        draw_diagram_block = false;
+        setTimeout(function(){draw_diagram_block = false;},100);
     },
     execute_draw: function(){
         try{
@@ -692,11 +692,16 @@ async function save_model_to_disk(){
             await sleep(1000);
             document.dispatchEvent(new CustomEvent('tracepaper:model:loaded'));
         }
+        if (JSON.stringify(session.staged_files) != stage_history){
+            Diagram.draw();
+            stage_history = JSON.stringify(session.staged_files);
+        }
     }catch(err){
         console.error(err);
     }
     save_model_to_disk_block = false;
 }
+var stage_history = "";
 
 async function load_file(file){
     try{
@@ -2919,6 +2924,11 @@ window.Events = {
     list: function(){
         let events = Object.keys(model).filter(key => key.includes("/events/")).map(key => model[key]["event"]);
         events = events.concat(Commands.list());
+        events = events.concat(make_sure_is_list(model["config.xml"]["draftsman"]["events"]).map(x => {
+            let event = x["event"];
+            event[NESTED] = make_sure_is_list(event[NESTED]);
+            return event;
+            }));
         return events;
     },
     get: function(name){
@@ -3159,7 +3169,20 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                     "att_clean-iam": "true",
                     "att_minimum-event-coverage": 80,
                     "att_minimum-view-coverage": 80
-                }
+                },
+                "events": [{
+                    "event": {
+                        att_name: "FileUploaded",
+                        att_type: "DomainEvent",
+                        att_source: "appsync",
+                        field: [
+                            {att_name: "bucket", att_type: "String"},
+                            {att_name: "uri", att_type: "String"},
+                            {att_name: "location", att_type: "String"},
+                            {att_name: "username", att_type: "String"}
+                        ]
+                    }
+                }]
             }
         };
     }

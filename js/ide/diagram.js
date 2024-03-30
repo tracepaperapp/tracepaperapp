@@ -41,7 +41,7 @@ window.Diagram = {
     draw: function(){
         if (draw_diagram_block){return}else{draw_diagram_block=true}
         Diagram.execute_draw();
-        draw_diagram_block = false;
+        setTimeout(function(){draw_diagram_block = false;},100);
     },
     execute_draw: function(){
         try{

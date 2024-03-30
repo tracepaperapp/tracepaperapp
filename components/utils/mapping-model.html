@@ -14,7 +14,8 @@
                       @click="
                       tab_state.handler_selected_entity = 'root';
                       tab_state.handler_entity = tab_state.aggregate.root;
-                      tab_state.handler_selected_source = 'root'"
+                      tab_state.handler_selected_source = 'root';
+                      Navigation.soft_reload_tab();"
                       :class="tab_state.handler_selected_entity == 'root' ? 'btn btn-primary' : 'btn btn-outline-primary'">Root</button>
               <template x-for="entity_def in entities" :key="entity_def.att_name">
                 <button type="button"

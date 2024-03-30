@@ -144,11 +144,16 @@ async function save_model_to_disk(){
             await sleep(1000);
             document.dispatchEvent(new CustomEvent('tracepaper:model:loaded'));
         }
+        if (JSON.stringify(session.staged_files) != stage_history){
+            Diagram.draw();
+            stage_history = JSON.stringify(session.staged_files);
+        }
     }catch(err){
         console.error(err);
     }
     save_model_to_disk_block = false;
 }
+var stage_history = "";
 
 async function load_file(file){
     try{
