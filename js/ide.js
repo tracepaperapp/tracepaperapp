@@ -208,8 +208,9 @@ var DiagramData = {
     add_behavior_trigger: function(reference,flow){
         let events = Events.list();
         flow.trigger.forEach(trigger => {
-            if (trigger.att_source.endsWith("Requested")){
+            if (trigger.att_source.endsWith("Requested") || trigger.att_source == "FileUploaded"){
                 let source = trigger.att_source.replace("Requested","");
+                source = source.replace("FileUploaded","UploadAPI")
                 DiagramData.add_node(source,"command");
                 DiagramData.add_edge(source,reference,trigger.att_source);
                 DiagramData.links.push("commands/" + trigger.att_source + ".xml");
