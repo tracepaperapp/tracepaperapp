@@ -5,6 +5,28 @@ window.Modeler = {
     initialize: function(){
         session.projectName = model["config.xml"]["draftsman"]["att_project-name"];
     },
+    get_dependencies: function(){
+        try{
+            return make_sure_is_list(model["config.xml"]["draftsman"]["global"]["dependency"]);
+        }catch{return []}
+    },
+    save_dependencies: function(dependencies){
+        let packages = {};
+        dependencies.forEach(x => {
+            packages[x.att_name] = x.att_version;
+        });
+        if (!("global" in model["config.xml"]["draftsman"])){
+            model["config.xml"]["draftsman"]["global"] = {};
+        }
+        model["config.xml"]["draftsman"]["global"]["dependency"] = [];
+        Object.keys(packages).forEach(name => {
+            model["config.xml"]["draftsman"]["global"]["dependency"].push({
+                att_name: name,
+                att_version: packages[name]
+            });
+        });
+        console.log(packages);
+    },
     get_summary: function(){
             let summary = {};
 

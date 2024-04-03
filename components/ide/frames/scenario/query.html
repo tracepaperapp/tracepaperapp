@@ -43,6 +43,12 @@
             <ui-text-field :value="input.att_value"
                            @updated.debounce="input.att_value = $event.detail.value;"></ui-text-field>
           </td>
+          <td x-show="!session.editing_disabled && activity.att_path.endsWith('.filter')">
+            <button type="button" class="btn btn-outline-danger"
+                    @click.debounce="inputs.splice(index, 1);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
         </tr>
       </template>
       </tbody>

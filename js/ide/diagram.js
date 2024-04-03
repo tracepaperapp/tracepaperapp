@@ -300,11 +300,41 @@ var DiagramData = {
         DiagramData.add_node(notifier.att_name,"notifier");
         DiagramData.add_notifier_trigger(notifier.att_name,notifier);
         DiagramData.links.push(path);
-        notifier.activity.filter(x => x.att_type == "code").forEach(x => {
+        function connect_to_code(x){
+            try {
             var module = x["att_python-file"].replace("lib/","").replace(".py"," (Python)");
             DiagramData.add_node(module,"dependency");
             DiagramData.add_edge(notifier.att_name,module,"",true);
-            DiagramData.links.push(x["att_python-file"]);
+            DiagramData.links.push(x["att_python-file"]);}catch(err){console.error(err,x)}
+        }
+        notifier.activity.filter(x => x.att_type == "code").forEach(connect_to_code);
+        notifier.activity.filter(x => x.att_type == "loop").forEach(x => {
+          x.activity.filter(x => x.att_type == "code").forEach(connect_to_code);
+        });
+
+        function connect_to_api(x){
+            try{
+            let attributes = x.att_query.split("|LB|").map(x => x.replaceAll("{","").replaceAll("}","").trim());
+            let type = attributes[0].startsWith("mutation") ? "command" : "query";
+            attributes.shift();
+            let name = "";
+            if (type == "command"){
+                let tmp = attributes.join(".").split("(").at(0).split(".");
+                let method = tmp.pop();
+                method = method.charAt(0).toUpperCase() + method.slice(1);
+                tmp.unshift(method);
+                name = tmp.join("");
+            }else{
+              name = attributes.join(".").split("(").at(0);
+            }
+            console.log(type,name);
+            DiagramData.add_node(name,type);
+            DiagramData.add_edge(notifier.att_name,name,"",true);
+            }catch(err){console.error(err,x)}
+        }
+        notifier.activity.filter(x => x.att_type == "call-internal-api").forEach(connect_to_api);
+        notifier.activity.filter(x => x.att_type == "loop").forEach(x => {
+          x.activity.filter(x => x.att_type == "call-internal-api").forEach(connect_to_api);
         });
     },
     add_notifier_trigger: function(reference,flow){

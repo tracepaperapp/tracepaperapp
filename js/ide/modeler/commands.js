@@ -71,8 +71,8 @@ window.Commands = {
     }),
     copy_attributes: blockingDecorator(function(source){
         if (source.att_name){
-            tab_state.command.field = tab_state.command.field.concat(source.field);
-            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source["nested-object"]);
+            tab_state.command.field = tab_state.command.field.concat(source.field.getUnobservedData());
+            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source["nested-object"].getUnobservedData());
         } else {
             console.log(source);
             tab_state.command.field = tab_state.command.field.concat(source.root.field.filter(x => field_types.includes(x.att_type)));

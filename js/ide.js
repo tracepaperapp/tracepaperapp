@@ -353,11 +353,41 @@ var DiagramData = {
         DiagramData.add_node(notifier.att_name,"notifier");
         DiagramData.add_notifier_trigger(notifier.att_name,notifier);
         DiagramData.links.push(path);
-        notifier.activity.filter(x => x.att_type == "code").forEach(x => {
+        function connect_to_code(x){
+            try {
             var module = x["att_python-file"].replace("lib/","").replace(".py"," (Python)");
             DiagramData.add_node(module,"dependency");
             DiagramData.add_edge(notifier.att_name,module,"",true);
-            DiagramData.links.push(x["att_python-file"]);
+            DiagramData.links.push(x["att_python-file"]);}catch(err){console.error(err,x)}
+        }
+        notifier.activity.filter(x => x.att_type == "code").forEach(connect_to_code);
+        notifier.activity.filter(x => x.att_type == "loop").forEach(x => {
+          x.activity.filter(x => x.att_type == "code").forEach(connect_to_code);
+        });
+
+        function connect_to_api(x){
+            try{
+            let attributes = x.att_query.split("|LB|").map(x => x.replaceAll("{","").replaceAll("}","").trim());
+            let type = attributes[0].startsWith("mutation") ? "command" : "query";
+            attributes.shift();
+            let name = "";
+            if (type == "command"){
+                let tmp = attributes.join(".").split("(").at(0).split(".");
+                let method = tmp.pop();
+                method = method.charAt(0).toUpperCase() + method.slice(1);
+                tmp.unshift(method);
+                name = tmp.join("");
+            }else{
+              name = attributes.join(".").split("(").at(0);
+            }
+            console.log(type,name);
+            DiagramData.add_node(name,type);
+            DiagramData.add_edge(notifier.att_name,name,"",true);
+            }catch(err){console.error(err,x)}
+        }
+        notifier.activity.filter(x => x.att_type == "call-internal-api").forEach(connect_to_api);
+        notifier.activity.filter(x => x.att_type == "loop").forEach(x => {
+          x.activity.filter(x => x.att_type == "call-internal-api").forEach(connect_to_api);
         });
     },
     add_notifier_trigger: function(reference,flow){
@@ -1190,6 +1220,8 @@ window.Navigation = {
             return "Expressions";
         } else if (file == "roles/"){
             return "Roles";
+        } else if (file == "dependencies/"){
+            return "Dependencies";
         } else if (file == "deployments/"){
             return "Deployments";
         } else {
@@ -1227,6 +1259,8 @@ window.Navigation = {
             Expressions.load();
         } else if (file == "roles/"){
             session.type = "roles";
+        } else if (file == "dependencies/"){
+            session.type = "dependencies";
         } else if (file == "deployments/"){
             session.type = "deployments";
         } else if (file.startsWith("documentation")){
@@ -1309,7 +1343,7 @@ document.addEventListener('tracepaper:model:loaded', async () => {
     let files = await FileSystem.listFiles();
     files = files.concat(Object.keys(model));
     files = files.concat(Object.keys(documentation));
-    session.tabs.map(x=> x.split("#").at(0)).filter(x=> !files.includes(x) && !x.startsWith("documentation/") && !x.startsWith("build/") && !["patterns/","expressions/","roles/","deployments/"].includes(x)).forEach(tab=> {
+    session.tabs.map(x=> x.split("#").at(0)).filter(x=> !files.includes(x) && !x.startsWith("documentation/") && !x.startsWith("build/") && !["patterns/","expressions/","roles/","deployments/","dependencies/"].includes(x)).forEach(tab=> {
         try{
             console.log("auto close tab:",tab);
             Navigation.execute_close_tab(tab);
@@ -2830,8 +2864,8 @@ window.Commands = {
     }),
     copy_attributes: blockingDecorator(function(source){
         if (source.att_name){
-            tab_state.command.field = tab_state.command.field.concat(source.field);
-            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source["nested-object"]);
+            tab_state.command.field = tab_state.command.field.concat(source.field.getUnobservedData());
+            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source["nested-object"].getUnobservedData());
         } else {
             console.log(source);
             tab_state.command.field = tab_state.command.field.concat(source.root.field.filter(x => field_types.includes(x.att_type)));
@@ -3000,6 +3034,28 @@ const summary_cache = {};
 window.Modeler = {
     initialize: function(){
         session.projectName = model["config.xml"]["draftsman"]["att_project-name"];
+    },
+    get_dependencies: function(){
+        try{
+            return make_sure_is_list(model["config.xml"]["draftsman"]["global"]["dependency"]);
+        }catch{return []}
+    },
+    save_dependencies: function(dependencies){
+        let packages = {};
+        dependencies.forEach(x => {
+            packages[x.att_name] = x.att_version;
+        });
+        if (!("global" in model["config.xml"]["draftsman"])){
+            model["config.xml"]["draftsman"]["global"] = {};
+        }
+        model["config.xml"]["draftsman"]["global"]["dependency"] = [];
+        Object.keys(packages).forEach(name => {
+            model["config.xml"]["draftsman"]["global"]["dependency"].push({
+                att_name: name,
+                att_version: packages[name]
+            });
+        });
+        console.log(packages);
     },
     get_summary: function(){
             let summary = {};
