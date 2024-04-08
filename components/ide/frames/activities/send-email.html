@@ -1,8 +1,8 @@
 <template x-component="activity-send-email">
   <div x-import="utils/editor-elements">
-    <text-field :value="activity.att_sender"
+    <ui-text-field :value="activity.att_sender"
                   description="Sender: "
-                  @updated.debounce="activity.att_sender = $event.detail.value;$dispatch('flow-updated');"></text-field>
+                  @updated.debounce="activity.att_sender = $event.detail.value;$dispatch('flow-updated');"></ui-text-field>
     <ui-selection :value="activity.att_receiver.replace('#flow.','')"
                   description="Receiver: "
                   :options="Notifiers.get_flow_variables(stored)"
