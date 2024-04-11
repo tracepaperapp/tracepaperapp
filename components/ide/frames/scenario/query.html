@@ -75,7 +75,7 @@
           <td>
             <ui-selection :value="expectation.att_type"
                           :options="qa_variable_types"
-                          @updated.debounce="expectation.att_type = $event.detail.value;"></ui-selection>
+                          @updated.debounce="expectation.att_type = $event.detail.value;if(expectation.att_type == 'Boolean'){expectation.att_value = 'false'}"></ui-selection>
           </td>
 
           <td x-show="(expectation.att_type != 'Boolean' && !('att_value' in expectation)) || (expectation.att_value.startsWith('#'))" x-cloak x-transition>
@@ -107,7 +107,7 @@
             x-show="!session.editing_disabled" x-cloak x-transition
             x-data="{block:false}"
             @click.debounce="blockingDecorator(function(){
-                activity['expect-value'].push({att_name: 'field-' + makeid(6), att_type: 'String'});
+                activity['expect-value'].push({att_name: 'field-' + makeid(6), att_type: 'String', att_value: '#'});
                 })">
       <i class="fa-solid fa-plus"></i>
     </button>

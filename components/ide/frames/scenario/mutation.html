@@ -30,14 +30,25 @@
         <tr>
           <td x-text="input.att_name">
           </td>
-          <td x-text="input.att_type">
+          <td>
+            <span x-text="input.att_type"></span>&nbsp;
+            <i @click="if(input.att_value.startsWith('base64:')){
+              input.att_value = atob(input.att_value.replace('base64:',''));
+            }else{
+              input.att_value = 'base64:' + btoa(input.att_value);
+            };Navigation.soft_reload_tab();" class="fa-solid fa-right-left"></i>
           </td>
-          <td x-show="!('att_value' in input) || (input.att_value.startsWith('#') && input.att_value.startsWith('#'))" x-cloak x-transition>
+          <td x-show="input.att_type == 'Nested'" x-cloak x-transition>
+            <ui-text-area :value="input.att_value"
+                          use-pre-tag
+                           @updated.debounce="input.att_value = $event.detail.value;"></ui-text-area>
+          </td>
+          <td x-show="input.att_type != 'Nested' && input.att_value != null && input.att_value.startsWith('#') && input.att_value.endsWith('#')" x-cloak x-transition>
             <ui-selection :value="input.att_value"
                           :options="Scenarios.get_flow_variables()"
-                           @updated.debounce="input.att_value = $event.detail.value;"></ui-selection>
+                          @updated.debounce="input.att_value = $event.detail.value;"></ui-selection>
           </td>
-          <td x-show="'att_value' in input && !input.att_value.startsWith('#') && !input.att_value.startsWith('#')" x-cloak x-transition>
+          <td x-show="input.att_type != 'Nested' && input.att_value != null && !(input.att_value.startsWith('#') && input.att_value.endsWith('#'))" x-cloak x-transition>
             <ui-text-field :value="input.att_value"
                           @updated.debounce="input.att_value = $event.detail.value;"></ui-text-field>
           </td>

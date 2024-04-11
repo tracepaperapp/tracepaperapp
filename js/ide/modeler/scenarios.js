@@ -105,7 +105,7 @@ window.Scenarios = {
                 updated_value.push(inputs[field.att_name]);
             } else {
                 let potential_variable = variables.filter(x => `#${field.att_name}#` == x);
-                let value = potential_variable.length != 0 ? potential_variable.at(0) : '';
+                let value = potential_variable.length != 0 ? potential_variable.at(0) : '#';
                 updated_value.push({
                     att_name: field.att_name,
                     att_type: field.att_type,
@@ -118,9 +118,14 @@ window.Scenarios = {
             if (nested.att_name in inputs){
                 updated_value.push(inputs[nested.att_name]);
             } else {
+                let default_value = {};
+                nested.field.filter(x => !("att_auto-fill" in x)).forEach(field => {
+                    default_value[field.att_name] = field.att_type == "String" ? "" : field.att_type == "Boolean" ? false : 0;
+                });
                 updated_value.push({
                     att_name: nested.att_name,
-                    att_type: "Nested"
+                    att_type: "Nested",
+                    att_value: JSON.stringify([default_value],null,2)
                 });
             }
         });
@@ -148,6 +153,7 @@ window.Scenarios = {
             "url",
         ]);
         flow = flow.map(x => "#" + x + "#");
+        flow.push("#");
         flow.push("");
         return flow;
     },
@@ -203,7 +209,8 @@ window.Scenarios = {
         if (query.att_type == "get"){
             updated_value.push({
                 att_name: "key",
-                att_type: "String"
+                att_type: "String",
+                att_value: "#"
             });
         }else{
             if ('att_use-canonical-search' in query && query['att_use-canonical-search'] == 'true'){
