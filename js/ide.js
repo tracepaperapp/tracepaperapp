@@ -3684,6 +3684,27 @@ window.Scenarios = {
         activity.input.push({att_name: 'field-' + makeid(4), att_type: 'String', att_value: ''});
     }),
     change_command: blockingDecorator(function(activity,commandName){
+        if (commandName == "upload"){
+            activity.input = [
+                {
+                    att_name: "name",
+                    att_type: "String",
+                    att_value: "#"
+                },
+                {
+                    att_name: "content",
+                    att_type: "String",
+                    att_value: ""
+                },
+                {
+                    att_name: "public",
+                    att_type: "Boolean",
+                    att_value: "false"
+                }
+            ];
+            activity.att_path = "upload";
+            return;
+        }
         let command = model["commands/" + commandName + "Requested.xml"]["event"];
         activity.att_path = tab_state.commands.index[commandName];
         let inputs = {};

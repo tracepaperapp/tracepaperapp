@@ -8,7 +8,7 @@
           </th>
           <td>
             <ui-selection-modal :value="tab_state.commands.reverse_index[activity.att_path]"
-                                :options="Object.keys(tab_state.commands.index).concat([''])"
+                                :options="Object.keys(tab_state.commands.index).concat(['upload',''])"
                                 modal-title="Select command"
                                 @changed="Scenarios.change_command(activity,$event.detail.value);"></ui-selection-modal>
           </td>
