@@ -1,0 +1,8 @@
+<template x-component="switch-user">
+  <div x-import="utils/editor-elements">
+    <ui-text-field :value="activity['att_user-number']"
+                  description="User number: "
+                  :pattern="numeric_input"
+                  @updated.debounce="activity['att_user-number'] = $event.detail.value;"></ui-text-field>
+  </div>
+</template>

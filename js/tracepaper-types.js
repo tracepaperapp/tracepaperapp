@@ -38,7 +38,7 @@ const qa_activity_types = [
     "mutation",
     "query",
     "refresh-token",
-//    "switch-user",
+    "switch-user",
     "wait",
 //    "view-store-update",
     "set-variables",
