@@ -1,6 +1,30 @@
 
 const summary_cache = {};
 
+function  sort_commands( ca, cb ) {
+  let a =  ca['att_graphql-namespace'] + '.' + ca['att_graphql-name'];
+  let b =  cb['att_graphql-namespace'] + '.' + cb['att_graphql-name'];
+  if ( a < b ){
+    return -1;
+  }
+  if ( a > b ){
+    return 1;
+  }
+  return 0;
+}
+
+function  sort_queries( ca, cb ) {
+  let a =  ca['att_graphql-namespace'] + '.' + ca['att_field-name'];
+  let b =  cb['att_graphql-namespace'] + '.' + cb['att_field-name'];
+  if ( a < b ){
+    return -1;
+  }
+  if ( a > b ){
+    return 1;
+  }
+  return 0;
+}
+
 window.Modeler = {
     initialize: function(){
         session.projectName = model["config.xml"]["draftsman"]["att_project-name"];
@@ -53,6 +77,22 @@ window.Modeler = {
             documentation[doc] = {content:""};
         }
         session.documentation = documentation[doc];
+    },
+    load_api_overview: function(){
+        session.type = "api";
+        let commands = Commands.list();
+        commands.sort(sort_commands);
+        tab_state.commands = commands;
+        let queries = [];
+        Views.list().forEach(view => {
+            view.query.forEach(query => {
+                query = JSON.parse(JSON.stringify(query));
+                query.view = view.att_name;
+                queries.push(query);
+            });
+        });
+        queries.sort(sort_queries);
+        tab_state.queries = queries;
     },
     get_json_schema: function(element){
 

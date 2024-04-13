@@ -145,6 +145,8 @@ window.Navigation = {
             return file.replace("scenarios/","").replace(".xml","");
         } else if (file.startsWith("build/")){
             return "Build";
+        } else if (file.startsWith("api/")){
+            return "API overview";
         } else if (file == "patterns/"){
             return "Patterns";
         } else if (file == "expressions/"){
@@ -184,6 +186,8 @@ window.Navigation = {
             Scenarios.load(file);
         } else if (file.startsWith("build/")){
             Builds.load();
+        } else if (file.startsWith("api/")){
+            Modeler.load_api_overview();
         } else if (file == "patterns/"){
             Patterns.load();
         } else if (file == "expressions/"){
@@ -274,7 +278,7 @@ document.addEventListener('tracepaper:model:loaded', async () => {
     let files = await FileSystem.listFiles();
     files = files.concat(Object.keys(model));
     files = files.concat(Object.keys(documentation));
-    session.tabs.map(x=> x.split("#").at(0)).filter(x=> !files.includes(x) && !x.startsWith("documentation/") && !x.startsWith("build/") && !["patterns/","expressions/","roles/","deployments/","dependencies/"].includes(x)).forEach(tab=> {
+    session.tabs.map(x=> x.split("#").at(0)).filter(x=> !files.includes(x) && !x.startsWith("documentation/") && !x.startsWith("build/") && !x.startsWith("api/") && !["patterns/","expressions/","roles/","deployments/","dependencies/"].includes(x)).forEach(tab=> {
         try{
             console.log("auto close tab:",tab);
             Navigation.execute_close_tab(tab);
