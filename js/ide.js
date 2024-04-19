@@ -4116,6 +4116,7 @@ window.Views = {
             if (path[2] != "root"){
                 entity = aggregate.entities.filter(x => x.att_name == path[2]).at(0);
             }
+            entity = JSON.parse(JSON.stringify(entity));
             entity.field.filter(x => !registered_attributes.includes(x.att_name)).forEach(x => {
                 tab_state.view.field.push(x);
             });

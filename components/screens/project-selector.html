@@ -50,11 +50,14 @@
                           <th x-text="user.user.fullName">
                           </th>
                           <td x-show="user.username != JSON.parse(localStorage._x_username)" x-cloak x-transition>
-                            <ui-selection :value="user.businessRole"
-                                          @updated="user.businessRole = $event.detail.value;$store.mutation.send('authorizeUser-workspace',{
+                            <select class="form-control" @change="$store.mutation.send('authorizeUser-workspace',{
                                             drn: context.selected_workspace.drn, username: user.username, businessRole: user.businessRole
-                                          });"
-                                          :options="['viewer','developer','administrator','removed']"></ui-selection>
+                                          });" x-model="user.businessRole">
+                              <option value="viewer">viewer</option>
+                              <option value="developer">developer</option>
+                              <option value="administrator">administrator</option>
+                              <option value="removed">removed</option>
+                            </select>
                           </td>
                           <td x-show="user.username == JSON.parse(localStorage._x_username)" x-cloak x-transition x-text="user.businessRole"></td>
                         </tr>
