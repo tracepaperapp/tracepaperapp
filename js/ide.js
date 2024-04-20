@@ -2867,9 +2867,10 @@ window.Commands = {
         }
     }),
     copy_attributes: blockingDecorator(function(source){
+        console.log(source);
         if (source.att_name){
-            tab_state.command.field = tab_state.command.field.concat(source.field.getUnobservedData());
-            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source["nested-object"].getUnobservedData());
+            tab_state.command.field = tab_state.command.field.concat(deep_copy(source.field));
+            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(deep_copy(source["nested-object"]));
         } else {
             console.log(source);
             tab_state.command.field = tab_state.command.field.concat(source.root.field.filter(x => field_types.includes(x.att_type)));
@@ -2885,6 +2886,10 @@ window.Commands = {
         delete model[session.tab];
         delete documentation[session.tab.replace(".xml",".md")];
     })
+}
+
+function deep_copy(data){
+    return JSON.parse(JSON.stringify(data));
 }
 
 document.addEventListener('tracepaper:model:loaded', async () => {
