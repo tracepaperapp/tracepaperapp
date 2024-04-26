@@ -55,9 +55,24 @@
               </td>
             </tr>
 
+            <tr x-show="trigger['att_idempotency-key']" x-cloak x-transition>
+              <th>Idempotency TTL</th>
+              <td>
+                <ui-text-field
+                        :value="
+                          if('att_idempotency-ttl' in trigger){
+                            return trigger['att_idempotency-ttl'];
+                          }else{
+                            return '24 * 60 * 60';
+                          }"
+                        @updated.debounce="trigger['att_idempotency-ttl'] = $event.detail.value;"></ui-text-field>
+              </td>
+            </tr>
+
             <tr>
               <th>Flow variable</th>
               <th>Event Field</th>
+              <th>Idempotency Check</th>
             </tr>
             </thead>
             <tbody>
@@ -81,6 +96,23 @@
                     <ui-text-field :value="mapping.att_value"
                                    @updated.debounce="mapping.att_value = $event.detail.value;"></ui-text-field>
                   </template>
+                </td>
+                <td>
+                  <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           @change="if($el.checked){
+                            if (!('att_idempotency-key' in trigger)){
+                              trigger['att_idempotency-key'] = '';
+                            }
+                            trigger['att_idempotency-key'] += ' ' + mapping.att_value;
+                           } else {
+                            trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace(mapping.att_value,'');
+                           }
+                           trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace('  ',' ').trim()"
+                           :checked="trigger['att_idempotency-key'].includes(mapping.att_value)"
+                    />
+                  </div>
                 </td>
                 <td x-show="!session.editing_disabled">
                   <button type="button" class="btn btn-outline-danger"
