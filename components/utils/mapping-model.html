@@ -79,6 +79,11 @@
                               @updated.debounce="handler['att_business-key'] = $event.detail.value;$dispatch('sync-handler')"></ui-selection>
 
               </th>
+              <td>
+                <ui-selection :value="handler.att_strategy ? handler.att_strategy : 'extend'"
+                              :options="['extend','replace']"
+                              @updated.debounce="handler.att_strategy = $event.detail.value;$dispatch('sync-handler')"></ui-selection>
+              </td>
             </tr>
           </template>
           <tr>
