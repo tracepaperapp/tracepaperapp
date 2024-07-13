@@ -10,7 +10,7 @@
 - [Component showcase](/admin-console)
 - [GraphiQL explorer](/admin-console/graphiql)
 - [GraphQL Voyager](/admin-console/voyager)
-
+ 
 #TODO: How to schrijven
 ## Tags
 Er zijn vier custom tags

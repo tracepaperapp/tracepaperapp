@@ -1,23 +1,11 @@
 [
-  {
-    "name": "Aggregate Data Model",
-    "path": "/docs/aggregate/01_data_model.md"
-  },
-  {
+  { 
     "name": "The Aggregate Concept",
     "path": "/docs/aggregate/00_concept.md"
   },
   {
-    "name": "API authorization expression",
-    "path": "/docs/expressions/00_ActorEventRole.md"
-  },
-  {
-    "name": "Trigger key expression",
-    "path": "/docs/expressions/01_TriggerKeyField.md"
-  },
-  {
-    "name": "Command Message Schema",
-    "path": "/docs/command/02_message_schema.md"
+    "name": "Aggregate Data Model",
+    "path": "/docs/aggregate/01_data_model.md"
   },
   {
     "name": "Command Concept",
@@ -26,5 +14,17 @@
   {
     "name": "Command Properties",
     "path": "/docs/command/01_command_properties.md"
+  },
+  {
+    "name": "Command Message Schema",
+    "path": "/docs/command/02_message_schema.md"
+  },
+  {
+    "name": "API authorization expression",
+    "path": "/docs/expressions/00_ActorEventRole.md"
+  },
+  {
+    "name": "Trigger key expression",
+    "path": "/docs/expressions/01_TriggerKeyField.md"
   }
 ]
