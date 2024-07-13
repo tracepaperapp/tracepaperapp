@@ -1,26 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <link rel="icon" type="image/x-icon" href="/assets/logo.png" />
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-        <meta name="description" content="A developer productivity tool for creating scalable complex business applications in the cloud."/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
         <title>Tracepaper by Draftsman</title>
-        <link rel="stylesheet" href="/css/draftsman.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <script src="/js/configuration.js"></script>
+        <script src="/js/configuration-staging.js"></script>
+
+        <script>var must_be_signed_in = true;</script>
+
+        <!-- IDE -->
+        <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
+        <script src="https://unpkg.com/isomorphic-git"></script>
         <link rel="stylesheet" href="/css/ide.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/fast-xml-parser/4.2.5/fxparser.min.js"></script>
+        <script src="/js/xml-builder.js"></script>
+        <script src="/js/tracepaper-types.js"></script>
+        <script src="/js/ide.js" type="module"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" async></script>
+
+        <link rel="stylesheet" href="/css/draftsman.css" />
+        <script src="/js/framework.js"></script>
+        <script src="/js/cache.js"></script>
+        <script src="https://unpkg.com/@vimesh/ui"></script>
+        <script src="/js/utils.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+        <script src="https://unpkg.com/alpinejs" defer></script>
+
+        <!-- full text search -->
+        <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
+
+        <!-- daisyUI, replace with optimized build -->
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <!-- -->
 
     </head>
-    <body>
+    <body x-data="session"
+          x-import="ide/menu-bar;ide/file-browser;ide/tab-bar;utils/tables">
+        <ui-menu-bar></ui-menu-bar>
+        <div class="grid grid-cols-12 gap-3 h-[91vh]">
+            <div class="col-span-2 bg-blue-100 h-full">
+                <ui-file-browser></ui-file-browser>
+            </div>
+            <div class="col-span-10">
+                <ui-tab-bar></ui-tab-bar>
+                <br>
 
-    <div class="splash-screen" x-ref="splash">
-        <img src="/assets/logo.svg" class="splash-logo"/>
-        <div class="loadingContainer">
-            <h1>Down for maintenance...</h1>
-            <h2>We are migrating to Tracepaper 3.</h2>
+                <div x-show="session.exception" x-cloak x-transition role="alert" class="alert alert-error w-[80vw]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span x-text="session.exception"></span>
+                </div>
+
+                <div x-show="!localStorage.project_repo && !sessionStorage.new_project" x-cloak x-transition>
+                    <div class="hero h-[80vh] w-[95%] bg-base-200">
+                        <div class="hero-content text-center">
+                            <div class="max-w-md">
+                                <h1 class="text-5xl font-bold">Welcome to Tracepaper by Draftsman</h1>
+                                <p class="py-6"></p>
+                                <button @click="project_modal.showModal()" class="btn btn-primary">Open project</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-import="ide/project-wizard">
+                    <ui-project-wizard></ui-project-wizard>
+                </div>
+
+                <div x-show="localStorage.project_repo" x-cloak x-transition>
+                    <div x-data="{loaded: false}" x-init="await sleep(1000);loaded=true">
+                        <template x-if="loaded && session.frame
+                            && session.frame !='/modeler#settings'
+                            && !session.frame.startsWith('/modeler#build/')">
+                            <iframe :src="session.frame"
+                                    id="modeler-container"
+                                    width="99%"
+                                    :height="0.8 * window.innerHeight"></iframe>
+                        </template>
+                        <template x-if="loaded && session.frame && session.frame.startsWith('/modeler#build/')">
+                            <iframe :src="'/build?key=' + localStorage.project_drn + ':' + session.frame.split('/').at(-1)"
+                                    width="99%"
+                                    :height="0.8 * window.innerHeight"></iframe>
+                        </template>
+                        <div x-show="loaded && session.frame && session.frame =='/modeler#settings'"
+                             x-import="ide/settings"
+                             x-cloak x-transition>
+                            <ui-settings></ui-settings>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
     </body>
 </html>

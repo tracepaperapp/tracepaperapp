@@ -1,0 +1,23 @@
+<template x-component="roles">
+    <div x-data="{meta: {}}" x-init="meta = await Modeler.get('meta.json')">
+        <table class="table">
+            <tr>
+                <th>Role</th>
+            </tr>
+            <template x-for="role in meta.roles" :key="role">
+                <tr>
+                    <td x-text="role"></td>
+                    <td>
+                        <ui-delete-button @delete.once="meta.roles = meta.roles.filter(x => x != role)"></ui-delete-button>
+                    </td>
+                </tr>
+            </template>
+        </table>
+
+        <ui-add-button modal-title="Role name"
+                       :pattern="lower_or_camel_cased"
+                       :message="lower_or_camel_cased_message"
+                       @updated.debounce.stop="if(!meta.roles.includes($event.detail.value)){meta.roles.push($event.detail.value)}"></ui-add-button>
+
+    </div>
+</template>

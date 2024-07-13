@@ -1,0 +1,37 @@
+<template x-component="view-settings">
+    <div class="overflow-x-auto">
+        <table class="table table-xs">
+            <tr>
+                <th>Data retention</th>
+                <td>
+                    <input type="number" x-model="model['att_data-retention-days']"
+                           min="-1" step="1"
+                           class="input input-ghost w-full h-full" />
+                    <small x-show="model['att_data-retention-days'] == -1" x-cloak x-transition>View object is stored indefinitely</small>
+                    <small x-show="model['att_data-retention-days'] > -1" x-cloak x-transition>
+                        The view object is stored for <span x-text="model['att_data-retention-days']"></span> days
+                    </small>
+                </td>
+            </tr>
+            <tr>
+                <th>Exclude from notification mechanism</th>
+                <td>
+                    <input type="checkbox"
+                           @change="model['att_att_exclude-notification'] = $el.checked ? 'true' : 'false'"
+                           :checked="model['att_att_exclude-notification'] == 'true'"
+                           class="checkbox checkbox-info" />
+                </td>
+            </tr>
+            <tr>
+                <th>Namespace</th>
+                <td x-data="{namespace: ''}" x-effect="namespace = file.replace('views/','').split('/').filter(x => !x.includes('.xml')).join('.')">
+                    <ui-editable-text-field
+                            :value="namespace"
+                            :pattern="graphql_namespace"
+                            :message="graphql_namespace_message"
+                            @updated.debounce.1000ms="await View.rename(file,namespace,$event.detail.value)"></ui-editable-text-field>
+                </td>
+            </tr>
+        </table>
+    </div>
+</template>

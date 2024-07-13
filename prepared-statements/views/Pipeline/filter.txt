@@ -1,0 +1,13 @@
+# This file is NOT managed by Tracepaper, and can be customized.
+query FilterPipeline($key_begins_with: String = "") {
+  Pipeline {
+    filter(key_begins_with: $key_begins_with) {
+       resultset { 
+        key
+        drn
+        pipelineName
+        stackId
+      }
+    }
+  }
+}

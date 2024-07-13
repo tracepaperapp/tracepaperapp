@@ -1,0 +1,10 @@
+# This file is managed by Tracepaper
+mutation Register($drn: String = "", $pipelineName: String = "", $stackId: String = "") {
+  Project{
+    Pipeline{
+      register(input: {drn: $drn,pipelineName: $pipelineName,stackId: $stackId}) {
+         correlationId
+      }
+    }
+  }
+}

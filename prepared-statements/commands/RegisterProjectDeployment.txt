@@ -1,0 +1,10 @@
+# This file is managed by Tracepaper
+mutation Register($drn: String = "", $domainName: String = "", $eventBus: String = "", $propertyVault: String = "", $stackId: String = "", $userPoolId: String = "", $apiId: String = "", $apiKey: String = "", $apiEndpoint: String = "", $appId: String = "") {
+  Project{
+    Deployment{
+      register(input: {drn: $drn,domainName: $domainName,eventBus: $eventBus,propertyVault: $propertyVault,stackId: $stackId,userPoolId: $userPoolId,apiId: $apiId,apiKey: $apiKey,apiEndpoint: $apiEndpoint,appId: $appId}) {
+         correlationId
+      }
+    }
+  }
+}

@@ -1,37 +1,9 @@
+var focus_index = 0;
 
-function deduplicate(elements){
-    let array = [];
-    let check = [];
-    elements.forEach(x =>{
-        let hash = btoa(JSON.stringify(x,true));
-        if (!(check.includes(hash))){
-            array.push(x);
-            check.push(hash);
-        }
-    });
-    return array;
+window.get_index = function(){
+    focus_index++;
+    return focus_index;
 }
-
-function get_attribute(event,name){
-    let value = event.srcElement.getAttribute(name);
-    if (!value){
-        value = event.srcElement.parentElement.getAttribute(name);
-    }
-    return value;
-}
-
-window.check_pattern = function(value,pattern){
-   if (!pattern || value.match(pattern)){
-       return true;
-   } else {
-       return false;
-   }
-}
-
-window.capitalizeFirstLetter = function(string) {
-   return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 window.make_sure_is_list = function(elements,deduplicate=true){
     if (Array.isArray(elements)){
         let array = [];
@@ -55,6 +27,19 @@ window.make_sure_is_list = function(elements,deduplicate=true){
     }
 }
 
+window.check_pattern = function(value,pattern){
+   if (!pattern || value.match(pattern)){
+       return true;
+   } else {
+       return false;
+   }
+}
+
+window.capitalizeFirstLetter = function (string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+var model_util_cache = {};
+
 window.makeid = function (length) {
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -67,38 +52,18 @@ window.makeid = function (length) {
     return result;
 }
 
-var block = false;
-window.blockingDecorator = function(wrapped) {
-  return function() {
-    if(block){return}else{block=true}
-    let result = null;
-    try{
-        result = wrapped.apply(this, arguments);
-        Navigation.reload_tab();
-    }catch(err){console.error(err)}
-    setTimeout(function(){
-        block = false;
-    },1000);
-    return result;
-  }
+window.deepcopy = function(obj){
+    return JSON.parse(JSON.stringify(obj));
 }
 
-window.loadData = function(element){
-    setTimeout(function(){
-        element.dispatchEvent(new CustomEvent("load"));
-    },1);
-}
-
-window.convertMarkdownToHtml = function(markdown){
-    try{
-        var converter = new showdown.Converter();
-        var html = converter.makeHtml(markdown);
-        html = html.replaceAll('<img','<img style="width:100%;"');
-        return html;
-    } catch(ex) {
-        console.error(ex);
-        return markdown;
-    }
+window.render_python_editor = async function(id,code){
+    await sleep(100);
+    var editor = ace.edit(id);
+    editor.setTheme('ace/theme/github');
+    editor.session.setMode('ace/mode/python');
+    code = code.replaceAll('|LB|','\n');
+    editor.setValue(code,1);
+    return editor;
 }
 
 window.arraymove = function(arr, fromIndex, toIndex) {
@@ -107,11 +72,14 @@ window.arraymove = function(arr, fromIndex, toIndex) {
    arr.splice(toIndex, 0, element);
 }
 
-window.sleep = function(ms) {
-    console.trace(`Sleep ${ms} milliseconds`);
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-window.get_lorem_picsum = function(el){
-    return `https://picsum.photos/seed/${el.id}/250`
+window.deduplicate = function(elements,key){
+    let array = [];
+    let check = [];
+    elements.forEach(x =>{
+        if (!(check.includes(x[key]))){
+            array.push(x);
+            check.push(x[key]);
+        }
+    });
+    return array;
 }

@@ -1,5 +1,38 @@
 
 var clear_exception_timer = null;
+var session = {
+    initialized:false,
+    navigation: {},
+    selected_node: "",
+    all_links: {},
+    saving: false,
+    tab: '',
+    tabs: [],
+    frame: ''
+};
+
+function open_frame(uri){
+    session.frame = "";
+    setTimeout(function(){
+        session.frame = uri;
+    },1);
+}
+document.addEventListener('alpine:init', async () => {
+    session = Alpine.reactive(session);
+    label = Alpine.reactive(label);
+    Alpine.data('session', () => ({
+        session: session,
+        label: label
+    }));
+    setTimeout(Navigation.soft_reload,100);
+    Alpine.effect(() => {
+        if (session.tab.startsWith("/diagram")){
+            open_frame(session.tab);
+        } else {
+            open_frame('/modeler#' + session.tab);
+        }
+    });
+});
 window.Session = {
     reload_from_disk: function(project){
         clearInterval(save_session_interval);
@@ -11,6 +44,9 @@ window.Session = {
             delete data.exception;
             Object.assign(session,data);
         }
+        session.saving = false;
+        session.last_save = "";
+        session.last_pull = "";
         start_save_session_interval();
     },
     show_exception: function(message){
@@ -26,22 +62,33 @@ window.Session = {
     },
     enable_editing: function(){
         session.hide_edit_button = false;
+    },
+    load_data: function (updated_value,original){
+        setTimeout(function(){
+            if (updated_value != original){
+                original = updated_value;
+            }
+        },1);
     }
 };
-
-document.addEventListener('tracepaper:session:initialized', async () => {
-    Session.reload_from_disk(localStorage.project);
-});
 
 var save_session_interval = null;
 function start_save_session_interval(){
     setInterval(function(){
-    if (localStorage.project){
-        localStorage[localStorage.project] = JSON.stringify(session);
+    if (localStorage.project_drn){
+        localStorage[localStorage.project_drn] = JSON.stringify(session);
+    }
+    if (session.tabs.length == 0){
+        Navigation.open("README.md");
     }
     },1000);
 }
 
-if (localStorage.project){
-    Session.reload_from_disk(localStorage.project);
+if (localStorage.project_drn){
+    Session.reload_from_disk(localStorage.project_drn);
+}
+
+window.sleep = function(ms) {
+    console.trace(`Sleep ${ms} milliseconds`);
+    return new Promise(resolve => setTimeout(resolve, ms));
 }

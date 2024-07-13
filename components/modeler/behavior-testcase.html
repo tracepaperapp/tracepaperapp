@@ -1,0 +1,142 @@
+<template x-component="test-case">
+  <div x-import="modeler/behavior-testcase-utils" x-data="{root: {}}" x-init="root = await Behavior.get_root()">
+
+    <!-- Initial state -->
+    <div x-data="{state:{}}"
+         @updated.debounce="testcase.state = JSON.stringify(state)"
+         x-init="if('state' in testcase && Object.keys(state).length == 0){state = JSON.parse(testcase.state.replace('\n',''))}">
+
+      <div tabindex="0" class="collapse collapse-plus border border-accent mt-2">
+        <input type="checkbox" :checked="sessionStorage[file + testcase.att_name + 'state'] == 'true'"
+               x-model="sessionStorage[file + testcase.att_name + 'state']"/>
+        <div class="collapse-title font-medium">
+          Initial state
+        </div>
+        <div class="collapse-content">
+          <ui-state></ui-state>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trigger -->
+    <div tabindex="0" class="collapse collapse-plus border border-accent mt-2">
+      <input type="checkbox" :checked="sessionStorage[file + testcase.att_name + 'trigger'] == 'true'"
+             x-model="sessionStorage[file + testcase.att_name + 'trigger']"/>
+      <div class="collapse-title font-medium">
+        Trigger event: <span x-text="testcase['att_trigger-event']"></span>
+      </div>
+      <div class="collapse-content">
+        <ui-test-trigger></ui-test-trigger>
+      </div>
+    </div>
+
+    <!-- Functional Exception -->
+    <div class="card card-bordered border-accent mt-2"
+         x-effect="testcase['att_expected-processing-status'] = testcase.expected.length == 0 ? 'error' : 'success';
+         if(testcase.expected.length == 0){delete testcase['expected-state']}
+         else if (!testcase['expected-state']){
+          let obj = {};
+          obj[root['att_business-key']] = 'businessKey';
+          testcase['expected-state'] = {'#text': JSON.stringify(obj,null,2), att_pk: 'businessKey'};
+          await Modeler.sync_to_disk();
+          location.reload();
+         } else if (root && 'att_business-key' in root && testcase['expected-state'] && testcase['expected-state'].att_pk){
+            let obj = JSON.parse(testcase['expected-state']['#text']);
+            obj[root['att_business-key']] = testcase['expected-state'].att_pk;
+            testcase['expected-state']['#text'] = JSON.stringify(obj,null,2);
+         }"
+         x-show="testcase.expected.length == 0">
+      <div class="card-body">
+        No expected events configured, this testcase will expect a functional exception.
+      </div>
+    </div>
+
+    <!-- Expected events -->
+    <template x-for="event in testcase.expected" :key="event.att_id">
+      <div tabindex="0" x-init="if(!event.att_id){event.att_id = makeid(6)}"class="collapse collapse-plus border border-accent mt-2">
+        <input type="checkbox" :checked="sessionStorage[file + testcase.att_name + event['att_domain-event']] == 'true'"
+               x-model="sessionStorage[file + testcase.att_name + event['att_domain-event']]"/>
+        <div class="collapse-title font-medium">
+          Expected domain event: <span x-text="event['att_domain-event']"></span>
+        </div>
+        <div class="collapse-content">
+          <table class="table">
+              <th>key</th>
+              <th>value</th>
+              <td>
+                <button class="btn btn-ghost" @click="Behavior.init_expected_event(event)">
+                  <i class="fa-solid fa-rotate-right"></i>
+                </button>
+              </td>
+            </tr>
+            <template x-for="field in event.field" :key="field.att_name">
+              <tr>
+                <td x-text="field.att_name"></td>
+                <td>
+                  <ui-editable-text-field
+                          :value="field.att_value"
+                          @updated.debounce="field.att_value = $event.detail.value;"></ui-editable-text-field>
+                </td>
+                <td>
+                  <ui-delete-button
+                          @delete.once.stop="event.field = event.field.filter(x => x.att_name != field.att_name);
+                          if(event.field.length == 0){
+                            testcase.expected = testcase.expected.filter(x => x.att_id != event.att_id);
+                          }"></ui-delete-button>
+                </td>
+              </tr>
+            </template>
+          </table>
+        </div>
+      </div>
+    </template>
+    <div x-data="{events: [], search: '', id: makeid(6)}"
+         x-effect="events = model.processor.filter(x => x.att_type == 'emit-event').map(x => x.att_ref)">
+      <button class="btn btn-ghost" @click="document.getElementById(id).showModal()"><i class="fa-solid fa-plus"></i>&nbsp;
+        Add expected event</button>
+      <dialog :id="id" class="modal">
+        <div class="modal-box">
+          <h3 class="font-bold text-lg">Add expected domain event</h3>
+          <p class="py-4">
+            <input type="text" placeholder="Search..."
+                   x-model="search"
+                   class="input input-bordered input-primary w-full" />
+            <br>
+          <table class="table">
+            <template x-for="event in events" :key="event">
+              <tr class="hover cursor-pointer"
+                  @click="let expected = {'att_domain-event': event};await Behavior.init_expected_event(expected);testcase.expected.push(expected);document.getElementById(id).close()">
+                <td>
+                  <span x-text="event"></span>&nbsp;
+                </td>
+              </tr>
+            </template>
+          </table>
+          </p>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    </div>
+
+    <!-- End state -->
+    <div x-data="{state:null}"
+         @updated.debounce="testcase['expected-state']['#text'] = JSON.stringify(state);testcase['expected-state'].att_pk =  state[root['att_business-key']]"
+         x-show="testcase['expected-state']" x-cloak x-transition
+         x-init="if('expected-state' in testcase && !state){state = JSON.parse(testcase['expected-state']['#text'].replace('\n',''))}">
+
+      <div tabindex="0" class="collapse collapse-plus border border-accent mt-2">
+        <input type="checkbox" :checked="sessionStorage[file + testcase.att_name + 'expected-state'] == 'true'"
+               x-model="sessionStorage[file + testcase.att_name + 'expected-state']"/>
+        <div class="collapse-title font-medium">
+          End state
+        </div>
+        <div class="collapse-content">
+          <ui-state :business-key="root['att_business-key']"></ui-state>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</template>

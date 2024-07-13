@@ -1,6 +1,6 @@
-query MyQuery($key: ID = "") {
+query MyQuery($username: ID = "") {
   User {
-    get(key: $key) {
+    get(key: $username) {
       username
       fullName
       workspace {

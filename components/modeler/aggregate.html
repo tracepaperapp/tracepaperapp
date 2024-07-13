@@ -1,0 +1,111 @@
+<template x-component="aggregate">
+  <div>
+    <div class="overflow-x-auto" x-data="{selected: null}">
+
+      <div class="prose">
+        <h2>Aggregate Document: <span x-text="model.att_name"></span></h2>
+        <hr>
+        <h4>Root</h4>
+      </div>
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+        </tr>
+        </thead>
+        <tbody>
+        <template x-for="field in model.field" :key="field.att_name">
+          <tr>
+            <td>
+              <ui-field-name></ui-field-name>
+            </td>
+            <td>
+              <ui-field-type></ui-field-type>
+            </td>
+            <td>
+              <ui-delete-button @delete.once.stop="model.field = model.field.filter(x => x.att_name != field.att_name)"></ui-delete-button>
+            </td>
+          </tr>
+        </template>
+        <tr>
+          <td colspan="2"></td>
+          <td>
+            <ui-add-button modal-title="Field name"
+                           :pattern="lower_or_camel_cased"
+                           :message="lower_or_camel_cased_message"
+                           @updated.debounce.stop="model.field.push({att_name: $event.detail.value,att_type: 'String'})"></ui-add-button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <div x-data="{entities: []}" x-effect="entities = await Aggregate.get_entities(file)">
+        <template x-for="entity in entities" :key="entity.att_name">
+          <div class="mt-5">
+            <div class="prose">
+              <h4>
+                <ui-editable-text-field
+                        prefix="Nested collection: "
+                        :value="entity.att_name"
+                        :pattern="lower_or_camel_cased"
+                        message="Must be <i>lowercased</i> or <i>camelCased</i>"
+                        @updated.debounce.1000ms="Aggregate.rename_entity(file,entity,$event.detail.value)"></ui-editable-text-field>
+              </h4>
+            </div>
+            <table class="table">
+              <tbody>
+              <tr>
+                <th>Business key</th>
+                <td>
+                  <select class="select select-ghost w-full h-full editable" x-model="entity['att_business-key']">
+                    <option></option>
+                    <template x-for="field in entity.field.filter(x => x.att_type == 'String')" :key="field.att_name">
+                      <option :value="field.att_name" x-text="field.att_name" :selected="field.att_name == entity['att_business-key']"></option>
+                    </template>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+              </tr>
+              <template x-for="field in entity.field" :key="field.att_name">
+                <tr>
+                  <td>
+                    <ui-field-name></ui-field-name>
+                  </td>
+                  <td>
+                    <ui-field-type></ui-field-type>
+                  </td>
+                  <td>
+                    <ui-delete-button @delete.once.stop="entity.field = entity.field.filter(x => x.att_name != field.att_name)"></ui-delete-button>
+                  </td>
+                </tr>
+              </template>
+              <tr>
+                <td>
+                  <ui-delete-button @delete.once.stop="Aggregate.delete_entity(file,entity)"></ui-delete-button>
+                </td>
+                <td></td>
+                <td>
+                  <ui-add-button modal-title="Field name"
+                                 :pattern="lower_or_camel_cased"
+                                 :message="lower_or_camel_cased_message"
+                                 @updated.debounce.stop="entity.field.push({att_name: $event.detail.value,att_type: 'String'})"></ui-add-button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <ui-add-button modal-title="Collection name"
+                       button-text="Add collection"
+                       :pattern="lower_or_camel_cased"
+                       :message="lower_or_camel_cased_message"
+                       @updated.debounce.stop="Aggregate.creat_collection(file,$event.detail.value)"></ui-add-button>
+
+      </div>
+    </div>
+  </div>
+</template>

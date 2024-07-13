@@ -1,0 +1,201 @@
+<template x-component="mapper">
+        <template x-for="handler in model['snapshot-handler']" :key="handler.att_id">
+            <div tabindex="0" class="collapse collapse-plus border border-base-300 mt-2">
+                <input type="checkbox" :checked="sessionStorage[model.att_name + handler.att_id] == 'true'"
+                       x-model="sessionStorage[model.att_name + handler.att_id]"/>
+                <div class="collapse-title font-medium">
+                    Source aggregate: <span x-text="handler['att_sub-domain']"></span>.<span x-text="handler.att_aggregate"></span>
+                    <div class="badge badge-primary badge-outline">mapper</div>
+                </div>
+                <div class="collapse-content">
+                    <table class="table">
+                        <tr>
+                            <th>Source domain</th>
+                            <td>
+                                <select @change="$dispatch('redraw')" class="editable" x-model="handler['att_sub-domain']">
+                                    <option>-</option>
+                                    <template x-for="sub in await Aggregate.list_subdomains()" :key="sub">
+                                        <option x-text="sub" :value="sub" :selected="sub == handler['att_sub-domain']"></option>
+                                    </template>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Source aggregate</th>
+                            <td>
+                                <select @change="$dispatch('redraw');View.get_default_mapping(model,handler)" class="editable" x-model="handler.att_aggregate">
+                                    <option>-</option>
+                                    <template x-for="agg in await Aggregate.list_aggregates(handler['att_sub-domain'])" :key="agg">
+                                        <option x-text="agg" :value="agg" :selected="agg == handler.att_aggregate"></option>
+                                    </template>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Business key</th>
+                            <td>
+                                <select class="editable" x-model="handler['att_key-mapping']">
+                                    <option>-</option>
+                                    <template x-for="field in await View.get_eligible_key_fields(handler)" :key="field">
+                                        <option x-text="field" :value="field" :selected="field == handler['att_key-mapping']"></option>
+                                    </template>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Processing strategy</th>
+                            <td>
+                                <select class="editable" x-model="handler.att_processor">
+                                    <option value="item">Item</option>
+                                    <option value="dictionary">Dictionary</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr x-show="handler.att_processor == 'dictionary'" x-cloak x-transition>
+                            <th>Aggregate collection</th>
+                            <td>
+                                <select class="editable" x-model="handler.att_dictionary">
+                                    <option>-</option>
+                                    <template x-for="field in await View.get_collections(handler)" :key="field">
+                                        <option x-text="field" :value="field" :selected="field == handler.att_dictionary"></option>
+                                    </template>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                    <hr>
+                    <table class="table table-xs">
+                        <thead>
+                        <tr>
+                            <th>View field</th>
+                            <th>Mapping</th>
+                            <th>Aggregate field</th>
+                            <th>Nested mapping</th>
+                        </tr>
+                        </thead>
+                        <template x-for="field in model.field.filter(x => view_field_types.includes(x.att_type))" :key="field.att_name">
+                            <tr x-data="{mapping: null}" x-effect="mapping = View.get_mapping(handler,field)">
+                                <td x-text="field.att_name"></td>
+                                <td>
+                                    <select @change="
+                                        if($el.value == 'unmapped'){handler.mapping = handler.mapping.filter(x => x.att_target != field.att_name)}
+                                        else if(!mapping.att_target){mapping.att_target = field.att_name;handler.mapping.push(mapping)}
+                                        if(!mapping.att_value){
+                                            let fields = await View.get_aggregate_fields(handler);
+                                            if (fields.includes(mapping.att_target)){
+                                                mapping.att_value = mapping.att_target;
+                                            }
+                                        }"
+                                            x-model="mapping.att_operand">
+                                        <option value="unmapped">unmapped</option>
+                                        <option value="set">Set</option>
+                                        <option value="add">Add</option>
+                                        <option value="subtract">Subtract</option>
+                                    </select>
+                                </td>
+                                <td x-show="mapping.att_operand && mapping.att_operand != 'unmapped'" x-cloak x-transition>
+                                    <select class="editable" x-model="mapping.att_value">
+                                        <option>-</option>
+                                        <template x-for="value in await View.get_aggregate_fields(handler)" :key="value">
+                                            <option x-text="value" :value="value" :selected="value == mapping.att_value"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-if="handler.att_processor != 'dictionary'">
+                            <template x-for="field in model.field.filter(x => x.att_type == 'ObjectList')" :key="field.att_name">
+                                <tr x-data="{mapping: null}" x-effect="mapping = View.get_mapping(handler,field)">
+                                    <td x-text="field.att_name"></td>
+                                    <td>
+                                        <select @change="
+                                        if($el.value == 'unmapped'){handler.mapping = handler.mapping.filter(x => x.att_target != field.att_name)}
+                                        else if(!mapping.att_target){mapping.att_target = field.att_name;handler.mapping.push(mapping)}
+                                        if(!mapping.att_value){
+                                            let fields = await View.get_collections(handler,true);
+                                            if (fields.includes(mapping.att_target)){
+                                                mapping.att_value = mapping.att_target;
+                                            }
+                                        }"
+                                                x-model="mapping.att_operand">
+                                            <option value="unmapped">unmapped</option>
+                                            <option value="convert_items">Map Items</option>
+                                        </select>
+                                    </td>
+                                    <td x-show="mapping.att_operand && mapping.att_operand != 'unmapped'" x-cloak x-transition>
+                                        <select class="editable" x-model="mapping.att_value">
+                                            <option>-</option>
+                                            <template x-for="value in await View.get_collections(handler,true)" :key="value">
+                                                <option x-text="value" :value="value" :selected="value == mapping.att_value"></option>
+                                            </template>
+                                        </select>
+                                    </td>
+                                    <td x-show="mapping.att_value" x-cloak x-transition>
+                                        <div x-data="{template: {}}"
+                                             @save-template="View.save_template(mapping,template)"
+                                             x-effect="await sleep(10);template = await View.read_template(model,handler,mapping,template)">
+                                            <table class="table">
+                                                <tr>
+                                                    <th>View field</th>
+                                                    <th>Source field</th>
+                                                    <td>
+                                                        <i @click="template = await View.read_template(model,handler,mapping,template)" class="cursor-pointer fa-solid fa-rotate-right"></i>
+                                                    </td>
+                                                </tr>
+                                                <template x-for="(mapped,key) in template" :key="key">
+                                                    <tr>
+                                                        <td x-text="key"></td>
+                                                        <td>
+                                                            <select @change="$dispatch('save-template')" class="editable" x-model="template[key]">
+                                                                <option value="">-</option>
+                                                                <template x-for="value in await View.get_aggregate_entity_fields(handler,mapping)" :key="value">
+                                                                    <option x-text="value" :selected="mapped == value" :value="value"></option>
+                                                                </template>
+                                                            </select>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </template>
+
+                        </tbody>
+                    </table>
+                    <hr>
+                    <table class="table">
+                        <tr>
+                            <th>
+                                If any of the next statements evaluates to true, the view entity will be deleted:
+                            </th>
+                        </tr>
+                        <template x-for="statement in handler.delete" :key="statement.att_id">
+                            <tr>
+                                <td>
+                                    <ui-editable-text-field
+                                            :value="statement.att_condition"
+                                            @updated.debounce="statement.att_condition = $event.detail.value;"></ui-editable-text-field>
+                                </td>
+                                <td>
+                                    <ui-delete-button
+                                            @delete.once.stop="handler.delete = handler.delete.filter(x => x.att_id != statement.att_id)"></ui-delete-button>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <button class="btn btn-ghost"
+                                        @click="handler.delete.push({att_id: makeid(6), att_condition: delete_statement})"><i class="fa-solid fa-plus"></i>&nbsp;</button>
+                            </td>
+                        </tr>
+                    </table>
+                    <ui-delete-button
+                            @delete.once.stop="model['snapshot-handler'] = model['snapshot-handler'].filter(x => x.att_id != handler.att_id);$dispatch('redraw')"></ui-delete-button>
+                </div>
+            </div>
+        </template>
+</template>

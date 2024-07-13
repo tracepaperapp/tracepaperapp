@@ -1,0 +1,15 @@
+# This file is NOT managed by Tracepaper, and can be customized.
+query GetProject($key: ID = "") {
+  Project {
+    get(key: $key) {
+      key
+      drn
+      name
+      repositories {
+        name
+        url
+        status
+      } 
+    }
+  }
+}

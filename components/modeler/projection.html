@@ -1,0 +1,164 @@
+<template x-component="projection">
+    <div>
+        <div class="prose">
+            <h2>API Configuration</h2>
+        </div>
+        <table class="table">
+            <tr>
+                <th>Name</th>
+                <td x-text="model.att_name" onclick="rename_projection.showModal()" class="editable"></td>
+            </tr>
+            <tr>
+                <th>GraphQL namespace</th>
+                <td x-text="model['att_graphql-namespace']" onclick="rename_projection.showModal()" class="editable"></td>
+            </tr>
+            <tr>
+                <th>GraphQL method name</th>
+                <td>
+                    <ui-editable-text-field
+                            :value="model['att_field-name']"
+                            :pattern="lower_or_camel_cased"
+                            :message="lower_or_camel_cased_message"
+                            @updated="model['att_field-name'] = $event.detail.value;$dispatch('redraw')"></ui-editable-text-field>
+                </td>
+            </tr>
+            <tr>
+                <th>Authorization mode</th>
+                <td>
+                    <select class="editable" x-model="model.att_authorization">
+                        <option value="anonymous">Anonymous</option>
+                        <option value="authenticated">Authenticated</option>
+                        <option value="role">Role</option>
+                    </select>
+                </td>
+            </tr>
+            <template x-if="model.att_authorization == 'role'">
+                <tr x-init="if(!model.att_role){model.att_role = ''}" x-show="model.att_authorization == 'role'" x-transition x-cloak>
+                    <th>Required role</th>
+                    <td x-show="!model.att_role.startsWith('#')" x-transition x-cloak>
+                        <select class="editable"
+                                x-data="{roles: []}"
+                                x-init="roles = await Modeler.get_roles()"
+                                x-model="model.att_role">
+                            <template x-for="role in roles" :key="role">
+                                <option :value="role" x-text="role" :selected="role == model.att_role"></option>
+                            </template>
+                        </select>
+                    </td>
+                    <td x-show="model.att_role.startsWith('#')" x-transition x-cloak>
+                        <ui-editable-text-field
+                                :value="model.att_role"
+                                @updated="model.att_role = $event.detail.value"></ui-editable-text-field>
+                    </td>
+                </tr>
+            </template>
+            <tr>
+                <th>Return object</th>
+                <td>
+                    <select @change="$dispatch('redraw')" class="editable" x-model="model.att_return">
+                        <option>-</option>
+                        <template x-for="ref in await View.list()" :key="ref">
+                            <option :value="ref" :selected="ref == model.att_return" x-text="ref"></option>
+                        </template>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>Return type</th>
+                <td>
+                    <select class="editable" x-model="model['att_return-type']">
+                        <option value="single object">Single object</option>
+                        <option value="result set">Result set</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+
+        <hr class="mt-5">
+        <div class="prose">
+            <h2>Arguments</h2>
+        </div>
+        <table class="table">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Required</th>
+            </tr>
+            <template x-for="field in model.input">
+                <tr>
+                    <td>
+                        <ui-field-name></ui-field-name>
+                    </td>
+                    <td>
+                        <ui-field-type></ui-field-type>
+                    </td>
+                    <td>
+                        <input type="checkbox" :checked="field.att_required == 'true'"
+                               @change="field.att_required = $el.checked ? 'true' : 'false'"
+                               class="checkbox checkbox-primary" />
+                    </td>
+                    <td>
+                        <ui-delete-button
+                                @delete.once.stop="model.input = model.input.filter(x => x.att_name != field.att_name)"></ui-delete-button>
+                    </td>
+                </tr>
+            </template>
+        </table>
+
+        <ui-add-button modal-title="Add argument"
+                       :pattern="lower_or_camel_cased"
+                       :message="lower_or_camel_cased_message"
+                       @updated.debounce.stop="model.input.push({
+                            att_name: $event.detail.value,
+                            att_type: 'String',
+                            att_required: 'false'
+                           })"></ui-add-button>
+
+        <hr class="mt-5">
+        <div class="prose mb-5">
+            <h2>Data preparation logic</h2>
+        </div>
+        <template x-if="model.att_code">
+            <ui-inline-code
+                    :code="model.att_code"
+                    prevent-reload
+                    @updated.debounce.stop="model.att_code = $event.detail.code;$dispatch('redraw')"></ui-inline-code>
+        </template>
+
+        <dialog id="rename_projection" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg">Rename projection</h3>
+                <div class="py-4" x-data="{name: '', path: ''}">
+                    <table class="table">
+                        <tr>
+                            <th>Name</th>
+                            <td >
+                                <ui-editable-text-field
+                                        :value="model.att_name"
+                                        :pattern="pascal_cased"
+                                        :message="pascal_cased_message"
+                                        @updated="name = $event.detail.value"></ui-editable-text-field>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>GraphQL namespace</th>
+                            <td>
+                                <ui-editable-text-field
+                                        :value="model['att_graphql-namespace']"
+                                        :pattern="graphql_namespace"
+                                        :message="graphql_namespace_message"
+                                        @updated="path = $event.detail.value"></ui-editable-text-field>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <button class="btn btn-outline btn-primary btn-block mt-5"
+                            @click="await Projection.rename(model,name,path);rename_projection.close();">Rename</button>
+                </p>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+    </div>
+</template>

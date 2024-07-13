@@ -1,0 +1,11 @@
+# This file is NOT managed by Tracepaper, and can be customized.
+query GetPipeline($key: ID = "") {
+  Pipeline {
+    get(key: $key) {
+      key
+      drn
+      pipelineName
+      stackId
+    }
+  }
+}

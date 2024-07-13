@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content="Generated example"/>
+    <title>Getting Started</title>
+    <link rel="icon" type="image/x-icon" href="/assets/draftsman-logo.png"/>
+    <script src="/js/configuration.js"></script>
+    <script src="/js/configuration-staging.js"></script>
+
+    <link rel="stylesheet" href="/css/draftsman.css"/>
+    <script src="/js/framework.js"></script>
+    <script src="/js/cache.js"></script>
+    <script src="https://unpkg.com/@vimesh/ui"></script>
+    <script src="/js/utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+
+    <!--
+        This example uses bootstrap 5 as it's CSS framework
+        But feel free to use your own preference.
+    -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
+          integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" defer></script>
+
+    <style>
+            code {
+              display: block;
+              white-space: pre-wrap
+            }
+            .scrollbar {
+                height:85vh;
+                overflow-y:auto;
+                padding: 1rem;
+            }
+            .scrollbar::-webkit-scrollbar {
+                width: 10px;
+            }
+            .scrollbar::-webkit-scrollbar-track {
+                border-radius: 8px;
+                background-color: #e7e7e7;
+                border: 1px solid #cacaca;
+            }
+            .scrollbar::-webkit-scrollbar-thumb {
+                border-radius: 8px;
+                background-color: #0d6efd;
+            }
+            .scrollbar-left {
+                direction: rtl;
+            }
+            .scroll-inside {
+                direction: ltr;
+            }
+
+    </style>
+</head>
+<body class="d-flex flex-column h-100" x-data x-import="navbar">
+<main class="flex-shrink-0">
+    <ui-navbar></ui-navbar>
+    <br>
+    <div class="container" x-data="{toc: []}">
+        <!-- Render the ReadMe on this page -->
+        <script src=" https://unpkg.com/showdown/dist/showdown.min.js"></script>
+        <script>
+                    var converter = new showdown.Converter();
+        </script>
+
+        <template x-component="toc-section">
+            <nav class="nav nav-pills flex-column">
+                <template x-for="item in $prop('toc')" :key="item.id">
+                    <div x-data="{spacer: ''}" x-init="spacer = $prop('spacer')">
+                        <a class="nav-link toc" :href="'#' + item.id" :id="'handle-' + item.id">
+                            <span x-html="spacer"></span>
+                            <span x-text="item.title"></span>
+                        </a>
+                        <template x-if="item.toc.length != 0">
+                            <ui-toc-section :toc="item.toc" :spacer="spacer + '&nbsp;&nbsp;&nbsp;'"></ui-toc-section>
+                        </template>
+                    </div>
+                </template>
+            </nav>
+        </template>
+
+        <div class="row">
+            <div class="col-4">
+                <div class="scrollbar scrollbar-left">
+                    <nav class="h-100 flex-column align-items-stretch pe-4 border-end scroll-inside">
+                        <ui-toc-section :toc="toc" :spacer="''"></ui-toc-section>
+                    </nav>
+                </div>
+
+            </div>
+
+            <div class="col-8">
+                <div x-ref="target" class="scrollbar" @scroll="update_toc_highlight($refs.target)">
+                </div>
+            </div>
+
+        </div>
+
+        <div x-include="/docs.md" x-effect="setTimeout(function(){
+                    $refs.target.innerHTML = converter.makeHtml($el.innerHTML);
+                    toc = create_toc($refs.target);
+                },100);" style="display:none;"></div>
+    </div>
+</main>
+</body>
+</html>

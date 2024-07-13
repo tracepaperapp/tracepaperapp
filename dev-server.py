@@ -1,12 +1,11 @@
-import os, time, glob, shutil, subprocess, traceback, json, sys
+import os, time, glob, shutil, subprocess, traceback
 global server
 server = None
 reload_interval_in_seconds = 1
 environment = "production"
-
 def start_server():
     global server
-    server = subprocess.Popen(["py","-m", "http.server", "8181", "--directory", "./tmp/"])
+    server = subprocess.Popen(["python3","-m", "http.server", "8181", "--directory", "./tmp/"])
 
 
 def stop_server():
@@ -58,36 +57,10 @@ def show_activity_bar(x):
     return x
 
 
-def prepare_documentation():
-    subjects = []
-    indexes = {}
-    for md in glob.glob('./docs/*/*.md'):
-        with open(md,"r") as f:
-            title = f.read().split("\n")[0].replace("# ","")
-        md = md.replace(os.sep,"/").replace("./","/")
-        subject = md.split("/")[2]
-        if subject not in indexes:
-            indexes[subject] = []
-            subjects.append(subject)
-        indexes[subject].append({
-            "name" : title,
-            "path" : md
-        });
-    for subject, index in indexes.items():
-        with open(f"./docs/{subject}/index.json","w") as f:
-            f.write(json.dumps(index,indent=2 ))
-    with open("./docs/index.json","w") as f:
-        index = []
-        for subject in subjects:
-            index += indexes[subject]
-        f.write(json.dumps(index,indent=2 ))
-
 def prepare_ide():
     code = ""
-    for src in glob.glob('./js/**/*.js',recursive=True):
+    for src in glob.glob('./js/ide/*.js',recursive=True):
         src = src.replace(os.sep,"/")
-        if not "js/ide/" in src:
-            continue
         f = open(src,'a')
         f.close()
         with open(src,'r') as f:
@@ -95,12 +68,12 @@ def prepare_ide():
     with open("./js/ide.js","w") as f:
         f.write(code)
 
+
 def watch_source():
     x = ""
     while True:
         try:
             prepare_ide()
-            prepare_documentation()
             copy_source()
             x = show_activity_bar(x)
         except:
@@ -109,16 +82,9 @@ def watch_source():
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument("-m", "--merge",action='store_true')
-    args = parser.parse_args()
-    if args.merge:
-        prepare_ide()
-    else:
-        print("Stop de server middels ctrl-c")
-        create_folder()
-        start_server()
-        watch_source()
-        stop_server()
-        remove_folder()
+    print("Stop de server middels ctrl-c")
+    create_folder()
+    start_server()
+    watch_source()
+    stop_server()
+    remove_folder()

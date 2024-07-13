@@ -1,0 +1,999 @@
+<?xml version="1.0" encoding="utf-8"?>
+<draftsman project-name="tracepapertwee" xmlns="https://tracepaper.draftsman.io">
+	<global>
+		<pattern name="BuildDrn" regex="^{{UserHash}}:{{LowerCase}}:{{PascalCase}}:{{DateTime}}$"></pattern>
+		<pattern name="BusinessRole" regex="^(viewer|developer|administrator|removed)$"></pattern>
+		<pattern name="Date" regex="^(?:20)\d{2}-\d{2}-\d{2}$"></pattern>
+		<pattern name="DateTime" regex="^{{Date}}T{{Time}}$"></pattern>
+		<pattern name="GitHubRepository" regex="^(https:\/\/github.com)+(\/{1}[a-zA-Z0-9\-\.\_]+){2}$"></pattern>
+		<pattern name="LowerCase" regex="^[a-z]+$"></pattern>
+		<pattern name="PascalCase" regex="^([A-Z]{1}[a-z]+)+$"></pattern>
+		<pattern name="ProjectDrn" regex="^{{UserHash}}:{{LowerCase}}:{{PascalCase}}$"></pattern>
+		<pattern name="Time" regex="^\d{2}:\d{2}$"></pattern>
+		<pattern name="UserHash" regex="^D[0-9]+$"></pattern>
+		<pattern name="WorkspaceDrn" regex="^{{UserHash}}:{{LowerCase}}$"></pattern>
+		<pattern name="WorkspaceType" regex="^(personal|business)$"></pattern>
+		<expression name="extractRoleFromDrn" type="ActorEventRole" input="drn;postfix" expression="${drn.split(':')[0]}:${drn.split(':')[1]}postfix"></expression>
+	</global>
+	<events>
+		<event graphql-namespace="Workspace" graphql-name="authorizeUser" name="AuthorizeUserWorkspaceRequested" authorization="role" type="ActorEvent" role="#global.extractRoleFromDrn(drn, '-administrator')">
+			<field name="drn" type="String" pattern="{{WorkspaceDrn}}"></field>
+			<field name="username" type="String" pattern="{{LowerCase}}"></field>
+			<field name="businessRole" type="String" pattern="{{BusinessRole}}"></field>
+		</event>
+		<event graphql-namespace="Project" graphql-name="build" name="BuildProjectRequested" authorization="role" type="ActorEvent" role="#global.extractRoleFromDrn(drn, '-developer')">
+			<field name="drn" type="String" pattern="{{ProjectDrn}}"></field>
+			<field name="buildId" type="String"></field>
+		</event>
+		<event graphql-namespace="User" graphql-name="create" authorization="authenticated" role="" type="ActorEvent" username-field="payloadAttribute" name="CreateUserRequested">
+			<field name="username" type="String" auto-fill="username"></field>
+			<field name="fullName" type="String"></field>
+		</event>
+		<event graphql-namespace="Workspace" graphql-name="create" name="CreateWorkspaceRequested" authorization="role" type="ActorEvent" role="administrator">
+			<field name="type" type="String" pattern="{{WorkspaceType}}"></field>
+			<field name="name" type="String" pattern="{{PascalCase}}"></field>
+			<field name="username" type="String"></field>
+			<field name="hash" type="String" pattern="{{UserHash}}"></field>
+		</event>
+		<event graphql-namespace="Project" graphql-name="delete" name="DeleteProjectRequested" authorization="role" type="ActorEvent" role="#global.extractRoleFromDrn(drn, '-administrator')">
+			<field name="drn" type="String" pattern="{{ProjectDrn}}"></field>
+		</event>
+		<event graphql-namespace="Project.Deployment" graphql-name="deregister" name="DeregisterProjectDeploymentRequested" authorization="anonymous" type="ActorEvent">
+			<field name="drn" type="String"></field>
+			<field name="eventBus" type="String"></field>
+		</event>
+		<event graphql-namespace="Project.Pipeline" graphql-name="deregister" name="DeregisterProjectPipelineRequested" authorization="anonymous" type="ActorEvent">
+			<field name="drn" type="String"></field>
+		</event>
+		<event graphql-namespace="Project" graphql-name="initialize" authorization="role" role="#global.extractRoleFromDrn(workspaceDrn, '-administrator')" type="ActorEvent" username-field="payloadAttribute" name="InitializeProjectRequested">
+			<field name="workspaceDrn" type="String" pattern="{{WorkspaceDrn}}"></field>
+			<field name="name" type="String" pattern="{{PascalCase}}"></field>
+			<field name="modelRepo" type="String" pattern="{{GitHubRepository}}"></field>
+			<field name="codeRepo" type="String" pattern="{{GitHubRepository}}"></field>
+			<field name="guiRepo" type="String" default="" pattern="{{GitHubRepository}}"></field>
+		</event>
+		<event graphql-namespace="Project.Deployment" graphql-name="register" name="RegisterProjectDeploymentRequested" authorization="anonymous" type="ActorEvent">
+			<field name="drn" type="String"></field>
+			<field name="domainName" type="String"></field>
+			<field name="eventBus" type="String"></field>
+			<field name="propertyVault" type="String"></field>
+			<field name="stackId" type="String"></field>
+			<field name="userPoolId" type="String"></field>
+			<field name="apiId" type="String"></field>
+			<field name="apiKey" type="String"></field>
+			<field name="apiEndpoint" type="String"></field>
+			<field name="appId" type="String"></field>
+		</event>
+		<event graphql-namespace="Project.Pipeline" graphql-name="register" name="RegisterProjectPipelineRequested" authorization="anonymous" type="ActorEvent">
+			<field name="drn" type="String" pattern="{{ProjectDrn}}"></field>
+			<field name="pipelineName" type="String"></field>
+			<field name="stackId" type="String"></field>
+		</event>
+		<event graphql-namespace="Project.Build" graphql-name="update" name="UpdateProjectBuildRequested" authorization="anonymous" type="ActorEvent">
+			<field name="drn" type="String" pattern="{{BuildDrn}}"></field>
+			<field name="message" type="String"></field>
+			<field name="status" type="String"></field>
+		</event>
+		<event name="BuildUpdated" source="ProjectManagement.Build" type="DomainEvent">
+			<field name="drn" type="String"></field>
+			<field name="status" type="String"></field>
+			<field name="lastEvent" type="String"></field>
+			<nested-object name="logs">
+				<field name="timestamp" type="String"></field>
+				<field name="message" type="String"></field>
+			</nested-object>
+		</event>
+		<event name="DeploymentDeregistered" source="ProjectManagement.Deployment" type="DomainEvent">
+			<field name="drn" type="String"></field>
+		</event>
+		<event name="DeploymentRegistered" source="ProjectManagement.Deployment" type="DomainEvent">
+			<field name="drn" type="String"></field>
+			<field name="domainName" type="String"></field>
+			<field name="eventBus" type="String"></field>
+			<field name="propertyVault" type="String"></field>
+			<field name="stackId" type="String"></field>
+			<field name="userPoolId" type="String"></field>
+			<field name="apiId" type="String"></field>
+			<field name="apiKey" type="String"></field>
+			<field name="apiEndpoint" type="String"></field>
+			<field name="appId" type="String"></field>
+		</event>
+		<event name="PipelineDeregistered" source="ProjectManagement.Pipeline" type="DomainEvent">
+			<field name="drn" type="String"></field>
+		</event>
+		<event name="PipelineRegistered" source="ProjectManagement.Pipeline" type="DomainEvent">
+			<field name="drn" type="String"></field>
+			<field name="pipelineName" type="String"></field>
+			<field name="stackId" type="String"></field>
+		</event>
+		<event name="ProjectCreated" source="ProjectManagement.Project" type="DomainEvent">
+			<field name="drn" type="String"></field>
+			<field name="name" type="String"></field>
+			<nested-object name="repository">
+				<field name="name" type="String" default=""></field>
+				<field name="url" type="String"></field>
+				<field name="status" type="String"></field>
+			</nested-object>
+		</event>
+		<event name="ProjectDeleted" source="ProjectManagement.Project" type="DomainEvent">
+			<field name="drn" type="String"></field>
+		</event>
+		<event name="AssignedBusinessRoleToUser" source="ProjectManagement.Workspace" type="DomainEvent">
+			<nested-object name="iam">
+				<field name="username" type="String"></field>
+				<field name="businessRole" type="String"></field>
+			</nested-object>
+			<field name="drn" type="String"></field>
+		</event>
+		<event name="ProjectInitialized" source="ProjectManagement.Workspace" type="DomainEvent">
+			<field name="name" type="String"></field>
+			<field name="drn" type="String"></field>
+			<nested-object name="repository">
+				<field name="name" type="String" default=""></field>
+				<field name="url" type="String"></field>
+			</nested-object>
+		</event>
+		<event name="WorkspaceCreated" source="ProjectManagement.Workspace" type="DomainEvent">
+			<field name="drn" type="String"></field>
+			<field name="name" type="String"></field>
+			<field name="type" type="String"></field>
+			<nested-object name="iam">
+				<field name="username" type="String" default=""></field>
+				<field name="businessRole" type="String"></field>
+			</nested-object>
+		</event>
+		<event name="UserCreated" source="UserManagement.User" type="DomainEvent">
+			<field name="username" type="String"></field>
+			<field name="fullName" type="String"></field>
+			<field name="hash" type="String"></field>
+		</event>
+	</events>
+	<domain>
+		<subdomain name="ProjectManagement">
+			<aggregate name="Build" business-key="drn" event-ttl="86400" snapshot-interval="100" backup-interval-days="0" backup-ttl-days="0">
+				<field name="drn" type="String"></field>
+				<field name="status" type="String"></field>
+				<field name="lastEvent" type="String"></field>
+				<command name="Update">
+					<trigger source="UpdateProjectBuildRequested" key-field="drn">
+						<mapping target="drn" value="drn"></mapping>
+						<mapping target="message" value="message"></mapping>
+						<mapping target="status" value="status"></mapping>
+					</trigger>
+					<processor type="code" id="GtjoH9" file="" handler="" code='import time|LB||LB|flow.timestamp = str(time.time())|LB|flow.logs = [{|LB|    "timestamp": flow.timestamp,|LB|    "message": flow.message|LB|}]'></processor>
+					<processor type="emit-event" id="qyXJZQ" ref="BuildUpdated">
+						<mapping target="drn" value="#flow.drn"></mapping>
+						<mapping target="status" value="#flow.status"></mapping>
+						<mapping target="lastEvent" value="#flow.timestamp"></mapping>
+						<mapping target="logs" value="#flow.logs"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="UpdateProjectBuildRequested">
+						<input name="drn" value="build" type="String"></input>
+						<input name="message" value="Hello World" type="String"></input>
+						<input name="status" value="Test" type="String"></input>
+						<expected domain-event="BuildUpdated">
+							<field value="build" name="drn" type="String"></field>
+							<field value="Test" name="status" type="String"></field>
+						</expected>
+					</test-case>
+				</command>
+				<event-handler on="BuildUpdated">
+					<mapping target="drn" operand="set" value="drn"></mapping>
+					<mapping target="status" operand="set" value="status"></mapping>
+					<mapping target="lastEvent" operand="set" value="lastEvent"></mapping>
+					<nested-mapping source="logs" target="logs" business-key="timestamp">
+						<mapping target="timestamp" operand="set" value="timestamp"></mapping>
+						<mapping target="message" operand="set" value="message"></mapping>
+					</nested-mapping>
+				</event-handler>
+				<nested-object name="logs" business-key="newField">
+					<field name="timestamp" type="String"></field>
+					<field name="message" type="String"></field>
+				</nested-object>
+			</aggregate>
+			<aggregate name="Deployment" business-key="drn" event-ttl="-1" snapshot-interval="100" backup-interval-days="0" backup-ttl-days="0">
+				<field name="drn" type="String"></field>
+				<field name="domainName" type="String"></field>
+				<field name="eventBus" type="String"></field>
+				<field name="propertyVault" type="String"></field>
+				<field name="stackId" type="String"></field>
+				<field name="userPoolId" type="String"></field>
+				<field name="apiId" type="String"></field>
+				<field name="apiKey" type="String"></field>
+				<field name="apiEndpoint" type="String"></field>
+				<field name="appId" type="String"></field>
+				<command name="Deregister">
+					<trigger source="DeregisterProjectDeploymentRequested" key-field='#event.drn + ":" + #event.eventBus'>
+						<mapping target="drn" value="drn"></mapping>
+						<mapping target="eventBus" value="eventBus"></mapping>
+					</trigger>
+					<processor type="set-variable" id="TmnIdD" name="drn" expression='flow.drn + ":" + flow.eventBus'></processor>
+					<processor type="emit-event" id="0MfK8K" ref="DeploymentDeregistered">
+						<mapping target="drn" value="#flow.drn"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="DeregisterProjectDeploymentRequested">
+						<input name="drn" value="drn" type="String"></input>
+						<input name="eventBus" value="bus" type="String"></input>
+						<expected domain-event="DeploymentDeregistered">
+							<field value="drn:bus" name="drn" type="String"></field>
+						</expected>
+						<expected-state pk="drn:bus">{
+  "isDeleted": "hard"
+}</expected-state>
+					</test-case>
+				</command>
+				<command name="Register">
+					<trigger source="RegisterProjectDeploymentRequested" key-field='#event.drn + ":" + #event.eventBus'>
+						<mapping target="domainName" value="domainName"></mapping>
+						<mapping target="eventBus" value="eventBus"></mapping>
+						<mapping target="propertyVault" value="propertyVault"></mapping>
+						<mapping target="stackId" value="stackId"></mapping>
+						<mapping target="userPoolId" value="userPoolId"></mapping>
+						<mapping target="apiId" value="apiId"></mapping>
+						<mapping target="apiKey" value="apiKey"></mapping>
+						<mapping target="drn" value="drn"></mapping>
+						<mapping target="apiEndpoint" value="apiEndpoint"></mapping>
+						<mapping target="appId" value="appId"></mapping>
+					</trigger>
+					<processor type="set-variable" id="lUFYgY" name="drn" expression='flow.drn + ":" +flow.eventBus'></processor>
+					<processor type="emit-event" id="6QPR4Q" ref="DeploymentRegistered">
+						<mapping target="drn" value="#flow.drn"></mapping>
+						<mapping target="domainName" value="#flow.domainName"></mapping>
+						<mapping target="eventBus" value="#flow.eventBus"></mapping>
+						<mapping target="propertyVault" value="#flow.propertyVault"></mapping>
+						<mapping target="stackId" value="#flow.stackId"></mapping>
+						<mapping target="userPoolId" value="#flow.userPoolId"></mapping>
+						<mapping target="apiId" value="#flow.apiId"></mapping>
+						<mapping target="apiKey" value="#flow.apiKey"></mapping>
+						<mapping target="apiEndpoint" value="#flow.apiEndpoint"></mapping>
+						<mapping target="appId" value="#flow.appId"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="RegisterProjectDeploymentRequested">
+						<input name="drn" value="drn" type="String"></input>
+						<input name="domainName" value="domain" type="String"></input>
+						<input name="eventBus" value="bus" type="String"></input>
+						<input name="propertyVault" value="vault" type="String"></input>
+						<input name="stackId" value="stack" type="String"></input>
+						<input name="userPoolId" value="pool" type="String"></input>
+						<input name="apiId" value="id" type="String"></input>
+						<input name="apiKey" value="key" type="String"></input>
+						<input name="apiEndpoint" value="apiEndpoint" type="String"></input>
+						<input name="appId" value="appId" type="String"></input>
+						<expected domain-event="DeploymentRegistered">
+							<field value="drn:bus" name="drn" type="String"></field>
+							<field value="domain" name="domainName" type="String"></field>
+							<field value="bus" name="eventBus" type="String"></field>
+							<field value="vault" name="propertyVault" type="String"></field>
+							<field value="stack" name="stackId" type="String"></field>
+							<field value="pool" name="userPoolId" type="String"></field>
+							<field value="id" name="apiId" type="String"></field>
+							<field value="key" name="apiKey" type="String"></field>
+							<field value="apiEndpoint" name="apiEndpoint" type="String"></field>
+							<field value="appId" name="appId" type="String"></field>
+						</expected>
+						<expected-state pk="drn:bus">{
+  "drn": "drn:bus",
+  "domainName": "domain",
+  "eventBus": "bus",
+  "propertyVault": "vault",
+  "stackId": "stack",
+  "userPoolId": "pool",
+  "apiId": "id",
+  "apiKey": "key",
+  "apiEndpoint": "apiEndpoint",
+  "appId": "appId"
+}</expected-state>
+					</test-case>
+				</command>
+				<event-handler on="DeploymentDeregistered" code="self.isDeleted = 'hard'"></event-handler>
+				<event-handler on="DeploymentRegistered">
+					<mapping target="drn" operand="set" value="drn"></mapping>
+					<mapping target="domainName" operand="set" value="domainName"></mapping>
+					<mapping target="eventBus" operand="set" value="eventBus"></mapping>
+					<mapping target="propertyVault" operand="set" value="propertyVault"></mapping>
+					<mapping target="stackId" operand="set" value="stackId"></mapping>
+					<mapping target="userPoolId" operand="set" value="userPoolId"></mapping>
+					<mapping target="apiId" operand="set" value="apiId"></mapping>
+					<mapping target="apiKey" operand="set" value="apiKey"></mapping>
+					<mapping target="apiEndpoint" operand="set" value="apiEndpoint"></mapping>
+					<mapping target="appId" operand="set" value="appId"></mapping>
+				</event-handler>
+			</aggregate>
+			<aggregate name="Pipeline" business-key="drn" event-ttl="-1" snapshot-interval="100" backup-interval-days="0" backup-ttl-days="0">
+				<field name="drn" type="String"></field>
+				<field name="pipelineName" type="String"></field>
+				<field name="stackId" type="String"></field>
+				<command name="Deregister">
+					<trigger source="DeregisterProjectPipelineRequested" key-field="drn">
+						<mapping target="drn" value="drn"></mapping>
+					</trigger>
+					<processor type="emit-event" id="fVxPRD" ref="PipelineDeregistered">
+						<mapping target="drn" value="#flow.drn"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="DeregisterProjectPipelineRequested">
+						<input name="drn" value="drn" type="String"></input>
+						<expected domain-event="PipelineDeregistered">
+							<field value="drn" name="drn" type="String"></field>
+						</expected>
+						<expected-state pk="drn">{
+  "isDeleted": "hard"
+}</expected-state>
+					</test-case>
+				</command>
+				<command name="Register">
+					<trigger source="RegisterProjectPipelineRequested" key-field="#event.drn + ':' + #event.pipelineName">
+						<mapping target="drn" value="drn"></mapping>
+						<mapping target="pipelineName" value="pipelineName"></mapping>
+						<mapping target="stackId" value="stackId"></mapping>
+					</trigger>
+					<processor type="set-variable" id="HKFR3x" name="drn" expression="flow.identity"></processor>
+					<processor type="emit-event" id="3Brvvl" ref="PipelineRegistered">
+						<mapping target="drn" value="#flow.drn"></mapping>
+						<mapping target="pipelineName" value="#flow.pipelineName"></mapping>
+						<mapping target="stackId" value="#flow.stackId"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="RegisterProjectPipelineRequested">
+						<input name="drn" value="D1562559209:personal:ProofOfConcept" type="String"></input>
+						<input name="pipelineName" value="main" type="String"></input>
+						<input name="stackId" value="arn:aws:cloudformation:eu-west-1:829188642883:stack/reafactoring-pipeline/68006840-4735-11ee-8d74-0252bc458c27" type="String"></input>
+						<expected domain-event="PipelineRegistered">
+							<field value="D1562559209:personal:ProofOfConcept:main" name="drn" type="String"></field>
+							<field value="main" name="pipelineName" type="String"></field>
+							<field value="arn:aws:cloudformation:eu-west-1:829188642883:stack/reafactoring-pipeline/68006840-4735-11ee-8d74-0252bc458c27" name="stackId" type="String"></field>
+						</expected>
+						<expected-state pk="D1562559209:personal:ProofOfConcept:main">{
+  "drn": "D1562559209:personal:ProofOfConcept:main",
+  "pipelineName": "main",
+  "stackId": "arn:aws:cloudformation:eu-west-1:829188642883:stack/reafactoring-pipeline/68006840-4735-11ee-8d74-0252bc458c27"
+}</expected-state>
+					</test-case>
+				</command>
+				<event-handler on="PipelineDeregistered" code="self.isDeleted = 'hard'"></event-handler>
+				<event-handler on="PipelineRegistered">
+					<mapping target="drn" operand="set" value="drn"></mapping>
+					<mapping target="pipelineName" operand="set" value="pipelineName"></mapping>
+					<mapping target="stackId" operand="set" value="stackId"></mapping>
+				</event-handler>
+			</aggregate>
+			<aggregate name="Project" business-key="drn" event-ttl="-1" snapshot-interval="100" backup-interval-days="0" backup-ttl-days="0">
+				<field name="drn" type="String"></field>
+				<field name="name" type="String"></field>
+				<command name="Create">
+					<trigger source="ProjectInitialized" key-field="drn">
+						<mapping target="name" value="name"></mapping>
+						<mapping target="drn" value="drn"></mapping>
+						<mapping target="repository" value="repository"></mapping>
+					</trigger>
+					<processor type="set-variable" id="XtjS0Y" name="repository" expression='[{"name": r.name, "url": r.url, "status": "initialized"} for r in flow.repository]'></processor>
+					<processor type="emit-event" id="igPtAu" ref="ProjectCreated">
+						<mapping target="drn" value="#flow.drn"></mapping>
+						<mapping target="name" value="#flow.name"></mapping>
+						<mapping target="repository" value="#flow.repository"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="ProjectInitialized">
+						<input name="name" value="test" type="String"></input>
+						<input name="drn" value="D3308175807:personal:test" type="String"></input>
+						<input name="repository" type="NestedObject">[
+  {
+    "name": "model",
+    "url": "https://github.com/dummy/model"
+  },
+{
+    "name": "code",
+    "url": "https://github.com/dummy/code"
+  },
+{
+    "name": "gui",
+    "url": "https://github.com/dummy/gui"
+  }
+]</input>
+						<expected domain-event="ProjectCreated">
+							<field value="D3308175807:personal:test" name="drn" type="String"></field>
+							<field value="test" name="name" type="String"></field>
+						</expected>
+						<expected-state pk="D3308175807:personal:test">{
+  "drn": "D3308175807:personal:test",
+  "name": "test",
+  "repository": {
+    "model": {
+      "name": "model",
+      "url": "https://github.com/dummy/model",
+      "status": "initialized"
+    },
+    "code": {
+      "name": "code",
+      "url": "https://github.com/dummy/code",
+      "status": "initialized"
+    },
+    "gui": {
+      "name": "gui",
+      "url": "https://github.com/dummy/gui",
+      "status": "initialized"
+    }
+  }
+}</expected-state>
+					</test-case>
+				</command>
+				<command name="Delete">
+					<trigger source="DeleteProjectRequested" key-field="drn">
+						<mapping target="drn" value="drn"></mapping>
+					</trigger>
+					<processor type="emit-event" id="NIBeuu" ref="ProjectDeleted">
+						<mapping target="drn" value="#flow.drn"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="DeleteProjectRequested">
+						<input name="drn" value="myproject" type="String"></input>
+						<expected domain-event="ProjectDeleted">
+							<field value="myproject" name="drn" type="String"></field>
+						</expected>
+						<expected-state pk="myproject">{
+  "isDeleted": "hard"
+}</expected-state>
+					</test-case>
+				</command>
+				<event-handler on="ProjectCreated">
+					<mapping target="drn" operand="set" value="drn"></mapping>
+					<mapping target="name" operand="set" value="name"></mapping>
+					<nested-mapping source="repository" target="repository" business-key="name">
+						<mapping target="name" operand="set" value="name"></mapping>
+						<mapping target="url" operand="set" value="url"></mapping>
+						<mapping target="status" operand="set" value="status"></mapping>
+					</nested-mapping>
+				</event-handler>
+				<event-handler on="ProjectDeleted" code="self.isDeleted = 'hard'"></event-handler>
+				<nested-object name="repository" business-key="name">
+					<field name="name" type="String"></field>
+					<field name="url" type="String"></field>
+					<field name="status" type="String"></field>
+				</nested-object>
+			</aggregate>
+			<aggregate name="Workspace" business-key="drn" event-ttl="-1" snapshot-interval="100" backup-interval-days="0" backup-ttl-days="0">
+				<field name="drn" type="String"></field>
+				<field name="name" type="String"></field>
+				<field name="type" type="String"></field>
+				<command name="AuthorizeUser">
+					<trigger source="AuthorizeUserWorkspaceRequested" key-field="drn">
+						<mapping target="drn" value="drn"></mapping>
+						<mapping target="username" value="username"></mapping>
+						<mapping target="businessRole" value="businessRole"></mapping>
+					</trigger>
+					<processor type="validator" id="Zxk459" condition="flow.entity.type == 'business'" exception="IAM is only enabled on business workspaces"></processor>
+					<processor type="set-variable" id="fql9XM" name="iam" expression='[{"username": flow.username, "businessRole" : flow.businessRole}]'></processor>
+					<processor type="emit-event" id="jCpn1H" ref="AssignedBusinessRoleToUser">
+						<mapping target="drn" value="#flow.drn"></mapping>
+						<mapping target="iam" value="#flow.iam"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="AuthorizeUserWorkspaceRequested">
+						<input name="drn" value="test" type="String"></input>
+						<input name="username" value="john.doe" type="String"></input>
+						<input name="businessRole" value="administrator" type="String"></input>
+						<expected domain-event="AssignedBusinessRoleToUser">
+							<field value="test" name="drn" type="String"></field>
+						</expected>
+						<state>{
+  "type": "business"
+}</state>
+						<expected-state pk="test">{
+  "iam": {
+    "john.doe": {
+      "username": "john.doe",
+      "businessRole": "administrator"
+    }
+  }
+}</expected-state>
+					</test-case>
+				</command>
+				<command name="Create" create-command="true">
+					<trigger source="UserCreated" key-field='#event.hash + ":personal"'>
+						<mapping target="drn" value='#domain_event.data.hash + ":personal"'></mapping>
+						<mapping target="name" value='#domain_event.data.fullName + ": Personal Workspace"'></mapping>
+						<mapping target="type" value="#'personal'"></mapping>
+						<mapping target="username" value="username"></mapping>
+						<mapping target="hash" value="#''"></mapping>
+					</trigger>
+					<trigger source="CreateWorkspaceRequested" key-field="#event.hash + ':' + #event.name.lower().replace(' ','')">
+						<mapping target="drn" value="#domain_event.data.hash + ':' + #domain_event.data.name.lower().replace(' ','')"></mapping>
+						<mapping target="name" value="name"></mapping>
+						<mapping target="type" value="type"></mapping>
+						<mapping target="username" value="username"></mapping>
+						<mapping target="hash" value="hash"></mapping>
+					</trigger>
+					<processor type="set-variable" id="Gh39Oh" name="iam" expression='[{"username": flow.username, "businessRole" : "administrator"}]'></processor>
+					<processor type="emit-event" id="j9XYW1" ref="WorkspaceCreated">
+						<mapping target="drn" value="#flow.drn"></mapping>
+						<mapping target="name" value="#flow.name"></mapping>
+						<mapping target="type" value="#flow.type"></mapping>
+						<mapping target="iam" value="#flow.iam"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="UserCreated">
+						<input name="username" value="j.doe" type="String"></input>
+						<input name="fullName" value="John Doe" type="String"></input>
+						<input name="hash" value="D3308175807" type="String"></input>
+						<expected domain-event="WorkspaceCreated">
+							<field value="D3308175807:personal" name="drn" type="String"></field>
+							<field value="John Doe: Personal Workspace" name="name" type="String"></field>
+							<field value="personal" name="type" type="String"></field>
+						</expected>
+						<expected-state pk="D3308175807:personal">{
+  "drn": "D3308175807:personal",
+  "name": "John Doe: Personal Workspace",
+  "type": "personal",
+  "iam": {
+    "j.doe": {
+      "username": "j.doe",
+      "businessRole": "administrator"
+    }
+  }
+}</expected-state>
+					</test-case>
+					<test-case name="CreateBusinessWorkspace" trigger-event="CreateWorkspaceRequested">
+						<input name="type" value="business" type="String"></input>
+						<input name="name" value="Draftsman" type="String"></input>
+						<input name="username" value="j.doe" type="String"></input>
+						<input name="hash" value="D3308175807" type="String"></input>
+						<expected domain-event="WorkspaceCreated">
+							<field value="D3308175807:draftsman" name="drn" type="String"></field>
+							<field value="Draftsman" name="name" type="String"></field>
+							<field value="business" name="type" type="String"></field>
+						</expected>
+						<expected-state pk="D3308175807:draftsman">{
+  "drn": "D3308175807:draftsman",
+  "name": "Draftsman",
+  "type": "business",
+  "iam": {
+    "j.doe": {
+      "username": "j.doe",
+      "businessRole": "administrator"
+    }
+  }
+}</expected-state>
+					</test-case>
+				</command>
+				<command name="StartNewProject">
+					<trigger source="InitializeProjectRequested" key-field="workspaceDrn">
+						<mapping target="workspaceDrn" value="workspaceDrn"></mapping>
+						<mapping target="name" value="name"></mapping>
+						<mapping target="modelRepo" value="modelRepo"></mapping>
+						<mapping target="codeRepo" value="codeRepo"></mapping>
+						<mapping target="guiRepo" value="guiRepo"></mapping>
+					</trigger>
+					<processor type="code" id="IqGZCf" file="lib/WorkspaceModule.py" handler="validate_new_project_request"></processor>
+					<processor type="emit-event" id="1CchWG" ref="ProjectInitialized">
+						<mapping target="name" value="#flow.name"></mapping>
+						<mapping target="drn" value="#flow.drn"></mapping>
+						<mapping target="repository" value="#flow.repositories"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="InitializeProjectRequested">
+						<input name="workspaceDrn" value="D3308175807:personal" type="String"></input>
+						<input name="name" value="test" type="String"></input>
+						<input name="modelRepo" value="https://github.com/dummy/model" type="String"></input>
+						<input name="codeRepo" value="https://github.com/dummy/code" type="String"></input>
+						<input name="guiRepo" value="https://github.com/dummy/gui" type="String"></input>
+						<expected domain-event="ProjectInitialized">
+							<field value="test" name="name" type="String"></field>
+							<field value="D3308175807:personal:test" name="drn" type="String"></field>
+						</expected>
+						<state>{
+  "project": {}
+}</state>
+						<expected-state pk="D3308175807:personal">{
+  "project" : {
+       "test" : {"name":"test"}
+   }
+}</expected-state>
+					</test-case>
+				</command>
+				<event-handler on="AssignedBusinessRoleToUser">
+					<nested-mapping source="iam" target="iam" business-key="username">
+						<mapping target="username" operand="set" value="username"></mapping>
+						<mapping target="businessRole" operand="set" value="businessRole"></mapping>
+					</nested-mapping>
+				</event-handler>
+				<event-handler code="self.project[event.name] = {'name':event.name}" on="ProjectInitialized"></event-handler>
+				<event-handler on="WorkspaceCreated">
+					<mapping target="drn" operand="set" value="drn"></mapping>
+					<mapping target="name" operand="set" value="name"></mapping>
+					<mapping target="type" operand="set" value="type"></mapping>
+					<nested-mapping source="iam" target="iam" business-key="username">
+						<mapping target="username" operand="set" value="username"></mapping>
+						<mapping target="businessRole" operand="set" value="businessRole"></mapping>
+					</nested-mapping>
+				</event-handler>
+				<nested-object name="iam" business-key="username">
+					<field name="username" type="String"></field>
+					<field name="businessRole" type="String"></field>
+				</nested-object>
+				<nested-object name="project" business-key="name">
+					<field name="name" type="String"></field>
+				</nested-object>
+			</aggregate>
+		</subdomain>
+		<subdomain name="UserManagement">
+			<aggregate name="User" business-key="username" event-ttl="-1" snapshot-interval="100" backup-interval-days="0" backup-ttl-days="0">
+				<field name="username" type="String"></field>
+				<field name="fullName" type="String"></field>
+				<field name="hash" type="String"></field>
+				<command name="Create" create-command="true">
+					<trigger source="CreateUserRequested" key-field="username">
+						<mapping target="username" value="username"></mapping>
+						<mapping target="fullName" value="fullName"></mapping>
+					</trigger>
+					<processor type="code" id="b8OlWS" file="lib/HashLib.py" handler="create_user_hash"></processor>
+					<processor type="emit-event" id="WbjL8P" ref="UserCreated">
+						<mapping target="username" value="#flow.username"></mapping>
+						<mapping target="fullName" value="#flow.fullName"></mapping>
+						<mapping target="hash" value="#flow.hash"></mapping>
+					</processor>
+					<test-case name="HappyFlow" trigger-event="CreateUserRequested">
+						<input name="username" value="j.doe" type="String"></input>
+						<input name="fullName" value="John Doe" type="String"></input>
+						<expected domain-event="UserCreated">
+							<field value="j.doe" name="username" type="String"></field>
+							<field value="John Doe" name="fullName" type="String"></field>
+							<field value="D3308175807" name="hash" type="String"></field>
+						</expected>
+						<expected-state pk="j.doe">{
+  "username": "j.doe",
+  "fullName": "John Doe",
+  "hash": "D3308175807"
+}</expected-state>
+					</test-case>
+				</command>
+				<event-handler on="UserCreated">
+					<mapping target="username" operand="set" value="username"></mapping>
+					<mapping target="fullName" operand="set" value="fullName"></mapping>
+					<mapping target="hash" operand="set" value="hash"></mapping>
+				</event-handler>
+			</aggregate>
+		</subdomain>
+	</domain>
+	<views>
+		<view name="Build" data-retention-days="7" exclude-notification="false">
+			<field name="drn" type="String" pk="true"></field>
+			<field name="status" type="String"></field>
+			<field name="logs" type="ObjectList" ref="BuildLog" authorization="authenticated" foreign-key="drn"></field>
+			<field name="lastEvent" type="String"></field>
+			<snapshot-handler id="AfhsfH" sub-domain="ProjectManagement" aggregate="Build" key-mapping="drn" processor="item">
+				<mapping target="drn" operand="set" value="drn"></mapping>
+				<mapping target="status" operand="set" value="status"></mapping>
+				<mapping target="logs" operand="convert_items" value="logs" template='{"timestamp": value["timestamp"],"message": value["message"]}'></mapping>
+				<mapping target="lastEvent" operand="set" value="lastEvent"></mapping>
+				<delete condition="#snapshot.isDeleted != ''"></delete>
+			</snapshot-handler>
+			<query graphql-namespace="Build" field-name="get" type="get" authorization="role" role="#global.extractRoleFromDrn(key, '-viewer')"></query>
+			<query graphql-namespace="Build" field-name="filter" type="filter" authorization="role" role="#global.extractRoleFromDrn(key_begins_with, '-viewer')" use-canonical-search="true"></query>
+		</view>
+		<view name="BuildLog" data-retention-days="-1" exclude-notification="false">
+			<field name="timestamp" type="String"></field>
+			<field name="message" type="String"></field>
+		</view>
+		<view name="Deployment" data-retention-days="-1" exclude-notification="false">
+			<field name="drn" type="String" pk="true"></field>
+			<field name="domainName" type="String"></field>
+			<field name="eventBus" type="String"></field>
+			<field name="propertyVault" type="String"></field>
+			<field name="stackId" type="String"></field>
+			<field name="userPoolId" type="String"></field>
+			<field name="apiId" type="String"></field>
+			<field name="apiKey" type="String"></field>
+			<field name="apiEndpoint" type="String"></field>
+			<field name="appId" type="String"></field>
+			<snapshot-handler id="Y088dT" sub-domain="ProjectManagement" aggregate="Deployment" key-mapping="drn" processor="item">
+				<mapping target="drn" operand="set" value="drn"></mapping>
+				<mapping target="domainName" operand="set" value="domainName"></mapping>
+				<mapping target="eventBus" operand="set" value="eventBus"></mapping>
+				<mapping target="propertyVault" operand="set" value="propertyVault"></mapping>
+				<mapping target="stackId" operand="set" value="stackId"></mapping>
+				<mapping target="userPoolId" operand="set" value="userPoolId"></mapping>
+				<mapping target="apiId" operand="set" value="apiId"></mapping>
+				<mapping target="apiKey" operand="set" value="apiKey"></mapping>
+				<mapping target="apiEndpoint" operand="set" value="apiEndpoint"></mapping>
+				<mapping target="appId" operand="set" value="appId"></mapping>
+				<delete condition="#snapshot.isDeleted != ''"></delete>
+			</snapshot-handler>
+			<query graphql-namespace="Deployment" field-name="get" type="get" authorization="role" role="#global.extractRoleFromDrn(key, '-viewer')"></query>
+			<query graphql-namespace="Deployment" field-name="filter" type="filter" authorization="role" role="#global.extractRoleFromDrn(key_begins_with, '-viewer')" use-canonical-search="true"></query>
+		</view>
+		<view name="Iam" data-retention-days="-1" exclude-notification="false">
+			<field name="username" type="String"></field>
+			<field name="businessRole" type="String"></field>
+			<field name="user" type="OneToOne" ref="User" authorization="authenticated" foreign-key="username"></field>
+		</view>
+		<view name="Pipeline" data-retention-days="-1" exclude-notification="false">
+			<field name="drn" type="String" pk="true"></field>
+			<field name="pipelineName" type="String"></field>
+			<field name="stackId" type="String"></field>
+			<snapshot-handler id="Yb7Geu" sub-domain="ProjectManagement" aggregate="Pipeline" key-mapping="drn" processor="item">
+				<mapping target="drn" operand="set" value="drn"></mapping>
+				<mapping target="pipelineName" operand="set" value="pipelineName"></mapping>
+				<mapping target="stackId" operand="set" value="stackId"></mapping>
+				<delete condition="#snapshot.isDeleted != ''"></delete>
+			</snapshot-handler>
+			<query graphql-namespace="Pipeline" field-name="get" type="get" authorization="role" role="#global.extractRoleFromDrn(key, '-viewer')"></query>
+			<query graphql-namespace="Pipeline" field-name="filter" type="filter" authorization="role" role="#global.extractRoleFromDrn(key_begins_with, '-viewer')" use-canonical-search="true"></query>
+		</view>
+		<view name="Project" data-retention-days="-1" exclude-notification="false">
+			<field name="drn" type="String" pk="true"></field>
+			<field name="name" type="String"></field>
+			<field name="repositories" type="ObjectList" ref="Repository" authorization="authenticated" foreign-key="drn"></field>
+			<field name="builds" type="OneToMany" ref="Build" authorization="authenticated" foreign-key="#canonical"></field>
+			<field name="pipelines" type="OneToMany" ref="Pipeline" authorization="authenticated" foreign-key="#canonical"></field>
+			<field name="deployments" type="OneToMany" ref="Deployment" authorization="authenticated" foreign-key="#canonical"></field>
+			<snapshot-handler id="OAgtbw" sub-domain="ProjectManagement" aggregate="Project" key-mapping="drn" processor="item">
+				<mapping target="drn" operand="set" value="drn"></mapping>
+				<mapping target="name" operand="set" value="name"></mapping>
+				<mapping target="repositories" operand="convert_items" value="repository" template='{"name": value["name"],"url": value["url"],"status": value["status"]}'></mapping>
+				<delete condition="#snapshot.isDeleted != ''"></delete>
+			</snapshot-handler>
+			<query graphql-namespace="Project" field-name="get" type="get" authorization="role" role="#global.extractRoleFromDrn(key, '-viewer')"></query>
+		</view>
+		<view name="Repository" data-retention-days="-1" exclude-notification="false">
+			<field name="name" type="String"></field>
+			<field name="url" type="String"></field>
+			<field name="status" type="String"></field>
+		</view>
+		<view name="RepositoryToken" data-retention-days="-1" exclude-notification="false">
+			<field name="project" type="String"></field>
+			<field name="url" type="String"></field>
+			<field name="token" type="String"></field>
+		</view>
+		<view name="User" data-retention-days="-1" exclude-notification="false">
+			<field name="username" type="String" pk="true"></field>
+			<field name="fullName" type="String"></field>
+			<field name="hash" type="String"></field>
+			<field name="workspaceKeys" type="StringList"></field>
+			<field name="workspace" type="ManyToMany" ref="Workspace" authorization="role" foreign-key="workspaceKeys" role="#global.extractRoleFromDrn(#foreign-key#, '-viewer')"></field>
+			<snapshot-handler id="bAIRJ8" sub-domain="UserManagement" aggregate="User" key-mapping="username" processor="item">
+				<mapping target="username" operand="set" value="username"></mapping>
+				<mapping target="fullName" operand="set" value="fullName"></mapping>
+				<mapping target="hash" operand="set" value="hash"></mapping>
+				<delete condition="#snapshot.isDeleted != ''"></delete>
+			</snapshot-handler>
+			<query graphql-namespace="User" field-name="get" type="get" authorization="authenticated"></query>
+			<query graphql-namespace="User" field-name="filter" type="filter" authorization="authenticated"></query>
+			<custom-handler id="v7wt77" sub-domain="ProjectManagement" aggregate="Workspace">for username, iam_rule in snapshot.iam.items():
+    entity = EntityManager.get(type="User", key=username)
+    if snapshot.drn not in entity.workspaceKeys:
+        entity.workspaceKeys.append(snapshot.drn)
+    
+    if snapshot.isDeleted != "" or iam_rule["businessRole"] == "removed":
+        entity.workspaceKeys = [relation for relation in entity.workspaceKeys if relation != snapshot.drn]</custom-handler>
+		</view>
+		<view name="Workspace" data-retention-days="-1" exclude-notification="false">
+			<field name="drn" type="String" pk="true"></field>
+			<field name="name" type="String"></field>
+			<field name="subscriptionType" type="String"></field>
+			<field name="iam" type="ObjectList" ref="Iam" authorization="authenticated" foreign-key="drn"></field>
+			<field name="projects" type="OneToMany" ref="Project" authorization="role" foreign-key="#canonical" role="#global.extractRoleFromDrn(entity.drn,'-viewer'))"></field>
+			<snapshot-handler id="trGoy3" sub-domain="ProjectManagement" aggregate="Workspace" key-mapping="drn" processor="item">
+				<mapping target="drn" operand="set" value="drn"></mapping>
+				<mapping target="name" operand="set" value="name"></mapping>
+				<mapping target="subscriptionType" operand="set" value="type"></mapping>
+				<delete condition="#snapshot.isDeleted != ''"></delete>
+			</snapshot-handler>
+			<query graphql-namespace="Workspace" field-name="get" type="get" authorization="role" role="#global.extractRoleFromDrn(key,'-viewer')"></query>
+			<custom-handler id="LVbKTC" sub-domain="ProjectManagement" aggregate="Workspace">entity = EntityManager.get(type="Workspace", key=snapshot.drn)
+rules = []
+for username, iam_rule in snapshot.iam.items():
+    if iam_rule["businessRole"] == "removed":
+        continue
+    rules.append(iam_rule)
+entity.iam = convert_to_dictionary(rules)</custom-handler>
+		</view>
+	</views>
+	<projections>
+		<projection graphql-namespace="RepositoryToken" field-name="get" authorization="role" return="RepositoryToken" name="GetRepositoryToken" code="from draftsman.ViewStoreApi import Query|LB|import hashlib, time, json, base64|LB||LB||LB|salt = &quot;075fdc59-d5e1-4edc-ba76-b3d0f266ec51&quot;|LB||LB|def transform(arguments, username):|LB|    |LB|    # You have access to the username of the requestor and the arguments.|LB|    print(f&quot;Handle graph request [{arguments}/{username}]&quot;)|LB|    |LB|    projectDrn = arguments[&quot;projectDrn&quot;]|LB|    project = Query('Project').get_item(projectDrn).run()|LB|    repository = [repo[&quot;url&quot;] for repo in project[&quot;repositories&quot;] if repo[&quot;name&quot;] == &quot;model&quot;][0]|LB|    |LB|    workspaceDrn = &quot;:&quot;.join(arguments[&quot;projectDrn&quot;].split(&quot;:&quot;)[:2])|LB|    workspace = Query('Workspace').get_item(workspaceDrn).run()|LB|    |LB|    role = [iam for iam in workspace[&quot;iam&quot;] if iam[&quot;username&quot;] == username][0][&quot;businessRole&quot;]|LB|    privelige = &quot;write&quot; if not role == &quot;viewer&quot; else &quot;read&quot;|LB|    |LB|    token = {|LB|        &quot;scope&quot;: {|LB|            &quot;url&quot;: repository,|LB|            &quot;privelige&quot;: privelige,|LB|            &quot;expiration&quot;: time.time() + 1800|LB|        }|LB|    }|LB|    checksum = token[&quot;scope&quot;][&quot;url&quot;] + token[&quot;scope&quot;][&quot;privelige&quot;] + str(token[&quot;scope&quot;][&quot;expiration&quot;]) + salt|LB|    token[&quot;checksum&quot;] = hashlib.md5(checksum.encode('utf-8')).hexdigest()|LB|    |LB|    token = json.dumps(token)|LB|    token = base64.b64encode(token.encode(&quot;ascii&quot;))|LB|    return {|LB|        &quot;project&quot;:project[&quot;name&quot;],|LB|        &quot;url&quot;:repository,|LB|        &quot;token&quot;:token|LB|    }" role="#global.extractRoleFromDrn(projectDrn, '-viewer')">
+			<input name="projectDrn" type="String" required="true"></input>
+		</projection>
+	</projections>
+	<notifiers>
+		<notifier name="AssignBusinessRole">
+			<trigger source="AssignedBusinessRoleToUser">
+				<mapping target="drn" value="drn"></mapping>
+				<mapping target="iam" value="iam"></mapping>
+			</trigger>
+			<activity type="loop" id="QpkySh" array="#flow.iam">
+				<activity type="set-variable" id="4nzLCl" name="user" expression="#item['username']"></activity>
+				<activity type="set-variable" id="IBY15d" name="administrator" expression='#flow.drn + "-administrator"'></activity>
+				<activity type="add-user-to-iam-group" id="1h72L4" group-name="#flow.administrator" username="#flow.user" condition="#item['businessRole'] == 'administrator'" fail-silent="true"></activity>
+				<activity type="remove-user-from-iam-group" id="D8jrTe" group-name="#flow.administrator" username="#flow.user" condition="#item['businessRole'] != 'administrator'" fail-silent="true"></activity>
+				<activity type="set-variable" id="8IxsoE" name="developer" expression="#flow.drn + '-developer'"></activity>
+				<activity type="add-user-to-iam-group" id="n4EwfB" group-name="#flow.developer" username="#flow.user" condition="#item['businessRole'] in ['developer','administrator']" fail-silent="true"></activity>
+				<activity type="remove-user-from-iam-group" id="l42XdD" group-name="#flow.developer" username="#flow.user" condition="#item['businessRole'] not in ['developer','administrator']" fail-silent="true"></activity>
+				<activity type="set-variable" id="OTbeUP" name="viewer" expression="#flow.drn + '-viewer'"></activity>
+				<activity type="add-user-to-iam-group" id="DlaDJp" group-name="#flow.viewer" username="#flow.user" condition="#item['businessRole'] != 'removed'" fail-silent="true"></activity>
+				<activity type="remove-user-from-iam-group" id="VE2R4C" group-name="#flow.viewer" username="#flow.user" condition="#item['businessRole'] == 'removed'" fail-silent="true"></activity>
+				<activity type="retrieve-email-from-iam" id="oL92ZP" name="email" username="#flow.user" fail-silent="true"></activity>
+				<activity type="call-internal-api" id="VeLCDI" condition="not #flow.email and #item['businessRole'] != 'removed'" name="response" query='mutation MyMutation($businessRole: String = "removed", $drn: String = "{{flow.drn}}", $username: String = "{{flow.user}}") {|LB|  Workspace {|LB|    authorizeUser(input: {drn: $drn, username: $username, businessRole: $businessRole}) {|LB|      correlationId|LB|    }|LB|  }|LB|}' fail-silent="true"></activity>
+			</activity>
+		</notifier>
+		<notifier name="InitializeSystemUser">
+			<trigger source="@afterDeployment">
+				<mapping target="dummy" value="#''"></mapping>
+			</trigger>
+			<activity type="iam-create-systemuser" fail-silent="true" id="vMB9LZ"></activity>
+		</notifier>
+		<notifier name="SetupWorkspace">
+			<trigger source="WorkspaceCreated">
+				<mapping target="drn" value="drn"></mapping>
+				<mapping target="name" value="name"></mapping>
+				<mapping target="type" value="type"></mapping>
+				<mapping target="iam" value="iam"></mapping>
+			</trigger>
+			<activity type="set-variable" id="YsCRSj" name="roles" expression='#[f"{flow.drn}-{role}" for role in["administrator","viewer","developer"]]'></activity>
+			<activity type="set-variable" id="f6ODST" name="owner" expression='#flow.iam[0]["username"]'></activity>
+			<activity type="set-variable" id="bJ0Asi" name="systemuser" expression='#"system-user"'></activity>
+			<activity type="loop" id="yloA7N" array="#flow.roles">
+				<activity type="set-variable" id="sIu4uf" name="role" expression="#item"></activity>
+				<activity type="create-iam-group" id="hZjulv" group-name="#flow.role" fail-silent="true"></activity>
+				<activity type="add-user-to-iam-group" id="FeIOu2" group-name="#flow.role" username="#flow.owner"></activity>
+				<activity type="add-user-to-iam-group" id="YarnuZ" group-name="#flow.role" username="#flow.systemuser"></activity>
+			</activity>
+		</notifier>
+		<notifier name="TriggerBuild">
+			<trigger source="BuildProjectRequested">
+				<mapping target="drn" value="drn"></mapping>
+				<mapping target="buildId" value="buildId"></mapping>
+				<mapping target="type" value="#'backend'"></mapping>
+				<mapping target="domainName" value="#''"></mapping>
+				<mapping target="eventBus" value="#''"></mapping>
+				<mapping target="propertyVault" value="#''"></mapping>
+				<mapping target="stackId" value="#''"></mapping>
+				<mapping target="userPoolId" value="#''"></mapping>
+				<mapping target="apiId" value="#''"></mapping>
+				<mapping target="apiKey" value="#''"></mapping>
+				<mapping target="apiEndpoint" value="#''"></mapping>
+				<mapping target="appId" value="#''"></mapping>
+			</trigger>
+			<trigger source="DeploymentRegistered">
+				<mapping target="drn" value="#':'.join(domain_event.data.drn.split(':')[:3])"></mapping>
+				<mapping target="buildId" value="#''"></mapping>
+				<mapping target="type" value="#'frontend'"></mapping>
+				<mapping target="domainName" value="domainName"></mapping>
+				<mapping target="eventBus" value="eventBus"></mapping>
+				<mapping target="propertyVault" value="propertyVault"></mapping>
+				<mapping target="stackId" value="stackId"></mapping>
+				<mapping target="userPoolId" value="userPoolId"></mapping>
+				<mapping target="apiId" value="apiId"></mapping>
+				<mapping target="apiKey" value="apiKey"></mapping>
+				<mapping target="apiEndpoint" value="apiEndpoint"></mapping>
+				<mapping target="appId" value="appId"></mapping>
+			</trigger>
+			<activity type="call-internal-api" id="xPTmha" query='query MyQuery {|LB|  Project {|LB|    get(key: "{{flow.drn}}") {|LB|      repositories {|LB|        name|LB|        status|LB|        url|LB|      }|LB|    }|LB|  }|LB|}' name="project"></activity>
+			<activity type="code" id="1EpZOp" python-file="lib/HashLib.py" handler="create_user_hash" code="repositories = flow.project['data']['Project']['get']['repositories']|LB|flow.model = [repo for repo in repositories if repo[&quot;name&quot;] == &quot;model&quot;][0][&quot;url&quot;]|LB||LB|target = &quot;code&quot; if flow.type == &quot;backend&quot; else &quot;gui&quot;|LB|flow.code = [repo for repo in repositories if repo[&quot;name&quot;] == target][0][&quot;url&quot;]|LB||LB|import hashlib|LB|salt = &quot;ccc2ff62-c8ba-48d7-b1fa-043fbdf2e7a5&quot;|LB|checksum = flow.model + flow.code + flow.drn + salt|LB|# Create checksum, used to validate the build request|LB|flow.checksum = hashlib.md5(checksum.encode('utf-8')).hexdigest()|LB||LB|flow.buildDrn = flow.drn + &quot;:&quot; + flow.buildId|LB||LB|import json, base64|LB|meta = json.dumps(flow.__dict__, default=lambda o: '&lt;not serializable&gt;')|LB|flow.meta = base64.b64encode(meta.encode('utf-8')).decode('utf-8')"></activity>
+			<activity type="HTTP" id="J4rpB6" method="POST" name="result" url="https://q5d6jcimwfpa4ps2myo7kuhlou0llwsw.lambda-url.eu-west-1.on.aws" body='{|LB|    "model" : "{{flow.model}}",|LB|    "target": "{{flow.code}}",|LB|    "drn": "{{flow.drn}}",|LB|    "checksum": "{{flow.checksum}}",|LB|    "buildDrn": "{{flow.buildDrn}}",|LB|    "type": "{{flow.type}}",|LB|    "meta": "{{flow.meta}}"|LB|}' load-json="false"></activity>
+		</notifier>
+	</notifiers>
+	<functional-scenarios clean-db="true" clean-iam="true" minimum-event-coverage="80" minimum-view-coverage="80">
+		<scenario name="Onboarding">
+			<activity id="QkiWhq" type="set-variables" description="Initialize flow variables">
+				<input name="name" type="String" value="John Doe"></input>
+				<input name="buildId" type="String" value="2023-10-01T12:00"></input>
+				<input name="tmp" type="String" value="trigger deployment"></input>
+			</activity>
+			<activity type="mutation" id="FPcQcj" path="User.create" description="Register a new user">
+				<expected-trace command="UserManagement.User.Create" status="success"></expected-trace>
+				<expected-trace command="ProjectManagement.Workspace.Create" status="success"></expected-trace>
+				<expected-trace command="SetupWorkspace-Notifier" status="success"></expected-trace>
+				<input name="fullName" type="String" value="#name#"></input>
+			</activity>
+			<activity type="refresh-token" id="FjVByZ" description="De voorgaande actie maakt specifieke rollen aan om de nieuwe workspace te benaderen en kent deze rollen toe aan de aanvrager (workspace owner). Om gebruik te maken van de aangemaakte rechten moet het user token gerefresht worden."></activity>
+			<activity type="query" id="p9eQGU" path="User.get" view="User" description="Check if the user view is created">
+				<input name="key" type="String" value="#user_name#"></input>
+				<expect-value name="fullName" type="String" value="#name#"></expect-value>
+				<extract-value name="workspace.0.drn" put-key="workspaceDrn"></extract-value>
+			</activity>
+			<activity type="query" id="wYX6da" path="Workspace.get" view="Workspace" description="Check if the workspace view is created">
+				<input name="key" type="String" value="#workspaceDrn#"></input>
+				<expect-value name="name" type="String" value="John Doe: Personal Workspace"></expect-value>
+				<expect-value name="subscriptionType" type="String" value="personal"></expect-value>
+				<expect-value name="iam.0.businessRole" type="String" value="administrator"></expect-value>
+				<expect-value name="iam.0.username" type="String" value="#user_name#"></expect-value>
+			</activity>
+			<activity type="set-variables" id="ikLkyU" description="Set project variables">
+				<input name="projectName" type="String" value="TestProject"></input>
+				<input name="modelRepo" type="String" value="https://github.com/dummy/model"></input>
+				<input name="codeRepo" type="String" value="https://github.com/dummy/code"></input>
+				<input name="guiRepo" type="String" value="https://github.com/dummy/gui"></input>
+			</activity>
+			<activity type="mutation" id="U4mXCV" path="Project.initialize" description="Create new project in namespace">
+				<input name="workspaceDrn" type="String" value="#workspaceDrn#"></input>
+				<input name="name" type="String" value="#projectName#"></input>
+				<input name="modelRepo" type="String" value="#modelRepo#"></input>
+				<input name="codeRepo" type="String" value="#codeRepo#"></input>
+				<input name="guiRepo" type="String" value="#guiRepo#"></input>
+				<expected-trace command="ProjectManagement.Workspace.StartNewProject" status="success"></expected-trace>
+			</activity>
+			<activity type="query" id="Sbg9Tz" description="Fetch project drn" path="Workspace.get" view="Workspace">
+				<input name="key" type="String" value="#workspaceDrn#"></input>
+				<expect-value name="projects.0.name" type="String" value="#projectName#"></expect-value>
+				<extract-value name="projects.0.drn" put-key="projectDrn"></extract-value>
+			</activity>
+			<activity type="query" id="l0meC6" description="Fetch project" path="Project.get" view="Project">
+				<input name="key" type="String" value="#projectDrn#"></input>
+				<expect-value name="name" type="String" value="#projectName#"></expect-value>
+				<expect-value name="repositories.0.url" type="String" value="#codeRepo#"></expect-value>
+				<expect-value name="repositories.1.url" type="String" value="#modelRepo#"></expect-value>
+				<expect-value name="repositories.2.url" type="String" value="#guiRepo#"></expect-value>
+			</activity>
+			<activity type="mutation" path="Project.build" id="irbsf" description="Build the project">
+				<input name="drn" type="String" value="#projectDrn#"></input>
+				<input name="buildId" type="String" value="#buildId#"></input>
+				<expected-trace command="TriggerBuild-Notifier" status="success"></expected-trace>
+			</activity>
+			<activity type="set-variables" id="qpsC5x" description="Initialize variables for the build log message">
+				<input name="buildDrn" type="String" value="#projectDrn#:#buildId#"></input>
+				<input name="message" type="String" value="Hello World!"></input>
+				<input name="buildStatus" type="String" value="Test"></input>
+			</activity>
+			<activity type="mutation" id="ZiCfRs" path="Project.Build.update" description="Insert build log">
+				<input name="drn" type="String" value="#buildDrn#"></input>
+				<input name="message" type="String" value="#message#"></input>
+				<input name="status" type="String" value="#buildStatus#"></input>
+				<expected-trace command="ProjectManagement.Build.Update" status="success"></expected-trace>
+			</activity>
+			<activity type="query" id="doTUYt" path="Build.get" view="Build" description="Assert the build log">
+				<input name="key" type="String" value="#buildDrn#"></input>
+				<expect-value name="status" type="String" value="#buildStatus#"></expect-value>
+				<expect-value name="logs.0.message" type="String" value="#message#"></expect-value>
+				<extract-value name="logs.0.timestamp" put-key="timestamp"></extract-value>
+			</activity>
+			<activity type="set-variables" id="SeRaW1" description="Initialize variables for the pipeline call">
+				<input name="pipelineName" type="String" value="main"></input>
+				<input name="stackId" type="String" value="arn:aws:cloudformation:eu-west-1:829188642883:stack/reafactoring-pipeline/68006840-4735-11ee-8d74-0252bc458c27"></input>
+			</activity>
+			<activity type="mutation" id="mDqGD4" path="Project.Pipeline.register" description="Register a pipeline">
+				<input name="drn" type="String" value="#projectDrn#"></input>
+				<input name="pipelineName" type="String" value="#pipelineName#"></input>
+				<input name="stackId" type="String" value="#stackId#"></input>
+				<expected-trace command="ProjectManagement.Pipeline.Register" status="success"></expected-trace>
+			</activity>
+			<activity type="query" id="JvWNuN" path="Pipeline.filter" view="Pipeline" description="Assert that the pipeline is registered">
+				<input name="key_begins_with" type="String" value="#projectDrn#"></input>
+				<expect-value name="resultset.0.stackId" type="String" value="#stackId#"></expect-value>
+				<extract-value name="resultset.0.drn" put-key="pipelineDrn"></extract-value>
+			</activity>
+			<activity type="mutation" id="Ze2JRc" description="Deregister pipeline" path="Project.Pipeline.deregister">
+				<input name="drn" type="String" value="#pipelineDrn#"></input>
+				<expected-trace command="ProjectManagement.Pipeline.Deregister" status="success"></expected-trace>
+			</activity>
+			<activity type="set-variables" id="x0q4SC" description="initialize variables for pipeline registration">
+				<input name="domainName" type="String" value="domainName"></input>
+				<input name="eventBus" type="String" value="eventBus"></input>
+				<input name="propertyVault" type="String" value="propertyVault"></input>
+				<input name="stackId" type="String" value="stackId"></input>
+				<input name="userPoolId" type="String" value="userPoolId"></input>
+				<input name="apiId" type="String" value="apiId"></input>
+				<input name="apiKey" type="String" value="apiKey"></input>
+				<input name="apiEndpoint" type="String" value="apiEndpoint"></input>
+				<input name="appId" type="String" value="appId"></input>
+			</activity>
+			<activity type="mutation" id="MTBr2q" path="Project.Deployment.register" description="Register a deployment">
+				<input name="drn" type="String" value="#projectDrn#"></input>
+				<input name="domainName" type="String" value="#domainName#"></input>
+				<input name="eventBus" type="String" value="#eventBus#"></input>
+				<input name="propertyVault" type="String" value="#propertyVault#"></input>
+				<input name="stackId" type="String" value="#stackId#"></input>
+				<input name="userPoolId" type="String" value="#userPoolId#"></input>
+				<input name="apiId" type="String" value="#apiId#"></input>
+				<input name="apiKey" type="String" value="#apiKey#"></input>
+				<input name="apiEndpoint" type="String" value="#apiEndpoint#"></input>
+				<input name="appId" type="String" value="#appId#"></input>
+				<expected-trace command="ProjectManagement.Deployment.Register" status="success"></expected-trace>
+			</activity>
+			<activity type="query" id="vSvLLZ" path="Deployment.filter" view="Deployment" description="Assert that a deployment is registered">
+				<input name="key_begins_with" type="String" value="#projectDrn#"></input>
+				<expect-value name="resultset.0.eventBus" type="String" value="#eventBus#"></expect-value>
+			</activity>
+			<activity type="mutation" id="17dz1H" description="Deregister a deployment" path="Project.Deployment.deregister">
+				<input name="drn" type="String" value="#projectDrn#"></input>
+				<input name="eventBus" type="String" value="#eventBus#"></input>
+				<expected-trace command="ProjectManagement.Deployment.Deregister" status="success"></expected-trace>
+			</activity>
+			<activity type="mutation" id="QYwh2D" path="Project.delete" description="Delete Project">
+				<input name="drn" type="String" value="#projectDrn#"></input>
+				<expected-trace command="ProjectManagement.Project.Delete" status="success"></expected-trace>
+			</activity>
+		</scenario>
+	</functional-scenarios>
+</draftsman>

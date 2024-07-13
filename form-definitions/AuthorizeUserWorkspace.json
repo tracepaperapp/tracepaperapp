@@ -1,0 +1,30 @@
+[
+  {
+    "type": "meta",
+    "message": "This file is managed by Tracepaper"
+  },
+  {
+    "name": "drn",
+    "title": "Drn",
+    "type": "String",
+    "pattern": "^D[0-9]+:[a-z]+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "username",
+    "title": "Username",
+    "type": "String",
+    "pattern": "^[a-z]+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "businessRole",
+    "title": "Businessrole",
+    "type": "String",
+    "pattern": "^(viewer|developer|administrator|removed)$",
+    "placeholder": "",
+    "default": ""
+  }
+]

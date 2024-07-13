@@ -1,0 +1,19 @@
+<!-- This file is managed by Tracepaper -->
+<template x-component="Deployment-filter">
+    <div x-import="tables;query-form">
+
+        <!-- The query object -->
+        <draftsman-query alias="Deploymentfilter" x-include="/prepared-statements/views/Deployment/filter.txt" authenticated>
+        </draftsman-query>
+
+        <!-- The form definition -->
+        <div  style="display:none;" id="Deploymentfilter"
+              x-include="/form-definitions/Deployment/filter.json"></div>
+
+        <!-- The query form -->
+        <ui-query-form alias="Deploymentfilter"></ui-query-form>
+
+        <!-- The data view --><ui-collection-table alias="Deploymentfilter" path="filter.resultset"></ui-collection-table>
+
+    </div>
+</template>

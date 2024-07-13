@@ -1,9 +1,0 @@
-<template x-component="documentation">
-    <template x-if="tab_state">
-        <template x-for="(file,index) in tab_state.files" :key="file.path">
-            <div x-show="index == tab_state.index" x-cloak x-transition>
-                <p x-html="await Documentation.get_html(file.path)"></p>
-            </div>
-        </template>
-    </template>
-</template>

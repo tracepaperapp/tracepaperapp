@@ -1,0 +1,49 @@
+<template x-component="aggregate-settings">
+    <div class="overflow-x-auto">
+        <table class="table table-xs">
+            <tr>
+                <th>Business key</th>
+                <td>
+                    <select class="select select-ghost w-full h-full" x-model="model['att_business-key']">
+                        <option value="">-</option>
+                        <template x-for="field in model.field.filter(x => x.att_type == 'String')" :key="field.att_name">
+                            <option :value="field.att_name" x-text="field.att_name" :selected="field.att_name == model['att_business-key']"></option>
+                        </template>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>EventStore time to live</th>
+                <td>
+                    <input type="number" x-model="model['att_event-ttl']"
+                           min="-1" step="1"
+                           class="input input-ghost w-full h-full" />
+                </td>
+            </tr>
+            <tr>
+                <th>Snapshot interval</th>
+                <td>
+                    <input type="number" x-model="model['att_snapshot-interval']"
+                           min="1" step="1"
+                           class="input input-ghost w-full h-full" />
+                </td>
+            </tr>
+            <tr>
+                <th>Cold storage interval</th>
+                <td>
+                    <input type="number" x-model="model['att_backup-interval-days']"
+                           min="1" step="1"
+                           class="input input-ghost w-full h-full" />
+                </td>
+            </tr>
+            <tr>
+                <th>Cold storage retention</th>
+                <td>
+                    <input type="number" x-model="model['att_backup-ttl-days']"
+                           min="1" step="1"
+                           class="input input-ghost w-full h-full" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</template>

@@ -1,0 +1,26 @@
+<!-- This file is managed by Tracepaper -->
+<template x-component="CreateWorkspace">
+    <div x-import="basic-form;tables">
+
+        <!-- The command object -->
+        <draftsman-mutation command="CreateWorkspace" x-include="/prepared-statements/commands/CreateWorkspace.txt" authenticated>
+        </draftsman-mutation>
+
+        <!-- The form definition -->
+        <div  style="display:none;" id="CreateWorkspace"
+              x-include="/form-definitions/CreateWorkspace.json"></div>
+
+        <!-- The trace table -->
+        <ui-trace-table></ui-trace-table>
+
+        <!-- The form -->
+        <ui-basic-form alias="CreateWorkspace"></ui-basic-form>
+
+        <draftsman-trace command="CreateWorkspace"
+              status="success"
+              @trace="
+                setTimeout(Draftsman.empty_track_and_trace_log,5000);
+                $dispatch('setdata', { command: 'CreateWorkspace', data: {} });">
+        </draftsman-trace>
+    </div>
+</template>

@@ -1,0 +1,19 @@
+<!-- This file is managed by Tracepaper -->
+<template x-component="User-filter">
+    <div x-import="tables;query-form">
+
+        <!-- The query object -->
+        <draftsman-query alias="Userfilter" x-include="/prepared-statements/views/User/filter.txt" authenticated>
+        </draftsman-query>
+
+        <!-- The form definition -->
+        <div  style="display:none;" id="Userfilter"
+              x-include="/form-definitions/User/filter.json"></div>
+
+        <!-- The query form -->
+        <ui-query-form alias="Userfilter"></ui-query-form>
+
+        <!-- The data view --><ui-collection-table alias="Userfilter" path="filter.resultset"></ui-collection-table>
+
+    </div>
+</template>

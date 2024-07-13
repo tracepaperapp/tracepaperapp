@@ -1,0 +1,63 @@
+<template x-component="query-form">
+    <div x-data="{filter: $persist({}).using(expiringStorage).as($prop('alias')),
+    name: $prop('alias'), fields: $api.get()}" class="form-element row"
+         @refresh="fields = $api.get();">
+        <template x-for="field in fields">
+            <div class="col-4" x-show="field.type != 'meta'" x-cloak x-transition>
+                <ui-query-fragment></ui-query-fragment>
+            </div>
+        </template>
+        <div class="col-4">
+            <button type="button" @click="Draftsman.reload_data($prop('alias'),filter,true);" class="btn btn-outline-info">Query</button>
+        </div>
+        <script>
+      return {
+        get(){
+          try{
+            let form = document.getElementById(this.$prop("alias")).innerText;
+            return JSON.parse(form);
+          } catch(exception){
+            return [];
+          }
+        }
+      }
+
+        </script>
+    </div>
+</template>
+<template x-component="query-fragment">
+    <div>
+        <template x-if="field.type == 'String'">
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="name + field.name" x-text="field.name"></span>
+                <input type="text"
+                       class="form-control"
+                       :value="field.default"
+                       x-model="filter[field.name]"
+                       :aria-describedby="name + field.name"
+                       :placeholder="field.placeholder"/>
+            </div>
+        </template>
+        <template x-if="field.type == 'Int' || field.type == 'Float'">
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="name + field.name" x-text="field.name"></span>
+                <input type="number"
+                       class="form-control"
+                       :value="field.default"
+                       x-model="filter[field.name]"
+                       :aria-describedby="name + field.name"/>
+            </div>
+        </template>
+        <template x-if="field.type == 'Boolean'">
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="name + field.name" x-text="field.name"></span>
+                <input type="checkbox"
+                       class="form-control"
+                       :value="field.default"
+                       x-model="filter[field.name]"
+                       :aria-describedby="name + field.name"/>
+            </div>
+        </template>
+    </div>
+
+</template>

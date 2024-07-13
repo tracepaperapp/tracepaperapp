@@ -1,8 +1,0 @@
-<template x-component="wait">
-  <div x-import="utils/editor-elements">
-    <ui-text-field :value="activity.att_milliseconds"
-                  description="Milliseconds: "
-                  :pattern="numeric_input"
-                  @updated.debounce="activity.att_milliseconds = $event.detail.value;"></ui-text-field>
-  </div>
-</template>

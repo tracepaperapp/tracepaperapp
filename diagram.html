@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/js/configuration.js"></script>
+    <script src="/js/configuration-staging.js"></script>
+
+    <script>var must_be_signed_in = true;</script>
+
+    <!-- IDE -->
+    <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
+    <script src="https://unpkg.com/isomorphic-git"></script>
+    <link rel="stylesheet" href="/css/ide.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fast-xml-parser/4.2.5/fxparser.min.js"></script>
+    <script src="/js/xml-builder.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <script src="/js/tracepaper-types.js"></script>
+    <script src="/js/ide.js" type="module"></script>
+
+    <link rel="stylesheet" href="/css/draftsman.css" />
+    <script src="/js/framework.js"></script>
+    <script src="/js/cache.js"></script>
+    <script src="https://unpkg.com/@vimesh/ui"></script>
+    <script src="/js/utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+
+    <!-- daisyUI, replace with optimized build -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- -->
+
+</head>
+<body :class="window.self === window.top ? 'p-5' : ''" x-data="session">
+<div x-data="{file: '',
+                selection: $persist({
+                    view: true,
+                    query: true,
+                    command: true,
+                    behavior: true,
+                    aggregate: true,
+                    notifier: true,
+                    dependency: true,
+                    schedule: true,
+                })}" x-init="file = location.hash.replace('#','')"
+     @update.debounce.1000ms="Diagram.draw(file,'project-diagram','500px',selection)">
+    <div class="grid grid-cols-12 gap-3">
+        <div class="col-span-10">
+            <div id="project-diagram" x-init="Diagram.draw(file,'project-diagram','500px',selection)"></div>
+        </div>
+        <label class="col-span-2">
+            <label class="label cursor-pointer">
+                <span class="label-text">Commands</span>
+                <input type="checkbox"
+                       @change="$dispatch('update')"
+                       :checked="selection.command" class="checkbox checkbox-primary"
+                       x-model="selection.command"/>
+            </label>
+            <label class="label cursor-pointer">
+                <span class="label-text">Behavior</span>
+                <input type="checkbox"
+                       @change="selection.aggregate = selection.behavior;$dispatch('update')"
+                       :checked="selection.behavior" class="checkbox checkbox-primary"
+                       x-model="selection.behavior"/>
+            </label>
+            <label class="label cursor-pointer">
+                <span class="label-text">Notifiers</span>
+                <input type="checkbox"
+                       @change="selection.schedule = selection.notifier;$dispatch('update')"
+                       :checked="selection.notifier" class="checkbox checkbox-primary"
+                       x-model="selection.notifier"/>
+            </label>
+            <label class="label cursor-pointer">
+                <span class="label-text">Views</span>
+                <input type="checkbox"
+                       @change="$dispatch('update')"
+                       :checked="selection.view" class="checkbox checkbox-primary"
+                       x-model="selection.view"/>
+            </label>
+            <label class="label cursor-pointer">
+                <span class="label-text">Queries</span>
+                <input type="checkbox"
+                       @change="$dispatch('update')"
+                       :checked="selection.query" class="checkbox checkbox-primary"
+                       x-model="selection.query"/>
+            </label>
+            <label class="label cursor-pointer">
+                <span class="label-text">Projections</span>
+                <input type="checkbox" @change="$dispatch('update')"
+                       :checked="selection.projection" class="checkbox checkbox-primary"
+                       x-model="selection.projection"/>
+            </label>
+            <label class="label cursor-pointer">
+                <span class="label-text">Dependencies</span>
+                <input type="checkbox" @change="$dispatch('update')"
+                       :checked="selection.dependency" class="checkbox checkbox-primary"
+                       x-model="selection.dependency"/>
+            </label>
+            <div class="badge badge-primary"
+                 x-show="session.selected_node" x-cloak x-transition
+                 x-text="session.selected_node"></div>
+            <button class="btn btn-outline btn-primary btn-block my-2"
+                    @click="location.hash = session.all_links[session.selected_node];location.reload()"
+                    x-show="session.selected_node in session.all_links" x-cloak x-transition>Focus</button>
+            <button class="btn btn-outline btn-primary btn-block mb-2"
+                    @click.debounce="parent.postMessage({type:'open',file:session.all_links[session.selected_node]});"
+                    x-show="session.selected_node in session.all_links" x-cloak x-transition>Open</button>
+            <button class="btn btn-outline btn-primary btn-block"
+                    @click="file = file.substring(0,file.lastIndexOf('/'));if(!file.includes('/')){file = ''};file = file.replace('/behavior-flows','');location.hash = file;location.reload()"
+                    x-show="location.hash.includes('/')" x-cloak x-transition>Zoom out</button>
+<!--            <button class="btn btn-outline btn-primary btn-block"-->
+<!--                    @click.debounce.stop="downloadURI(session.diagram_img,'diagram.png')"-->
+<!--                    x-show="session.diagram_img" x-cloak x-transition>Get screenshot</button>-->
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

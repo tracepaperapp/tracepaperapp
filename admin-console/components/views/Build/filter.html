@@ -1,0 +1,19 @@
+<!-- This file is managed by Tracepaper -->
+<template x-component="Build-filter">
+    <div x-import="tables;query-form">
+
+        <!-- The query object -->
+        <draftsman-query alias="Buildfilter" x-include="/prepared-statements/views/Build/filter.txt" authenticated>
+        </draftsman-query>
+
+        <!-- The form definition -->
+        <div  style="display:none;" id="Buildfilter"
+              x-include="/form-definitions/Build/filter.json"></div>
+
+        <!-- The query form -->
+        <ui-query-form alias="Buildfilter"></ui-query-form>
+
+        <!-- The data view --><ui-collection-table alias="Buildfilter" path="filter.resultset"></ui-collection-table>
+
+    </div>
+</template>

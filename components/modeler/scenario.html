@@ -1,0 +1,84 @@
+<template x-component="scenario">
+    <div x-data="{components: [], commands: [], meta: {}, queries: {}}"
+         x-import="modeler/scenario-activity"
+         x-init="
+            components = await Scenario.get_components();
+            commands = await Scenario.get_commands();
+            queries = await Scenario.get_queries();
+            meta = await Modeler.get('meta.json')">
+        <div class="prose">
+            <h2>Scenario: <span x-text="model.att_name"></span></h2>
+            <hr>
+        </div>
+        <template x-for="(activity,index) in model.activity" :key="activity.att_id">
+            <div tabindex="0" class="collapse collapse-plus border border-primary mt-2">
+                <input type="checkbox" :checked="sessionStorage[activity.att_id] == 'true'"
+                       x-model="sessionStorage[activity.att_id]"/>
+                <div class="collapse-title font-medium">
+                    <span x-text="Language.get('qa.' + activity.att_type)"></span>:
+                    <span x-text="activity.att_description"></span>
+                </div>
+                <div class="collapse-content" x-data="{flow_vars: []}" x-init="flow_vars = Scenario.get_flowvars(model,index)">
+                    <div class="flex">
+                        <div class="flex-initial w-[100%]">
+                            <ui-activity></ui-activity>
+                        </div>
+                        <div class="flex-1">
+                            <div x-show="index > 0" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="move up">
+                  <button class="btn btn-ghost" @click="arraymove(model.activity,index,index - 1)">
+                    <i class="fa-solid fa-arrow-up"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="index < model.activity.length - 1" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="move down">
+                  <button class="btn btn-ghost" @click="arraymove(model.activity,index,index + 1)">
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </button>
+                </span>
+                            </div>
+                            <ui-delete-button
+                                    @delete.once.stop="model.activity = model.activity.filter(x => x.att_id != activity.att_id)"></ui-delete-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <div x-data="{activity: {}, title: '', flow_vars: [],index: makeid(6)}">
+            <button @shortcut-insert.document="activity = Scenario.prepare_activity({att_path: '-select-'});title = 'Add activity';add_activity.showModal()"
+                    class="btn btn-ghost" @click="activity = Scenario.prepare_activity({att_path: '-select-'});title = 'Add activity';add_activity.showModal()"><i class="fa-solid fa-plus"></i>&nbsp;
+                Add activity</button>
+            <dialog id="add_activity" class="modal">
+                <div class="modal-box w-11/12 max-w-5xl">
+                    <h3 class="font-bold text-lg" x-text="title"></h3>
+                    <p class="py-4" >
+
+                    <ul class="menu bg-primary-content w-full rounded-box" x-show="!activity.att_type" x-cloak x-transition>
+                        <template x-for="type in qa_activity_types" :key="type">
+                            <li><a @click.debounce.stop="title = Language.get('qa.' + type);activity.att_type = type;flow_vars = Scenario.get_flowvars(model,model.activity.length)">
+                                <span x-text="Language.get('qa.' + type)"></span>
+                            </a></li>
+                        </template>
+                    </ul>
+                    <div x-show="activity.att_type" x-cloak x-transition>
+                        <ui-activity></ui-activity>
+                    </div>
+
+                    </p>
+                    <div class="modal-action">
+                        <form method="dialog">
+                            <button class="btn btn-success"
+                                    @click="activity.att_id = makeid(6);model.activity.push(activity);"
+                                    x-show="activity.att_type" x-cloak x-transition>Append</button>
+                        </form>
+                    </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+        </div>
+    </div>
+</template>

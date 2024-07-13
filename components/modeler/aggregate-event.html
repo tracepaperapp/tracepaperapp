@@ -1,0 +1,266 @@
+<template x-component="aggregate-event">
+  <div>
+    <div class="overflow-x-auto">
+
+      <div class="prose">
+        <h2>Domain Event: <span x-text="model.att_name"></span></h2>
+        <hr>
+        <h4>Root</h4>
+      </div>
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Default</th>
+        </tr>
+        </thead>
+        <tbody>
+        <template x-for="field in model.field" :key="field.att_name">
+          <tr>
+            <td>
+              <ui-field-name></ui-field-name>
+            </td>
+            <td>
+              <ui-field-type></ui-field-type>
+            </td>
+            <td>
+              <ui-editable-text-field
+                      :value="field.att_default"
+                      @updated.debounce.1000ms="field.att_default = $event.detail.value"></ui-editable-text-field>
+            </td>
+            <td>
+              <ui-delete-button @delete.once.stop="model.field = model.field.filter(x => x.att_name != field.att_name)"></ui-delete-button>
+            </td>
+          </tr>
+        </template>
+        <tr>
+          <td colspan="3"></td>
+          <td>
+            <ui-add-button modal-title="Field name"
+                           :pattern="lower_or_camel_cased"
+                           :message="lower_or_camel_cased_message"
+                           @updated.debounce.stop="model.field.push({att_name: $event.detail.value,att_type: 'String'})"></ui-add-button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <div>
+        <template x-for="entity in model['nested-object']" :key="entity.att_name">
+          <div class="mt-5">
+            <div class="prose">
+              <h4>
+                <ui-editable-text-field
+                        prefix="Nested collection: "
+                        :value="entity.att_name"
+                        :pattern="lower_or_camel_cased"
+                        message="Must be <i>lowercased</i> or <i>camelCased</i>"
+                        @updated.debounce.1000ms="entity.att_name = $event.detail.value"></ui-editable-text-field>
+              </h4>
+            </div>
+            <table class="table">
+              <tbody>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Default</th>
+              </tr>
+              <template x-for="field in entity.field" :key="field.att_name">
+                <tr>
+                  <td>
+                    <ui-field-name></ui-field-name>
+                  </td>
+                  <td>
+                    <ui-field-type></ui-field-type>
+                  </td>
+                  <td>
+                    <ui-editable-text-field
+                            :value="field.att_default"
+                            @updated.debounce.1000ms="field.att_default = $event.detail.value"></ui-editable-text-field>
+                  </td>
+                  <td>
+                    <ui-delete-button @delete.once.stop="entity.field = entity.field.filter(x => x.att_name != field.att_name)"></ui-delete-button>
+                  </td>
+                </tr>
+              </template>
+              <tr>
+                <td>
+                  <ui-delete-button @delete.once.stop="model['nested-object'] = model['nested-object'].filter(x => x.att_name != entity.att_name)"></ui-delete-button>
+                </td>
+                <td colspan="2"></td>
+                <td>
+                  <ui-add-button modal-title="Field name"
+                                 :pattern="lower_or_camel_cased"
+                                 :message="lower_or_camel_cased_message"
+                                 @updated.debounce.stop="entity.field.push({att_name: $event.detail.value,att_type: 'String'})"></ui-add-button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <ui-add-button modal-title="Collection name"
+                       button-text="Add collection"
+                       :pattern="lower_or_camel_cased"
+                       :message="lower_or_camel_cased_message"
+                       @updated.debounce.stop="model['nested-object'].push({att_name:$event.detail.value,field:[]})"></ui-add-button>
+      </div>
+      <div class="prose">
+        <hr>
+        <h2>Mapping</h2>
+      </div>
+
+      <template x-if="await Modeler.exists(file.replace('/events/','/event-handlers/'))">
+        <div x-data="{mapping: {}, root: {},entities: []}">
+          <div x-init="mapping = await Modeler.get(file.replace('/events/','/event-handlers/'))"></div>
+          <div x-init="root = await Modeler.get(file.split('/events/').at(0) + '/root.xml',true)"></div>
+          <div x-init="entities = await Aggregate.get_entities(file.split('/events/').at(0) + '/root.xml')"></div>
+
+          <div class="form-control w-52">
+            <label class="cursor-pointer label">
+              <span class="label-text">Custom code mapper</span>
+              <input type="checkbox" class="toggle toggle-primary"
+                     @change="if($el.checked){
+                        mapping.att_code = '';
+                        mapping.mapping = [];
+                     }else{
+                        delete mapping.att_code;
+                        mapping.mapping = [];
+                     }"
+                     :checked="'att_code' in mapping" />
+            </label>
+          </div>
+
+          <template x-if="!('att_code' in mapping)">
+            <table class="table">
+                <tr>
+                  <th>Document field</th>
+                  <th>Mapping</th>
+                  <th>Event field</th>
+                </tr>
+                <template x-for="field in root.field" :key="field.att_name">
+                  <tr x-data="{field_mapping: {}}"
+                      x-effect="field_mapping = Aggregate.get_event_handler_mapping(field,mapping)">
+                    <td x-text="field.att_name"></td>
+                    <td>
+                      <select class="editable" @change="if(!Aggregate.isMapped(field,mapping)){
+                        field_mapping.att_target = field.att_name;
+                        mapping.mapping.push(field_mapping);
+                      } else if ($el.value == 'unmapped'){
+                        mapping.mapping = mapping.mapping.filter(x => x.att_target != field.att_name)
+                      }" x-model="field_mapping.att_operand">
+                        <option value="unmapped">Unmapped</option>
+                        <option value="set">Set</option>
+                        <option value="add">Add</option>
+                        <option value="subtract">Subtract</option>
+                      </select>
+                    </td>
+                    <td x-show="Aggregate.isMapped(field,mapping)" x-cloak x-transition>
+                      <select class="editable"
+                              x-effect="if(Aggregate.isMapped(field,mapping) && !field_mapping.att_value && model.field.map(x => x.att_name).includes(field_mapping.att_target)){field_mapping.att_value = field_mapping.att_target}"
+                              x-model="field_mapping.att_value">
+                        <option>-not set-</option>
+                        <template x-for="event_field in model.field" :key="event_field.att_name">
+                          <option :value="event_field.att_name"
+                                  :selected="event_field.att_name == field_mapping.att_value"
+                                  x-text="event_field.att_name" ></option>
+                        </template>
+                      </select>
+                    </td>
+                  </tr>
+                </template>
+                <template x-for="entity in entities" :key="entity.att_name">
+                  <tr x-data="{field_mapping: {}}"
+                      x-effect="field_mapping = Aggregate.get_event_handler_mapping(entity,mapping)">
+                    <td x-text="entity.att_name"></td>
+                    <td>
+                      <select class="editable" @change="if(!Aggregate.isMapped(entity,mapping)){
+                        field_mapping.att_target = entity.att_name;
+                        field_mapping.mapping = [];
+                        field_mapping.att_strategy = $el.value;
+                        mapping['nested-mapping'].push(field_mapping);
+                      } else if ($el.value == 'unmapped'){
+                        mapping['nested-mapping'] = mapping['nested-mapping'].filter(x => x.att_target != entity.att_name)
+                      }" x-model="field_mapping.att_strategy">
+                        <option value="unmapped">Unmapped</option>
+                        <option value="extend">Extend</option>
+                        <option value="replace">Replace</option>
+                      </select>
+                    </td>
+                    <td x-show="Aggregate.isMapped(entity,mapping)" x-cloak x-transition>
+                      <div x-data="{collection: {}}" x-effect="collection = model['nested-object'].filter(x => x.att_name == field_mapping.att_source).at(0)">
+                        <select class="editable" x-model="field_mapping.att_source">
+                          <option>-source collection-</option>
+                          <template x-for="collection in model['nested-object']" :key="collection.att_name">
+                            <option :value="collection.att_name"
+                                    :selected="collection.att_name == field_mapping.att_source"
+                                    x-text="collection.att_name" ></option>
+                          </template>
+                        </select>
+                        <select class="editable" x-model="field_mapping['att_business-key']">
+                          <option>-business key-</option>
+                          <template x-for="event_field in collection.field" :key="event_field.att_name">
+                            <option :value="event_field.att_name"
+                                    :selected="event_field.att_name == field_mapping['att_business-key']"
+                                    x-text="event_field.att_name" ></option>
+                          </template>
+                        </select>
+                        <table class="table">
+                          <tr>
+                            <th>Document field</th>
+                            <th>Mapping</th>
+                            <th>Event field</th>
+                          </tr>
+                          <template x-for="field in entity.field" :key="field.att_name">
+                            <tr x-data="{nested_mapping: {}}" x-effect="nested_mapping = Aggregate.get_event_handler_mapping(field,field_mapping)">
+                              <td x-text="field.att_name"></td>
+                              <td>
+                                <select class="editable" @change="if(!Aggregate.isMapped(field,field_mapping)){
+                        nested_mapping.att_target = field.att_name;
+                        field_mapping.mapping.push(nested_mapping);
+                      } else if ($el.value == 'unmapped'){
+                        field_mapping.mapping = field_mapping.mapping.filter(x => x.att_target != field.att_name)
+                      }" x-model="nested_mapping.att_operand">
+                                  <option value="unmapped">Unmapped</option>
+                                  <option value="set">Set</option>
+                                  <option value="add">Add</option>
+                                  <option value="subtract">Subtract</option>
+                                </select>
+                              </td>
+                              <td x-show="Aggregate.isMapped(field,field_mapping)" x-cloak x-transition>
+                                <select class="editable" x-model="nested_mapping.att_value">
+                                  <option>-not set-</option>
+                                  <template x-for="event_field in entity.field" :key="event_fiel.att_name">
+                                    <option :value="event_field.att_name"
+                                            :selected="event_field.att_name == nested_mapping.att_value"
+                                            x-text="event_field.att_name" ></option>
+                                  </template>
+                                </select>
+                              </td>
+                            </tr>
+                          </template>
+                        </table>
+                      </div>
+
+                    </td>
+                  </tr>
+                </template>
+              </table>
+          </template>
+
+          <template x-if="'att_code' in mapping">
+            <ui-inline-code :code="mapping.att_code" @updated.debounce.stop="mapping.att_code = $event.detail.code"></ui-inline-code>
+          </template>
+
+        </div>
+      </template>
+
+      <template x-if="!await Modeler.exists(file.replace('/events/','/event-handlers/'))">
+        <button class="btn btn-outline btn-primary mt-5" @click="Aggregate.create_event_handler(file,model)">
+          Configure mapping to Aggregate Document (query model)
+        </button>
+      </template>
+    </div>
+  </div>
+</template>

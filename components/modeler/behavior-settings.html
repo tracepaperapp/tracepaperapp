@@ -1,0 +1,15 @@
+<template x-component="behavior-settings">
+    <div class="overflow-x-auto">
+        <table class="table table-xs">
+            <tr>
+                <th>Is create flow</th>
+                <td>
+                    <input type="checkbox"
+                           @change="if($el.checked){model['att_create-command'] = 'true'}else{model['att_create-command'] = 'false'}"
+                           :checked="'att_create-command' in model && model['att_create-command'] == 'true'"
+                           class="checkbox checkbox-info" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</template>

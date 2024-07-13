@@ -1,0 +1,12 @@
+# This file is NOT managed by Tracepaper, and can be customized.
+query FilterBuild($key_begins_with: String = "") {
+  Build {
+    filter(key_begins_with: $key_begins_with) {
+       resultset {
+        drn
+        status
+        lastEvent
+      }
+    }
+  }
+}

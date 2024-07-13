@@ -1,0 +1,145 @@
+<template x-component="notifier">
+    <div x-data="{target_flow: [],target: ''}" x-import="modeler/notifier-activities">
+        <div class="prose">
+            <h2>Notifier: <span x-text="model.att_name"></span></h2>
+            <hr>
+            <!-- triggers -->
+            <h4>Triggers:</h4>
+        </div>
+        <template x-for="trigger in model.trigger" :key="trigger.att_source">
+            <div tabindex="0" class="collapse collapse-plus border border-primary mt-2">
+                <input type="checkbox" :checked="sessionStorage[trigger.att_source] == 'true'"
+                       x-model="sessionStorage[trigger.att_source]"/>
+                <div class="collapse-title font-medium">
+                    <span x-text="trigger.att_source"></span>
+                </div>
+                <div class="collapse-content"
+                     x-import="modeler/notifier-trigger"
+                     x-data="{event:{}, expressions: []}"
+                     x-effect="event = await Modeler.get_by_name(trigger.att_source);expressions = await Behavior.get_trigger_expressions()">
+                    <ui-trigger></ui-trigger>
+                </div>
+            </div>
+        </template>
+        <div x-data="{events: [], search: ''}" x-effect="events = await Modeler.list_events()">
+            <button class="btn btn-ghost" onclick="add_trigger.showModal()"><i class="fa-solid fa-plus"></i>&nbsp;
+                Add trigger</button>
+            <dialog id="add_trigger" class="modal">
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg">Add trigger</h3>
+                    <p class="py-4">
+                        <input type="text" placeholder="Search..."
+                               x-model="search"
+                               class="input input-bordered input-primary w-full" />
+                        <br>
+                    <table class="table">
+                        <template x-for="event in events" :key="event">
+                            <tr x-show="event.toLowerCase().includes(search.toLowerCase()) &&
+                           !model.trigger.map(x => x.att_source).includes(event)" x-cloak x-transition
+                                class="hover cursor-pointer"
+                                @click="Notifier.add_trigger(model,event);add_trigger.close();await Modeler.sync_to_disk();$dispatch('redraw')">
+                                <td>
+                                    <span x-text="event"></span>&nbsp;
+                                </td>
+                            </tr>
+                        </template>
+                    </table>
+                    </p>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+        </div>
+        <!-- triggers end -->
+
+        <!-- flow -->
+        <div class="prose">
+            <hr>
+            <h4>Activity flow:</h4>
+        </div>
+        <template x-for="(activity, index) in model.activity" :key="activity.att_id">
+            <div tabindex="0" class="collapse collapse-plus border border-base-300 mt-2">
+                <input type="checkbox" :checked="sessionStorage[activity.att_id] == 'true'"
+                       x-model="sessionStorage[activity.att_id]"/>
+                <div class="collapse-title font-medium">
+                    <span x-text="index + 1"></span>:&nbsp;
+                    <span x-text="Language.get('notifier.' + activity.att_type)"></span>
+                </div>
+                <div class="collapse-content">
+                    <div class="flex">
+                        <div class="flex-initial w-[100%]">
+                            <ui-activities></ui-activities>
+                        </div>
+                        <div class="flex-1">
+                            <div x-show="index > 0" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="move up">
+                  <button class="btn btn-ghost" @click="arraymove(model.activity,index,index - 1)">
+                    <i class="fa-solid fa-arrow-up"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="index < model.activity.length - 1" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="move down">
+                  <button class="btn btn-ghost" @click="arraymove(model.activity,index,index + 1)">
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'code' && !activity.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_code(activity)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'code' && activity.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_code(activity)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'call-internal-api' && !activity.att_query" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_query(activity)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'call-internal-api' && activity.att_query" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_query(activity)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'HTTP' && !activity.att_body" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_body(activity)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'HTTP' && activity.att_body" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_body(activity)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                            </div>
+                            <ui-delete-button
+                                    @delete.once.stop="model.activity = model.activity.filter(x => x.att_id != activity.att_id)"></ui-delete-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <div @shortcut-insert.document="target_flow = model.activity;target='root';$dispatch('add-activity')">
+            <ui-activity-modal></ui-activity-modal>
+            <button class="btn btn-ghost" @click.stop="target_flow = model.activity;target='root';$dispatch('add-activity')"><i class="fa-solid fa-plus"></i>&nbsp;
+                Add activity</button>
+        </div>
+        <!-- flow end -->
+    </div>
+</template>

@@ -1,0 +1,103 @@
+<template x-component="view-relations">
+    <div tabindex="0" class="collapse collapse-plus border border-primary mt-2">
+        <input type="checkbox" :checked="sessionStorage[model.att_name + '-relations'] == 'true'"
+               x-model="sessionStorage[model.att_name + '-relations']"/>
+        <div class="collapse-title font-medium">
+            Relations
+        </div>
+        <div class="collapse-content">
+            <table class="table table-xs">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Relation type</th>
+                    <th>Referenced view</th>
+                    <th>Foreign key</th>
+                    <th>Authorization Method</th>
+                    <th>Required role</th>
+                </tr>
+                </thead>
+                <tbody>
+                <template x-for="field in model.field.filter(x => !view_field_types.includes(x.att_type))" :key="field.att_name">
+                    <tr>
+                        <td>
+                            <ui-field-name></ui-field-name>
+                        </td>
+                        <td>
+                            <select @change="$dispatch('redraw')" class="editable" x-model="field.att_type">
+                                <option>-</option>
+                                <template x-for="type in view_relations" :key="type">
+                                    <option :value="type" :selected="type == field.att_type" x-text="type"></option>
+                                </template>
+                            </select>
+                        </td>
+                        <td>
+                            <select @change="$dispatch('redraw')" class="editable" x-model="field.att_ref">
+                                <option>-</option>
+                                <template x-for="ref in await View.list()" :key="ref">
+                                    <option :value="ref" :selected="ref == field.att_ref" x-text="ref"></option>
+                                </template>
+                            </select>
+                        </td>
+                        <td x-show="field.att_type != 'ObjectList'">
+                            <select class="editable" x-model="field['att_foreign-key']">
+                                <option>-</option>
+                                <template x-for="fk in model.field.filter(x => ['String','StringList'].includes(x.att_type)).map(x => x.att_name)" :key="fk">
+                                    <option :value="fk" :selected="fk == field['att_foreign-key']" x-text="fk"></option>
+                                </template>
+                                <option value="#canonical">#canonical</option>
+                            </select>
+                        </td>
+                        <td x-show="field.att_type == 'ObjectList'">
+                            n.a.
+                        </td>
+                        <td x-show="field.att_type != 'ObjectList'">
+                            <select class="editable" x-model="field.att_authorization">
+                                <option value="authenticated">Inherit from API query</option>
+                                <option value="role">Role based access</option>
+                            </select>
+                        </td>
+                        <td x-show="field.att_type == 'ObjectList'">
+                            inherit from API query
+                            <template x-if="field.att_type == 'ObjectList'">
+                                <div x-init="field.att_authorization = 'authenticated'"></div>
+                            </template>
+                        </td>
+                        <td x-show="field.att_authorization == 'role' && !field.att_role.startsWith('#')">
+                            <select class="editable"
+                                    x-data="{roles: []}"
+                                    x-init="roles = await Modeler.get_roles()"
+                                    x-model="field.att_role">
+                                <template x-for="role in roles" :key="role">
+                                    <option :value="role" x-text="role" :selected="role == field.att_role"></option>
+                                </template>
+                            </select>
+                        </td>
+                        <td x-show="field.att_authorization == 'role' && field.att_role.startsWith('#')">
+                            <ui-editable-text-field
+                                    :value="field.att_role"
+                                    @updated.debounce.1000ms="field.att_role = $event.detail.value"></ui-editable-text-field>
+                        </td>
+                        <td x-show="field.att_authorization != 'role'">
+                            n.a.
+                        </td>
+                        <td>
+                            <ui-delete-button
+                                    @delete.once="model.field = model.field.filter(x => x.att_name != field.att_name);$dispatch('redraw')"></ui-delete-button>
+                        </td>
+                    </tr>
+                </template>
+                <tr>
+                    <td colspan="6"></td>
+                    <td>
+                        <ui-add-button modal-title="Field name"
+                                       :pattern="lower_or_camel_cased"
+                                       :message="lower_or_camel_cased_message"
+                                       @updated.debounce.stop="View.add_relation(model, $event.detail.value);$dispatch('redraw')"></ui-add-button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</template>

@@ -4,6 +4,7 @@
     <title>API explorer</title>
     <meta name="title" content="API explorer" />
     <script src="/js/configuration.js"></script>
+    <script src="/js/configuration-staging.js"></script>
     <script src="/js/cache.js"></script>
     <script src="/admin-console/dist/configuration.js"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
@@ -50,7 +51,7 @@
   </div>
   <div class="custom-button" x-data="{}">
     <button
-            @click="sessionStorage['prevLoc'] = location;location = '/auth/signin'">
+            @click="sessionStorage['prevLoc'] = location;location = '/auth'">
       <span x-text="TOKEN ? 'Refresh' : 'Fetch'"></span> User token
     </button>
     <button

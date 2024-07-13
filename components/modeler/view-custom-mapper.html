@@ -1,0 +1,44 @@
+<template x-component="custom-mapper">
+    <template x-for="handler in model['custom-handler']" :key="handler.att_id">
+        <div tabindex="0" class="collapse collapse-plus border border-primary-content mt-2">
+            <input type="checkbox" :checked="sessionStorage[model.att_name + handler.att_id] == 'true'"
+                   x-model="sessionStorage[model.att_name + handler.att_id]"/>
+            <div class="collapse-title font-medium">
+                Source aggregate: <span x-text="handler['att_sub-domain']"></span>.<span x-text="handler.att_aggregate"></span>
+                <div class="badge badge-primary badge-outline">custom mapper</div>
+            </div>
+            <div class="collapse-content">
+                <table class="table">
+                    <tr>
+                        <th>Source domain</th>
+                        <td>
+                            <select @change="$dispatch('redraw')" class="editable" x-model="handler['att_sub-domain']">
+                                <option>-</option>
+                                <template x-for="sub in await Aggregate.list_subdomains()" :key="sub">
+                                    <option x-text="sub" :value="sub" :selected="sub == handler['att_sub-domain']"></option>
+                                </template>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Source aggregate</th>
+                        <td>
+                            <select @change="$dispatch('redraw');handler['#text'] = await View.get_initial_inline_code(model,handler)" class="editable" x-model="handler.att_aggregate">
+                                <option>-</option>
+                                <template x-for="agg in await Aggregate.list_aggregates(handler['att_sub-domain'])" :key="agg">
+                                    <option x-text="agg" :value="agg" :selected="agg == handler.att_aggregate"></option>
+                                </template>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <hr>
+                <ui-inline-code :code="handler['#text']"
+                                disable-break-replacement
+                                @updated.debounce.stop="handler['#text'] = $event.detail.code"></ui-inline-code>
+                <ui-delete-button
+                        @delete.once.stop="model['custom-handler'] = model['custom-handler'].filter(x => x.att_id != handler.att_id);$dispatch('redraw')"></ui-delete-button>
+            </div>
+        </div>
+    </template>
+</template>

@@ -1,0 +1,127 @@
+<template x-component="project-wizard">
+    <div x-show="!localStorage.project_repo && sessionStorage.new_project" x-cloak x-transition>
+        <div class="hero h-[80vh] w-[95%] bg-base-200">
+            <div class="hero-content text-center">
+                <div class="" x-data="{project: $persist({}),github_account: $persist('tracepaperapp')}">
+                    <h1 class="text-5xl font-bold">Start a new project</h1>
+                    <p class="py-6">
+                        <table class="table">
+                            <tr>
+                                <th>Workspace</th>
+                                <td>
+                                    <select class="select select-bordered w-full max-w-xs" x-model="project.workspaceDrn">
+                                        <option></option>
+                                        <template x-for="workspace in $store.context.get.workspace" :key="workspace.drn">
+                                            <option :value="workspace.drn" x-text="workspace.name"
+                                                    :selected="project.workspaceDrn == workspace.drn"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Name</th>
+                                <td>
+                                    <ui-editable-text-field
+                                            :value="project.name"
+                                            :pattern="pascal_cased"
+                                            :message="pascal_cased_message"
+                                            @updated.debounce.1000ms="project.name = $event.detail.value"></ui-editable-text-field>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Github account</th>
+                                <td>
+                                    <ui-editable-text-field
+                                            :value="github_account"
+                                            @updated.debounce.1000ms="github_account = $event.detail.value"></ui-editable-text-field>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Model repository</th>
+                                <td>
+                                    <ui-editable-text-field
+                                            :value="project.modelRepo"
+                                            x-effect="project.modelRepo = 'https://github.com/' + github_account + '/' + project.name.toLowerCase() + '-model'"
+                                            @updated.debounce.1000ms="project.modelRepo = $event.detail.value"></ui-editable-text-field>
+                                    <hr>
+                                    <p>
+                                        <b>
+                                            <a class="link" :href="'https://github.com/new?name=' + project.name.toLowerCase() + '-model'
+                                        + '&owner=' + github_account + '&description=Tracepaper+model+repository&visibility=private'" target="_blank">
+                                                create repo
+                                            </a>
+                                        </b>&nbsp;
+                                        <b>
+                                            <a class="link" :href="project.modelRepo + '/settings/access'" target="_blank">
+                                                make sure the <i>draftsman-io</i> user is invited to have write access.
+                                            </a>
+                                        </b>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                        <th>Code repository</th>
+                        <td>
+                            <ui-editable-text-field
+                                    :value="project.codeRepo"
+                                    x-effect="project.codeRepo = 'https://github.com/' + github_account + '/' + project.name.toLowerCase() + '-backend'"
+                                    @updated.debounce.1000ms="project.codeRepo = $event.detail.value"></ui-editable-text-field>
+                            <hr>
+                            <p>
+                                <b>
+                                    <a class="link" :href="'https://github.com/new?name=' + project.name.toLowerCase() + '-backend'
+                                        + '&owner=' + github_account + '&description=`Backend`+repository&visibility=private'" target="_blank">
+                                        create repo
+                                    </a>
+                                </b>&nbsp;
+                                <b>
+                                    <a class="link" :href="project.codeRepo + '/settings/access'" target="_blank">
+                                        make sure the <i>draftsman-io</i> user is invited to have write access.
+                                    </a>
+                                </b>
+                            </p>
+                        </td>
+                    </tr>
+                            <tr>
+                        <th>GUI repository (beta)</th>
+                        <td>
+                            <ui-editable-text-field
+                                    :value="project.guiRepo"
+                                    x-effect="project.guiRepo = 'https://github.com/' + github_account + '/' + project.name.toLowerCase() + '-gui'"
+                                    @updated.debounce.1000ms="project.guiRepo = $event.detail.value"></ui-editable-text-field>
+                            <hr>
+                            <p>
+                                <b>
+                                    <a class="link" :href="'https://github.com/new?name=' + project.name.toLowerCase() + '-gui'
+                                        + '&owner=' + github_account + '&description=GUI+assist+repository&visibility=private'" target="_blank">
+                                        create repo
+                                    </a>
+                                </b>&nbsp;
+                                <b>
+                                    <a class="link" :href="project.guiRepo + '/settings/access'" target="_blank">
+                                        make sure the <i>draftsman-io</i> user is invited to have write access.
+                                    </a>
+                                </b>
+                            </p>
+                        </td>
+                    </tr>
+                        </table>
+                    </p>
+
+                    <draftsman-mutation authenticated command="InitializeProject" x-include="/prepared-statements/commands/InitializeProject.txt">
+                    </draftsman-mutation>
+
+                    <ui-trace-table></ui-trace-table>
+
+                    <button @click="sessionStorage.removeItem('new_project');location.reload(true);" class="btn btn-outline btn-error">Cancel</button>
+                    <button @click="$store.mutation.send('InitializeProject',project);" class="btn btn-success">Create project</button>
+
+                    <draftsman-trace command="InitializeProject"
+                                     status="success"
+                                     @trace="Project.force_open(project.workspaceDrn, project.name, project.modelRepo)">
+                    </draftsman-trace>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

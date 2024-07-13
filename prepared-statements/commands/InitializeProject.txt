@@ -1,0 +1,8 @@
+# This file is managed by Tracepaper
+mutation Initialize($workspaceDrn: String = "", $name: String = "", $modelRepo: String = "", $codeRepo: String = "", $guiRepo: String = "") {
+  Project{
+    initialize(input: {workspaceDrn: $workspaceDrn,name: $name,modelRepo: $modelRepo,codeRepo: $codeRepo,guiRepo: $guiRepo}) {
+       correlationId
+    }
+  }
+}

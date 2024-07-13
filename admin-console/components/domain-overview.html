@@ -1,0 +1,309 @@
+<!-- This file is managed by Tracepaper -->
+<template x-component="domain-overview">
+    <div class="row gx-5">
+            <div class="col-3">
+                <h4>Commands</h4>
+                <center>
+                    <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'AuthorizeUserWorkspace'"
+                                x-show="'authorizeuserworkspace'.includes(search.toLowerCase())">
+                            AuthorizeUserWorkspace
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'BuildProject'"
+                                x-show="'buildproject'.includes(search.toLowerCase())">
+                            BuildProject
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'CreateUser'"
+                                x-show="'createuser'.includes(search.toLowerCase())">
+                            CreateUser
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'CreateWorkspace'"
+                                x-show="'createworkspace'.includes(search.toLowerCase())">
+                            CreateWorkspace
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'DeleteProject'"
+                                x-show="'deleteproject'.includes(search.toLowerCase())">
+                            DeleteProject
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'DeregisterProjectDeployment'"
+                                x-show="'deregisterprojectdeployment'.includes(search.toLowerCase())">
+                            DeregisterProjectDeployment
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'DeregisterProjectPipeline'"
+                                x-show="'deregisterprojectpipeline'.includes(search.toLowerCase())">
+                            DeregisterProjectPipeline
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'InitializeProject'"
+                                x-show="'initializeproject'.includes(search.toLowerCase())">
+                            InitializeProject
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'RegisterProjectDeployment'"
+                                x-show="'registerprojectdeployment'.includes(search.toLowerCase())">
+                            RegisterProjectDeployment
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'RegisterProjectPipeline'"
+                                x-show="'registerprojectpipeline'.includes(search.toLowerCase())">
+                            RegisterProjectPipeline
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-primary"
+                                @click="Draftsman.empty_track_and_trace_log();component = 'UpdateProjectBuild'"
+                                x-show="'updateprojectbuild'.includes(search.toLowerCase())">
+                            UpdateProjectBuild
+                        </button>
+                        
+                    </div>
+                </center>
+            </div>
+            <div class="col-6">
+                
+                <div x-show="component == 'AuthorizeUserWorkspace'" x-cloak x-transition>
+                    <div x-import="commands/AuthorizeUserWorkspace">
+                        <h6>AuthorizeUserWorkspace</h6>
+                        <ui-AuthorizeUserWorkspace></ui-AuthorizeUserWorkspace>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'BuildProject'" x-cloak x-transition>
+                    <div x-import="commands/BuildProject">
+                        <h6>BuildProject</h6>
+                        <ui-BuildProject></ui-BuildProject>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'CreateUser'" x-cloak x-transition>
+                    <div x-import="commands/CreateUser">
+                        <h6>CreateUser</h6>
+                        <ui-CreateUser></ui-CreateUser>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'CreateWorkspace'" x-cloak x-transition>
+                    <div x-import="commands/CreateWorkspace">
+                        <h6>CreateWorkspace</h6>
+                        <ui-CreateWorkspace></ui-CreateWorkspace>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'DeleteProject'" x-cloak x-transition>
+                    <div x-import="commands/DeleteProject">
+                        <h6>DeleteProject</h6>
+                        <ui-DeleteProject></ui-DeleteProject>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'DeregisterProjectDeployment'" x-cloak x-transition>
+                    <div x-import="commands/DeregisterProjectDeployment">
+                        <h6>DeregisterProjectDeployment</h6>
+                        <ui-DeregisterProjectDeployment></ui-DeregisterProjectDeployment>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'DeregisterProjectPipeline'" x-cloak x-transition>
+                    <div x-import="commands/DeregisterProjectPipeline">
+                        <h6>DeregisterProjectPipeline</h6>
+                        <ui-DeregisterProjectPipeline></ui-DeregisterProjectPipeline>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'InitializeProject'" x-cloak x-transition>
+                    <div x-import="commands/InitializeProject">
+                        <h6>InitializeProject</h6>
+                        <ui-InitializeProject></ui-InitializeProject>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'RegisterProjectDeployment'" x-cloak x-transition>
+                    <div x-import="commands/RegisterProjectDeployment">
+                        <h6>RegisterProjectDeployment</h6>
+                        <ui-RegisterProjectDeployment></ui-RegisterProjectDeployment>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'RegisterProjectPipeline'" x-cloak x-transition>
+                    <div x-import="commands/RegisterProjectPipeline">
+                        <h6>RegisterProjectPipeline</h6>
+                        <ui-RegisterProjectPipeline></ui-RegisterProjectPipeline>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'UpdateProjectBuild'" x-cloak x-transition>
+                    <div x-import="commands/UpdateProjectBuild">
+                        <h6>UpdateProjectBuild</h6>
+                        <ui-UpdateProjectBuild></ui-UpdateProjectBuild>
+                    </div>
+                </div>
+
+                
+
+                
+                <div x-show="component == 'Build/get'" x-cloak x-transition>
+                    <div x-import="views/Build/get">
+                        <h6>Build.get</h6>
+                        <ui-Build-get></ui-Build-get>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'Build/filter'" x-cloak x-transition>
+                    <div x-import="views/Build/filter">
+                        <h6>Build.filter</h6>
+                        <ui-Build-filter></ui-Build-filter>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'Deployment/get'" x-cloak x-transition>
+                    <div x-import="views/Deployment/get">
+                        <h6>Deployment.get</h6>
+                        <ui-Deployment-get></ui-Deployment-get>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'Deployment/filter'" x-cloak x-transition>
+                    <div x-import="views/Deployment/filter">
+                        <h6>Deployment.filter</h6>
+                        <ui-Deployment-filter></ui-Deployment-filter>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'Pipeline/get'" x-cloak x-transition>
+                    <div x-import="views/Pipeline/get">
+                        <h6>Pipeline.get</h6>
+                        <ui-Pipeline-get></ui-Pipeline-get>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'Pipeline/filter'" x-cloak x-transition>
+                    <div x-import="views/Pipeline/filter">
+                        <h6>Pipeline.filter</h6>
+                        <ui-Pipeline-filter></ui-Pipeline-filter>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'Project/get'" x-cloak x-transition>
+                    <div x-import="views/Project/get">
+                        <h6>Project.get</h6>
+                        <ui-Project-get></ui-Project-get>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'User/get'" x-cloak x-transition>
+                    <div x-import="views/User/get">
+                        <h6>User.get</h6>
+                        <ui-User-get></ui-User-get>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'User/filter'" x-cloak x-transition>
+                    <div x-import="views/User/filter">
+                        <h6>User.filter</h6>
+                        <ui-User-filter></ui-User-filter>
+                    </div>
+                </div>
+
+                
+                <div x-show="component == 'Workspace/get'" x-cloak x-transition>
+                    <div x-import="views/Workspace/get">
+                        <h6>Workspace.get</h6>
+                        <ui-Workspace-get></ui-Workspace-get>
+                    </div>
+                </div>
+
+                
+
+            </div>
+            <div class="col-3">
+                <h4>Queries</h4>
+                <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'build.get'.includes(search.toLowerCase())"
+                            @click="component = 'Build/get'">Build.get
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'build.filter'.includes(search.toLowerCase())"
+                            @click="component = 'Build/filter'">Build.filter
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'deployment.get'.includes(search.toLowerCase())"
+                            @click="component = 'Deployment/get'">Deployment.get
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'deployment.filter'.includes(search.toLowerCase())"
+                            @click="component = 'Deployment/filter'">Deployment.filter
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'pipeline.get'.includes(search.toLowerCase())"
+                            @click="component = 'Pipeline/get'">Pipeline.get
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'pipeline.filter'.includes(search.toLowerCase())"
+                            @click="component = 'Pipeline/filter'">Pipeline.filter
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'project.get'.includes(search.toLowerCase())"
+                            @click="component = 'Project/get'">Project.get
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'user.get'.includes(search.toLowerCase())"
+                            @click="component = 'User/get'">User.get
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'user.filter'.includes(search.toLowerCase())"
+                            @click="component = 'User/filter'">User.filter
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary"
+                            x-show="'workspace.get'.includes(search.toLowerCase())"
+                            @click="component = 'Workspace/get'">Workspace.get
+                    </button>
+                    
+                </div>
+            </div>
+        </div>
+</template>

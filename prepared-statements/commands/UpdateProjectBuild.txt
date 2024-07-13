@@ -1,0 +1,10 @@
+# This file is managed by Tracepaper
+mutation Update($drn: String = "", $message: String = "", $status: String = "") {
+  Project{
+    Build{
+      update(input: {drn: $drn,message: $message,status: $status}) {
+         correlationId
+      }
+    }
+  }
+}

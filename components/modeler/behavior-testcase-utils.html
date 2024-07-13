@@ -1,0 +1,169 @@
+<template x-component="state">
+  <div>
+    <table class="table">
+      <tr>
+        <th>Attribute Name</th>
+        <th>Value</th>
+      </tr>
+      <template x-for="(value,fkey) in state" :key="fkey">
+        <tr>
+          <td x-text="fkey"></td>
+          <template x-if="typeof value !== 'object' && !Array.isArray(value) && value !== null">
+            <td>
+              <ui-editable-text-field
+                      :value="value"
+                      @updated.debounce="state[fkey] = $event.detail.value;"></ui-editable-text-field>
+            </td>
+          </template>
+          <template x-if="typeof value === 'object' && !Array.isArray(value) && value !== null">
+            <td colspan="2" x-data="{entity: {}}" x-effect="entity = await Behavior.get_entity(fkey)">
+              <template x-for="(entity,bkey) in value" :key="bkey">
+                <table class="table">
+                  <tr>
+                    <th>Attribute Name</th>
+                    <th>Value</th>
+                    <td class="text-end">
+                      <ui-delete-button
+                              @delete.once.stop="delete state[fkey][bkey];if(Object.keys(state[fkey]).length == 0){delete state[fkey]};$dispatch('updated')"></ui-delete-button>
+                    </td>
+                  </tr>
+                  <template x-for="(value,key) in entity" :key="key">
+                    <tr>
+                      <td x-text="key"></td>
+                      <template x-if="value == bkey">
+                        <td colspan="2" x-text="value"></td>
+                      </template>
+                      <template x-if="value != bkey">
+                        <td colspan="2">
+                          <ui-editable-text-field
+                                  :value="value"
+                                  @updated.debounce="entity[key] = $event.detail.value;"></ui-editable-text-field>
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+                </table>
+              </template>
+
+              <ui-add-button modal-title="Business key"
+                             :pattern="/.*/g"
+                             message=""
+                             @updated.debounce.stop="value[$event.detail.value] = {};
+                                 value[$event.detail.value][entity['att_business-key']] =  $event.detail.value;
+                                 entity.field.filter(x => x.att_name != entity['att_business-key']).forEach(x => {
+                                  value[$event.detail.value][x.att_name] = x.att_type == 'String' ? 'text' : x.att_type == 'Boolean' ? false : 0
+                                 })"></ui-add-button>
+            </td>
+          </template>
+          <template x-if="$prop('business-key') != fkey && typeof value !== 'object' && !Array.isArray(value) && value !== null">
+            <td class="text-end">
+              <ui-delete-button
+                      @delete.once.stop="delete state[fkey];$dispatch('updated')"></ui-delete-button>
+            </td>
+          </template>
+        </tr>
+      </template>
+      <tr>
+        <td x-data="{root: {}, entities: [], id: makeid(6)}">
+          <button class="btn btn-ghost" @click="root = await Behavior.get_root();entities = await Behavior.get_entities();document.getElementById(id).showModal()"><i class="fa-solid fa-plus"></i></button>
+          <dialog :id="id" class="modal">
+            <div class="modal-box">
+              <h3 class="font-bold text-lg">Add field</h3>
+              <p class="py-4">
+              <table class="table">
+                <template x-for="field in root.field.filter(x => !(x.att_name in state))" :key="field.att_name">
+                  <tr>
+                    <th x-text="field.att_name"></th>
+                    <td>
+                      <button class="btn btn-ghost"
+                              @click="state[field.att_name] = field.att_type == 'String' ? 'text' : field.att_type == 'Boolean' ? false : 0"><i class="fa-solid fa-plus"></i></button>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="!('version' in state)" x-cloak x-transition>
+                  <th>version</th>
+                  <td>
+                    <button class="btn btn-ghost"
+                            @click="state['version'] = 1;$dispatch('updated')"><i class="fa-solid fa-plus"></i></button>
+                  </td>
+                </tr>
+                <template x-for="entity in entities" :key="entity.att_name">
+                  <tr x-show="!(entity.att_name in state)" x-cloak x-transition>
+                    <th x-text="entity.att_name"></th>
+                    <td>
+                      <button class="btn btn-ghost"
+                              @click="state[entity.att_name] = {}"><i class="fa-solid fa-plus"></i></button>
+                    </td>
+                  </tr>
+                </template>
+              </table>
+              </p>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+              <button>close</button>
+            </form>
+          </dialog>
+        </td>
+      </tr>
+    </table>
+  </div>
+</template>
+<template x-component="test-trigger">
+  <table class="table">
+    <tr>
+      <th>Trigger event</th>
+      <td>
+        <select class="editable"
+                @change="Behavior.update_test_trigger(testcase,testcase['att_trigger-event'])"
+                x-model="testcase['att_trigger-event']">
+          <template x-for="trigger in model.trigger" :key="trigger.att_source">
+            <option :value="trigger.att_source" x-text="trigger.att_source" :checked="trigger.att_source == testcase['att_trigger-event']"></option>
+          </template>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <th>key</th>
+      <th>value</th>
+    </tr>
+    <template x-for="input in testcase.input" :key="input.att_name">
+      <tr>
+        <td x-text="input.att_name"></td>
+        <td x-show="input.att_type != 'NestedObject'" x-cloak x-transition>
+          <ui-editable-text-field
+                  :value="input.att_value"
+                  @updated.debounce="input.att_value = $event.detail.value;"></ui-editable-text-field>
+        </td>
+        <td x-data="{collection: []}"
+            x-init="collection = JSON.parse(input['#text'])"
+            x-effect="input['#text'] = JSON.stringify(collection,null,2);if(input['#text'] == '[]'){delete input['#text']}"
+            x-show="input.att_type == 'NestedObject'" x-cloak x-transition>
+          <template x-for="(obj,index) in collection" :key="JSON.stringify(obj)">
+            <table class="table">
+              <tr>
+                <td>Object <span x-text="index + 1"></span></td>
+                <td class="text-end">
+                  <ui-delete-button
+                          @delete.once.stop="collection.splice(index,1)"></ui-delete-button>
+                </td>
+              </tr>
+              <template x-for="(value,key) in obj" :key="key">
+                <tr>
+                  <th x-text="key"></th>
+                  <td>
+                    <ui-editable-text-field
+                            :value="value"
+                            @updated.debounce="obj[key] = $event.detail.value;"></ui-editable-text-field>
+                  </td>
+                </tr>
+              </template>
+            </table>
+          </template>
+          <button class="btn btn-ghost" @click="collection.push(await Behavior.initialize_nested(testcase['att_trigger-event'],input.att_name))">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </td>
+      </tr>
+    </template>
+  </table>
+</template>

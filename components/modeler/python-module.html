@@ -1,0 +1,11 @@
+<template x-component="python-module">
+    <template x-if="model.content">
+        <div x-data="{id: makeid(6),editor:null}">
+            <div :id="id"
+                 style="width: 100%;height:95vh;"
+                 @keyup.debounce="model.content = editor.getValue()"
+                 x-init="editor = await render_python_editor(id,model.content)">
+            </div>
+        </div>
+    </template>
+</template>

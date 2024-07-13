@@ -1,0 +1,10 @@
+# This file is managed by Tracepaper
+mutation Deregister($drn: String = "") {
+  Project{
+    Pipeline{
+      deregister(input: {drn: $drn}) {
+         correlationId
+      }
+    }
+  }
+}

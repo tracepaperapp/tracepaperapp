@@ -1,212 +1,193 @@
-<template x-component="documentation-icon">
-    <a href="#"
-       @click="Documentation.open($prop('subject'),$prop('key'))"
-       class="documentation-icon"><i class="fa-solid fa-question"></i></a>
+<template x-component="editable-text-field">
+  <span x-data="{failed:false}">
+    <template x-if="$prop('prefix')">
+      <span x-text="$prop('prefix')"></span>
+    </template>
+
+    <span x-text="$prop('value')" @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="
+    let value = $el.innerText;
+    if($prop('pattern')){
+      if (check_pattern(value,$prop('pattern'))){
+        failed = false;
+        $dispatch('updated',{value:value});
+      } else {
+        failed = true;
+      }
+    } else {
+      failed = false;
+      $dispatch('updated',{value:value});
+    }
+  " contenteditable class="p-2"></span>
+    <template x-if="failed && $prop('message')">
+      <div x-show="failed && $prop('message')" x-cloak x-transition role="alert" class="alert alert-error">
+        <span x-html="$prop('message')"></span>
+      </div>
+    </template>
+  </span>
 </template>
-
-<template x-component="documentation-icon-inline">
-    <a href="#"
-       @click="Documentation.open($prop('subject'),$prop('key'))"
-       class="documentation-icon-inline"><i class="fa-solid fa-question"></i></a>
+<template x-component="editable-text-area">
+  <span>
+    <pre x-text="$prop('value')" @focusout="
+    let value = $el.innerText;
+      $dispatch('updated',{value:value});
+  " contenteditable class="p-2"></pre>
+  </span>
 </template>
-
-<template x-component="trash-icon">
-    <a href="#"
-       x-show="!session.editing_disabled"
-       @click="$dispatch('delete')"
-       class="trash-icon"><i class="fa-solid fa-trash"></i></a>
+<template x-component="delete-button">
+  <div x-data="{countdown: -1,interval: null}" x-effect="if(countdown==0){clearInterval(interval);countdown=-1;$dispatch('delete')}">
+    <button class="btn btn-ghost" @click="
+      if(countdown == -1){
+        countdown = 5;
+        interval = setInterval(function(){countdown -= 1},1000);
+      } else {
+        clearInterval(interval);
+        countdown = -1;
+      }
+    ">
+      <i x-show="countdown < 0" class="fa-regular fa-trash-can"></i>
+      <span x-show="countdown > -1" x-cloak x-transition x-text="countdown"></span>
+    </button>
+  </div>
 </template>
-
-<template x-component="check-box">
-    <div class="form-check" x-data="{id: uuidv4()}">
-        <input class="form-check-input" type="checkbox"
-               :checked="$prop('checked')" :id="id"
-               @change="$dispatch('updated',{ value: $el.checked });Navigation.soft_reload_tab();"/>
-        <label class="form-check-label" :for="id" x-text="$prop('label')"></label>
-    </div>
+<template x-component="field-name">
+  <ui-editable-text-field
+          :value="field.att_name"
+          :pattern="lower_or_camel_cased"
+          message="Must be <i>lowercased</i> or <i>camelCased</i>"
+          @updated.debounce.1000ms="field.att_name = $event.detail.value"></ui-editable-text-field>
 </template>
-
-<template x-component="text-field">
-    <div x-data="{value: null, pattern: null}"
-         @soft-reload.document.debounce="value = $prop('value');pattern = $prop('pattern');"
-         x-effect="await sleep(1);if(value == null){value = $prop('value')};if(pattern == null){pattern = $prop('pattern')}">
-        <div x-show="!session.editing_disabled" x-cloak x-transition>
-            <div class="row">
-                <div class="col-2" x-show="$prop('description')" x-cloak x-transition>
-                    <span x-text="$prop('description')" class="form-text"></span>
-                </div>
-                <div class="col-10">
-                    <input class="form-control" type="text"
-                           @change="
-                    if(check_pattern(value,pattern)){
-                        $dispatch('updated',{ value: value });
-                        Navigation.soft_reload_tab();
-                    }"
-                           x-model="value"/>
-                    <small class="red-text" x-text="$prop('validation-message')" x-show="!value.match($prop('pattern'))"
-                           x-cloak x-transition></small>
-                </div>
-            </div>
-        </div>
-        <div x-show="session.editing_disabled" x-cloak x-transition>
-            <span x-text="value"></span>
-        </div>
-    </div>
+<template x-component="field-type">
+  <select class="editable" x-model="field.att_type">
+    <option value="String">String</option>
+    <option value="Int">Int</option>
+    <option value="Float">Float</option>
+    <option value="Boolean">Boolean</option>
+    <option value="StringList">StringList</option>
+  </select>
 </template>
-
-<template x-component="range">
-    <div x-data="{value: null}"
-         @soft-reload.document.debounce="value = $prop('value');"
-         x-effect="if(value==null){value = $prop('value');}">
-        <div x-show="!session.editing_disabled" x-cloak x-transition>
-            <div class="row">
-                <div class="col-2" x-show="$prop('description')" x-cloak x-transition>
-                    <span x-text="$prop('description')" class="form-text"></span>
-                </div>
-                <div class="col-10">
-                    <input class="form-control" type="number"
-                           :min="$prop('min')" :max="$prop('max')"
-                           @change="
-                        $dispatch('updated',{ value: value });
-                        Navigation.soft_reload_tab();"
-                           x-model="value"/>
-                </div>
-            </div>
-        </div>
-        <div x-show="session.editing_disabled" x-cloak x-transition>
-            <span x-text="value"></span>
-        </div>
-    </div>
-</template>
-
-<template x-component="text-area">
-    <div x-data="{value: null, description: $prop('description')? $prop('description') : '', edit:false, pattern: $prop('pattern') ? $prop('pattern') : null}"
-         @soft-reload.document.debounce="value = $prop('value');">
-
-        <p @click="if(!session.editing_disabled){edit = true;}" x-show="!edit">
-            <span x-show="description" x-text="description"></span><span x-text="value" x-show="!$prop('use-pre-tag')" x-cloak x-transition></span>
-            <template x-if="$prop('use-pre-tag')">
-                <pre x-text="value" x-show="$prop('use-pre-tag')" x-cloak x-transition></pre>
+<template x-component="event-mapper">
+  <table class="table">
+    <tr>
+      <th>Document field</th>
+      <th>Mapping</th>
+      <th>Event field</th>
+    </tr>
+    <template x-for="field in fields" :key="field.att_name">
+      <tr x-data="{field_mapping: {}}"
+          x-effect="field_mapping = Aggregate.get_event_handler_mapping(field,mapper)">
+        <td x-text="field.att_name"></td>
+        <td>
+          <select class="editable" @change="if(!Aggregate.isMapped(field,mapper)){
+                        field_mapping.att_target = field.att_name;
+                        mapper.mapping.push(field_mapping);
+                      } else if ($el.value == 'unmapped'){
+                        mapper.mapping = mapper.mapping.filter(x => x.att_target != field.att_name)
+                      }" x-model="field_mapping.att_operand">
+            <option value="unmapped">Unmapped</option>
+            <option value="set">Set</option>
+            <option value="add">Add</option>
+            <option value="subtract">Subtract</option>
+          </select>
+        </td>
+        <td x-show="Aggregate.isMapped(field,mapper)" x-cloak x-transition>
+          <select class="editable" x-model="field_mapping.att_value">
+            <option>-not set-</option>
+            <template x-for="event_field in model.field" :key="event_field.att_name">
+              <option :value="event_field.att_name"
+                      :selected="event_field.att_name == field_mapping.att_value"
+                      x-text="event_field.att_name" ></option>
             </template>
-            &nbsp;<i class="fa-solid fa-pen-to-square float-end" x-show="!session.editing_disabled"></i>
+          </select>
+        </td>
+      </tr>
+    </template>
+    <template x-for="entity in entities" :key="entity.att_name">
+      <tr x-data="{field_mapping: {}}"
+          x-effect="field_mapping = Aggregate.get_event_handler_mapping(entity,mapping)">
+        <td x-text="entity.att_name"></td>
+        <td>
+          <select class="editable" @change="if(!Aggregate.isMapped(entity,mapping)){
+                        field_mapping.att_target = entity.att_name;
+                        field_mapping.att_strategy = $el.value;
+                        mapping['nested-mapping'].push(field_mapping);
+                      } else if ($el.value == 'unmapped'){
+                        mapping['nested-mapping'] = mapping['nested-mapping'].filter(x => x.att_target != entity.att_name)
+                      }" x-model="field_mapping.att_strategy">
+            <option value="unmapped">Unmapped</option>
+            <option value="extend">Extend</option>
+            <option value="replace">Replace</option>
+          </select>
+        </td>
+        <td x-show="Aggregate.isMapped(entity,mapping)" x-cloak x-transition>
+          <div x-data="{collection: {}}" x-effect="collection = model['nested-object'].filter(x => x.att_name == field_mapping.att_source).at(0)">
+            <select class="editable" x-model="field_mapping.att_source">
+              <option>-source collection-</option>
+              <template x-for="collection in model['nested-object']" :key="collection.att_name">
+                <option :value="collection.att_name"
+                        :selected="collection.att_name == field_mapping.att_source"
+                        x-text="collection.att_name" ></option>
+              </template>
+            </select>
+            <select class="editable" x-model="field_mapping['att_business-key']">
+              <option>-business key-</option>
+              <template x-for="event_field in collection.field" :key="event_field.att_name">
+                <option :value="event_field.att_name"
+                        :selected="event_field.att_name == field_mapping['att_business-key']"
+                        x-text="event_field.att_name" ></option>
+              </template>
+            </select>
+          </div>
+
+        </td>
+      </tr>
+    </template>
+  </table>
+</template>
+<template x-component="add-button">
+  <div x-data="{failed: false,id: makeid(6)}">
+    <button class="btn btn-ghost" @click="document.getElementById(id).showModal()"><i class="fa-solid fa-plus"></i>&nbsp;
+      <span x-show="$prop('button-text')" x-cloak x-transition x-text="$prop('button-text')"></span></button>
+    <dialog :id="id" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
+        <p class="py-4">
+          <input type="text"
+                 @keyup.enter.debounce="
+                 let value = $el.value;
+                 if($prop('pattern')){
+                  if (check_pattern(value,$prop('pattern'))){
+                    failed = false;
+                  $dispatch('updated',{value:value});
+                  document.getElementById(id).close()
+                  } else {
+                  failed = true;
+                  }
+                  } else {
+                  failed = false;
+                  $dispatch('updated',{value:value});
+                  document.getElementById(id).close()
+                  }"
+                 class="input w-full" />
+          <template x-if="failed && $prop('message')">
+                  <div x-show="failed && $prop('message')" x-cloak x-transition role="alert" class="alert alert-error">
+                    <span x-html="$prop('message')"></span>
+                  </div>
+          </template>
         </p>
-
-        <div class="input-group mb-3" x-show="edit">
-            <textarea
-                    class="form-control"
-                    x-model="value"></textarea>
-            <button class="btn btn-outline-success" type="button" @click="
-                    edit = false;$dispatch('updated',{ value: value });Navigation.soft_reload_tab();">Save</button>
-        </div>
-        <div x-effect="if(!edit){console.trace(session.last_updated);value = $prop('value');}"></div>
-    </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+      </form>
+    </dialog>
+  </div>
 </template>
-
-<template x-component="selection">
-    <div x-data="{value: null, description: '',options:[]}"
-         @soft-reload.document.debounce="value = $prop('value');
-         options = $prop('options');
-         description = $prop('description')? $prop('description') : '';">
-        <div x-show="!session.editing_disabled" x-cloak x-transition>
-            <div class="row">
-                <div class="col-2" x-show="$prop('description')">
-                    <span x-text="$prop('description')" class="form-text"></span>
-                </div>
-                <div class="col-10">
-                    <select class="form-select custom-select"
-                            @change="await sleep(10);$dispatch('updated',{ value: value });Navigation.soft_reload_tab();"
-                            x-model="value">
-                        <template x-for="option in make_sure_is_list(options)" :key="option">
-                            <option :value="option"
-                                    :selected="option == value" x-text="option"></option>
-                        </template>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div x-show="session.editing_disabled" x-cloak x-transition>
-            <span x-text="value"></span>
-        </div>
+<template x-component="inline-code">
+  <div x-data="{id: makeid(6),editor:null}">
+    <div :id="id"
+         style="width: 100%;height:50vh;"
+         @keyup.debounce="let code = editor.getValue();if(!$prop('disable-break-replacement')){code = code.replaceAll('\n','|LB|')};$dispatch('updated',{code:code})"
+         @redraw.document="if($prop('prevent-reload')){return};await sleep(1000);editor = await render_python_editor(id,$prop('code'))"
+         x-init="editor = await render_python_editor(id,$prop('code'))">
     </div>
-</template>
-
-<template x-component="role-selector">
-    <div x-data="{value: null, options: [],expressions: []}"
-         @soft-reload.document.debounce="value = $prop('value');"
-         x-effect="
-            options = [];
-            meta.roles.forEach(x => options.push(x));
-            expressions = Expressions.list();
-            expressions.filter(x => x.att_type == 'ActorEventRole').forEach(x => {
-                options.push(`#global.${x.att_name}(${x.att_input.replaceAll(';',', ')})`);
-            });
-            options.push('')">
-        <template x-if="value.startsWith('#')">
-            <ui-text-field :value="value"></ui-text-field>
-        </template>
-        <template x-if="!value.startsWith('#')">
-            <ui-selection :value="value" :options="options"></ui-selection>
-        </template>
-    </div>
-</template>
-
-<template x-component="debugger">
-    <pre x-text="JSON.stringify($prop('data'),null,2)"></pre>
-</template>
-<template x-component="selection-modal">
-    <div x-data="{value: '', description: '', edit:false, options: [],search: ''}"
-         @soft-reload.document.debounce="value = $prop('value');if($prop('description')){decsription=$prop('description')}">
-
-        <span @click="if(!session.editing_disabled){edit = true;}" x-show="!edit">
-            <span x-show="description" x-text="description"></span><span x-text="value"></span>
-            &nbsp;<i class="fa-solid fa-pen-to-square float-end" x-show="!session.editing_disabled"></i>
-        </span>
-
-        <template x-if="edit">
-            <div>
-                <div class="overlay"></div>
-                <div class="prompt">
-                    <h4>
-                        <span x-text="$prop('modal-title')"></span>
-                        <button type="button" @click="edit=false" class="btn-close float-end"></button>
-                    </h4>
-
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" >
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                        </span>
-                        <input type="text" class="form-control"
-                               placeholder="search..." x-model="search"/>
-                    </div>
-
-                    <div class="list-group list-group-flush" @click="await sleep(10);edit=false;$dispatch('command-updated');">
-                        <template x-for="value in options" :key="value">
-                            <button type="button"
-                                    @click="$dispatch('changed',{ value: value });setTimeout(function(){edit = false},500);"
-                                    x-show="value.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition
-                                    class="list-group-item list-group-item-action">
-                                <span x-text="value"></span>
-                                <span class="badge bg-primary rounded-pill float-end"
-                                      x-show="value == $prop('value')" x-cloak x-transition>selected</span>
-                            </button>
-                        </template>
-                    </div>
-
-                </div>
-            </div>
-        </template>
-
-        <div
-                x-init="
-        setInterval(function(){
-            if (!value){
-                value = $prop('value');
-            }
-            options = $prop('options');
-            if ($prop('verbose-log')){
-                console.log($prop('value'),$prop('options'));
-            }
-        },500)"></div>
-        <div x-effect="if(!edit){console.trace(session.last_updated);value = $prop('value');}"></div>
-    </div>
+  </div>
 </template>

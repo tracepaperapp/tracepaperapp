@@ -1,0 +1,8 @@
+# This file is managed by Tracepaper
+mutation Build($drn: String = "", $buildId: String = "") {
+  Project{
+    build(input: {drn: $drn,buildId: $buildId}) {
+       correlationId
+    }
+  }
+}

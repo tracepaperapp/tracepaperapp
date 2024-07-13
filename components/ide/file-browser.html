@@ -1,0 +1,42 @@
+<template x-component="file-browser">
+    <div class="scrollbar-v scrollbar-v-left">
+        <ul class="menu menu-xs rounded-lg scroll-v-inside scrollbar-h" x-data="{files: [],visible: true}"
+            @soft-reload.document.debounce="files = await Project.get_files()">
+            <template x-component="navigation-item">
+                <li>
+                    <a x-show="file.type == 'file'" x-transition x-cloak
+                       :class="file.path == session.tab ? 'active' : ''"
+                       @click="Navigation.open(file.path)">
+                        <i class="fa-regular fa-file-code"></i>
+                        <span x-text="file.name"></span>
+                    </a>
+                    <details x-show="file.type == 'directory'" x-transition x-cloak
+                             :open="file.path in session.navigation && session.navigation[file.path]"
+                             @click.debounce="session.navigation[file.path] = $el.open">
+                        <summary>
+                            <i class="fa-regular fa-folder"></i>
+                            <span x-text="file.name"></span>
+                        </summary>
+                        <ul x-data="{items: []}"
+                            x-effect="let updated = file.items;await sleep(1);if(updated != items){items=updated}">
+                            <template x-for="file in items" :key="file.path">
+                                <ui-navigation-item></ui-navigation-item>
+                            </template>
+                        </ul>
+                    </details>
+                </li>
+            </template>
+            <template x-for="file in files" :key="file.path">
+                <ui-navigation-item></ui-navigation-item>
+            </template>
+            <li>
+                <a
+                   :class="'settings' == session.tab ? 'active' : ''"
+                   @click="Navigation.open('settings')">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</template>

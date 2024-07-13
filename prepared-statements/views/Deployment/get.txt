@@ -1,0 +1,18 @@
+# This file is NOT managed by Tracepaper, and can be customized.
+query GetDeployment($key: ID = "") {
+  Deployment {
+    get(key: $key) {
+      key
+      drn
+      domainName
+      eventBus
+      propertyVault
+      stackId
+      userPoolId
+      apiId
+      apiKey
+      apiEndpoint
+      appId
+    }
+  }
+}

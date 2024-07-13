@@ -1,0 +1,111 @@
+<template x-component="trigger">
+  <table class="table">
+    <tr x-data="{id: makeid(6)}">
+      <th>Trigger event</th>
+      <td x-data="{events: [], search: ''}" x-effect="events = await Modeler.list_events()">
+        <p class="editable" @click="document.getElementById(id).showModal()" x-text="trigger.att_source"></p>
+        <dialog :id="id" class="modal">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg">Edit trigger</h3>
+            <p class="py-4">
+              <input type="text" placeholder="Search..."
+                     x-model="search"
+                     class="input input-bordered input-primary w-full" />
+              <br>
+            <table class="table">
+              <template x-for="event in events" :key="event">
+                <tr x-show="event.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition
+                    class="hover cursor-pointer"
+                    @click="Notifier.update_trigger(trigger,event);document.getElementById(id).close()">
+                  <td>
+                    <span x-text="event"></span>&nbsp;
+                    <div x-show="event == trigger.att_source" x-cloak x-transition
+                         class="badge badge-primary badge-outline">current</div>
+                  </td>
+                </tr>
+              </template>
+            </table>
+            </p>
+          </div>
+          <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+          </form>
+        </dialog>
+      </td>
+    </tr>
+    <tr x-show="trigger['att_idempotency-key']" x-cloak x-transition>
+      <th>Idempotency TTL</th>
+      <td>
+        <ui-editable-text-field
+                :value="trigger['att_idempotency-ttl'] ? trigger['att_idempotency-ttl'] : '24 * 60 * 60'"
+                @updated.debounce="trigger['att_idempotency-ttl'] = $event.detail.value;"></ui-editable-text-field>
+      </td>
+    </tr>
+    <tr><td colspan="3"></td></tr>
+    <tr>
+      <th>Flow variable</th>
+      <th>Event field</th>
+      <th>Idempotency Check</th>
+    </tr>
+    <template x-for="mapping in trigger.mapping" :key="mapping.att_target">
+      <tr>
+        <td>
+          <ui-editable-text-field
+                  :pattern="lower_or_camel_cased"
+                  :message="lower_or_camel_cased_message"
+                  :value="mapping.att_target"
+                  @updated.debounce.stop="mapping.att_target = $event.detail.value;"></ui-editable-text-field>
+        </td>
+        <td>
+          <template x-if="!mapping.att_value || !mapping.att_value.startsWith('#')">
+            <select class="editable" x-model="mapping.att_value">
+              <option value="">-</option>
+              <template x-for="field in event.field" :key="field.att_name">
+                <option :value="field.att_name" x-text="field.att_name" :selected="field.att_name == mapping.att_value"></option>
+              </template>
+              <option value="#''">#''</option>
+            </select>
+          </template>
+          <template x-if="mapping.att_value && mapping.att_value.startsWith('#')">
+            <ui-editable-text-field
+                    :value="mapping.att_value"
+                    @updated.debounce="mapping.att_value = $event.detail.value;"></ui-editable-text-field>
+          </template>
+        </td>
+        <td>
+          <input type="checkbox"
+                 @change="if($el.checked){
+                      if (!('att_idempotency-key' in trigger)){
+                        trigger['att_idempotency-key'] = '';
+                      }
+                      trigger['att_idempotency-key'] += ' ' + mapping.att_value;
+                     }else{
+                      trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace(mapping.att_value,'');
+                     }
+                     trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace('  ',' ').trim()"
+                 :checked="trigger['att_idempotency-key'].includes(mapping.att_value)"
+                 class="checkbox" />
+        </td>
+        <td>
+          <ui-delete-button @delete.once.stop="trigger.mapping = trigger.mapping.filter(x => x.att_target != mapping.att_target)"></ui-delete-button>
+        </td>
+      </tr>
+    </template>
+    <tr>
+      <td>
+        <ui-delete-button
+                @delete.once.stop="model.trigger = model.trigger.filter(x => x.att_source != trigger.att_source);Notifier.balance_triggers();$dispatch('redraw')"></ui-delete-button>
+      </td>
+      <td colspan="2"></td>
+      <td>
+        <ui-add-button modal-title="Flow variable name"
+                       :pattern="lower_or_camel_cased"
+                       :message="lower_or_camel_cased_message"
+                       @updated.debounce.stop="trigger.mapping.push({
+                            att_target: $event.detail.value,
+                            att_value: event.field.map(x => x.att_name).includes($event.detail.value)? $event.detail.value : ''
+                           })"></ui-add-button>
+      </td>
+    </tr>
+  </table>
+</template>

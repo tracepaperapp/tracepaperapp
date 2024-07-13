@@ -1,0 +1,467 @@
+<template x-component="model-wizard">
+    <div x-data="{title: '',stage: -1, type: '', data: {}}"
+         @shortcut-model.document="title = 'Add new model element';stage=0;data = await Modeler.prepare_wizard();model_wizard.showModal()">
+
+        <div  class="tooltip tooltip-bottom"
+              data-tip="add model element">
+        <button class="btn btn-ghost btn-circle"
+                @click="title = 'Add new model element';stage=0;data = await Modeler.prepare_wizard();model_wizard.showModal()">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+        </div>
+
+        <dialog id="model_wizard" class="modal">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg" x-text="title"></h3>
+                <p class="py-4">
+
+                    <!-- Type selector -->
+                    <ul class="menu bg-primary-content w-full rounded-box" x-show="stage==0" x-cloak x-transition>
+                        <li><a @click.debounce.stop="stage = 1;title = 'Add command';type = 'command'">
+                            Command <span><kbd class="kbd kbd-sm">C</kbd></span>
+                        </a></li>
+                        <li><a @click.debounce.stop="stage = 1;title = 'Add aggregate';type = 'aggregate'">
+                            Aggregate <span><kbd class="kbd kbd-sm">A</kbd></span>
+                        </a></li>
+                        <li><a @click.debounce.stop="stage = 1;title = 'Add domain event';type = 'event'">
+                            Domain event <span><kbd class="kbd kbd-sm">D</kbd></span>
+                        </a></li>
+                        <li @click.debounce.stop="stage = 1;title = 'Add behavior flow';type = 'behavior'"><a>
+                            Behavior flow <span><kbd class="kbd kbd-sm">B</kbd></span>
+                        </a></li>
+                        <li @click.debounce.stop="stage = 1;title = 'Add notifier';type = 'notifier'"><a>
+                            Notifier <span><kbd class="kbd kbd-sm">N</kbd></span>
+                        </a></li>
+                        <li @click.debounce.stop="stage = 1;title = 'Add view';type = 'view'"><a>
+                            View <span><kbd class="kbd kbd-sm">V</kbd></span>
+                        </a></li>
+                        <li @click.debounce.stop="stage = 1;title = 'Add projection';type = 'projection'"><a>
+                            Projection <span><kbd class="kbd kbd-sm">P</kbd></span>
+                        </a></li>
+                        <li @click.debounce.stop="stage = 1;title = 'Add python module';type = 'code'"><a>
+                            Python module <span><kbd class="kbd kbd-sm">M</kbd></span>
+                        </a></li>
+                        <li @click.debounce.stop="stage = 1;title = 'Add expression';type = 'expression'"><a>
+                            Expression <span><kbd class="kbd kbd-sm">E</kbd></span>
+                        </a></li>
+                        <li @click.debounce.stop="stage = 1;title = 'Add pattern';type = 'pattern'"><a>
+                            Pattern (regex) <span><kbd class="kbd kbd-sm">R</kbd></span>
+                        </a></li>
+                        <li @click.debounce.stop="stage = 1;title = 'Add scenario';type = 'scenario'"><a>
+                            Quality gate scenario <span><kbd class="kbd kbd-sm">S</kbd></span>
+                        </a></li>
+                    </ul>
+                    <template x-if="stage == 0">
+                        <div @keyup.c.window="stage = 1;title = 'Add command';type = 'command'"
+                             @keyup.a.window="stage = 1;title = 'Add aggregate';type = 'aggregate'"
+                             @keyup.d.window="stage = 1;title = 'Add domain event';type = 'event'"
+                             @keyup.b.window="stage = 1;title = 'Add behavior flow';type = 'behavior'"
+                             @keyup.n.window="stage = 1;title = 'Add notifier';type = 'notifier'"
+                             @keyup.v.window="stage = 1;title = 'Add view';type = 'view'"
+                             @keyup.p.window="stage = 1;title = 'Add projection';type = 'projection'"
+                             @keyup.m.window="stage = 1;title = 'Add python module';type = 'code'"
+                             @keyup.e.window="stage = 1;title = 'Add expression';type = 'expression'"
+                             @keyup.r.window="stage = 1;title = 'Add pattern';type = 'pattern'"
+                             @keyup.s.window="stage = 1;title = 'Add scenario';type = 'scenario'"></div>
+                    </template>
+
+                    <!-- Command -->
+                    <div x-show="stage!=0 && type == 'command'" x-cloak x-transition>
+                        <table class="table">
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>GraphQL namespace</th>
+                                <td x-text="data.namespace"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,graphql_namespace);if(!error){data.namespace = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
+                            </tr>
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>GraphQL method name</th>
+                                <td x-text="data.name"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,lower_or_camel_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
+                                <td x-show="error" x-cloak x-transition x-text="camel_cased_message"></td>
+                            </tr>
+                            <tr>
+                                <th>Name</th>
+                                <td><span x-text="capitalizeFirstLetter(data.name)"></span><span x-text="data.namespace.replaceAll('.','')"></span></td>
+                            </tr>
+                            <tr>
+                                <th>Event Name</th>
+                                <td><span x-text="capitalizeFirstLetter(data.name)"></span><span x-text="data.namespace.replaceAll('.','')"></span>Requested</td>
+                            </tr>
+                        </table>
+
+                        <hr class="mt-5">
+                        <div class="form-control">
+                            <label class="label cursor-pointer">
+                                <input type="checkbox" x-model="data.copy" class="checkbox checkbox-primary" />
+                                <span class="label-text">Copy attributes from other model</span>
+                            </label>
+                        </div>
+                        <p x-show="data.copy && data.source" x-cloak x-transition x-text="data.source_name"></p>
+                        <div x-show="data.copy && !data.source" x-cloak x-transition>
+                            <div x-data="{sources: [], search: ''}" x-init="sources = await Project.get_attribute_sources()">
+                                <input type="text" placeholder="Search..." x-model="search"
+                                       class="input input-bordered input-primary w-full " />
+                                <ul class="menu bg-primary-content w-full rounded-box mt-5">
+                                    <li class="menu-title">Commands</li>
+                                    <template x-for="command in sources.commands" :key="command.name">
+                                        <li x-show="command.name.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
+                                            <a @click.debounce.stop="data.source = command.file;data.source_name = command.name"
+                                               x-text="command.name"></a>
+                                        </li>
+                                    </template>
+                                </ul>
+
+                                <ul class="menu bg-primary-content w-full rounded-box mt-5">
+                                    <li class="menu-title">Aggregates</li>
+                                    <template x-for="aggregate in sources.aggregates" :key="aggregate.name">
+                                        <li x-show="aggregate.name.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
+                                            <a @click.debounce.stop="data.source = aggregate.file;data.source_name = aggregate.name"
+                                               x-text="aggregate.name"></a>
+                                        </li>
+                                    </template>
+                                </ul>
+
+                            </div>
+                        </div>
+
+
+
+                        <button class="btn btn-outline btn-primary btn-block mt-5"
+                                @click="await Command.create(data);model_wizard.close();"
+                                :disabled="!data.namespace || !data.name">Add command</button>
+                    </div>
+
+                    <!-- Aggregate -->
+                    <div x-show="stage!=0 && type == 'aggregate'" x-cloak x-transition>
+                        <table class="table">
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Subdomain</th>
+                                <td x-text="data.subdomain"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.subdomain = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Aggregate Name</th>
+                                <td x-text="data.aggregate"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.aggregate = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Business key</th>
+                                <td x-text="data.key"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,lower_or_camel_cased);if(!error){data.key = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="lower_or_camel_cased_message"></td>
+                            </tr>
+                        </table>
+
+                        <hr class="mt-5">
+                        <div class="form-control">
+                            <label class="label cursor-pointer">
+                                <input type="checkbox" x-model="data.copy" class="checkbox checkbox-primary" />
+                                <span class="label-text">Copy attributes from other model</span>
+                            </label>
+                        </div>
+                        <p x-show="data.copy && data.source" x-cloak x-transition x-text="data.source_name"></p>
+                        <div x-show="data.copy && !data.source" x-cloak x-transition>
+                            <div x-data="{sources: [], search: ''}" x-init="sources = await Project.get_attribute_sources()">
+                                <input type="text" placeholder="Search..." x-model="search"
+                                       class="input input-bordered input-primary w-full " />
+                                <ul class="menu bg-primary-content w-full rounded-box mt-5">
+                                    <li class="menu-title">Commands</li>
+                                    <template x-for="command in sources.commands" :key="command.name">
+                                        <li x-show="command.name.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
+                                            <a @click.debounce.stop="data.source = command.file;data.source_name = command.name"
+                                               x-text="command.name"></a>
+                                        </li>
+                                    </template>
+                                </ul>
+
+                                <ul class="menu bg-primary-content w-full rounded-box mt-5">
+                                    <li class="menu-title">Aggregates</li>
+                                    <template x-for="aggregate in sources.aggregates" :key="aggregate.name">
+                                        <li x-show="aggregate.name.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
+                                            <a @click.debounce.stop="data.source = aggregate.file;data.source_name = aggregate.name"
+                                               x-text="aggregate.name"></a>
+                                        </li>
+                                    </template>
+                                </ul>
+
+                            </div>
+                        </div>
+
+                        <button class="btn btn-outline btn-primary btn-block mt-5"
+                                @click="await Aggregate.create(data);model_wizard.close();"
+                                :disabled="!data.subdomain || !data.aggregate || !data.key">Add aggregate</button>
+                    </div>
+
+                    <!-- Domain Event -->
+                    <div x-show="stage!=0 && type == 'event'" x-cloak x-transition>
+                        <table class="table">
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Subdomain</th>
+                                <td x-text="data.subdomain"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.subdomain = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Aggregate</th>
+                                <td x-text="data.selected_aggregate"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.selected_aggregate = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Event Name</th>
+                                <td x-text="data.event"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.event = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                        </table>
+
+                        <hr class="mt-5">
+
+                        <button class="btn btn-outline btn-primary btn-block mt-5"
+                                @click="await Aggregate.create_event(data);model_wizard.close();"
+                                :disabled="!data.subdomain || !data.selected_aggregate || !data.event">Add domain event</button>
+                    </div>
+
+                    <!-- Behavior -->
+                    <div x-show="stage!=0 && type == 'behavior'" x-cloak x-transition>
+                    <table class="table">
+                        <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                            <th>Subdomain</th>
+                            <td x-text="data.subdomain"
+                                @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.subdomain = $el.innerText}" contenteditable>
+                            </td>
+                            <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                        </tr>
+                        <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                            <th>Aggregate</th>
+                            <td x-text="data.selected_aggregate"
+                                @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.selected_aggregate = $el.innerText}" contenteditable>
+                            </td>
+                            <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                        </tr>
+                        <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                            <th>Behavior Name</th>
+                            <td x-text="data.name"
+                                @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable>
+                            </td>
+                            <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                        </tr>
+                    </table>
+
+                    <hr class="mt-5">
+
+                    <button class="btn btn-outline btn-primary btn-block mt-5"
+                            @click="await Behavior.create(data);model_wizard.close();"
+                            :disabled="!data.subdomain || !data.selected_aggregate || !data.name">Add behavior flow</button>
+                </div>
+
+                    <!-- Notifier -->
+                    <div x-show="stage!=0 && type == 'notifier'" x-cloak x-transition>
+                    <table class="table">
+                        <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                            <th>Notifier Name</th>
+                            <td x-text="data.name"
+                                @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable>
+                            </td>
+                            <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                        </tr>
+                    </table>
+
+                    <hr class="mt-5">
+
+                    <button class="btn btn-outline btn-primary btn-block mt-5"
+                            @click="await Notifier.create(data);model_wizard.close();"
+                            :disabled="!data.name">Add notifier</button>
+                </div>
+
+                    <!-- View -->
+                    <div x-show="stage!=0 && type == 'view'" x-cloak x-transition>
+                        <table class="table">
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>GraphQL namespace</th>
+                                <td x-text="data.namespace"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,graphql_namespace);if(!error){data.namespace = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
+                            </tr>
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>View name</th>
+                                <td x-text="data.name"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                        </table>
+
+                        <button class="btn btn-outline btn-primary btn-block mt-5"
+                                @click="await View.create(data);model_wizard.close();"
+                                :disabled="!data.namespace || !data.name">Add view</button>
+                    </div>
+
+                    <!-- Projection -->
+                    <div x-show="stage!=0 && type == 'projection'" x-cloak x-transition>
+                        <table class="table">
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>GraphQL namespace</th>
+                                <td x-text="data.namespace"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,graphql_namespace);if(!error){data.namespace = $el.innerText}" contenteditable>
+                                </td>
+                                <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
+                            </tr>
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Projection name</th>
+                                <td x-text="data.name"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                        </table>
+
+                        <button class="btn btn-outline btn-primary btn-block mt-5"
+                                @click="await Projection.create(data);model_wizard.close();"
+                                :disabled="!data.namespace || !data.name">Add projection</button>
+                    </div>
+
+                    <!-- Python Module -->
+                    <div x-show="stage!=0 && type == 'code'" x-cloak x-transition>
+                        <table class="table">
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Module name</th>
+                                <td x-text="data.name"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                        </table>
+
+                        <button class="btn btn-outline btn-primary btn-block mt-5"
+                                @click="await Modeler.create_module(data);model_wizard.close();"
+                                :disabled="!data.name">Add python module</button>
+                    </div>
+
+                    <!-- Expression -->
+                    <div x-show="stage!=0 && type == 'expression'" x-cloak x-transition x-import="utils/editor-elements;utils/markdown"
+                         x-effect="if(stage!=0 && type == 'expression'){data = {
+                            name: 'truncateArn',
+                            type: 'TriggerKeyField',
+                            input: 'arn;length',
+                            expression: `':'.join(arn.split(':')[:int(length)])`,
+                            docs: 'documentation'
+                         }}">
+
+                        <table class="table">
+                            <tr>
+                                <th>Name</th>
+                                <td>
+                                    <ui-editable-text-field
+                                            :value="data.name"
+                                            :pattern="lower_or_camel_cased"
+                                            :message="lower_or_camel_cased_message"
+                                            @updated.debounce.1000ms="data.name = $event.detail.value"></ui-editable-text-field>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Type</th>
+                                <td>
+                                    <select class="editable" x-model="data.type">
+                                        <option>-</option>
+                                        <option value="ActorEventRole">API authorization expression</option>
+                                        <option value="TriggerKeyField">Trigger key expression</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Inputs</th>
+                                <td>
+                                    <ui-editable-text-field
+                                            :value="data.input"
+                                            :pattern="expression_input"
+                                            :message="expression_input_message"
+                                            @updated.debounce.1000ms="data.input = $event.detail.value"></ui-editable-text-field>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Expression</th>
+                                <td>
+                                    <ui-editable-text-field
+                                            :value="data.expression"
+                                            @updated.debounce.1000ms="data.expression = $event.detail.value"></ui-editable-text-field>
+                                </td>
+                            </tr>
+                        </table>
+                        <hr class="m-5">
+                        <ui-markdown :content="data.docs"
+                                     @updated.stop="data.docs = $event.detail.content"></ui-markdown>
+
+                    <button class="btn btn-outline btn-primary btn-block mt-5"
+                            @click="await Expression.create(data);model_wizard.close();"
+                            :disabled="!data.name">Add expression</button>
+                </div>
+
+                    <!-- Pattern -->
+                    <div x-show="stage!=0 && type == 'pattern'" x-cloak x-transition x-import="utils/editor-elements;utils/markdown"
+                     x-effect="if(stage!=0 && type == 'pattern'){data = {
+                            name: 'Arn',
+                            regex: '^tenant:[a-z]+$',
+                            docs: 'documentation'
+                         }}">
+
+                    <table class="table">
+                        <tr>
+                            <th>Name</th>
+                            <td>
+                                <ui-editable-text-field
+                                        :value="data.name"
+                                        :pattern="pascal_cased"
+                                        :message="pascal_cased_message"
+                                        @updated.debounce.1000ms="data.name = $event.detail.value"></ui-editable-text-field>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Regular expression</th>
+                            <td>
+                                <ui-editable-text-field
+                                        :value="data.regex"
+                                        @updated.debounce.1000ms="data.regex = $event.detail.value"></ui-editable-text-field>
+                            </td>
+                        </tr>
+                    </table>
+                    <hr class="m-5">
+                    <ui-markdown :content="data.docs"
+                                 @updated.stop="data.docs = $event.detail.content"></ui-markdown>
+
+                    <button class="btn btn-outline btn-primary btn-block mt-5"
+                            @click="await Pattern.create(data);model_wizard.close();"
+                            :disabled="!data.name">Add pattern</button>
+                </div>
+
+                    <!-- Scenario -->
+                    <div x-show="stage!=0 && type == 'scenario'" x-cloak x-transition>
+                        <table class="table">
+                            <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                                <th>Scenario name</th>
+                                <td x-text="data.name"
+                                    @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
+                                <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
+                            </tr>
+                        </table>
+
+                        <button class="btn btn-outline btn-primary btn-block mt-5"
+                                @click="await Scenario.create(data);model_wizard.close();"
+                                :disabled="!data.name">Add scenario</button>
+                    </div>
+                </p>
+            </div>
+        </dialog>
+    </div>
+</template>

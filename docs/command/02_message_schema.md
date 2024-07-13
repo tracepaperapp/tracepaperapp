@@ -1,3 +1,0 @@
-# Command Message Schema
-
-Todo

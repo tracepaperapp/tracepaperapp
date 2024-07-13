@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="devConf, een DevOps conferentie in het zuiden" />
+  <title>config</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+  <script src="https://unpkg.com/alpinejs" defer></script>
+</head>
+<body x-data="{env: ''}"
+      x-effect="env = localStorage['staging-environment'] == 'false' ? 'production' : 'staging'"
+      x-init="if(!('staging-environment' in localStorage)){localStorage['staging-environment'] = 'false' }">
+<main>
+  Connected to:
+  <button @click="localStorage['staging-environment'] = localStorage['staging-environment'] == 'false' ? 'true' : 'false';env = localStorage['staging-environment'] == 'false' ? 'production' : 'staging';location.href='/'"
+          x-text="env"></button>
+  <div x-init="setTimeout(function(){
+    if (window.location.search. includes('staging')){
+        localStorage['staging-environment'] = 'true';
+        location.href='/';
+    }
+  },500)"></div>
+</main>
+
+</body>
+</html>

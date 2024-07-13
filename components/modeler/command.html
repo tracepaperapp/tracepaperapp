@@ -1,0 +1,268 @@
+<template x-component="command">
+  <div>
+    <div class="overflow-x-auto">
+      <div class="prose">
+        <h2>API Configuration</h2>
+      </div>
+
+      <table class="table">
+        <tbody>
+          <tr>
+            <th>API path</th>
+            <td x-data="{namespace: '',name: ''}">
+              <a class="editable" @click="namespace=model['att_graphql-namespace'];name=model['att_graphql-name'];edit_command_namespace.showModal()">
+                <span x-text="model['att_graphql-namespace']"></span>.<span x-text="model['att_graphql-name']"></span>
+              </a>
+              <dialog id="edit_command_namespace" class="modal">
+                <div class="modal-box w-11/12 max-w-5xl">
+                  <h3 class="font-bold text-lg">Update GraphQL path & Command name</h3>
+                  <table class="table">
+                    <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                      <th>GraphQL namespace</th>
+                      <td x-text="namespace"
+                          @focusout="namespace = $el.innerText;error = !check_pattern(namespace,graphql_namespace)" contenteditable>
+                      </td>
+                      <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
+                    </tr>
+                    <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                      <th>GraphQL method name</th>
+                      <td x-text="name"
+                          @focusout="name = $el.innerText;error = !check_pattern(name,lower_or_camel_cased)" contenteditable></td>
+                      <td x-show="error" x-cloak x-transition x-text="camel_cased_message"></td>
+                    </tr>
+                    <tr>
+                      <th>Name</th>
+                      <td><span x-text="capitalizeFirstLetter(name)"></span><span x-text="namespace.replaceAll('.','')"></span></td>
+                    </tr>
+                    <tr>
+                      <th>Event Name</th>
+                      <td><span x-text="capitalizeFirstLetter(name)"></span><span x-text="namespace.replaceAll('.','')"></span>Requested</td>
+                    </tr>
+                  </table>
+                  </p>
+                  <div class="modal-action">
+                    <form method="dialog">
+                      <button class="btn">Close</button>
+                      <button class="btn btn-success" @click="Command.rename(model,name,namespace)">Save</button>
+                    </form>
+                  </div>
+                </div>
+              </dialog>
+            </td>
+          </tr>
+          <tr>
+            <th>Name</th>
+            <td x-text="model.att_name.replace('Requested','')"></td>
+          </tr>
+          <tr>
+            <th>Event Name</th>
+            <td x-text="model.att_name"></td>
+          </tr>
+          <tr>
+            <th>Authorization mode</th>
+            <td>
+              <select class="editable" x-model="model.att_authorization">
+                <option value="anonymous">Anonymous</option>
+                <option value="authenticated">Authenticated</option>
+                <option value="role">Role</option>
+              </select>
+            </td>
+          </tr>
+          <template x-if="model.att_authorization == 'role'">
+            <tr x-init="if(!model.att_role){model.att_role = ''}" x-show="model.att_authorization == 'role'" x-transition x-cloak>
+              <th>Required role</th>
+              <td x-show="!model.att_role.startsWith('#')" x-transition x-cloak>
+                <select class="editable"
+                        x-data="{roles: []}"
+                        x-init="roles = await Modeler.get_roles()"
+                        x-model="model.att_role">
+                  <template x-for="role in roles" :key="role">
+                    <option :value="role" x-text="role" :selected="role == model.att_role"></option>
+                  </template>
+                </select>
+              </td>
+              <td x-show="model.att_role.startsWith('#')" x-transition x-cloak>
+                <p x-text="model.att_role" @focusout="model.att_role = $el.innerText" contenteditable></p>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+
+      <div class="prose mt-5">
+        <h2>Message Definition</h2>
+        <h4>Message root</h4>
+      </div>
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Default</th>
+          <th>Pattern</th>
+          <th>Autofill</th>
+        </tr>
+        </thead>
+        <tbody>
+        <template x-for="field in model.field" :key="field.att_name">
+          <tr>
+            <td>
+              <ui-editable-text-field
+                      :value="field.att_name"
+                      :pattern="lower_or_camel_cased"
+                      message="Must be <i>lowercased</i> or <i>camelCased</i>"
+                      @updated.debounce.1000ms="Command.refactor_field_name(model,field.att_name,$event.detail.value)"></ui-editable-text-field>
+            </td>
+            <td>
+              <select class="editable" x-model="field.att_type">
+                <option value="String">String</option>
+                <option value="Int">Int</option>
+                <option value="Float">Float</option>
+                <option value="Boolean">Boolean</option>
+              </select>
+            </td>
+            <td>
+              <input type="checkbox" :checked="'att_default' in field"
+                     @change="if($el.checked){field.att_default = 'default value'}else{delete field.att_default}" class="checkbox checkbox-xs" />
+              <template x-if="'att_default' in field">
+                <span x-text="field.att_default" @focusout.debounce.stop="field.att_default = $el.innerText" contenteditable></span>
+              </template>
+            </td>
+            <td>
+              <select class="editable" x-data="{patterns: []}"
+                      x-effect="if(field.att_pattern == ''){delete field.att_pattern}"
+                      x-init="patterns = await Pattern.list()" x-model="field.att_pattern">
+                <option></option>
+                <template x-for="pattern in patterns.map(x => x.model.att_name)" :key="pattern">
+                  <option :value="'{{' + pattern + '}}'"
+                          :selected="$el.value == field.att_pattern"
+                          x-text="pattern"></option>
+                </template>
+              </select>
+            </td>
+            <td>
+              <select class="editable"
+                      x-effect="if(field['att_auto-fill'] == ''){delete field['att_auto-fill']}"
+                      x-model="field['att_auto-fill']">
+                <option value="">-</option>
+                <option value="username">username</option>
+                <option value="uuid">uuid</option>
+              </select>
+            </td>
+            <td>
+              <ui-delete-button @delete.once.stop="model.field = model.field.filter(x => x.att_name != field.att_name)"></ui-delete-button>
+            </td>
+          </tr>
+        </template>
+        <tr>
+          <td colspan="5"></td>
+          <td>
+            <ui-add-button modal-title="Field name"
+                           :pattern="lower_or_camel_cased"
+                           :message="lower_or_camel_cased_message"
+                           @updated.debounce.stop="model.field.push({att_name: $event.detail.value,att_type: 'String'})"></ui-add-button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <template x-for="collection in model['nested-object']" :key="collection.att_name">
+        <div>
+          <div class="prose">
+            <h4>
+              <ui-editable-text-field
+                      prefix="Nested collection: "
+                      :value="collection.att_name"
+                      :pattern="lower_or_camel_cased"
+                      message="Must be <i>lowercased</i> or <i>camelCased</i>"
+                      @updated.debounce.1000ms="Command.refactor_field_name(collection,collection.att_name,$event.detail.value);collection.att_name = $event.detail.value;"></ui-editable-text-field>
+              </h4>
+          </div>
+          <table class="table">
+            <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Pattern</th>
+              <th>Autofill</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="field in collection.field" :key="field.att_name">
+              <tr>
+                <td>
+                  <ui-editable-text-field
+                          :value="field.att_name"
+                          :pattern="lower_or_camel_cased"
+                          message="Must be <i>lowercased</i> or <i>camelCased</i>"
+                          @updated.debounce.1000ms="field.att_name = $event.detail.value"></ui-editable-text-field>
+                </td>
+                <td>
+                  <select class="editable" x-model="field.att_type">
+                    <option value="String">String</option>
+                    <option value="Int">Int</option>
+                    <option value="Float">Float</option>
+                    <option value="Boolean">Boolean</option>
+                  </select>
+                </td>
+                <td>
+                  <input type="checkbox" :checked="'att_default' in field"
+                         @change="if($el.checked){field.att_default = 'default value'}else{delete field.att_default}" class="checkbox checkbox-xs" />
+                  <template x-if="'att_default' in field">
+                    <span x-text="field.att_default" @focusout.debounce.stop="field.att_default = $el.innerText" contenteditable></span>
+                  </template>
+                </td>
+                <td>
+                  <select class="editable" x-data="{patterns: []}"
+                          x-effect="if(field.att_pattern == ''){delete field.att_pattern}"
+                          x-init="patterns = await Pattern.list()" x-model="field.att_pattern">
+                    <option></option>
+                    <template x-for="pattern in patterns.map(x => x.model.att_name)" :key="pattern">
+                      <option :value="'{{' + pattern + '}}'"
+                              :selected="$el.value == field.att_pattern"
+                              x-text="pattern"></option>
+                    </template>
+                  </select>
+                </td>
+                <td>
+                  <select class="editable"
+                          x-effect="if(field['att_auto-fill'] == ''){delete field['att_auto-fill']}"
+                          x-model="field['att_auto-fill']">
+                    <option value="">-</option>
+                    <option value="username">username</option>
+                    <option value="uuid">uuid</option>
+                  </select>
+                </td>
+                <td>
+                  <ui-delete-button @delete.once.stop="collection.field = collection.field.filter(x => x.att_name != field.att_name)"></ui-delete-button>
+                </td>
+              </tr>
+            </template>
+            <tr>
+              <td>
+                <ui-delete-button @delete.once.stop="model['nested-object'] = model['nested-object'].filter(x => x.att_name != collection.att_name)"></ui-delete-button>
+              </td>
+              <td colspan="4"></td>
+              <td x-data="{ id: $id('text-input') }">
+                <ui-add-button modal-title="Field name"
+                               :pattern="lower_or_camel_cased"
+                               :message="lower_or_camel_cased_message"
+                               @updated.debounce.stop="collection.field.push({att_name: $event.detail.value,att_type: 'String'})"></ui-add-button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <br>
+        </div>
+      </template>
+
+      <ui-add-button modal-title="Collection name"
+                     button-text="Add collection"
+                     :pattern="lower_or_camel_cased"
+                     :message="lower_or_camel_cased_message"
+                     @updated.debounce.stop="model['nested-object'].push({att_name: $event.detail.value,field:[]})"></ui-add-button>
+    </div>
+
+  </div>
+</template>

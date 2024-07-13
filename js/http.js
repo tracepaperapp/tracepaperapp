@@ -134,7 +134,7 @@ async function get_proxy_token(){
         }
     }
     if (proxy_token == ""){
-        let data = await Draftsman.query(fetch_token_query,{projectDrn:localStorage.project});
+        let data = await Draftsman.query(fetch_token_query,{projectDrn:localStorage.project_drn});
         proxy_token = data.RepositoryToken.get.token;
     }
     return proxy_token;

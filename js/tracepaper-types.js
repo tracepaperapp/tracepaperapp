@@ -8,10 +8,16 @@ const QUERY_FILTER = "filter-clause";
 
 const github_url = /^(https:\/\/github.com)+(\/{1}[a-zA-Z0-9\-\.\_]+){2}$/g;
 const lower_or_camel_cased = /^[a-z]{1,25}([A-Z][a-z]{1,24})*$/g;
+const lower_or_camel_cased_message = "Must be lowercased or camelCased";
 const camel_cased = /^[a-z]+([A-Z]{1}[a-z]+)*$/g;
+const camel_cased_message = "Value must be camelCased";
 const pascal_cased = /^([A-Z]{1}[a-z]+)+$/g;
+const pascal_cased_message = "Must be PascalCased";
+const expression_input = /^[a-z]{1,25}(;[a-z]{1,24})*$/g;
+const expression_input_message = "Must be a list of lowercased words separetd by a <i>;</i>";
 const numeric_input = /^[0-9]*$/g;
 const graphql_namespace = /^([A-Z]{1}[a-z]+)+(\.([A-Z]{1}[a-z]+)+)*$/g;
+const graphql_namespace_message = "Must be PascalCased words optionally separated by dots. e.g. Namespace, NameSpace, NameSpace.SubSpace are all valid.";
 const field_types = ['String', 'Int', 'Float', 'Boolean'];
 const view_field_types = field_types.concat(["StringList"]);
 const boolean_text = ['true','false'];
@@ -20,7 +26,7 @@ const view_filter_types = ["equals","not_equals","less_than","greater_than","les
 const auto_fill_modes = ['','username','uuid'];
 const auth_types = ['authenticated','role','user','anonymous'];
 const mapper_operands = ["unmapped","set","add","subtract"];
-const behavior_processor_types = ["emit-event","code","validator","set-variable","update-key"]; // TODO: ["dmn","create-text-patch","update-key"]
+const behavior_processor_types = ["emit-event","code","validator","set-variable","update-key"]; // TODO: ["dmn","create-text-patch"]
 const http_methods = ["GET", "POST", "PATCH", "HEAD", "OPTIONS", "DELETE", "PUT"];
 const editor_options = {
    mode: {
@@ -33,7 +39,7 @@ const editor_options = {
    matchBrackets: true
 };
 
-const qa_variable_types = ["String","Numeric","Boolean","Nested"];
+const delete_statement = "#snapshot.isDeleted != ''";
 const qa_activity_types = [
     "mutation",
     "query",
@@ -48,27 +54,27 @@ const qa_activity_types = [
 
 const notifier_activity_types = [
       "create-iam-group",
-//      "delete-iam-group",
+      "delete-iam-group",
       "add-user-to-iam-group",
       "remove-user-from-iam-group",
       "retrieve-email-from-iam",
       "render-template",
       "send-email",
-//      "send-graphql-notification",
-//      "write-file",
+      "send-graphql-notification",
+      "write-file",
       "fetch-property",
-//      "get-token",
-//      "get-systemuser-token",
+      "get-token",
+      "get-systemuser-token",
       "iam-create-systemuser",
-//      "iam-create-user",
-//      "iam-delete-user",
+      "iam-create-user",
+      "iam-delete-user",
       "set-variable",
       "call-internal-api",
       "code",
 //      "dmn",
       "HTTP",
 //      "scheduled-event",
-//      "invalidate-cdn",
+      "invalidate-cdn",
       "loop"
 ]
 

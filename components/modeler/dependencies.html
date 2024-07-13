@@ -1,0 +1,32 @@
+<template x-component="dependencies">
+    <div>
+        <div class="prose">
+            <h2>Dependencies</h2>
+            <p>Search packages on <a href="https://pypi.org/" target="_blank">pypi.org</a></p>
+        </div>
+        <table class="table">
+            <tr>
+                <th>Package Name</th>
+                <th>Version</th>
+            </tr>
+            <template x-for="dependency in model.global.dependency" :key="dependency.att_name">
+                <tr>
+                    <td>
+                        <ui-editable-text-field :value="dependency.att_name"
+                                                @updated.debounce="dependency.att_name = $event.detail.value"></ui-editable-text-field>
+                    </td>
+                    <td>
+                        <ui-editable-text-field :value="dependency.att_version"
+                                                @updated.debounce="dependency.att_version = $event.detail.value"></ui-editable-text-field>
+                    </td>
+                    <td>
+                        <ui-delete-button @delete.once="model.global.dependency = model.global.dependency.filter(x => x.att_name != dependency.att_name)"></ui-delete-button>
+                    </td>
+                </tr>
+            </template>
+        </table>
+
+        <ui-add-button modal-title="Package name"
+                       @updated.debounce.stop="model.global.dependency.push({att_name: $event.detail.value,att_version: '1.0.0'})"></ui-add-button>
+    </div>
+</template>

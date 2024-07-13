@@ -1,0 +1,11 @@
+[
+  {
+    "type": "meta",
+    "message": "This file is NOT managed by Tracepaper, and can be customized."
+  },
+  {
+    "name": "key_begins_with",
+    "type": "String",
+    "title": "Key Begins With"
+  }
+]

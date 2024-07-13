@@ -1,0 +1,38 @@
+[
+  {
+    "type": "meta",
+    "message": "This file is managed by Tracepaper"
+  },
+  {
+    "name": "type",
+    "title": "Type",
+    "type": "String",
+    "pattern": "^(personal|business)$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "name",
+    "title": "Name",
+    "type": "String",
+    "pattern": "^([A-Z]{1}[a-z]+)+$",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "username",
+    "title": "Username",
+    "type": "String",
+    "pattern": "",
+    "placeholder": "",
+    "default": ""
+  },
+  {
+    "name": "hash",
+    "title": "Hash",
+    "type": "String",
+    "pattern": "^D[0-9]+$",
+    "placeholder": "",
+    "default": ""
+  }
+]

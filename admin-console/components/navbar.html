@@ -1,0 +1,33 @@
+<template x-component="navbar">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light" x-transition>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="/assets/draftsman-logo.png" height="40px" alt="logo"/>
+                <b>Administration</b>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" target="_blank" href="/admin-console/graphiql">API</a></li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" @click="Draftsman.clear_cache();location.reload()">Clear cache</a>
+                    </li>
+                    <li class="nav-item" x-data="{env: ''}" x-effect="env = localStorage['staging-environment'] == 'false' ? 'production' : 'staging'"
+                        x-init="if(!('staging-environment' in localStorage)){localStorage['staging-environment'] = 'false' }">
+                        <a href="#" class="nav-link"
+                           @click="localStorage['staging-environment'] = localStorage['staging-environment'] == 'false' ? 'true' : 'false';env = localStorage['staging-environment'] == 'false' ? 'production' : 'staging';location.reload()">Connected to: <span style="color:red;" x-text="env"></span></a>
+                    </li>
+                </ul>
+                <form class="d-flex" role="search">
+                    <input x-model="search" class="form-control me-2" type="search" placeholder="Search"
+                           aria-label="Search">
+                </form>
+            </div>
+        </div>
+    </nav>
+</template>

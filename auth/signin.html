@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="refresh" content="1; URL=/auth" />
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta name="description" content=""/>
@@ -94,7 +95,7 @@
         </div>
 
         <button class="w-100 btn btn-lg btn-primary" type="button"
-                @click="enabled = false;username = username.toLowerCase();executeSignIn(username,password);setTimeout(function(){enabled = true;password=''},3000)"
+                @click="enabled = false;username = username.toLowerCase();executeSignIn(username,password);localStorage['username']=username;setTimeout(function(){enabled = true;password=''},3000)"
                 x-cloak x-transition x-bind:disabled="!enabled">Sign in
         </button>
 

@@ -1,0 +1,639 @@
+<template x-component="activities">
+    <div x-effect="variables = await Notifier.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"
+         x-data="{variables: [],reserved: []}">
+        <template x-if="activity.att_type != 'loop'">
+            <ui-container></ui-container>
+        </template>
+        <template x-if="activity.att_type == 'loop'">
+            <div x-data="{activities: []}" x-effect="let update = activity.activity;await sleep(1);if(activities != update){activities = update}">
+                <table class="table">
+                    <tr>
+                        <th>Source array</th>
+                        <td>
+                            <ui-bind-flowvar :value="activity.att_array"
+                                             @updated.debounce.stop="activity.att_array = $event.detail.value"></ui-bind-flowvar>
+                        </td>
+                    </tr>
+                    <template x-for="(nested,index) in activities" :key="nested.att_id">
+                        <tr>
+                            <td>
+                                <p>
+                                    <span x-text="index + 1"></span>: <b x-text="Language.get('notifier.' + nested.att_type)"></b>
+                                </p><br>
+                                <p>
+                                    <small>
+                                    <span x-show="index > 0" x-cloak x-transition>
+                                        <span class="tooltip tooltip-left" data-tip="move up">
+                                          <button class="btn btn-ghost" @click="arraymove(activity.activity,index,index - 1)">
+                                            <i class="fa-solid fa-arrow-up"></i>
+                                          </button>
+                                        </span>
+                                    </span>
+                                        <span x-show="index < activity.activity.length - 1" x-cloak x-transition>
+                                        <span class="tooltip tooltip-left" data-tip="move down">
+                                          <button class="btn btn-ghost" @click="arraymove(activity.activity,index,index + 1)">
+                                            <i class="fa-solid fa-arrow-down"></i>
+                                          </button>
+                                        </span>
+                                    </span>
+
+                                        <span x-show="nested.att_type == 'code' && !nested.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_code(nested)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                                    </span>
+                                        <span x-show="nested.att_type == 'code' && nested.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_code(nested)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                                    </span>
+                                        <span x-show="nested.att_type == 'call-internal-api' && !nested.att_query" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_query(nested)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                                    </span>
+                                        <span x-show="nested.att_type == 'call-internal-api' && nested.att_query" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_query(nested)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                                    </span>
+                                        <span x-show="nested.att_type == 'HTTP' && !nested.att_body" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_body(nested)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                                    </span>
+                                        <span x-show="nested.att_type == 'HTTP' && nested.att_body" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_body(nested)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                                    </span>
+
+                                        <ui-delete-button
+                                                @delete.once.stop="activity.activity = activity.activity.filter(x => x.att_id != nested.att_id)"></ui-delete-button>
+                                    </small>
+                                </p>
+
+                            </td>
+                            <td x-data="{activity: {}}" x-init="activity = nested">
+                                <ui-container></ui-container>
+                            </td>
+                        </tr>
+                    </template>
+                </table>
+                <button class="btn btn-ghost" @click.stop="target_flow = activity.activity;target='loop';$dispatch('add-activity')"><i class="fa-solid fa-plus"></i>&nbsp;
+                    Add activity</button>
+            </div>
+        </template>
+    </div>
+</template>
+<template x-component="container">
+    <table class="table">
+        <template x-if="activity.att_type == 'create-iam-group'">
+            <tr x-show="activity.att_type == 'create-iam-group'" x-cloak x-transition>
+                <th>Group name</th>
+                <td><ui-bind-flowvar :value="activity['att_group-name']"
+                                     @updated.debounce.stop="activity['att_group-name'] = $event.detail.value"></ui-bind-flowvar></td>
+            </tr>
+        </template>
+        <template x-if="activity.att_type == 'delete-iam-group'">
+            <tr x-show="activity.att_type == 'delete-iam-group'" x-cloak x-transition>
+                <th>Group name</th>
+                <td><ui-bind-flowvar :value="activity['att_group-name']"
+                                     @updated.debounce.stop="activity['att_group-name'] = $event.detail.value"></ui-bind-flowvar></td>
+            </tr>
+        </template>
+        <template x-if="activity.att_type == 'add-user-to-iam-group'">
+            <tbody x-show="activity.att_type == 'add-user-to-iam-group'" x-cloak x-transition>
+                <tr>
+                    <th>Group name</th>
+                    <td><ui-bind-flowvar :value="activity['att_group-name']"
+                                         @updated.debounce.stop="activity['att_group-name'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Username</th>
+                    <td><ui-bind-flowvar :value="activity['att_username']"
+                                         @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'remove-user-from-iam-group'">
+            <tbody x-show="activity.att_type == 'remove-user-from-iam-group'" x-cloak x-transition>
+            <tr>
+                <th>Group name</th>
+                <td><ui-bind-flowvar :value="activity['att_group-name']"
+                                     @updated.debounce.stop="activity['att_group-name'] = $event.detail.value"></ui-bind-flowvar></td>
+            </tr>
+            <tr>
+                <th>Username</th>
+                <td><ui-bind-flowvar :value="activity['att_username']"
+                                     @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
+            </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'retrieve-email-from-iam'">
+            <tbody x-show="activity.att_type == 'retrieve-email-from-iam'" x-cloak x-transition>
+                <tr>
+                    <th>Variable name</th>
+                    <td>
+                        <ui-editable-text-field
+                                :value="activity.att_name"
+                                :pattern="lower_or_camel_cased"
+                                @updated.debounce="activity.att_name = $event.detail.value;variables = await Notifier.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"></ui-editable-text-field>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Username</th>
+                    <td><ui-bind-flowvar :value="activity['att_username']"
+                                         @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'render-template'">
+            <tbody x-show="activity.att_type == 'render-template'" x-cloak x-transition>
+            <tr>
+                <th>Variable name</th>
+                <td>
+                    <ui-editable-text-field
+                            :value="activity.att_name"
+                            :pattern="lower_or_camel_cased"
+                            @updated.debounce="activity.att_name = $event.detail.value;variables = await Notifier.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"></ui-editable-text-field>
+                </td>
+            </tr>
+            <tr>
+                <th>Template file</th>
+                <td x-data="{templates: null}" x-effect="templates = await Modeler.list_templates()">
+                    <select class="editable" x-model="activity['att_template-file']">
+                        <option>-</option>
+                        <template x-for="template in templates">
+                            <option x-text="template.replace('templates/','')"
+                                    :value="template"
+                                    :selected="activity['att_template-file'] == template"></option>
+                        </template>
+                    </select>
+                </td>
+            </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'send-email'">
+            <tbody x-show="activity.att_type == 'send-email'" x-cloak x-transition>
+                <tr>
+                    <th>Sender</th>
+                    <td><ui-editable-text-field
+                            :value="activity.att_sender"
+                            @updated.debounce="activity.att_sender = $event.detail.value"></ui-editable-text-field></td>
+                </tr>
+                <tr>
+                    <th>Receiver</th>
+                    <td><ui-bind-flowvar :value="activity.att_receiver"
+                                         @updated.debounce.stop="activity.att_receiver = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Subject</th>
+                    <td><ui-bind-flowvar :value="activity.att_subject"
+                                         @updated.debounce.stop="activity.att_subject = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Text Body</th>
+                    <td><ui-bind-flowvar :value="activity.att_text"
+                                         @updated.debounce.stop="activity.att_text = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>HTML Body</th>
+                    <td><ui-bind-flowvar :value="activity.att_html"
+                                         @updated.debounce.stop="activity.att_html = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'send-graphql-notification'">
+            <tbody x-show="activity.att_type == 'send-graphql-notification'" x-cloak x-transition>
+                <tr>
+                    <th>Identifier</th>
+                    <td><ui-bind-flowvar :value="activity.att_identifier"
+                                         @updated.debounce.stop="activity.att_subject = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Notification type</th>
+                    <td><ui-bind-flowvar :value="activity['att_notification-type']"
+                                         @updated.debounce.stop="activity['att_notification-type'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Message</th>
+                    <td><ui-bind-flowvar :value="activity.att_message"
+                                         @updated.debounce.stop="activity.att_message = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'write-file'">
+            <tbody x-show="activity.att_type == 'write-file'" x-cloak x-transition>
+                <tr>
+                    <th>File name</th>
+                    <td><ui-bind-flowvar :value="activity['att_file-name']"
+                                         @updated.debounce.stop="activity['att_file-name'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Directory Path</th>
+                    <td><ui-bind-flowvar :value="activity['att_path']"
+                                         @updated.debounce.stop="activity['att_path'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Content</th>
+                    <td><ui-bind-flowvar :value="activity['att_content']"
+                                         @updated.debounce.stop="activity['att_content'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Bucket</th>
+                    <td>
+                        <ui-editable-text-field
+                                :value="activity.att_bucket"
+                                @updated.debounce="activity.att_bucket = $event.detail.value"></ui-editable-text-field>
+                    </td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'fetch-property'">
+            <tbody x-show="activity.att_type == 'fetch-property'" x-cloak x-transition>
+                <tr>
+                    <th>Variable name</th>
+                    <td>
+                        <ui-editable-text-field
+                                :value="activity.att_name"
+                                :pattern="lower_or_camel_cased"
+                                @updated.debounce="activity.att_name = $event.detail.value;variables = await Notifier.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"></ui-editable-text-field>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Key</th>
+                    <td><ui-bind-flowvar :value="activity['att_key']"
+                                         @updated.debounce.stop="activity['att_key'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'get-token'">
+            <tbody x-show="activity.att_type == 'get-token'" x-cloak x-transition>
+                <tr>
+                    <th>Username</th>
+                    <td><ui-bind-flowvar :value="activity['att_username']"
+                                         @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Password</th>
+                    <td><ui-bind-flowvar :value="activity['att_password']"
+                                         @updated.debounce.stop="activity['att_password'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'get-systemuser-token'">
+            <tbody x-show="activity.att_type == 'get-systemuser-token'" x-cloak x-transition>
+                <!-- No additional attributes-->
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'iam-create-systemuser'">
+            <tbody x-show="activity.att_type == 'iam-create-systemuser'" x-cloak x-transition>
+                <!-- No additional properties -->
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'iam-create-user'">
+            <tbody x-show="activity.att_type == 'iam-create-user'" x-cloak x-transition>
+                <tr>
+                    <th>Username</th>
+                    <td><ui-bind-flowvar :value="activity['att_username']"
+                                         @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Password</th>
+                    <td><ui-bind-flowvar :value="activity['att_password']"
+                                         @updated.debounce.stop="activity['att_password'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td><ui-bind-flowvar :value="activity['att_email']"
+                                         @updated.debounce.stop="activity['att_email'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'iam-delete-user'">
+            <tr x-show="activity.att_type == 'iam-delete-user'" x-cloak x-transition>
+                <th>Username</th>
+                <td><ui-bind-flowvar :value="activity['att_username']"
+                                     @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
+            </tr>
+        </template>
+        <template x-if="activity.att_type == 'set-variable'">
+            <tbody x-show="activity.att_type == 'set-variable'" x-cloak x-transition>
+                <tr>
+                    <th>Variable name</th>
+                    <td>
+                        <ui-editable-text-field
+                                :value="activity.att_name"
+                                :pattern="lower_or_camel_cased"
+                                @updated.debounce="activity.att_name = $event.detail.value;variables = await Notifier.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"></ui-editable-text-field>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Expression</th>
+                    <td>
+                        <ui-editable-text-field
+                                :value="activity.att_expression"
+                                @updated.debounce="activity.att_expression = $event.detail.value;"></ui-editable-text-field>
+                    </td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'call-internal-api' && !activity.att_query">
+            <tbody x-show="activity.att_type == 'call-internal-api'" x-cloak x-transition>
+                <tr>
+                    <th>Variable name</th>
+                    <td>
+                        <ui-editable-text-field
+                                :value="activity.att_name"
+                                :pattern="lower_or_camel_cased"
+                                @updated.debounce="activity.att_name = $event.detail.value;variables = await Notifier.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"></ui-editable-text-field>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Template file</th>
+                    <td x-data="{templates: null}" x-effect="templates = await Modeler.list_templates()">
+                        <select class="editable" x-model="activity['att_template-file']">
+                            <option>-</option>
+                            <template x-for="template in templates">
+                                <option x-text="template.replace('templates/','')"
+                                        :value="template"
+                                        :selected="activity['att_template-file'] == template"></option>
+                            </template>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'call-internal-api' && activity.att_query">
+            <tbody x-show="activity.att_type == 'call-internal-api'" x-cloak x-transition>
+            <tr>
+                <th>Variable name</th>
+                <td>
+                    <ui-editable-text-field
+                            :value="activity.att_name"
+                            :pattern="lower_or_camel_cased"
+                            @updated.debounce="activity.att_name = $event.detail.value;variables = await Notifier.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"></ui-editable-text-field>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <ui-inline-code :code="activity.att_query" @updated.debounce.stop="activity.att_query = $event.detail.code"></ui-inline-code>
+                </td>
+            </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'code' && !activity.att_code">
+            <tbody x-show="activity.att_type == 'code'" x-cloak x-transition>
+                <tr>
+                    <th>Module</th>
+                    <td x-data="{modules: []}" x-init="modules = await Modeler.list_python_modules()">
+                        <select class="editable" x-model="activity['att_python-file']">
+                            <option>-</option>
+                            <template x-for="module in modules">
+                                <option x-text="module.split('/').at(-1).replace('.py','')"
+                                        :value="module" :selected="activity['att_python-file'] == module"></option>
+                            </template>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Function</th>
+                    <td x-data="{methods: []}" x-effect="methods = await Modeler.get_methods(activity['att_python-file'],'notifier')">
+                        <select class="editable" x-model="activity.att_handler">
+                            <option>-</option>
+                            <template x-for="method in methods">
+                                <option x-text="method"
+                                        :value="method" :selected="activity.att_handler == method"></option>
+                            </template>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'code' && activity.att_code">
+                <tr x-show="activity.att_type == 'code'" x-cloak x-transition>
+                    <td colspan="2">
+                        <ui-inline-code :code="activity.att_code" @updated.debounce.stop="activity.att_code = $event.detail.code"></ui-inline-code>
+                    </td>
+                </tr>
+        </template>
+        <template x-if="activity.att_type == 'dmn'">
+            <tbody x-show="activity.att_type == 'dmn'" x-cloak x-transition>
+                <tr>
+                    <th colspan="2">Not implemented in modeler</th>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'HTTP'">
+            <tbody x-show="activity.att_type == 'HTTP'" x-cloak x-transition>
+                <tr>
+                <th>Variable name</th>
+                <td>
+                    <ui-editable-text-field
+                            :value="activity.att_name"
+                            :pattern="lower_or_camel_cased"
+                            @updated.debounce="activity.att_name = $event.detail.value;variables = await Notifier.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"></ui-editable-text-field>
+                </td>
+            </tr>
+                <tr>
+                    <th>URL</th>
+                    <td><ui-bind-flowvar :value="activity['att_url']"
+                                         @updated.debounce.stop="activity['att_url'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td>
+                        <select class="editable" x-model="activity.att_method">
+                            <option>-</option>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="HEAD">HEAD</option>
+                            <option value="OPTIONS">OPTIONS</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Load JSON</th>
+                    <td>
+                        <input type="checkbox" :checked="activity['att_load-json'] == 'true'"
+                               @change="activity['att_load-json'] = $el.checked ? 'true' : 'false'" class="checkbox checkbox-primary" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>Parameters</th>
+                    <td><ui-bind-flowvar :value="activity['att_params']"
+                                         @updated.debounce.stop="activity['att_params'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <tr>
+                    <th>Headers</th>
+                    <td><ui-bind-flowvar :value="activity['att_headers']"
+                                         @updated.debounce.stop="activity['att_headers'] = $event.detail.value"></ui-bind-flowvar></td>
+                </tr>
+                <template x-if="!activity.att_body">
+                    <tr>
+                        <th>Template file</th>
+                        <td x-data="{templates: null}" x-effect="templates = await Modeler.list_templates()">
+                            <select class="editable" x-model="activity['att_template-file']">
+                                <option>-</option>
+                                <template x-for="template in templates">
+                                    <option x-text="template.replace('templates/','')"
+                                            :value="template"
+                                            :selected="activity['att_template-file'] == template"></option>
+                                </template>
+                            </select>
+                        </td>
+                    </tr>
+                </template>
+                <template>
+                    <tr>
+                        <th>Body</th>
+                        <td>
+                            <ui-inline-code :code="activity.att_body" @updated.debounce.stop="activity.att_body = $event.detail.code"></ui-inline-code>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'scheduled-event'">
+            <tbody x-show="activity.att_type == 'scheduled-event'" x-cloak x-transition>
+                <tr>
+                    <th colspan="2">Not implemented in modeler</th>
+                </tr>
+            </tbody>
+        </template>
+        <template x-if="activity.att_type == 'invalidate-cdn'">
+            <tr x-show="activity.att_type == 'invalidate-cdn'" x-cloak x-transition>
+                <th>URI</th>
+                <td><ui-bind-flowvar :value="activity['att_uri']"
+                                     @updated.debounce.stop="activity['att_uri'] = $event.detail.value"></ui-bind-flowvar></td>
+            </tr>
+        </template>
+        <tr>
+            <td>
+                <small>Conditional:</small>
+            </td>
+            <td>
+                <input type="text"
+                       x-model="activity.att_condition"
+                       placeholder="Expression" class="input input-ghost w-full editable" />
+            </td>
+        </tr>
+    </table>
+</template>
+<template x-component="bind-flowvar">
+    <div x-data="{value:null}" x-effect="if(!value){value = $prop('value')}">
+        <div x-show="reserved.includes(value)" x-cloak x-transition>
+            <select class="editable" x-model="value" @change="$dispatch('updated',{value:value})">
+                <template x-for="variable in variables">
+                    <option x-text="variable"
+                            :value="'#flow.' + variable"
+                            :selected="value == '#flow.' + variable"></option>
+                </template>
+                <option value="#'expresion'">#'expresion'</option>
+            </select>
+        </div>
+        <div x-show="!reserved.includes(value)"
+             x-effect="if(!value){value = reserved.at(0);$dispatch('updated',{value:value})}" x-cloak x-transition>
+            <ui-editable-text-field
+                    :value="value"
+                    @updated.debounce="value = $event.detail.value;$dispatch('updated',{value:value})"></ui-editable-text-field>
+        </div>
+    </div>
+</template>
+<template x-component="activity-modal">
+    <div x-data="{activity: {}, title: '', id: 'add-activity'}"
+         @add-activity.document.debounce="activity = {att_id: makeid(6)};title = 'Add activity';document.getElementById(id).showModal()">
+        <dialog :id="id" class="modal">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg" x-text="title"></h3>
+                <p class="py-4" >
+                <ul class="menu bg-primary-content w-full rounded-box" x-show="!activity.att_type" x-cloak x-transition>
+                    <template x-for="type in notifier_activity_types" :key="type">
+                        <li x-show="target != type" x-cloak x-transition><a @click.debounce.stop="title = Language.get('notifier.' + type);activity.att_type = type">
+                            <span x-text="Language.get('notifier.' + type)"></span>
+                        </a></li>
+                    </template>
+                </ul>
+
+                <div x-show="activity.att_type" x-cloak x-transition>
+                    <div class="flex">
+                        <div class="flex-initial w-[100%]">
+                            <ui-activities></ui-activities>
+                        </div>
+                        <div class="flex-1">
+                            <div x-show="activity.att_type == 'code' && !activity.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_code(activity)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'code' && activity.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_code(activity)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'call-internal-api' && !activity.att_query" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_query(activity)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'call-internal-api' && activity.att_query" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_query(activity)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'HTTP' && !activity.att_body" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_body(activity)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                            </div>
+                            <div x-show="activity.att_type == 'HTTP' && activity.att_body" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Notifier.toggle_body(activity)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </p>
+                <div class="modal-action">
+                    <form method="dialog">
+                        <button class="btn btn-success"
+                                @click.self.debounce="if(target_flow.filter(x => x.att_id == activity.att_id).length == 0){target_flow.push(activity)}"
+                                x-show="activity.att_type" x-cloak x-transition>Append</button>
+                    </form>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+    </div>
+</template>

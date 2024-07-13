@@ -1,0 +1,15 @@
+<template x-component="readme-sidebar">
+    <div class="card bg-primary text-primary-content card-compact">
+        <div class="card-body">
+            <p x-data="{summary: {}}" x-init="summary = await Modeler.get_summary()">
+                Project contains <b><span x-text="summary.commands"></span> commands</b>
+                and <b><span x-text="summary.aggregates"></span> aggregates</b> divided over
+                <b><span x-text="summary.subdomains"></span> subdomains</b>.
+                These aggregates will emit <b><span x-text="summary.domainEvents"></span> domain events</b>.
+                And are integrated to the outside
+                world with <b><span x-text="summary.notifiers"></span> notifiers</b>. Data is accessible via
+                <b><span x-text="summary.views"></span> views</b> and <b><span x-text="summary.projections"></span> projections</b>.
+            </p>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/js/configuration.js"></script>
+    <script src="/js/configuration-staging.js"></script>
+
+    <script>
+        var must_be_signed_in = true;
+        document.addEventListener('alpine:init', () => {
+            Draftsman.disable_cache_for_page();
+        });
+    </script>
+
+    <link rel="stylesheet" href="/css/draftsman.css" />
+    <script src="/js/framework.js"></script>
+    <script src="/js/cache.js"></script>
+    <script src="https://unpkg.com/@vimesh/ui"></script>
+    <script src="/js/utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" async></script>
+
+    <!-- daisyUI, replace with optimized build -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- -->
+
+    <script>
+        window.progression = [
+            "Accepted",                             //0
+            "Conversion in progress",               //1
+            "Conversion Failed",                    //2
+            "Converted",                            //3
+            "Source Checkout STARTED",              //4
+            "Package Package STARTED",              //5
+            "Package Package FAILED",               //6
+            "Package Package SUCCEEDED",            //7
+            "PACKAGE CREATED",                      //8
+            "DeployStaging Execute STARTED",        //9
+            "DeployStaging Prepare STARTED",        //10
+            "DeployStaging Prepare SUCCEEDED",      //11
+            "DeployStaging Prepare FAILED",         //12
+            "DeployStaging Execute FAILED",         //13
+            "DeployStaging Execute SUCCEEDED",      //14
+            "QualityGate ExecuteTests STARTED",     //15
+            "QualityGate ExecuteTests FAILED",      //16
+            "QualityGate ExecuteTests SUCCEEDED",   //17
+            "DeployProduction Prepare STARTED",     //18
+            "DeployProduction Execute STARTED",     //19
+            "DeployProduction Prepare SUCCEEDED",   //20
+            "DeployProduction Prepare FAILED",      //21
+            "DeployProduction Execute FAILED",      //22
+            "DeployProduction Execute SUCCEEDED"    //23
+        ]
+        function convert_links(message){
+            return message.replace("#link.","<a class='link' target='_blank' href='").replace(".link#","'>AWS pipeline</a>")
+        }
+        function determine_progression(status){
+            if (status == 'Source Checkout SUCCEEDED'){
+                status = 'Source Checkout STARTED';
+            }
+            status = progression.indexOf(status);
+
+            stages = {
+                'converter':'',
+                'package': '',
+                'staging': '',
+                'qa': '',
+                'production': ''
+            }
+
+            if (status < 2){
+                stages.converter = 'active';
+            }
+            if (status == 2){
+                stages.converter = 'error';
+            }
+            if (status > 2){
+                stages.converter = 'done';
+            }
+
+            if (status > 3 && status < 6){
+                stages.package = 'active';
+            }
+            if (status == 6){
+                stages.package = 'error';
+            }
+            if (status > 6){
+                stages.package = 'done';
+            }
+
+            if (status > 6 && status < 12){
+                stages.staging = 'active';
+            }
+            if (status == 12 || status == 13){
+                stages.staging = 'error';
+            }
+            if (status > 13){
+                stages.staging = 'done';
+            }
+
+            if (status == 15){
+                stages.qa = 'active';
+            }
+            if (status == 16){
+                stages.qa = 'error';
+            }
+            if (status > 16){
+                stages.qa = 'done';
+            }
+
+            if (status > 16 && status < 21){
+                stages.production = 'active';
+            }
+            if (status == 21 || status == 22){
+                stages.production = 'error';
+            }
+            if (status == 23){
+                stages.production = 'done';
+            }
+            return stages;
+        }
+    </script>
+    <link rel="stylesheet" href="/css/pipeline.css" />
+</head>
+<body :class="window.self === window.top ? 'p-5' : ''">
+    <div x-data="{build: {},logs: [], stages: {}}">
+
+        <draftsman-query alias="build" x-include="/prepared-statements/views/Build/get.txt" authenticated>
+        </draftsman-query>
+
+        <draftsman-notification message="updated" type="Build"
+                                @notification="if(Draftsman.fetch_query_parameter('key') == $event.detail.identifier){await Draftsman.force_reload_data();}">
+        </draftsman-notification>
+
+        <div class="data-element" @refresh="
+            build = $store.build.get;
+            logs = $store.build.get.logs;
+            logs.sort((a,b) => b.timestamp-a.timestamp);
+            let status = $store.build.get.status;
+            stages = determine_progression(status);
+            "></div>
+        <div class="grid grid-cols-12 gap-3">
+            <div class="col-span-8">
+                <!-- Visual -->
+                <div class="progressbar-wrapper">
+                    <ul class="progressbar">
+                        <li :class="stages.converter">Prepare Source</li>
+                        <li :class="stages.package">Package</li>
+                        <li :class="stages.staging">Deploy Staging</li>
+                        <li :class="stages.qa">Quality Gate</li>
+                        <li :class="stages.production">Deploy Production</li>
+                    </ul>
+                </div>
+
+                <!-- Logs-->
+                <table class="table">
+                    <tr>
+                        <th>Build ID</th>
+                        <td x-text="build.drn"></td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td x-text="build.status"></td>
+                    </tr>
+                    <template x-for="log in logs" :key="log.timestamp">
+                        <tr>
+                            <th x-text="moment(Number(log.timestamp)*1000).format('YYYY-MM-DD h:mm:ss')"></th>
+                            <td x-html="convert_links(log.message)"></td>
+                        </tr>
+                    </template>
+                </table>
+            </div>
+            <div class="col-span-4">
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

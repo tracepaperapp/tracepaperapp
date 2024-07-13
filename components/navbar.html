@@ -20,6 +20,11 @@
                     <li class="nav-item" x-show="localStorage.token">
                         <a href="#" class="nav-link" @click="Draftsman.sign_out();">Sign out</a>
                     </li>
+                    <template x-if="localStorage['staging-environment'] && localStorage['staging-environment'] == 'true'">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/configuration" style="color:red;">Staging!</a>
+                        </li>
+                    </template>
                 </ul>
             </div>
         </div>

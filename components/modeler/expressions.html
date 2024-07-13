@@ -1,0 +1,60 @@
+<template x-component="expressions">
+  <div x-data="{expressions: []}" x-init="expressions = await Expression.list()">
+    <template x-for="expression in expressions" :key="expression.file">
+        <div tabindex="0" class="collapse collapse-plus border border-base-300 mt-2">
+          <input type="checkbox" :checked="sessionStorage[expression.file] == 'true'"
+                 x-model="sessionStorage[expression.file]"/>
+          <div class="collapse-title font-medium">
+            <span x-show="expression.model.att_type == 'ActorEventRole'" x-cloak x-transition>API authorization expression:</span>
+            <span x-show="expression.model.att_type == 'TriggerKeyField'" x-cloak x-transition>Trigger key expression:</span>
+            <span x-text="expression.model.att_name"></span>
+          </div>
+          <div class="collapse-content">
+            <table class="table">
+              <tr>
+                <th>Name</th>
+                <td>
+                  <ui-editable-text-field
+                          :value="expression.model.att_name"
+                          :pattern="lower_or_camel_cased"
+                          :message="lower_or_camel_cased_message"
+                          @updated.debounce.1000ms="await Expression.rename(expression.model,expression.file,$event.detail.value)"></ui-editable-text-field>
+                </td>
+              </tr>
+              <tr>
+                <th>Type</th>
+                <td>
+                  <select class="editable" x-model="expression.model.att_type">
+                    <option value="ActorEventRole">API authorization expression</option>
+                    <option value="TriggerKeyField">Trigger key expression</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th>Inputs</th>
+                <td>
+                  <ui-editable-text-field
+                          :value="expression.model.att_input"
+                          :pattern="expression_input"
+                          :message="expression_input_message"
+                          @updated.debounce.1000ms="expression.model.att_input = $event.detail.value"></ui-editable-text-field>
+                </td>
+              </tr>
+              <tr>
+                <th>Expression</th>
+                <td>
+                  <ui-editable-text-field
+                          :value="expression.model.att_expression"
+                          @updated.debounce.1000ms="expression.model.att_expression = $event.detail.value"></ui-editable-text-field>
+                </td>
+              </tr>
+            </table>
+            <ui-markdown :content="expression.docs.content"
+                         @updated.stop="expression.docs.content = $event.detail.content;Modeler.force_sync_to_cache(expression.file.replace('.xml','.md').replace('.py','.md'),expression.docs)"></ui-markdown>
+
+            <ui-delete-button @delete.once="expressions = expressions.filter(x => x.file != expression.file);Modeler.delete(expression.file,false)"></ui-delete-button>
+          </div>
+        </div>
+    </template>
+  </div>
+</template>

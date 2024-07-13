@@ -1,0 +1,577 @@
+<template x-component="activity">
+    <div x-data="{show: false}" x-init="setTimeout(function(){show =true},10)">
+        <template x-if="show">
+            <table class="table">
+                <!-- Command -->
+                <template x-if="activity.att_type == 'mutation'">
+                    <tr>
+                        <th>Command</th>
+                        <td x-data="{id: makeid(6),search: ''}">
+                                            <span class="editable p-2"
+                                                  @click="document.getElementById(id).showModal()"
+                                                  x-text="activity.att_path"></span>
+                            <dialog :id="id" class="modal">
+                                <div class="modal-box">
+                                    <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
+                                    <p class="py-4">
+                                        <input type="text"
+                                               placeholder="search..."
+                                               x-model="search"
+                                               class="input w-full" />
+                                    <table class="table">
+                                        <template x-for="command in commands">
+                                            <tr x-show="command.toLowerCase().includes(search.toLowerCase())"
+                                                @click="document.getElementById(id).close();Scenario.update_command(activity,command)"
+                                                :class="command == activity.att_path ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
+                                                x-cloak x-transition>
+                                                <th>Command</th>
+                                                <td x-text="command"></td>
+                                            </tr>
+                                        </template>
+                                    </table>
+                                    </p>
+                                </div>
+                                <form method="dialog" class="modal-backdrop">
+                                    <button>close</button>
+                                </form>
+                            </dialog>
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Query -->
+                <template x-if="activity.att_type == 'query'">
+                    <tr>
+                        <th>Query</th>
+                        <td x-data="{id: makeid(6),search: ''}">
+                                            <span class="editable"
+                                                  @click="document.getElementById(id).showModal()"
+                                                  x-text="activity.att_path"></span>
+                            <dialog :id="id" class="modal">
+                                <div class="modal-box">
+                                    <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
+                                    <p class="py-4">
+                                        <input type="text"
+                                               placeholder="search..."
+                                               x-model="search"
+                                               class="input w-full" />
+                                    <table class="table">
+                                        <template x-for="query in Object.keys(queries)">
+                                            <tr x-show="query.toLowerCase().includes(search.toLowerCase())"
+                                                @click="document.getElementById(id).close();await Scenario.update_query(activity,queries,query)"
+                                                :class="query == activity.att_path ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
+                                                x-cloak x-transition>
+                                                <th x-text="queries[query].type"></th>
+                                                <td x-text="query"></td>
+                                            </tr>
+                                        </template>
+                                    </table>
+                                    </p>
+                                </div>
+                                <form method="dialog" class="modal-backdrop">
+                                    <button>close</button>
+                                </form>
+                            </dialog>
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Description -->
+                <tr>
+                    <th>Description</th>
+                    <td>
+                        <ui-editable-text-field
+                                :value="activity.att_description"
+                                @updated.debounce.1000ms="activity.att_description = $event.detail.value"></ui-editable-text-field>
+                    </td>
+                </tr>
+
+                <!-- Variables -->
+                <template x-if="['set-variables'].includes(activity.att_type)">
+                    <tr>
+                        <th>Variables</th>
+                        <td>
+                            <table class="table">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Value</th>
+                                </tr>
+                                <template x-for="input in activity.input" :key="input.att_name">
+                                    <tr>
+                                        <td>
+                                            <ui-editable-text-field :value="input.att_name"
+                                                                    :pattern="lower_or_camel_cased"
+                                                                    :message="lower_or_camel_cased_message"
+                                                                    @updated.debounce="input.att_name = $event.detail.value"></ui-editable-text-field>
+                                        </td>
+                                        <td>
+                                            <select class="editable" x-model="input.att_type">
+                                                <option value="String">String</option>
+                                                <option value="Numeric">Numeric</option>
+                                                <option value="Boolean">Boolean</option>
+                                                <option value="Nested">Nested</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <template x-if="input.att_type == 'Nested'">
+                                                <table class="table" x-data="{data:[]}"
+                                                       x-effect="input.att_value = JSON.stringify(data)"
+                                                       x-init="data = JSON.parse(input.att_value)">
+                                                    <template x-for="(row,index) in data">
+                                                        <tr>
+                                                            <th>Item <span x-text="index + 1"></span>
+                                                                <ui-add-button modal-title="Nested variable name"
+                                                                               :pattern="lower_or_camel_cased"
+                                                                               :message="lower_or_camel_cased_message"
+                                                                               @updated.debounce.stop="row[$event.detail.value] = 'value'"></ui-add-button>
+                                                                <ui-delete-button @delete.once="data = data.filter(x => x != row)"></ui-delete-button>
+                                                            </th>
+                                                            <td>
+                                                                <table class="table bordered border-primary">
+                                                                    <template x-for="k in Object.keys(row)">
+                                                                        <tr x-data="{type: ''}" x-init="type = typeof row[k]">
+                                                                            <th x-text="k"></th>
+                                                                            <td x-effect="if(type && type != typeof row[k]){
+                                                                                                row[k] = type == 'string' ? 'value' : type == 'number' ? 0 : false
+                                                                                            }">
+                                                                                <select class="editable" x-model="type">
+                                                                                    <option value="string">String</option>
+                                                                                    <option value="number">Numeric</option>
+                                                                                    <option value="boolean">Boolean</option>
+                                                                                </select>
+                                                                            </td>
+                                                                            <td>
+                                                                                <template x-if="type == 'string'">
+                                                                                    <ui-editable-text-field
+                                                                                            :value="row[k]"
+                                                                                            @updated.debounce="row[k] = $event.detail.value;"
+                                                                                    ></ui-editable-text-field>
+                                                                                </template>
+                                                                                <template x-if="type == 'boolean'">
+                                                                                    <input type="checkbox" :checked="row[k]" @change="row[k] = $el.checked" class="checkbox checkbox-primary" />
+                                                                                </template>
+                                                                                <template x-if="type == 'number'">
+                                                                                    <ui-editable-text-field
+                                                                                            :value="row[k]"
+                                                                                            @updated.debounce="row[k] = parseFloat($event.detail.value);"
+                                                                                    ></ui-editable-text-field>
+                                                                                </template>
+                                                                            </td>
+                                                                            <td>
+                                                                                <ui-delete-button @delete.once="delete row[k]"></ui-delete-button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </template>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                    <tr>
+                                                        <td>
+                                                            <button class="btn btn-ghost" @click="data.push({'key': 'value'})">
+                                                                <i class="fa-solid fa-plus"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </template>
+                                            <template x-if="input.att_type != 'Nested'">
+                                                <ui-editable-text-field
+                                                        :value="input.att_value"
+                                                        @updated.debounce.1000ms="input.att_value = $event.detail.value"
+                                                ></ui-editable-text-field>
+                                            </template>
+                                        </td>
+                                        <td>
+                                            <ui-delete-button @delete.once="activity.input = activity.input.filter(x => x.att_name != input.att_name)"></ui-delete-button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr>
+                                    <td>
+                                        <ui-add-button modal-title="Variable name"
+                                                       :pattern="lower_or_camel_cased"
+                                                       :message="lower_or_camel_cased_message"
+                                                       @updated.debounce.stop="activity.input.push({att_name: $event.detail.value,att_type: 'String',att_value: ''})"></ui-add-button>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Inputs -->
+                <template x-if="['mutation','query'].includes(activity.att_type)">
+                    <tr>
+                        <th>Inputs</th>
+                        <td>
+                            <table class="table">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Value</th>
+                                </tr>
+                                <template x-for="input in activity.input" :key="input.att_name">
+                                    <tr>
+                                        <td x-text="input.att_name"></td>
+                                        <td x-text="input.att_type"></td>
+                                        <td>
+                                            <template x-if="input.att_value.startsWith('#') && input.att_value.endsWith('#')">
+                                                <select class="editable" x-model="input.att_value">
+                                                    <template x-for="fvar in flow_vars" :key="fvar">
+                                                        <option :value="fvar"
+                                                                x-text="fvar.replaceAll('#','')"
+                                                                :selected="input.att_value == fvar"></option>
+                                                    </template>
+                                                    <option value="#">-select-</option>
+                                                    <option value="">-expression-</option>
+                                                </select>
+                                            </template>
+                                            <template x-if="input.att_type == 'Nested'">
+                                                <table class="table" x-data="{data:[]}"
+                                                       x-effect="input.att_value = JSON.stringify(data)"
+                                                       x-init="data = JSON.parse(input.att_value)">
+                                                    <template x-for="(row,index) in data">
+                                                        <tr>
+                                                            <th>Item <span x-text="index + 1"></span></th>
+                                                            <td>
+                                                                <table class="table bordered border-primary">
+                                                                    <template x-for="k in Object.keys(row)">
+                                                                        <tr>
+                                                                            <th x-text="k"></th>
+                                                                            <td>
+                                                                                <ui-editable-text-field
+                                                                                        :value="row[k]"
+                                                                                        @updated.debounce="row[k] = $event.detail.value;"
+                                                                                ></ui-editable-text-field>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </template>
+                                                                </table>
+                                                            </td>
+                                                            <td>
+                                                                <ui-delete-button @delete.once="data = data.filter(x => x != row)"></ui-delete-button>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                    <tr>
+                                                        <td>
+                                                            <button class="btn btn-ghost" @click="data.push(await Scenario.prepare_nested_input(activity,input.att_name))">
+                                                                <i class="fa-solid fa-plus"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </template>
+                                            <template x-if="input.att_type != 'Nested' && (!input.att_value.startsWith('#') || !input.att_value.endsWith('#'))">
+                                                <ui-editable-text-area
+                                                        :value="input.att_value"
+                                                        @updated.debounce.1000ms="input.att_value = $event.detail.value"
+                                                ></ui-editable-text-area>
+                                            </template>
+
+                                        </td>
+                                    </tr>
+                                </template>
+                            </table>
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Expected Traces -->
+                <template x-if="['mutation'].includes(activity.att_type)">
+                    <tr>
+                        <th>Expected invocations</th>
+                        <td x-data="{traces: []}" x-effect="traces = activity['expected-trace'].map(x => x.att_command)">
+                            <table class="table">
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Processing status</th>
+                                </tr>
+                                <template x-for="expectation in activity['expected-trace']" :key="expectation.att_command">
+                                    <tr>
+                                        <td x-data="{id: makeid(6),search: ''}">
+                                                            <span class="editable"
+                                                                  @click="document.getElementById(id).showModal()"
+                                                                  x-text="expectation.att_command"></span>
+                                            <dialog :id="id" class="modal">
+                                                <div class="modal-box">
+                                                    <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
+                                                    <p class="py-4">
+                                                        <input type="text"
+                                                               placeholder="search..."
+                                                               x-model="search"
+                                                               class="input w-full" />
+                                                    <table class="table">
+                                                        <template x-for="component in components.filter(x =>
+                                                                                !traces.includes(x) || x == expectation.att_command
+                                                                            )">
+                                                            <tr x-show="component.toLowerCase().includes(search.toLowerCase())"
+                                                                @click="document.getElementById(id).close();expectation.att_command = component;"
+                                                                :class="component == expectation.att_command ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
+                                                                x-cloak x-transition>
+                                                                <th x-show="!component.includes('-Notifier')" x-cloak x-transition>Behavior</th>
+                                                                <th x-show="component.includes('-Notifier')" x-cloak x-transition>Notifier</th>
+                                                                <td x-text="component"></td>
+                                                            </tr>
+                                                        </template>
+                                                    </table>
+                                                    </p>
+                                                </div>
+                                                <form method="dialog" class="modal-backdrop">
+                                                    <button>close</button>
+                                                </form>
+                                            </dialog>
+                                        </td>
+                                        <td>
+                                            <select class="editable" x-model="expectation.att_status">
+                                                <option value="success">Success</option>
+                                                <option value="error">Error</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <ui-delete-button @delete.once="activity['expected-trace'] = activity['expected-trace'].filter(x => x.att_command != expectation.att_command)"></ui-delete-button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr>
+                                    <td x-data="{id: makeid(6),search: ''}">
+                                        <button class="btn btn-ghost" @click="document.getElementById(id).showModal()"><i class="fa-solid fa-plus"></i></button>
+                                        <dialog :id="id" class="modal">
+                                            <div class="modal-box">
+                                                <h3 class="font-bold text-lg"></h3>
+                                                <p class="py-4">
+                                                    <input type="text"
+                                                           placeholder="search..."
+                                                           x-model="search"
+                                                           class="input w-full" />
+                                                <table class="table">
+                                                    <template x-for="component in components.filter(x =>
+                                                                                !traces.includes(x)
+                                                                            )">
+                                                        <tr x-show="component.toLowerCase().includes(search.toLowerCase())"
+                                                            @click="document.getElementById(id).close();activity['expected-trace'].push({att_command: component, att_status: 'success'})"
+                                                            class="cursor-pointer"
+                                                            x-cloak x-transition>
+                                                            <th x-show="!component.includes('-Notifier')" x-cloak x-transition>Behavior</th>
+                                                            <th x-show="component.includes('-Notifier')" x-cloak x-transition>Notifier</th>
+                                                            <td x-text="component"></td>
+                                                        </tr>
+                                                    </template>
+                                                </table>
+                                                </p>
+                                            </div>
+                                            <form method="dialog" class="modal-backdrop">
+                                                <button>close</button>
+                                            </form>
+                                        </dialog>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Expected Values -->
+                <template x-if="activity.att_type == 'query'">
+                    <tr>
+                        <th>Expected values</th>
+                        <td>
+                            <table class="table">
+                                <tr>
+                                    <th>Path</th>
+                                    <th>Type</th>
+                                    <th>Expected value</th>
+                                </tr>
+                                <template x-for="(expectation,j) in activity['expect-value']" :key="index + '-' + j">
+                                    <tr>
+                                        <td x-data="{id: $persist(makeid(6)).as(index + '-' + j).using(sessionStorage)}">
+                                            <span class="editable p-2"
+                                                  @click="document.getElementById(id).showModal()"
+                                                  x-text="expectation.att_name"></span>
+                                            <dialog :id="id" class="modal">
+                                                <div class="modal-box">
+                                                    <h3 class="font-bold text-lg">Path builder</h3>
+                                                    <p class="py-4">
+                                                        <ui-editable-text-field :value="expectation.att_name"
+                                                                                @updated.debounce="
+                                                                                                expectation.att_name = $event.detail.value;
+                                                                                                expectation.att_type = await Scenario.determine_type(activity,expectation)"></ui-editable-text-field>
+
+                                                    <table class="table" x-data="{fields: []}" x-init="fields = await Scenario.query_path_helper(activity,expectation)" x-effect="fields = await Scenario.query_path_helper(activity,expectation)">
+                                                        <template x-for="field in fields" :key="field.name">
+                                                            <tr class="cursor-pointer"
+                                                                @click.stop="await sleep(500);
+                                                                                        let update = Scenario.update_path(expectation,field);
+                                                                                        expectation.att_name = update[0];
+                                                                                        expectation.att_type = update[1];
+                                                                                        await sleep(10);
+                                                                                        document.getElementById(id).showModal()">
+                                                                <td x-text="field.name"></td>
+                                                                <td x-text="field.type"></td>
+                                                            </tr>
+                                                        </template>
+                                                    </table>
+                                                    </p>
+                                                </div>
+                                                <form method="dialog" class="modal-backdrop">
+                                                    <button>close</button>
+                                                </form>
+                                            </dialog>
+                                        </td>
+                                        <td x-text="expectation.att_type"></td>
+                                        <td>
+                                            <template x-if="expectation.att_value.startsWith('#') && expectation.att_value.endsWith('#')">
+                                                <select class="editable" x-model="expectation.att_value">
+                                                    <template x-for="fvar in flow_vars" :key="fvar">
+                                                        <option :value="fvar"
+                                                                x-text="fvar.replaceAll('#','')"
+                                                                :selected="expectation.att_value == fvar"></option>
+                                                    </template>
+                                                    <option value="#">-select-</option>
+                                                    <option value="">-expression-</option>
+                                                </select>
+                                            </template>
+                                            <template x-if="!expectation.att_value.startsWith('#') || !expectation.att_value.endsWith('#')">
+                                                <ui-editable-text-area
+                                                        :value="expectation.att_value"
+                                                        @updated.debounce.1000ms="expectation.att_value = $event.detail.value"
+                                                ></ui-editable-text-area>
+                                            </template>
+                                        </td>
+                                        <td>
+                                            <ui-delete-button @delete.once="activity['expect-value'] = activity['expect-value'].filter(x => x.att_name != expectation.att_name)"></ui-delete-button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr>
+                                    <td>
+                                        <button class="btn btn-ghost" @click="activity['expect-value'].push(await Scenario.initialize_expectation(activity))"><i class="fa-solid fa-plus"></i></button>
+                                    </td>
+                                </tr>
+                            </table>
+                    </tr>
+                </template>
+
+                <!-- Extract Values -->
+                <template x-if="activity.att_type == 'query'">
+                    <tr>
+                        <th>Extractions</th>
+                        <td>
+                            <table class="table">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Path</th>
+                                </tr>
+                                <template x-for="(extraction,j) in activity['extract-value']" :key="index + '-' + j">
+                                    <tr>
+                                        <td>
+                                            <ui-editable-text-field :value="extraction['att_put-key']"
+                                                                    :pattern="lower_or_camel_cased"
+                                                                    :message="lower_or_camel_cased_message"
+                                                                    @updated.debounce="extraction['att_put-key'] = $event.detail.value"></ui-editable-text-field>
+
+                                        </td>
+                                        <td x-data="{id: $persist(makeid(6)).as(index + '+' + j).using(sessionStorage)}">
+                                                            <span class="editable p-2"
+                                                                  @click="document.getElementById(id).showModal()"
+                                                                  x-text="extraction.att_name"></span>
+                                            <dialog :id="id" class="modal">
+                                                <div class="modal-box">
+                                                    <h3 class="font-bold text-lg">Path builder</h3>
+                                                    <p class="py-4">
+                                                        <ui-editable-text-field :value="extraction.att_name"
+                                                                                @updated.debounce="
+                                                                                                extraction.att_name = $event.detail.value;fields = await Scenario.query_path_helper(activity,extraction);"></ui-editable-text-field>
+
+                                                    <table class="table" x-data="{fields: []}"
+                                                           x-effect="fields = await Scenario.query_path_helper(activity,extraction)">
+                                                        <template x-for="field in fields" :key="field.name">
+                                                            <tr class="cursor-pointer"
+                                                                @click.stop="await sleep(500);
+                                                                                        let update = Scenario.update_path(extraction,field);
+                                                                                        extraction.att_name = update[0];
+                                                                                        await sleep(10);
+                                                                                        fields = await Scenario.query_path_helper(activity,extraction);
+                                                                                        document.getElementById(id).showModal()">
+                                                                <td x-text="field.name"></td>
+                                                                <td x-text="field.type"></td>
+                                                            </tr>
+                                                        </template>
+                                                    </table>
+                                                    </p>
+                                                </div>
+                                                <form method="dialog" class="modal-backdrop">
+                                                    <button>close</button>
+                                                </form>
+                                            </dialog>
+                                        </td>
+                                        <td>
+                                            <ui-delete-button @delete.once="activity['extract-value'] = activity['extract-value'].filter(x => x['att_put-key'] != extraction['att_put-key'])"
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr>
+                                    <td>
+                                        <button class="btn btn-ghost" @click="activity['extract-value'].push({'att_put-key':'flowVariableName','att_name':'key'})"><i class="fa-solid fa-plus"></i></button>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Role -->
+                <template x-if="activity.att_type == 'grant-role'">
+                    <tr>
+                        <th>Role</th>
+                        <td x-show="activity.att_role" x-cloak x-transition>
+                            <ui-editable-text-field
+                                    :value="activity.att_role"
+                                    @updated.debounce.1000ms="activity.att_role = $event.detail.value"></ui-editable-text-field>
+                        </td>
+                        <td x-show="!activity.att_role" x-cloak x-transition>
+                            <select class="editable" x-model="activity.att_role">
+                                <option></option>
+                                <template x-for="role in meta.roles" :key="role">
+                                    <option :value="role" x-text="role" :selected="role == activity.att_role"></option>
+                                </template>
+                            </select>
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Sleep -->
+                <template x-if="activity.att_type == 'wait'">
+                    <tr>
+                        <th>Wait for</th>
+                        <td>
+                            <input type="number" x-model="activity.att_milliseconds" min="1" max="10000" class="input input-ghost editable" /> Milliseconds
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- Switch User -->
+                <template x-if="activity.att_type == 'switch-user'">
+                    <tr>
+                        <th>Switch to user number</th>
+                        <td x-show="!Number.isInteger(Number(activity['att_user-number']))" x-cloak x-transition>
+                            <select class="editable" x-model="activity['att_user-number']">
+                                <template x-for="fvar in flow_vars" :key="fvar">
+                                    <option :value="fvar"
+                                            x-text="fvar.replaceAll('#','')"
+                                            :selected="activity['att_user-number'] == fvar"></option>
+                                </template>
+                                <option value="#">-select-</option>
+                                <option value="1">-literal-</option>
+                            </select>
+                        </td>
+                        <td x-show="Number.isInteger(Number(activity['att_user-number']))" x-cloak x-transition>
+                            <input type="number" x-model="activity['att_user-number']" min="1" max="100"
+                                   class="input input-ghost editable" />
+                        </td>
+                    </tr>
+                </template>
+            </table>
+        </template>
+    </div>
+</template>

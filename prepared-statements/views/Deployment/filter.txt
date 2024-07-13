@@ -1,0 +1,20 @@
+# This file is NOT managed by Tracepaper, and can be customized.
+query FilterDeployment($key_begins_with: String = "") {
+  Deployment {
+    filter(key_begins_with: $key_begins_with) {
+       resultset { 
+        key
+        drn
+        domainName
+        eventBus
+        propertyVault
+        stackId
+        userPoolId
+        apiId
+        apiKey
+        apiEndpoint
+        appId
+      }
+    }
+  }
+}

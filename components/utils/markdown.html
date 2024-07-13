@@ -1,0 +1,16 @@
+<template x-component="markdown">
+    <div x-data="{edit: false}">
+        <div x-show="!edit" x-cloak x-transition>
+            <article class="prose"
+                     x-html="Modeler.convertMarkdownToHtml($prop('content'))"></article>
+            <div @click="edit=true" class="text-right">
+                <i class="fa-regular fa-pen-to-square"></i>
+            </div>
+        </div>
+        <div x-show="edit" x-cloak x-transition>
+            <textarea :value="$prop('content')"
+                      class="textarea textarea-bordered w-[100%] h-[60vh]"
+                      @focusout="$dispatch('updated',{ content: $el.value });edit=false;Navigation.soft_reload();"></textarea>
+        </div>
+    </div>
+</template>

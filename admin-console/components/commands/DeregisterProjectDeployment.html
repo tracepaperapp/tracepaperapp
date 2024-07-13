@@ -1,0 +1,26 @@
+<!-- This file is managed by Tracepaper -->
+<template x-component="DeregisterProjectDeployment">
+    <div x-import="basic-form;tables">
+
+        <!-- The command object -->
+        <draftsman-mutation command="DeregisterProjectDeployment" x-include="/prepared-statements/commands/DeregisterProjectDeployment.txt" authenticated>
+        </draftsman-mutation>
+
+        <!-- The form definition -->
+        <div  style="display:none;" id="DeregisterProjectDeployment"
+              x-include="/form-definitions/DeregisterProjectDeployment.json"></div>
+
+        <!-- The trace table -->
+        <ui-trace-table></ui-trace-table>
+
+        <!-- The form -->
+        <ui-basic-form alias="DeregisterProjectDeployment"></ui-basic-form>
+
+        <draftsman-trace command="DeregisterProjectDeployment"
+              status="success"
+              @trace="
+                setTimeout(Draftsman.empty_track_and_trace_log,5000);
+                $dispatch('setdata', { command: 'DeregisterProjectDeployment', data: {} });">
+        </draftsman-trace>
+    </div>
+</template>

@@ -1,0 +1,10 @@
+[
+  {
+    "type": "meta",
+    "message": "This file is NOT managed by Tracepaper, and can be customized."
+  },
+  {
+    "name": "key",
+    "type": "String"
+  }
+]

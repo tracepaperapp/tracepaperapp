@@ -1,0 +1,63 @@
+<template x-component="quick-guide">
+    <div x-data="{title: '',stage: 0, type: '', data: {}}"
+         @shortcut-guide.document="quick_guide.showModal()">
+
+        <div  class="tooltip tooltip-bottom"
+              data-tip="quick guide">
+        <button class="btn btn-ghost btn-circle"
+                x-show="!$prop('hide')" x-cloak x-transition
+                @click="quick_guide.showModal()">
+            <i class="fa-regular fa-keyboard"></i>
+        </button>
+        </div>
+
+        <dialog id="quick_guide" class="modal">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg">Keyboard shortcuts</h3>
+                <p class="py-4">
+                    <table class="table">
+                        <tr>
+                            <th>Open this menu</th>
+                            <td>
+                                <kbd class="kbd">ctrl</kbd>
+                                +
+                                <kbd class="kbd">space</kbd>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Add new model element</th>
+                            <td>
+                                <kbd class="kbd">shift</kbd>
+                                +
+                                <kbd class="kbd">enter</kbd>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Open search window</th>
+                            <td>
+                                <kbd class="kbd">shift</kbd>
+                                +
+                                <kbd class="kbd">space</kbd>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Insert element (behavior/notifier/scenario)</th>
+                            <td>
+                                <kbd class="kbd">ctrl</kbd>
+                                +
+                                <kbd class="kbd">enter</kbd>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Close modal</th>
+                            <td><kbd class="kbd">esc</kbd></td>
+                        </tr>
+                    </table>
+                </p>
+            </div>
+        </dialog>
+    </div>
+</template>

@@ -1,3 +1,5 @@
+if (!must_be_signed_in){var must_be_signed_in = false;}
+
 // Cleanup
 document.addEventListener("beforeunload", (event) => {
     if (notification_socket){
@@ -8,16 +10,51 @@ document.addEventListener("beforeunload", (event) => {
     }
 });
 var mutation_queries = {};
-var request_cache = []
+var inflight = "";
+
+function decode_variables(data){
+    try{
+    Object.keys(data).forEach(key => {
+        if ( (typeof data[key] === 'string' || data[key] instanceof String) && data[key].startsWith("base64:")){
+            data[key] = atob(data[key].replace("base64:",""));
+        } else if (data[key].constructor === Array){
+            data[key] = data.key.map(x => decode_variables(x));
+        } else if (typeof data[key] === 'object' &&
+                       data[key] !== null){
+            data[key] = decode_variables(data[key]);
+        }
+    });
+    }catch{ }
+    return data;
+}
+
+function encode_variables(data){
+    try{
+    Object.keys(data).forEach(key => {
+        if ( (typeof data[key] === 'string' || data[key] instanceof String) && data[key].includes(" ")){
+            data[key] = "base64:" + btoa(unescape(encodeURIComponent(data[key])));
+        } else if (data[key].constructor === Array){
+            data[key] = data.key.map(x => encode_variables(x));
+        } else if (typeof data[key] === 'object' &&
+                       data[key] !== null){
+            data[key] = encode_variables(data[key]);
+        }
+    });
+    }catch{}
+    return data;
+}
 
 function send_mutation(command,data){
+    inflight = command;
+    data = encode_variables(JSON.parse(JSON.stringify(data)));
     empty_track_and_trace_log();
-    var cache_key = JSON.stringify({command: command,data: data});
-    if (request_cache.includes(cache_key)){
-        return;
-    }
-    request_cache.push(cache_key);
     let query = mutation_queries[command];
+    if (!query){
+        console.log("on the fly mutation load");
+        let element = document.querySelectorAll(`[command="${command}"]`)[0];
+        query = element.innerText;
+        mutation_queries[command] = query;
+    }
     let anonymous = mutation_queries[command+"_anonymous"];
     appsync_call(query,(data,errors) => {
         if (errors){
@@ -46,7 +83,6 @@ function send_mutation(command,data){
                     tmp = tmp[key];
                 }
             }
-            console.log(cid);
             add_trace({
               command: command,
               status: "pending",
@@ -66,10 +102,10 @@ function send_mutation(command,data){
               }`;
             trace_socket = Draftsman.subscribe(query_string,(data,errors) => {
                 add_trace(data["onTrace"]);
-                evaluate_trace_subscribers(command,data["onTrace"]);
             },variables={"correlationId":cid});
         }
     },data,anonymous);
+    setTimeout(function(){inflight = ""},10000);
 }
 
 function list_mutations(){
@@ -153,11 +189,15 @@ const Draftsman = {
     contains_teleports: false,
     sign_in: function(target_location){
         if (target_location){
-            sessionStorage["prevLoc"] = target_location;
+                sessionStorage["prevLoc"] = target_location;
         } else {
             sessionStorage["prevLoc"] = location;
         }
-        location = "/auth/signin"
+        if (sessionStorage["hosted-signin"]){
+            location = `${localStorage["aws-congnito-ui"]}/oauth2/authorize?client_id=${localStorage["aws-congnito-app-id"]}&response_type=token&scope=openid&redirect_uri=${window.location.origin}/auth`;
+        } else {
+            location = "/auth/signin";
+        }
     },
     sign_out: function(){
         for(var i in localStorage){
@@ -226,16 +266,16 @@ function trigger_refresh_form_on_components(){
     }
 }
 
-
-if (must_be_signed_in && !localStorage["token"]){
-    sessionStorage["prevLoc"] = location;
-    location = "/auth/signin";
-}
+setTimeout(function(){
+    if (must_be_signed_in && !localStorage["token"]){
+        Draftsman.sign_in();
+    }
+},100);
 var subscription_reconnect_backoff = 100;
 
-async function query(query,variables,anonymous){
+async function query(query,variables,anonymous,force=false){
     var cache_key = JSON.stringify({query: query,variables: variables});
-    if(cache_enabled && query.indexOf("filter(") == -1) {
+    if(!force && cache_enabled && query.indexOf("filter(") == -1) {
         var cached_response = cacheJS.get(cache_key);
     } else {
         var cached_response = null;
@@ -267,8 +307,7 @@ function appsync_call_promise(query,variables,anonymous) {
         }
         xhr.onreadystatechange = function () {
             if(xhr.readyState == 4 && xhr.status == 401){
-                sessionStorage["prevLoc"] = location;
-                location = "/auth/signin";
+                Draftsman.sign_in();
             }
         }
         xhr.onload = function () {
@@ -359,8 +398,7 @@ function appsync_call(query,callback,variables={},anonymous=false){
     }
     xhr.onreadystatechange = function () {
         if(xhr.readyState == 4 && xhr.status == 401){
-            sessionStorage["prevLoc"] = location;
-            location = "/auth/signin";
+            Draftsman.sign_in();
         }
     }
     xhr.onload = function () {
@@ -470,7 +508,7 @@ async function load_data_after_page_init(alias,filter){
         },100);
     } else if (parseInt(sessionStorage.reload) < 10){
         sessionStorage.reload = parseInt(sessionStorage.reload) + 1;
-        location.reload();
+        //location.reload();
     } else {
         console.log("Unexpected error!");
         sessionStorage.reload = 0
@@ -581,9 +619,15 @@ async function execute_load_data(alias,filter){
     }
     var data = await Draftsman.query(query,variable_mapping,!authorized);
     aliases.forEach(alias => {
-        Alpine.store(alias, data[alias]);
-        let key = "store_" + alias + "_" + location;
-        localStorage[key] = JSON.stringify(data[alias]);
+        if (!data[alias]){return}
+        try {
+            Alpine.store(alias, data[alias]);
+            let key = "store_" + alias + "_" + location;
+            localStorage[key] = JSON.stringify(data[alias]);
+        } catch(e){
+            console.log(e);
+            alert();
+        }
     });
     trigger_refresh_data_on_components();
 }
@@ -628,6 +672,7 @@ function evaluate_trace_subscribers(command,trace_message){
 
 function add_trace(message){
     Alpine.store("trace").unshift(message);
+    evaluate_trace_subscribers(inflight,message);
 }
 
 function empty_track_and_trace_log(){

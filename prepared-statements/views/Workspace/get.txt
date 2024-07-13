@@ -1,0 +1,15 @@
+# This file is NOT managed by Tracepaper, and can be customized.
+query GetWorkspace($key: ID = "") {
+  Workspace {
+    get(key: $key) {
+      key
+      drn
+      name
+      subscriptionType
+      iam {
+        username
+        businessRole
+      } 
+    }
+  }
+}

@@ -1,0 +1,6 @@
+<template x-component="documentation-sidebar">
+  <div>
+    <ui-markdown :content="documentation.content"
+                 @updated.stop="documentation.content = $event.detail.content;;Modeler.force_sync_to_cache(file.replace('.xml','.md').replace('.py','.md'),documentation)"></ui-markdown>
+  </div>
+</template>

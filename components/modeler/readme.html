@@ -1,0 +1,6 @@
+<template x-component="readme">
+  <div x-import="utils/markdown">
+    <ui-markdown :content="model.content"
+                 @updated.stop="model.content = $event.detail.content;Modeler.force_sync_to_cache(file,model)"></ui-markdown>
+  </div>
+</template>

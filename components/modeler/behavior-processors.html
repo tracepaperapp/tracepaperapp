@@ -1,0 +1,154 @@
+<template x-component="processors">
+  <div x-effect="variables = await Behavior.get_flow_variables(model);reserved = variables.map(x => '#flow.' + x)"
+       x-data="{variables: [],reserved: []}">
+    <template x-if="processor.att_type == 'emit-event'">
+      <div x-show="processor.att_type == 'emit-event'" x-cloak x-transition>
+        <table class="table" x-data="{mappings: []}" x-effect="let update = processor.mapping;await sleep(10);if(mappings!=update){mappings = update}">
+          <tr>
+            <th>Domain event</th>
+            <td x-data="{events: []}" x-init="events = await Behavior.get_emitable_events()">
+              <select class="editable" @change="Behavior.update_emit_event(processor,$el.value)">
+                <option>-</option>
+                <template x-for="event in events">
+                  <option x-text="event" :value="event" :selected="processor.att_ref == event"></option>
+                </template>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <th>Field name</th>
+            <th>Value</th>
+          </tr>
+          <template x-for="mapping in mappings" :key="mapping.att_target">
+            <tr>
+              <td x-text="mapping.att_target"></td>
+              <td>
+                <div x-show="reserved.includes(mapping.att_value)" x-cloak x-transition>
+                  <select class="editable" x-model="mapping.att_value">
+                    <template x-for="variable in variables">
+                      <option x-text="variable"
+                              :value="'#flow.' + variable"
+                              :selected="mapping.att_value == '#flow.' + variable"></option>
+                    </template>
+                    <option value="#'expresion'">#'expresion'</option>
+                  </select>
+                </div>
+                <div x-show="!reserved.includes(mapping.att_value)"
+                     x-effect="if(!mapping.att_value){mapping.att_value = reserved.at(0)}" x-cloak x-transition>
+                  <ui-editable-text-field
+                          :value="mapping.att_value"
+                          @updated.debounce="mapping.att_value = $event.detail.value;"></ui-editable-text-field>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </table>
+      </div>
+    </template>
+    <template x-if="processor.att_type == 'validator'">
+      <div x-show="processor.att_type == 'validator'" x-cloak x-transition>
+        <table class="table">
+          <tr>
+            <th>Rule</th>
+            <td>
+              <ui-editable-text-field
+                      :value="processor.att_condition"
+                      @updated.debounce="processor.att_condition = $event.detail.value;"></ui-editable-text-field>
+            </td>
+          </tr>
+          <tr>
+            <th>Message</th>
+            <td>
+              <ui-editable-text-field
+                      :value="processor.att_exception"
+                      @updated.debounce="processor.att_exception = $event.detail.value;"></ui-editable-text-field>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <small>When the rule fails a functional exception is thrown</small>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </template>
+    <template x-if="processor.att_type == 'code' && !processor.att_code">
+      <div x-show="processor.att_type == 'code'" x-cloak x-transition>
+        <table class="table">
+          <tr>
+            <th>Module</th>
+            <td x-data="{modules: []}" x-init="modules = await Modeler.list_python_modules()">
+              <select class="editable" x-model="processor.att_file">
+                <option>-</option>
+                <template x-for="module in modules">
+                  <option x-text="module.split('/').at(-1).replace('.py','')"
+                          :value="module" :selected="processor.att_file == module"></option>
+                </template>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <th>Function</th>
+            <td x-data="{methods: []}" x-effect="methods = await Modeler.get_methods(processor.att_file,'behavior')">
+              <select class="editable" x-model="processor.att_handler">
+                <option>-</option>
+                <template x-for="method in methods">
+                  <option x-text="method"
+                          :value="method" :selected="processor.att_handler == method"></option>
+                </template>
+              </select>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </template>
+    <template x-if="processor.att_type == 'code' && processor.att_code">
+      <div x-show="processor.att_type == 'code'" x-cloak x-transition>
+        <ui-inline-code :code="processor.att_code" @updated.debounce.stop="processor.att_code = $event.detail.code"></ui-inline-code>
+      </div>
+    </template>
+    <template x-if="processor.att_type == 'set-variable'">
+      <div x-show="processor.att_type == 'set-variable'" x-cloak x-transition>
+        <table class="table">
+          <tr>
+            <th>Variable name</th>
+            <td>
+              <ui-editable-text-field
+                      :value="processor.att_name"
+                      :pattern="lower_or_camel_cased"
+                      @updated.debounce="processor.att_name = $event.detail.value;"></ui-editable-text-field>
+            </td>
+          </tr>
+          <tr>
+            <th>Expression</th>
+            <td>
+              <ui-editable-text-field
+                      :value="processor.att_expression"
+                      @updated.debounce="processor.att_expression = $event.detail.value;"></ui-editable-text-field>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </template>
+    <template x-if="processor.att_type == 'update-key'">
+      <div x-show="processor.att_type == 'update-key'" x-cloak x-transition>
+        <table class="table">
+          <tr>
+            <th>New business key</th>
+            <td>
+              <select class="editable" x-model="processor.att_key">
+                <option>-</option>
+                <template x-for="variable in variables">
+                  <option x-text="variable"
+                          :value="'#flow.' + variable"
+                          :selected="processor.att_key == '#flow.' + variable"></option>
+                </template>
+              </select>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </template>
+  </div>
+
+</template>

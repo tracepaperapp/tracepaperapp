@@ -1,0 +1,56 @@
+<template x-component="view">
+    <div x-import="modeler/view-fields;modeler/view-relations;modeler/view-mapper;modeler/view-custom-mapper;modeler/view-queries">
+
+        <!-- model -->
+        <div class="prose">
+            <h2>View: <span x-text="model.att_name"></span></h2>
+            <hr>
+            <h4>Model:</h4>
+        </div>
+        <ui-view-fields></ui-view-fields>
+        <ui-view-relations></ui-view-relations>
+        <!-- model end -->
+
+        <hr class="mt-1">
+
+        <!-- data mapping -->
+        <div class="prose">
+            <h4>Data mapping</h4>
+        </div>
+
+        <ui-mapper></ui-mapper>
+        <ui-custom-mapper></ui-custom-mapper>
+
+        <button class="btn btn-ghost"
+                @click="model['snapshot-handler'].push({att_id: makeid(6),att_processor: 'item',mapping: []})">
+            <i class="fa-solid fa-plus"></i>&nbsp;add mapper</button>
+        <button class="btn btn-ghost"
+                @click="model['custom-handler'].push({att_id: makeid(6),'#text': ''})">
+            <i class="fa-solid fa-plus"></i>&nbsp;add custom mapper</button>
+        <!-- data mapping end -->
+
+        <hr class="mt-1">
+
+        <!-- queries -->
+        <div class="prose">
+            <h4>Queries:</h4>
+        </div>
+        <ui-queries></ui-queries>
+        <br>
+        <button class="btn btn-ghost"
+                x-show="model.query.filter(x => x.att_type == 'get').length == 0" x-cloak x-transition
+                @click.debounce="await View.add_query(file,model,'get','get');$dispatch('redraw')">
+            <i class="fa-solid fa-plus"></i>&nbsp;add get query</button>
+        <button class="btn btn-ghost"
+                x-show="model.query.filter(x => x.att_type == 'filter').length == 0" x-cloak x-transition
+                @click.debounce="await View.add_query(file,model,'filter','filter');$dispatch('redraw')">
+            <i class="fa-solid fa-plus"></i>&nbsp;add filter query</button>
+        <ui-add-button modal-title="Named query"
+                       :pattern="lower_or_camel_cased"
+                       button-text="add named query"
+                       :message="lower_or_camel_cased_message"
+                       @updated.debounce.stop="await View.add_query(file,model,'query',$event.detail.value);$dispatch('redraw')"></ui-add-button>
+        <!-- queries end -->
+
+    </div>
+</template>

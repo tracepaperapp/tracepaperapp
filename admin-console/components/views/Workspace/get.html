@@ -1,0 +1,21 @@
+<!-- This file is managed by Tracepaper -->
+<template x-component="Workspace-get">
+    <div x-import="tables;query-form">
+
+        <!-- The query object -->
+        <draftsman-query alias="Workspaceget" x-include="/prepared-statements/views/Workspace/get.txt" authenticated>
+        </draftsman-query>
+
+        <!-- The form definition -->
+        <div  style="display:none;" id="Workspaceget"
+              x-include="/form-definitions/Workspace/get.json"></div>
+
+        <!-- The query form -->
+        <ui-query-form alias="Workspaceget"></ui-query-form>
+
+        <!-- The data view -->
+        <ui-item-table alias="Workspaceget" path="get"></ui-item-table>
+        
+
+    </div>
+</template>

@@ -1,0 +1,87 @@
+<template x-component="view-fields">
+    <div tabindex="0" class="collapse collapse-plus border border-primary mt-2">
+        <input type="checkbox" :checked="sessionStorage[model.att_name + '-fields'] == 'true'"
+               x-model="sessionStorage[model.att_name + '-fields']"/>
+        <div class="collapse-title font-medium">
+            Fields
+        </div>
+        <div class="collapse-content">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Is Primary Key</th>
+                </tr>
+                </thead>
+                <tbody>
+                <template x-for="field in model.field.filter(x => view_field_types.includes(x.att_type))" :key="field.att_name">
+                    <tr>
+                        <td>
+                            <ui-field-name></ui-field-name>
+                        </td>
+                        <td>
+                            <ui-field-type></ui-field-type>
+                        </td>
+                        <td>
+                            <input type="checkbox" :checked="field.att_pk"
+                                   @change="model.field.forEach(x => delete x.att_pk);if($el.checked){field.att_pk = 'true'}"
+                                   class="checkbox checkbox-primary" />
+                        </td>
+                        <td>
+                            <ui-delete-button
+                                    @delete.once.stop="model.field = model.field.filter(x => x.att_name != field.att_name)"></ui-delete-button>
+                        </td>
+                    </tr>
+                </template>
+                </tbody>
+                <tr>
+                    <td colspan="3"></td>
+                    <td>
+                        <ui-add-button modal-title="Field name"
+                                       :pattern="lower_or_camel_cased"
+                                       :message="lower_or_camel_cased_message"
+                                       @updated.debounce.stop="View.add_field(model, $event.detail.value)"></ui-add-button>
+                    </td>
+                </tr>
+            </table>
+            <button onclick="copy_attributes.showModal()" class="btn btn-ghost">
+                <i class="fa-solid fa-file-import"></i>
+            </button>
+            <dialog id="copy_attributes" class="modal">
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg">Copy attributes from other model</h3>
+                    <p class="py-4">
+                    <div x-data="{sources: [], search: ''}" x-init="sources = await Project.get_attribute_sources()">
+                        <input type="text" placeholder="Search..." x-model="search"
+                               class="input input-bordered input-primary w-full " />
+                        <ul class="menu bg-primary-content w-full rounded-box mt-5">
+                            <li class="menu-title">Commands</li>
+                            <template x-for="command in sources.commands" :key="command.name">
+                                <li x-show="command.name.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
+                                    <a @click.debounce.stop="await View.copy_attributes(model,command.file);copy_attributes.close();"
+                                       x-text="command.name"></a>
+                                </li>
+                            </template>
+                        </ul>
+
+                        <ul class="menu bg-primary-content w-full rounded-box mt-5">
+                            <li class="menu-title">Aggregates</li>
+                            <template x-for="aggregate in sources.aggregates" :key="aggregate.name">
+                                <li x-show="aggregate.name.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
+                                    <a @click.debounce.stop="await View.copy_attributes(model,aggregate.file);copy_attributes.close();"
+                                       x-text="aggregate.name"></a>
+                                </li>
+                            </template>
+                        </ul>
+
+                    </div>
+                    </p>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+        </div>
+    </div>
+</template>

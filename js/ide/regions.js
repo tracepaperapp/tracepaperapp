@@ -297,13 +297,16 @@ window.regions = [
 	}
 ]
 
-window.create_pipeline = function(region){
+window.create_pipeline = function(region,project){
+    console.log(region,project);
+    let repo = project.repositories.filter(x => x.name == 'code').at(0).url;
+    console.log(repo);
     let url = 'https://' + region.code + '.console.aws.amazon.com/cloudformation/home?region='
         + region.code + '#/stacks/create/review?templateURL=https://s3.eu-central-1.amazonaws.com/templates.draftsman.io/draftsman-application-pipeline-v5.yml&stackName='
-        + session.projectName.toLowerCase() + '-main-pipeline&param_GithubWorkspace='
-        + context.code_repo.split('/').at(-2).toLowerCase() + '&param_RepositoryName='
-        + context.code_repo.split('/').at(-1).toLowerCase() + '&param_RepositoryBranch=main&param_ProjectName='
-        + session.projectName.toLowerCase() + '&param_DRN='
+        + project.name.toLowerCase() + '-main-pipeline&param_GithubWorkspace='
+        + repo.split('/').at(-2).toLowerCase() + '&param_RepositoryName='
+        + repo.split('/').at(-1).toLowerCase() + '&param_RepositoryBranch=main&param_ProjectName='
+        + project.name.toLowerCase() + '&param_DRN='
         + localStorage.project + '&param_GraphQL=' + api_url + '&param_APIKEY=' + api_key;
     window.open(url, '_blank');
 }

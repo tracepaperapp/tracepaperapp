@@ -1,0 +1,8 @@
+# This file is managed by Tracepaper
+mutation AuthorizeUser($drn: String = "", $username: String = "", $businessRole: String = "") {
+  Workspace{
+    authorizeUser(input: {drn: $drn,username: $username,businessRole: $businessRole}) {
+       correlationId
+    }
+  }
+}

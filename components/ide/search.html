@@ -1,0 +1,36 @@
+<template x-component="search">
+  <div @shortcut-search.document="search.showModal()">
+    <div  class="tooltip tooltip-bottom"
+          data-tip="search">
+    <button class="btn btn-ghost btn-circle" @click="search.showModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+    </button>
+    </div>
+    <dialog id="search" class="modal">
+      <div class="modal-box" x-data="{query: $persist(''),search_results: [],initial:true }" @focusin="if(initial){
+        search_results = SearchEngine.search(query);
+        initial = false;
+      }">
+        <form method="dialog">
+          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 class="font-bold text-lg">Search...</h3>
+        <p class="py-4">
+          <input type="text" placeholder="Search..."
+                 x-model="query"
+                 @keyup.debounce="search_results = SearchEngine.search($el.value)"
+                 class="input input-bordered input-primary w-full" />
+          <br>
+          <div class="w-full text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <template x-for="result in search_results" :key="result.id">
+              <a  @click="Navigation.open(result.id);search.close()" class="block w-full px-4 py-2 border-b border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:ring-gray-500 dark:focus:text-white">
+                <span x-text="result.name"></span>
+                <div class="badge badge-primary badge-outline items-end" x-text="result.type"></div>
+              </a>
+            </template>
+          </div>
+        </p>
+      </div>
+    </dialog>
+  </div>
+</template>

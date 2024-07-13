@@ -1,0 +1,15 @@
+# This file is NOT managed by Tracepaper, and can be customized.
+query GetBuild($key: ID = "") {
+  Build {
+    get(key: $key) {
+      key
+      drn
+      status
+      logs {
+        timestamp
+        message
+      } 
+      lastEvent
+    }
+  }
+}

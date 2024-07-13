@@ -1,113 +1,190 @@
 <template x-component="canvas">
-  <div x-import="utils/document-model;utils/mapping-model">
+  <div class="scrollbar-v h-[99vh] p-1"
+       x-data="{file: '', type: '', model: {}, documentation: {}}"
+       x-import="utils/editor-elements;utils/markdown"
+       x-init="file = location.hash.replace('#','');type = Modeler.determine_type(file)" spellcheck="false">
+    <div x-init="document.title = Navigation.get_name(file)"></div>
+    <template x-if="type != 'dependencies'">
+      <div x-init="model = await Modeler.get(file)"></div>
+    </template>
+    <template x-if="type == 'dependencies'">
+      <div x-init="model = await Modeler.get('config.xml')"></div>
+    </template>
 
-    <template x-if="session.tab.endsWith('README.md')" key="readme">
-      <div x-show="session.tab.endsWith('README.md')" x-cloak x-transition x-import="ide/tabs/project-readme">
-        <ui-project-readme></ui-project-readme>
+    <div x-init="documentation = await Modeler.get(file.split('.').at(0) + '.md')"></div>
+
+    <template x-if="session.exception">
+      <div class="absolute top-5 right-5 z-50">
+        <div role="alert" class="alert alert-error mb-5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <span style="word-break: break-all;" x-html="session.exception"></span>
+        </div>
       </div>
     </template>
 
-    <template x-if="session.type == 'command'" key="comand">
-      <div x-show="session.type == 'command'" x-cloak x-transition x-import="ide/tabs/command">
-        <ui-command></ui-command>
+    <div class="prose" x-show="window.self === window.top" x-cloak x-transition>
+      <h1 x-text="document.title"></h1>
+      <hr class="mb-2">
+    </div>
+
+    <template x-if="type != 'unknown'">
+      <div x-show="type != 'unknown'" x-cloak x-transition class="grid grid-cols-12 gap-3">
+        <div class="col-span-8">
+
+          <template x-if="type == 'readme'">
+            <div x-show="type == 'readme'" x-cloak x-transition x-import="modeler/readme">
+              <ui-readme></ui-readme>
+            </div>
+          </template>
+          <template x-if="type == 'command'">
+            <div x-show="type == 'command'" x-cloak x-transition x-import="modeler/command">
+              <ui-command></ui-command>
+            </div>
+          </template>
+          <template x-if="type == 'aggregate'">
+            <div x-show="type == 'aggregate'" x-cloak x-transition x-import="modeler/aggregate">
+              <ui-aggregate></ui-aggregate>
+            </div>
+          </template>
+          <template x-if="type == 'event'">
+            <div x-show="type == 'event'" x-cloak x-transition x-import="modeler/aggregate-event">
+              <ui-aggregate-event></ui-aggregate-event>
+            </div>
+          </template>
+          <template x-if="type == 'behavior'">
+            <div x-show="type == 'behavior'" x-cloak x-transition x-import="modeler/behavior">
+              <ui-behavior></ui-behavior>
+            </div>
+          </template>
+          <template x-if="type == 'notifier'">
+            <div x-show="type == 'notifier'" x-cloak x-transition x-import="modeler/notifier">
+              <ui-notifier></ui-notifier>
+            </div>
+          </template>
+          <template x-if="type == 'view'">
+            <div x-show="type == 'view'" x-cloak x-transition x-import="modeler/view">
+              <ui-view></ui-view>
+            </div>
+          </template>
+          <template x-if="type == 'projection'">
+            <div x-show="type == 'projection'" x-cloak x-transition x-import="modeler/projection">
+              <ui-projection></ui-projection>
+            </div>
+          </template>
+          <template x-if="type == 'code'">
+            <div x-show="type == 'code'" x-cloak x-transition x-import="modeler/python-module">
+              <ui-python-module></ui-python-module>
+            </div>
+          </template>
+          <template x-if="type == 'expressions'">
+            <div x-show="type == 'expressions'" x-cloak x-transition x-import="modeler/expressions">
+              <ui-expressions></ui-expressions>
+            </div>
+          </template>
+          <template x-if="type == 'dependencies'">
+            <div x-show="type == 'dependencies'" x-cloak x-transition x-import="modeler/dependencies">
+              <ui-dependencies></ui-dependencies>
+            </div>
+          </template>
+          <template x-if="type == 'patterns'">
+            <div x-show="type == 'patterns'" x-cloak x-transition x-import="modeler/patterns">
+              <ui-patterns></ui-patterns>
+            </div>
+          </template>
+          <template x-if="type == 'roles'">
+            <div x-show="type == 'roles'" x-cloak x-transition x-import="modeler/roles">
+              <ui-roles></ui-roles>
+            </div>
+          </template>
+          <template x-if="type == 'scenario'">
+            <div x-show="type == 'scenario'" x-cloak x-transition x-import="modeler/scenario">
+              <ui-scenario></ui-scenario>
+            </div>
+          </template>
+        </div>
+        <div class="col-span-4">
+
+          <div class="card bg-primary text-primary-content mb-5 card-compact">
+            <div class="card-body">
+              <div class="card-actions justify-end">
+                <i x-show="file.endsWith('.xml')" x-cloak x-transition
+                   @click="window.open(localStorage.project_repo + '/blob/' + localStorage.branch + '/' + file, '_blank').focus()"
+                   class="fa-solid fa-code"></i>
+                <i @click="window.open(document.URL, '_blank', 'location=no,height=405,width=720,scrollbars=yes,status=no');parent.postMessage({type:'popout',file:file});"
+                   x-show="window.self !== window.top && file !='README.md'" x-cloak x-transition
+                   class="fa-solid fa-up-right-from-square"></i>
+              </div>
+              <h2 class="card-title" x-text="Language.get(type)"></h2>
+              <p x-text="file.split('.').at(0).replaceAll('/',' / ')"></p>
+              <template x-if="type == 'aggregate'">
+                <div x-show="type == 'aggregate'" x-cloak x-transition x-import="modeler/aggregate-settings">
+                  <ui-aggregate-settings></ui-aggregate-settings>
+                </div>
+              </template>
+              <template x-if="type == 'behavior'">
+                <div x-show="type == 'behavior'" x-cloak x-transition x-import="modeler/behavior-settings">
+                  <ui-behavior-settings></ui-behavior-settings>
+                </div>
+              </template>
+              <template x-if="type == 'view'">
+                <div x-show="type == 'view'" x-cloak x-transition x-import="modeler/view-settings">
+                  <ui-view-settings></ui-view-settings>
+                </div>
+              </template>
+              <div class="card-actions justify-end" x-show="!['readme','expressions','dependencies','patterns','roles'].includes(type)" x-cloak x-transition>
+                <i class="fa-regular fa-trash-can" @click="delete_confirmation.showModal()"></i>
+              </div>
+            </div>
+          </div>
+
+          <dialog id="delete_confirmation" class="modal">
+            <div class="modal-box" x-data="{valid: false}">
+              <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+              </form>
+              <h3 class="font-bold text-lg">Permanently delete model?</h3>
+              <p class="py-4">
+                <span x-text="file.split('.').at(0).replaceAll('/',' / ')"></span><br>
+                <small>Type <i>permanently delete</i> and press <kbd class="kbd kbd-xs">Enter</kbd></small>
+              </p>
+              <input type="text" placeholder="permanently delete"
+                     @keyup.debounce="valid = $el.value == 'permanently delete'"
+                     :class="valid ? 'input input-bordered input-success w-full' : 'input input-bordered input-error w-full'"
+                     @keyup.enter.debounce="if($el.value == 'permanently delete'){delete_confirmation.close();Modeler.delete(file)}" />
+              <br>
+              <small>*Child elements will be removed as well.</small>
+            </div>
+          </dialog>
+
+          <div x-show="!['event','dependencies','roles','scenario'].includes(type)" x-cloak x-transition
+               class="card bg-base-100 card-bordered border-primary mb-5 card-compact">
+            <div class="relative p-2" x-data="{loaded:false}">
+              <div id="project-diagram"
+                   @redraw.document="await sleep(1000);await Diagram.draw(file,'project-diagram','250px')"
+                   x-init="await sleep(1);await Diagram.draw(file,'project-diagram','250px');loaded=true"></div>
+              <a x-show="loaded" x-cloak x-transition
+                 @click="parent.postMessage({type:'diagram',file:file});" class="bottom-2 right-2 absolute z-50">
+                <i class="fa-solid fa-up-right-from-square"></i>
+              </a>
+            </div>
+          </div>
+
+          <template x-if="type == 'readme'">
+            <div x-show="type == 'readme'" x-cloak x-transition x-import="modeler/readme-sidebar">
+              <ui-readme-sidebar></ui-readme-sidebar>
+            </div>
+          </template>
+
+          <div x-show="!['readme','expressions','dependencies','patterns','roles'].includes(type)" x-cloak x-transition
+               x-import="modeler/documentation-sidebar">
+            <ui-documentation-sidebar></ui-documentation-sidebar>
+          </div>
+        </div>
       </div>
     </template>
 
-    <template x-if="session.type == 'aggregate'" key="aggregate">
-      <div x-show="session.type == 'aggregate'" x-cloak x-transition x-import="ide/tabs/aggregate">
-        <ui-aggregate></ui-aggregate>
-      </div>
-    </template>
+    <div x-show="type == 'unknown'" x-cloak x-transition class="bg-neutral-content w-[100%] h-[50vh]">
 
-    <template x-if="session.type == 'documentation'" key="documentation">
-      <div x-show="session.type == 'documentation'" x-cloak x-transition x-import="ide/tabs/documentation">
-        <ui-documentation></ui-documentation>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'behavior'" key="documentation">
-      <div x-show="session.type == 'behavior'" x-cloak x-transition x-import="ide/tabs/behavior">
-        <ui-behavior></ui-behavior>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'testcase'" key="testcase">
-      <div x-show="session.type == 'testcase'" x-cloak x-transition x-import="ide/tabs/behavior-test">
-        <ui-behavior-test></ui-behavior-test>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'view'" key="view">
-      <div x-show="session.type == 'view'" x-cloak x-transition x-import="ide/tabs/view">
-        <ui-view></ui-view>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'notifier'" key="notifier">
-      <div x-show="session.type == 'notifier'" x-cloak x-transition x-import="ide/tabs/notifier">
-        <ui-notifier></ui-notifier>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'code'" key="code">
-      <div x-show="session.type == 'code'" x-cloak x-transition x-import="ide/tabs/code">
-        <ui-code></ui-code>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'patterns'" key="patterns">
-      <div x-show="session.type == 'patterns'" x-cloak x-transition x-import="ide/tabs/patterns">
-        <ui-patterns></ui-patterns>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'expressions'" key="expressions">
-      <div x-show="session.type == 'expressions'" x-cloak x-transition x-import="ide/tabs/expressions">
-        <ui-expressions></ui-expressions>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'roles'" key="roles">
-      <div x-show="session.type == 'roles'" x-cloak x-transition x-import="ide/tabs/roles">
-        <ui-roles></ui-roles>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'dependencies'" key="dependencies">
-      <div x-show="session.type == 'dependencies'" x-cloak x-transition x-import="ide/tabs/dependencies">
-        <ui-dependencies></ui-dependencies>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'scenario'" key="scenario">
-      <div x-show="session.type == 'scenario'" x-cloak x-transition x-import="ide/tabs/scenario">
-        <ui-scenario></ui-scenario>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'projection'" key="projection">
-      <div x-show="session.type == 'projection'" x-cloak x-transition x-import="ide/tabs/projection">
-        <ui-projection></ui-projection>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'build'" key="build">
-      <div x-show="session.type == 'build'" x-cloak x-transition x-import="ide/tabs/build">
-        <ui-build></ui-build>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'api'" key="api">
-      <div x-show="session.type == 'api'" x-cloak x-transition x-import="ide/tabs/api">
-        <ui-api></ui-api>
-      </div>
-    </template>
-
-    <template x-if="session.type == 'deployments'" key="deployments">
-      <div x-show="session.type == 'deployments'" x-cloak x-transition x-import="ide/tabs/deployments">
-        <ui-deployments></ui-deployments>
-      </div>
-    </template>
-
+    </div>
   </div>
 </template>

@@ -1,50 +1,17 @@
 <template x-component="tab-bar">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
-
-        <div>
-            <ul class="nav nav-tabs"
-                x-effect="let updated = session.tabs;await sleep(1);if(tabs != updated){tabs=updated}"
-                x-data="{tabs: []}">
-                <template x-for="tab in tabs" :key="tab">
-                    <li class="nav-item relative" x-data="{showContextMenu:false}">
-                        <a class="nav-link"
-                           :class="session.tab == tab ? 'active' : ''"
-                           aria-current="page" href="#"
-                           :file="tab"
-                           @contextmenu="$event.preventDefault();showContextMenu=true;"
-                           @close-menu.window="showContextMenu=false;"
-                           @click.stop="Navigation.open_tab($event);$dispatch('close-menu');">
-                            <span x-text="Navigation.get_tabname(tab)"></span>&nbsp;
-                            <button type="button" class="btn-close"
-                                    :file="tab"
-                                    @click.stop="Navigation.close_tab"
-                                    aria-label="Close"></button>
-                        </a>
-                        <div x-show="showContextMenu" class="mt-2" x-transition x-cloak>
-                            <div class="btn-group-vertical btn-group-sm" role="group" @click.away="showContextMenu=false">
-                                <button type="button" @click.debounce="showContextMenu=false;Navigation.close_tabs_left(tab)" class="btn btn-outline-primary">Close tabs on the Left</button>
-                                <button type="button" @click.debounce="showContextMenu=false;Navigation.close_other(tab)" class="btn btn-outline-primary">Close other</button>
-                                <button type="button" @click.debounce="showContextMenu=false;Navigation.close_tabs_right(tab)" class="btn btn-outline-primary">Close tabs on the Right</button>
-                            </div>
-                        </div>
-                    </li>
-                </template>
-                <li class="nav-item dropdown" x-show="session.tab_history.length != 0">
-                    <a class="nav-link dropdown-toggle"
-                       data-bs-toggle="dropdown" href="#"
-                       role="button" aria-expanded="false"><i class="fa-solid fa-clock-rotate-left"></i></a>
-                    <ul class="dropdown-menu">
-                        <template x-for="tab in session.tab_history">
-                            <li><a
-                                    class="dropdown-item"
-                                    x-text="Navigation.get_tabname(tab)"
-                                    :file="tab"
-                                    @click.stop="Navigation.open_tab"
-                                    href="#"></a></li>
-                        </template>
-                    </ul>
-                </li>
-            </ul>
-        </div>
+  <div class="w-[99%] my-1 scrollbar-h">
+    <div role="tablist" class="tabs tabs-lifted w-[99%]">
+      <template x-for="path in session.tabs" :key="path">
+        <a role="tab"
+           :class="path == session.tab ? 'tab tab-active' : 'tab'"
+           @contextmenu.stop="$event.preventDefault();Navigation.close(path)"
+           @click.stop="Navigation.open(path)">
+          <div class="tooltip tooltip-right" data-tip="right click to close tab">
+            <span x-text="Navigation.get_name(path)"></span>
+          </div>
+        </a>
+      </template>
     </div>
+    </div>
+  </div>
 </template>

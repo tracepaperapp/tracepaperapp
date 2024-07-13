@@ -1,0 +1,215 @@
+<template x-component="behavior">
+  <div>
+    <div class="prose">
+      <h2>Behavior: <span x-text="model.att_name"></span></h2>
+      <hr>
+      <!-- triggers -->
+      <h4>Triggers:</h4>
+    </div>
+    <template x-for="trigger in model.trigger" :key="trigger.att_source">
+      <div tabindex="0" class="collapse collapse-plus border border-primary mt-2">
+        <input type="checkbox" :checked="sessionStorage[trigger.att_source] == 'true'"
+               x-model="sessionStorage[trigger.att_source]"/>
+        <div class="collapse-title font-medium">
+          <span x-text="trigger.att_source"></span>
+        </div>
+        <div class="collapse-content"
+             x-import="modeler/behavior-trigger"
+             x-data="{event:{}, expressions: []}"
+             x-effect="event = await Modeler.get_by_name(trigger.att_source);expressions = await Behavior.get_trigger_expressions()">
+          <ui-trigger></ui-trigger>
+        </div>
+      </div>
+    </template>
+    <div x-data="{events: [], search: ''}" x-effect="events = await Modeler.list_events()">
+      <button class="btn btn-ghost" onclick="add_trigger.showModal()"><i class="fa-solid fa-plus"></i>&nbsp;
+        Add trigger</button>
+      <dialog id="add_trigger" class="modal">
+        <div class="modal-box">
+          <h3 class="font-bold text-lg">Add trigger</h3>
+          <p class="py-4">
+            <input type="text" placeholder="Search..."
+                   x-model="search"
+                   class="input input-bordered input-primary w-full" />
+            <br>
+          <table class="table">
+            <template x-for="event in events" :key="event">
+              <tr x-show="event.toLowerCase().includes(search.toLowerCase()) &&
+                           !model.trigger.map(x => x.att_source).includes(event)" x-cloak x-transition
+                  class="hover cursor-pointer"
+                  @click="Behavior.add_trigger(model,event);add_trigger.close();await Modeler.sync_to_disk();$dispatch('redraw')">
+                <td>
+                  <span x-text="event"></span>&nbsp;
+                </td>
+              </tr>
+            </template>
+          </table>
+          </p>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    </div>
+    <!-- triggers end -->
+
+    <!-- flow -->
+    <div class="prose">
+      <hr>
+      <h4>Behavior flow:</h4>
+    </div>
+    <template x-for="(processor, index) in model.processor" :key="processor.att_id">
+      <div tabindex="0" class="collapse collapse-plus border border-base-300 mt-2">
+        <input type="checkbox" :checked="sessionStorage[processor.att_id] == 'true'"
+               x-model="sessionStorage[processor.att_id]"/>
+        <div class="collapse-title font-medium">
+          <span x-text="index + 1"></span>&nbsp;
+          <span x-text="Language.get('behavior.' + processor.att_type)"></span>:&nbsp;
+          <span x-text="Behavior.get_processor_name(processor)"></span>
+        </div>
+        <div class="collapse-content" x-import="modeler/behavior-processors">
+          <div class="flex">
+            <div class="flex-initial w-[100%]">
+              <ui-processors></ui-processors>
+            </div>
+            <div class="flex-1">
+              <div x-show="index > 0" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="move up">
+                  <button class="btn btn-ghost" @click="arraymove(model.processor,index,index - 1)">
+                    <i class="fa-solid fa-arrow-up"></i>
+                  </button>
+                </span>
+              </div>
+              <div x-show="index < model.processor.length - 1" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="move down">
+                  <button class="btn btn-ghost" @click="arraymove(model.processor,index,index + 1)">
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </button>
+                </span>
+              </div>
+              <div x-show="processor.att_type == 'code' && !processor.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Behavior.toggle_code(processor)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+              </div>
+              <div x-show="processor.att_type == 'code' && processor.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Behavior.toggle_code(processor)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+              </div>
+              <ui-delete-button
+                      @delete.once.stop="model.processor = model.processor.filter(x => x.att_id != processor.att_id)"></ui-delete-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+    <div x-data="{processor: {}, title: ''}">
+      <button @shortcut-insert.document="processor = {};title = 'Add processor';add_processor.showModal()"
+              class="btn btn-ghost" @click="processor = {};title = 'Add processor';add_processor.showModal()"><i class="fa-solid fa-plus"></i>&nbsp;
+        Add processor</button>
+      <dialog id="add_processor" class="modal">
+        <div class="modal-box">
+          <h3 class="font-bold text-lg" x-text="title"></h3>
+          <p class="py-4" >
+          <ul class="menu bg-primary-content w-full rounded-box" x-show="!processor.att_type" x-cloak x-transition>
+            <li><a @click.debounce.stop="title = 'Set variable';processor.att_type = 'set-variable'">
+              <span x-text="Language.get('behavior.set-variable')"></span> <span><kbd class="kbd kbd-sm">S</kbd></span>
+            </a></li>
+          <li><a @click.debounce.stop="title = 'Validator';processor.att_type = 'validator'">
+            <span x-text="Language.get('behavior.validator')"></span> <span><kbd class="kbd kbd-sm">V</kbd></span>
+          </a></li>
+          <li><a @click.debounce.stop="title = 'Code';processor.att_type = 'code'">
+            <span x-text="Language.get('behavior.code')"></span> <span><kbd class="kbd kbd-sm">C</kbd></span>
+          </a></li>
+          <li><a @click.debounce.stop="title = 'Update business key';processor.att_type = 'update-key'">
+            <span x-text="Language.get('behavior.update-key')"></span> <span><kbd class="kbd kbd-sm">K</kbd></span>
+          </a></li>
+          <li><a @click.debounce.stop="title = 'Emit event';processor.att_type = 'emit-event'">
+            <span x-text="Language.get('behavior.emit-event')"></span> <span><kbd class="kbd kbd-sm">E</kbd></span>
+          </a></li>
+          </ul>
+          <template x-if="!processor.att_type">
+            <div @keyup.s.window="title = 'Set variable';processor.att_type = 'set-variable'"
+                 @keyup.v.window="title = 'Validator';processor.att_type = 'validator'"
+                 @keyup.c.window="title = 'Code';processor.att_type = 'code'"
+                 @keyup.k.window="title = 'Update business key';processor.att_type = 'update-key'"
+                 @keyup.e.window="title = 'Emit event';processor.att_type = 'emit-event'"></div>
+          </template>
+
+          <div x-show="processor.att_type" x-cloak x-transition x-import="modeler/behavior-processors">
+            <div class="flex">
+              <div class="flex-initial w-[100%]">
+                <ui-processors></ui-processors>
+              </div>
+              <div class="flex-1">
+                <div x-show="processor.att_type == 'code' && !processor.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="change to inline code">
+                  <button class="btn btn-ghost" @click="Behavior.toggle_code(processor)">
+                    <i class="fa-solid fa-code"></i>
+                  </button>
+                </span>
+                </div>
+                <div x-show="processor.att_type == 'code' && processor.att_code" x-cloak x-transition>
+                <span class="tooltip tooltip-left" data-tip="use library code">
+                  <button class="btn btn-ghost" @click="Behavior.toggle_code(processor)">
+                    <i class="fa-solid fa-book"></i>
+                  </button>
+                </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          </p>
+          <div class="modal-action">
+            <form method="dialog">
+              <button class="btn btn-success"
+                      @click="processor.att_id = makeid(6);model.processor.push(processor);"
+                      x-show="processor.att_type" x-cloak x-transition>Append</button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    </div>
+    <!-- flow end -->
+
+    <!-- test cases -->
+    <div>
+      <div class="prose">
+        <hr>
+        <h4>Test cases:</h4>
+      </div>
+      <template x-for="testcase in model['test-case']" :key="testcase.att_name">
+        <div tabindex="0" class="collapse collapse-plus border border-accent mt-2">
+          <input type="checkbox" :checked="sessionStorage[file + testcase.att_name] == 'true'"
+                 x-model="sessionStorage[file + testcase.att_name]"/>
+          <div class="collapse-title font-medium">
+            Case:&nbsp;
+            <span x-text="testcase.att_name"></span>
+          </div>
+          <div class="collapse-content" x-import="modeler/behavior-testcase">
+            <ui-test-case></ui-test-case>
+            <ui-delete-button
+                    @delete.once.stop="model['test-case'] = model['test-case'].filter(x => x.att_name != testcase.att_name)"></ui-delete-button>
+          </div>
+        </div>
+      </template>
+      <ui-add-button modal-title="Test case name"
+                     :pattern="pascal_cased"
+                     message="Must be PascalCased"
+                     @updated.debounce.stop="
+                      let testcase = await Behavior.add_testcase(model,$event.detail.value);
+                      model[TEST].push(testcase);
+                      await Modeler.sync_to_disk();
+                      location.reload();"></ui-add-button>
+    </div>
+
+  </div>
+</template>
