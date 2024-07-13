@@ -11,76 +11,16 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
         <link rel="stylesheet" href="/css/ide.css" />
 
-        <script src="/js/configuration.js"></script>
-        <script>var must_be_signed_in = true;</script>
-        <script src="/js/framework.js"></script>
-        <script src="/js/cache.js"></script>
-        <script src="https://unpkg.com/@vimesh/ui"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-        <script src="https://unpkg.com/alpinejs" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js" async></script>
-        <script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
-        <script src="https://unpkg.com/isomorphic-git"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/fast-xml-parser/4.2.5/fxparser.min.js"></script>
-        <script src="/js/xml-builder.js"></script>
-        <script src="/js/ide.js" type="module"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js" async></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
-
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.js"
-                integrity="sha512-OMjy8oWtPbx9rJmoprdaQdS2rRovgTetHjiBf7RL7LvRSouoMLks5aIcgqHb6vGEAduuPdBTDCoztxLR+nv45g=="
-                crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-        <script src="/js/setup.js"></script>
-        <script src="/js/tracepaper-types.js"></script>
-
-        <script async defer data-domain="preview.draftsman.io"
-                src="https://analytics.bohanssen.com/js/plausible.js"></script>
     </head>
-    <body x-data="session"
-          x-import="
-        screens/onboarding;
-        screens/workspace-selector;
-        screens/project-selector;
-        screens/modeler;
-        utils/health-check">
+    <body>
 
     <div class="splash-screen" x-ref="splash">
         <img src="/assets/logo.svg" class="splash-logo"/>
         <div class="loadingContainer">
-            <div class="ball1"></div>
-            <div class="ball2"></div>
-            <div class="ball3"></div>
-            <div class="ball4"></div>
+            <h1>Down for maintenance...</h1>
+            <h2>We are migrating to Tracepaper 3.</h2>
         </div>
-        <div x-effect="if (session.initialized){$refs.splash.remove()}"></div>
     </div>
-
-    <ui-onboarding></ui-onboarding>
-    <ui-workspace-selector></ui-workspace-selector>
-    <ui-project-selector></ui-project-selector>
-    <ui-modeler></ui-modeler>
-
-    <draftsman-query alias="context" x-include="/prepared-statements/get-user-context.txt" authenticated>
-    </draftsman-query>
-
-    <!-- health check -->
-    <ui-health-check></ui-health-check>
-    <script>
-        setTimeout(function(){
-            try {
-                var check = document.getElementById("health-check");
-                if(!Draftsman || !check){
-                    location.reload();
-                }
-            }catch(err){
-                location.reload();
-            }
-        },5000);
-    </script>
 
     </body>
 </html>
