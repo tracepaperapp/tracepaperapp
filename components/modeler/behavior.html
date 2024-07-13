@@ -207,8 +207,7 @@
                      @updated.debounce.stop="
                       let testcase = await Behavior.add_testcase(model,$event.detail.value);
                       model[TEST].push(testcase);
-                      await Modeler.sync_to_disk();
-                      //location.reload();"></ui-add-button>
+                      await Modeler.sync_to_disk();"></ui-add-button>
     </div>
 
   </div>
