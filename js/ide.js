@@ -1,55 +1,875 @@
 
-window.Context = {
-    reload: async function(){
-        await sleep(1000);
-        await Draftsman.force_reload_data();
-        await sleep(10);
-        load_context();
-    },
-    open_workspace: function(event){
-        let workspace = get_attribute(event,"name");
-        localStorage.workspace = workspace;
-        context.selected_workspace = context.workspace.filter(x => x.name == localStorage.workspace).at(0);
-    },
-    open_project: function(event){
-        Session.reload_from_disk(get_attribute(event,"drn"));
-        load_context();
-    },
-    close_workspace: function(){
-        delete context.selected_workspace;
-        localStorage.removeItem("workspace");
-    },
-    close_project: function(){
-        delete context.selected_project;
-        localStorage.removeItem("project");
-        Session.reload_from_disk("");
-        checked_out_repository = "";
-    }
-}
+import http from '/js/http.js'
 
-document.addEventListener('draftsman:initialized', async () => {
-    load_context();
-    if (!context.repository){
+const dir = '/project';
+const proxy = "https://git.draftsman.io";
+var auto_save = null;
+var sync_interval = null;
+var fs = null;
+
+var branch = "main";
+var checked_out_repository = "";
+var file_check = {};
+
+const options = {
+    ignoreAttributes : false,
+    format: true,
+    attributeNamePrefix : "att_"
+};
+
+var parser = null;
+var builder = null;
+
+document.addEventListener('tracepaper:context:changed', async () => {
+    if (!parser || !builder){
+        parser = new XMLParser(options);
+        builder = new XMLBuilder(options);
+    }
+    if (context.repository && context.repository != checked_out_repository){
+        clearInterval(auto_save);
+        clearInterval(sync_interval);
+        checked_out_repository = context.repository;
+        try{
+            await connect_repository();
+        }catch(err){
+            console.error(err);
+        }
+        await load_model();
+        auto_save = setInterval(save_model_to_disk,1000);
+        sync_interval = setInterval(sync_model,5*60*1000);
+        await sleep(500);
         session.initialized = true;
+        block = false;
     }
 });
 
-function load_context(){
-    if (Alpine.store("context").get != null){
-        Object.assign(context,Alpine.store("context").get);
+window.clear_storage = async function(force=false){
+    clearInterval(auto_save);
+    clearInterval(sync_interval);
+    clearInterval(save_session_interval);
+    var databases = await indexedDB.databases();
+    for (var r of databases){
+        indexedDB.deleteDatabase(r.name);
     }
-    if (localStorage.workspace && context.workspace){
-        context.selected_workspace = context.workspace.filter(x => x.name == localStorage.workspace).at(0);
+    Draftsman.sign_out();
+}
+
+async function reload_model(){
+    clearInterval(auto_save);
+    while (save_model_to_disk_block){
+        await sleep(10);
     }
-    if (localStorage.project && context.selected_workspace){
-        context.selected_project = context.selected_workspace.projects.filter(x => x.drn == localStorage.project).at(0);
+    await load_model();
+    auto_save = setInterval(save_model_to_disk,1000);
+}
+
+async function sync_model(){
+    await pull_model();
+    await reload_model();
+}
+
+var save_model_to_disk_block = false;
+
+async function write_model_element(file,content){
+      let placeholder = "placeholder-6a3eacfc-85ff-4414-938d-511785c46536";
+      let json = JSON.stringify(content);
+      json = json.replaceAll('"true"','"' + placeholder + '"');
+      json = JSON.parse(json);
+      let xml = builder.build(json);
+      xml = xml.replaceAll(placeholder,"true");
+      await FileSystem.write(file,xml);
+}
+
+async function save_model_to_disk(){
+    if (save_model_to_disk_block){return}else{save_model_to_disk_block = true}
+    try{
+        for (var member in report) delete report[member];
+        hard_deletes = [];
+        hard_writes = {};
+        document.dispatchEvent(new CustomEvent('tracepaper:model:prepare-save'));
+        await sleep(100);
+        let isRefactored = false;
+        if (meta && meta.roles){
+            await FileSystem.write("meta.json",JSON.stringify(meta,null,2));
+        }
+        await Object.entries(documentation).forEach(async entry => {
+            await FileSystem.write(entry[0],entry[1].content);
+        });
+        await Object.entries(model).forEach(async entry => {
+              let element = entry[1][Object.keys(entry[1]).at(0)];
+              if (element && "att_mark_for_deletion" in element && element["att_mark_for_deletion"]){
+                  await FileSystem.delete(entry[0]);
+                  delete model[entry[0]];
+                  let doc = entry[0].replace(".xml",".md");
+                  if (doc in documentation){
+                    await FileSystem.delete(doc);
+                    delete documentation[doc];
+                  }
+                  isRefactored = true;
+              } else{
+                  if (element){
+                    delete element.att_mark_for_deletion;
+                    delete element.att_file_path;
+                  }
+                  await write_model_element(entry[0],entry[1]);
+              }
+        });
+        await Object.entries(code).forEach(async entry => {
+            await FileSystem.write(entry[0],entry[1].content);
+        });
+
+        //Cleanup
+        let files = await FileSystem.listFiles();
+        await files.filter(
+                file => file != "meta.json"
+                    && file != ".gitignore"
+                    && !(file in documentation)
+                    && !(file in model)
+                    && !(file in code)
+                    && !(file in logs)
+                    && !(file in templates)
+            ).forEach(async file => {
+            isRefactored = true;
+            await FileSystem.delete(file);
+        });
+        await hard_deletes.forEach(async file => {
+            await FileSystem.delete(file);
+        });
+        await Object.keys(hard_writes).forEach(async file => {
+            await write_model_element(file,hard_writes[file]);
+        });
+        let status = await get_status_matrix();
+        session.staged_files = deduplicate(status.map(x => x[0]));
+        if (isRefactored){
+            await sleep(1000);
+            document.dispatchEvent(new CustomEvent('tracepaper:model:loaded'));
+        }
+        if (JSON.stringify(session.staged_files) != stage_history){
+            Diagram.draw();
+            stage_history = JSON.stringify(session.staged_files);
+        }
+    }catch(err){
+        console.error(err);
     }
-    if (context.selected_project){
-        reset_proxy_token();
-        context.repository = context.selected_project.repositories.filter(x => x.name == "model").at(0).url;
-        context.code_repo = context.selected_project.repositories.filter(x => x.name == "code").at(0).url;
+    save_model_to_disk_block = false;
+}
+var stage_history = "";
+
+async function load_file(file){
+    try{
+        let content = await FileSystem.read(file);
+            file_check[file] = content;
+            if (file == "meta.json"){
+                let data = JSON.parse(content);
+                Object.assign(meta,data);
+                meta.roles = make_sure_is_list(meta.roles);
+            }
+            else if (file.endsWith(".xml")){
+                content = parser.parse(content);
+                model[file] = content;
+            }
+            else if (file.endsWith(".py")){
+                code[file] = {content:content};
+            }
+            else if(file.startsWith("templates/")){
+                templates[file] = {content:content};
+            }
+            else if(file.endsWith(".md")){
+                documentation[file] = {content:content};
+            }else if(file.endsWith(".log")){
+                logs[file] = content;
+                localStorage[file] = content;
+            }
+            else {
+                console.log(file,content);
+            }
+    }catch(err){
+        console.log("Could not load file:",file,err);
     }
-    document.dispatchEvent(new CustomEvent('tracepaper:context:changed'));
+}
+
+async function load_model(){
+    clear_model();
+    let files = await FileSystem.listFiles();
+    await files.forEach(async file => {
+        await load_file(file);
+    });
+    await sleep(500);
+    document.dispatchEvent(new CustomEvent('tracepaper:model:loaded'));
+}
+
+function extract_file_name(path){
+    return path.split('/').at(-1).split('.').at(0);
+}
+
+function clear_model(){
+    for (var member in model) delete model[member];
+    for (var member in meta) delete meta[member];
+    for (var member in documentation) delete documentation[member];
+}
+
+async function connect_repository(){
+        fs = new LightningFS(localStorage.project);
+        if (await FileSystem.read("README.md") == "file not found"){
+            console.log("clone");
+            await git.clone({ fs, http, dir, url: checked_out_repository, corsProxy: proxy });
+
+            console.log("set author");
+            await git.setConfig({
+              fs,
+              dir: dir,
+              path: 'user.name',
+              value: context.fullName
+            })
+        }
+        await pull_model();
+}
+
+async function pull_model(){
+    if (!await FileSystem.staged_files()){
+      console.log("checkout: " + branch);
+      await FileSystem.checkout_branch(branch);
+      prepare_folder_structure();
+      const currentDate = new Date();
+      session.last_pulled = currentDate.getTime();
+    }
+}
+
+var hard_deletes = [];
+var hard_writes = {};
+
+const trigger_build = `
+mutation TriggerBuild($buildId: String = "", $drn: String = "") {
+  Project {
+    build(input: {drn: $drn, buildId: $buildId}) {
+      correlationId
+    }
+  }
+}
+`;
+
+window.FileSystem = {
+    sync_model: sync_model,
+    hardWrite: function(path,content){
+        hard_writes[path] = content;
+    },
+    hardDelete: function(path){
+        hard_deletes.push(path);
+    },
+    clean_and_pull: function(){
+        session.editing_disabled = false;
+        delete session.exception;
+        indexedDB.deleteDatabase(localStorage.project);
+        localStorage[localStorage.project] = JSON.stringify(session);
+        setTimeout(function(){location.reload()},500);
+    },
+    listFiles: async function(){
+        return await git.listFiles({ fs, dir: dir, ref: 'HEAD' });
+    },
+    staged_files: async function(){
+        let status = await get_status_matrix();
+        return status.length != 0;
+    },
+    read: async function(filepath){
+        try{
+            return await fs.promises.readFile(dir + "/" + filepath, "utf8");
+        } catch {
+            return "file not found";
+        }
+    },
+    write: async function(filepath,content){
+        if (!content || file_check[filepath] == content){
+            return;
+        }
+        file_check[filepath] = content;
+        await FileSystem.create_dir(filepath);
+        await fs.promises.writeFile(dir + "/" + filepath, content,"utf8");
+        await git.add({ fs, dir: dir, filepath: filepath });
+    },
+    delete: async function(filepath){
+        try{
+            await git.remove({ fs, dir: dir, filepath: filepath });
+            await fs.promises.unlink(dir + "/" + filepath);
+        }catch{}
+    },
+    create_dir: async function(path){
+        var subdir = dir;
+        for (const sub of path.split('/')){
+            if (!sub || sub.includes(".")){
+                continue;
+            }
+            subdir += '/' + sub;
+            try{
+                await fs.promises.mkdir(subdir);
+            } catch{}
+        }
+    },
+    commit: async function(message){
+        clearInterval(auto_save);
+        let sha = await git.commit({
+          fs,
+          dir: dir,
+          author: {
+            name: context.fullName,
+            email: context.username + '@example.com',
+          },
+          message: message
+        });
+        let pushResult = await git.push({
+          fs,
+          http,
+          dir: dir,
+          remote: 'origin',
+          force: true,
+          ref: branch,
+          corsProxy: proxy
+        })
+        await FileSystem.pull();
+        await reload_model();
+        await sleep(100);
+        Navigation.hard_reload_tab();
+        if (session.trigger_build_after_commit){
+            let buildId = moment().format("YYYY-MM-DD[T]hh:mm")
+            let data = await Draftsman.query(trigger_build,{drn:localStorage.project,buildId:buildId});
+            console.log(data);
+            Navigation.execute_open_tab("build/" + localStorage.project + ":" +buildId);
+        }
+    },
+    get_history: async function(){
+        return await git.log({fs,dir:dir});
+    },
+    pull: async function(){
+        await git.fetch({fs,dir: dir,http: http});
+        await git.pull({fs,http,dir: dir});
+    },
+    checkout_branch: async function(branch){
+        await git.fetch({
+          fs,
+          dir: dir,
+          http: http
+        })
+        await git.checkout({
+          fs,
+          dir: dir,
+          ref: branch
+        })
+        await git.pull({
+          fs,
+          http,
+          dir: dir
+        })
+    },
+    checkout_commit: async function(commit){
+        await git.checkout({
+          fs,
+          dir: dir,
+          ref: commit.oid
+        });
+        Navigation.execute_open_tab("README.md");
+        await reload_model();
+
+        let message = "Revision [";
+        let id = crc32(commit.oid);
+        message += id;
+        message += "] is read-only. Reload this page to return back to the last revision.";
+        message += ' <button type="button" class="btn btn-outline-danger" @click="FileSystem.revert_to(';
+        message += "'"+ id +"'";
+        message += ')">Revert to revision '+ id +'</button>';
+        message += '<br><br><button type="button" class="btn btn-outline-danger" @click="FileSystem.clean_and_pull()">Cancel</button>';
+        session.exception = message;
+        session.editing_disabled = true;
+    },
+    revert_to: async function(id){
+        let file_stash = {};
+        var files = await git.listFiles({ fs, dir: dir, ref: 'HEAD' })
+        for (const file of files) {
+            file_stash[file] = await FileSystem.read(file);
+        }
+        await FileSystem.checkout_branch(branch);
+        await cleanup_git_directory();
+        for (const [path, content] of Object.entries(file_stash)) {
+          await FileSystem.write(path,content);
+        }
+        session.editing_disabled = false;
+        delete session.exception;
+        Navigation.execute_open_tab("README.md");
+        await reload_model();
+    },
+    file_status: async function(path){
+        let status = await git.status({ fs, dir: dir, filepath: path });
+        return status;
+    },
+    remove_from_staging: async function(path,noreload=false){
+        clearInterval(auto_save);
+        let file_status = await FileSystem.file_status(path);
+        await git.resetIndex({ fs, dir: dir, filepath: path });
+        await git.checkout({
+          fs,
+          dir: dir,
+          ref: branch,
+          force: true,
+          filepaths: [path]
+        });
+        if (!noreload && file_status != "added"){
+            await load_file(path);
+        }
+        if (!noreload && file_status == "added"){
+            await FileSystem.delete(path);
+        }
+        if (!noreload){
+            document.dispatchEvent(new CustomEvent('tracepaper:model:loaded'));
+            await sleep(100);
+            Navigation.hard_reload_tab();
+        }
+        let status = await get_status_matrix();
+        session.staged_files = deduplicate(status.map(x => x[0]));
+        clearInterval(auto_save);
+        auto_save = setInterval(save_model_to_disk,1000);
+    }
+}
+
+
+async function prepare_folder_structure(){
+    await [   "/commands",
+        "/domain",
+        "/lib",
+        "/notifiers",
+        "/patterns",
+        "/expressions",
+        "/scenarios",
+        "/views"].forEach(async path => {
+        try{await fs.promises.mkdir(dir + path);} catch{}
+    });
+}
+
+var makeCRCTable = function(){
+    var c;
+    var crcTable = [];
+    for(var n =0; n < 256; n++){
+        c = n;
+        for(var k =0; k < 8; k++){
+            c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        crcTable[n] = c;
+    }
+    return crcTable;
+}
+
+window.crc32 = function(str) {
+    var crcTable = window.crcTable || (window.crcTable = makeCRCTable());
+    var crc = 0 ^ (-1);
+
+    for (var i = 0; i < str.length; i++ ) {
+        crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+    }
+
+    return (crc ^ (-1)) >>> 0;
+};
+
+async function cleanup_git_directory(){
+        var files = await git.listFiles({ fs, dir: dir, ref: 'HEAD' })
+        for (const file of files) {
+            await git.remove({ fs, dir: dir, filepath: file });
+            await fs.promises.unlink(dir + "/" + file);
+        }
+        await prepare_folder_structure();
+    }
+
+async function get_status_matrix(){
+        let status = await git.statusMatrix({fs,dir: dir});
+        return status.filter(x => !(x[1] == 1 && x[3] == 1));
+    }
+window.regions = [
+    {
+        "name": "Stockholm",
+        "full_name": "EU (Stockholm)",
+        "code": "eu-north-1",
+        "public": true,
+        "zones": [
+            "eu-north-1a",
+            "eu-north-1b",
+            "eu-north-1c"
+        ]
+    },
+    {
+        "name": "Ireland",
+        "full_name": "EU (Ireland)",
+        "code": "eu-west-1",
+        "public": true,
+        "zones": [
+            "eu-west-1a",
+            "eu-west-1b",
+            "eu-west-1c"
+        ]
+    },
+    {
+        "name": "London",
+        "full_name": "EU (London)",
+        "code": "eu-west-2",
+        "public": true,
+        "zones": [
+            "eu-west-2a",
+            "eu-west-2b",
+            "eu-west-2c"
+        ]
+    },
+    {
+        "name": "Paris",
+        "full_name": "EU (Paris)",
+        "code": "eu-west-3",
+        "public": true,
+        "zones": [
+            "eu-west-3a",
+            "eu-west-3b",
+            "eu-west-3c"
+        ]
+    },
+    {
+        "name": "Frankfurt",
+        "full_name": "EU (Frankfurt)",
+        "code": "eu-central-1",
+        "public": true,
+        "zones": [
+            "eu-central-1a",
+            "eu-central-1b",
+            "eu-central-1c"
+        ]
+    },
+    {
+        "name": "Milan",
+        "full_name": "EU (Milan)",
+        "code": "eu-south-1",
+        "public": true,
+        "zones": [
+            "eu-south-1a",
+            "eu-south-1b",
+            "eu-south-1c"
+        ]
+    },
+	{
+		"name": "N. Virginia",
+		"full_name": "US East (N. Virginia)",
+		"code": "us-east-1",
+		"public": true,
+		"zones": [
+			"us-east-1a",
+			"us-east-1b",
+			"us-east-1c",
+			"us-east-1d",
+			"us-east-1e",
+			"us-east-1f"
+		]
+	},
+	{
+		"name": "Ohio",
+		"full_name": "US East (Ohio)",
+		"code": "us-east-2",
+		"public": true,
+		"zones": [
+			"us-east-2a",
+			"us-east-2b",
+			"us-east-2c"
+		]
+	},
+	{
+		"name": "N. California",
+		"full_name": "US West (N. California)",
+		"code": "us-west-1",
+		"public": true,
+		"zone_limit": 2,
+		"zones": [
+			"us-west-1a",
+			"us-west-1b",
+			"us-west-1c"
+		]
+	},
+	{
+		"name": "Oregon",
+		"full_name": "US West (Oregon)",
+		"code": "us-west-2",
+		"public": true,
+		"zones": [
+			"us-west-2a",
+			"us-west-2b",
+			"us-west-2c",
+			"us-west-2d"
+		]
+	},
+	{
+		"name": "GovCloud West",
+		"full_name": "AWS GovCloud (US)",
+		"code": "us-gov-west-1",
+		"public": false,
+		"zones": [
+			"us-gov-west-1a",
+			"us-gov-west-1b",
+			"us-gov-west-1c"
+		]
+	},
+	{
+		"name": "GovCloud East",
+		"full_name": "AWS GovCloud (US-East)",
+		"code": "us-gov-east-1",
+		"public": false,
+		"zones": [
+			"us-gov-east-1a",
+			"us-gov-east-1b",
+			"us-gov-east-1c"
+		]
+	},
+	{
+		"name": "Canada",
+		"full_name": "Canada (Central)",
+		"code": "ca-central-1",
+		"public": true,
+		"zones": [
+			"ca-central-1a",
+			"ca-central-1b",
+			"ca-central-1c",
+			"ca-central-1d"
+		]
+	},
+	{
+		"name": "Cape Town",
+		"full_name": "Africa (Cape Town)",
+		"code": "af-south-1",
+		"public": true,
+		"zones": [
+			"af-south-1a",
+			"af-south-1b",
+			"af-south-1c"
+		]
+	},
+	{
+		"name": "Tokyo",
+		"full_name": "Asia Pacific (Tokyo)",
+		"code": "ap-northeast-1",
+		"public": true,
+		"zone_limit": 3,
+		"zones": [
+			"ap-northeast-1a",
+			"ap-northeast-1b",
+			"ap-northeast-1c",
+			"ap-northeast-1d"
+		]
+	},
+	{
+		"name": "Seoul",
+		"full_name": "Asia Pacific (Seoul)",
+		"code": "ap-northeast-2",
+		"public": true,
+		"zones": [
+			"ap-northeast-2a",
+			"ap-northeast-2b",
+			"ap-northeast-2c",
+			"ap-northeast-2d"
+		]
+	},
+	{
+		"name": "Osaka",
+		"full_name": "Asia Pacific (Osaka-Local)",
+		"code": "ap-northeast-3",
+		"public": true,
+		"zones": [
+			"ap-northeast-3a",
+			"ap-northeast-3b",
+			"ap-northeast-3c"
+		]
+	},
+	{
+		"name": "Singapore",
+		"full_name": "Asia Pacific (Singapore)",
+		"code": "ap-southeast-1",
+		"public": true,
+		"zones": [
+			"ap-southeast-1a",
+			"ap-southeast-1b",
+			"ap-southeast-1c"
+		]
+	},
+	{
+		"name": "Sydney",
+		"full_name": "Asia Pacific (Sydney)",
+		"code": "ap-southeast-2",
+		"public": true,
+		"zones": [
+			"ap-southeast-2a",
+			"ap-southeast-2b",
+			"ap-southeast-2c"
+		]
+	},
+	{
+		"name": "Jakarta",
+		"full_name": "Asia Pacific (Jakarta)",
+		"code": "ap-southeast-3",
+		"public": true,
+		"zones": [
+			"ap-southeast-3a",
+			"ap-southeast-3b",
+			"ap-southeast-3c"
+		]
+	},
+	{
+		"name": "Hong Kong",
+		"full_name": "Asia Pacific (Hong Kong)",
+		"code": "ap-east-1",
+		"public": true,
+		"zones": [
+			"ap-east-1a",
+			"ap-east-1b",
+			"ap-east-1c"
+		]
+	},
+	{
+		"name": "Mumbai",
+		"full_name": "Asia Pacific (Mumbai)",
+		"code": "ap-south-1",
+		"public": true,
+		"zones": [
+			"ap-south-1a",
+			"ap-south-1b",
+			"ap-south-1c"
+		]
+	},
+	{
+		"name": "São Paulo",
+		"full_name": "South America (São Paulo)",
+		"code": "sa-east-1",
+		"public": true,
+		"zone_limit": 2,
+		"zones": [
+			"sa-east-1a",
+			"sa-east-1b",
+			"sa-east-1c"
+		]
+	},
+	{
+		"name": "Bahrain",
+		"full_name": "Middle East (Bahrain)",
+		"code": "me-south-1",
+		"public": true,
+		"zones": [
+			"me-south-1a",
+			"me-south-1b",
+			"me-south-1c"
+		]
+	},
+	{
+		"name": "Beijing",
+		"full_name": "China (Beijing)",
+		"code": "cn-north-1",
+		"public": false,
+		"zones": [
+			"cn-north-1a",
+			"cn-north-1b",
+			"cn-north-1c"
+		]
+	},
+	{
+		"name": "Ningxia",
+		"full_name": "China (Ningxia)",
+		"code": "cn-northwest-1",
+		"public": false,
+		"zones": [
+			"cn-northwest-1a",
+			"cn-northwest-1b",
+			"cn-northwest-1c"
+		]
+	}
+]
+
+window.create_pipeline = function(region){
+    let url = 'https://' + region.code + '.console.aws.amazon.com/cloudformation/home?region='
+        + region.code + '#/stacks/create/review?templateURL=https://s3.eu-central-1.amazonaws.com/templates.draftsman.io/draftsman-application-pipeline-v5.yml&stackName='
+        + session.projectName.toLowerCase() + '-main-pipeline&param_GithubWorkspace='
+        + context.code_repo.split('/').at(-2).toLowerCase() + '&param_RepositoryName='
+        + context.code_repo.split('/').at(-1).toLowerCase() + '&param_RepositoryBranch=main&param_ProjectName='
+        + session.projectName.toLowerCase() + '&param_DRN='
+        + localStorage.project + '&param_GraphQL=' + api_url + '&param_APIKEY=' + api_key;
+    window.open(url, '_blank');
+}
+var XMLBuilder;(()=>{var t={784:(t,e,i)=>{"use strict";var r=i(687),s={attributeNamePrefix:"@_",attributesGroupName:!1,textNodeName:"#text",ignoreAttributes:!0,cdataPropName:!1,format:!1,indentBy:"  ",suppressEmptyNode:!1,suppressUnpairedNode:!0,suppressBooleanAttributes:!0,tagValueProcessor:function(t,e){return e},attributeValueProcessor:function(t,e){return e},preserveOrder:!1,commentPropName:!1,unpairedTags:[],entities:[{regex:new RegExp("&","g"),val:"&amp;"},{regex:new RegExp(">","g"),val:"&gt;"},{regex:new RegExp("<","g"),val:"&lt;"},{regex:new RegExp("'","g"),val:"&apos;"},{regex:new RegExp('"',"g"),val:"&quot;"}],processEntities:!0,stopNodes:[],oneListGroup:!1};function n(t){this.options=Object.assign({},s,t),this.options.ignoreAttributes||this.options.attributesGroupName?this.isAttribute=function(){return!1}:(this.attrPrefixLen=this.options.attributeNamePrefix.length,this.isAttribute=h),this.processTextOrObjNode=o,this.options.format?(this.indentate=a,this.tagEndChar=">\n",this.newLine="\n"):(this.indentate=function(){return""},this.tagEndChar=">",this.newLine="")}function o(t,e,i){var r=this.j2x(t,i+1);return void 0!==t[this.options.textNodeName]&&1===Object.keys(t).length?this.buildTextValNode(t[this.options.textNodeName],e,r.attrStr,i):this.buildObjectNode(r.val,e,r.attrStr,i)}function a(t){return this.options.indentBy.repeat(t)}function h(t){return!!t.startsWith(this.options.attributeNamePrefix)&&t.substr(this.attrPrefixLen)}n.prototype.build=function(t){return this.options.preserveOrder?r(t,this.options):(Array.isArray(t)&&this.options.arrayNodeName&&this.options.arrayNodeName.length>1&&((e={})[this.options.arrayNodeName]=t,t=e),this.j2x(t,0).val);var e},n.prototype.j2x=function(t,e){var i="",r="";for(var s in t)if(void 0===t[s]);else if(null===t[s])"?"===s[0]?r+=this.indentate(e)+"<"+s+"?"+this.tagEndChar:r+=this.indentate(e)+"<"+s+"/"+this.tagEndChar;else if(t[s]instanceof Date)r+=this.buildTextValNode(t[s],s,"",e);else if("object"!=typeof t[s]){var n=this.isAttribute(s);if(n)i+=this.buildAttrPairStr(n,""+t[s]);else if(s===this.options.textNodeName){var o=this.options.tagValueProcessor(s,""+t[s]);r+=this.replaceEntitiesValue(o)}else r+=this.buildTextValNode(t[s],s,"",e)}else if(Array.isArray(t[s])){for(var a=t[s].length,h="",p=0;p<a;p++){var u=t[s][p];void 0===u||(null===u?"?"===s[0]?r+=this.indentate(e)+"<"+s+"?"+this.tagEndChar:r+=this.indentate(e)+"<"+s+"/"+this.tagEndChar:"object"==typeof u?this.options.oneListGroup?h+=this.j2x(u,e+1).val:h+=this.processTextOrObjNode(u,s,e):h+=this.buildTextValNode(u,s,"",e))}this.options.oneListGroup&&(h=this.buildObjectNode(h,s,"",e)),r+=h}else if(this.options.attributesGroupName&&s===this.options.attributesGroupName)for(var d=Object.keys(t[s]),l=d.length,c=0;c<l;c++)i+=this.buildAttrPairStr(d[c],""+t[s][d[c]]);else r+=this.processTextOrObjNode(t[s],s,e);return{attrStr:i,val:r}},n.prototype.buildAttrPairStr=function(t,e){return e=this.options.attributeValueProcessor(t,""+e),e=this.replaceEntitiesValue(e),this.options.suppressBooleanAttributes&&"true"===e?" "+t:" "+t+'="'+e+'"'},n.prototype.buildObjectNode=function(t,e,i,r){if(""===t)return"?"===e[0]?this.indentate(r)+"<"+e+i+"?"+this.tagEndChar:this.indentate(r)+"<"+e+i+this.closeTag(e)+this.tagEndChar;var s="</"+e+this.tagEndChar,n="";return"?"===e[0]&&(n="?",s=""),i&&-1===t.indexOf("<")?this.indentate(r)+"<"+e+i+n+">"+t+s:!1!==this.options.commentPropName&&e===this.options.commentPropName&&0===n.length?this.indentate(r)+"\x3c!--"+t+"--\x3e"+this.newLine:this.indentate(r)+"<"+e+i+n+this.tagEndChar+t+this.indentate(r)+s},n.prototype.closeTag=function(t){var e="";return-1!==this.options.unpairedTags.indexOf(t)?this.options.suppressUnpairedNode||(e="/"):e=this.options.suppressEmptyNode?"/":"></"+t,e},n.prototype.buildTextValNode=function(t,e,i,r){if(!1!==this.options.cdataPropName&&e===this.options.cdataPropName)return this.indentate(r)+"<![CDATA["+t+"]]>"+this.newLine;if(!1!==this.options.commentPropName&&e===this.options.commentPropName)return this.indentate(r)+"\x3c!--"+t+"--\x3e"+this.newLine;if("?"===e[0])return this.indentate(r)+"<"+e+i+"?"+this.tagEndChar;var s=this.options.tagValueProcessor(e,t);return""===(s=this.replaceEntitiesValue(s))?this.indentate(r)+"<"+e+i+this.closeTag(e)+this.tagEndChar:this.indentate(r)+"<"+e+i+">"+s+"</"+e+this.tagEndChar},n.prototype.replaceEntitiesValue=function(t){if(t&&t.length>0&&this.options.processEntities)for(var e=0;e<this.options.entities.length;e++){var i=this.options.entities[e];t=t.replace(i.regex,i.val)}return t},t.exports=n},687:t=>{function e(t,o,a,h){for(var p="",u=!1,d=0;d<t.length;d++){var l,c=t[d],f=i(c);if(l=0===a.length?f:a+"."+f,f!==o.textNodeName)if(f!==o.cdataPropName)if(f!==o.commentPropName)if("?"!==f[0]){var g=h;""!==g&&(g+=o.indentBy);var N=h+"<"+f+r(c[":@"],o),x=e(c[f],o,l,g);-1!==o.unpairedTags.indexOf(f)?o.suppressUnpairedNode?p+=N+">":p+=N+"/>":x&&0!==x.length||!o.suppressEmptyNode?x&&x.endsWith(">")?p+=N+">"+x+h+"</"+f+">":(p+=N+">",x&&""!==h&&(x.includes("/>")||x.includes("</"))?p+=h+o.indentBy+x+h:p+=x,p+="</"+f+">"):p+=N+"/>",u=!0}else{var v=r(c[":@"],o),m="?xml"===f?"":h,b=c[f][0][o.textNodeName];p+=m+"<"+f+(b=0!==b.length?" "+b:"")+v+"?>",u=!0}else p+=h+"\x3c!--"+c[f][0][o.textNodeName]+"--\x3e",u=!0;else u&&(p+=h),p+="<![CDATA["+c[f][0][o.textNodeName]+"]]>",u=!1;else{var E=c[f];s(l,o)||(E=n(E=o.tagValueProcessor(f,E),o)),u&&(p+=h),p+=E,u=!1}}return p}function i(t){for(var e=Object.keys(t),i=0;i<e.length;i++){var r=e[i];if(":@"!==r)return r}}function r(t,e){var i="";if(t&&!e.ignoreAttributes)for(var r in t){var s=e.attributeValueProcessor(r,t[r]);!0===(s=n(s,e))&&e.suppressBooleanAttributes?i+=" "+r.substr(e.attributeNamePrefix.length):i+=" "+r.substr(e.attributeNamePrefix.length)+'="'+s+'"'}return i}function s(t,e){var i=(t=t.substr(0,t.length-e.textNodeName.length-1)).substr(t.lastIndexOf(".")+1);for(var r in e.stopNodes)if(e.stopNodes[r]===t||e.stopNodes[r]==="*."+i)return!0;return!1}function n(t,e){if(t&&t.length>0&&e.processEntities)for(var i=0;i<e.entities.length;i++){var r=e.entities[i];t=t.replace(r.regex,r.val)}return t}t.exports=function(t,i){var r="";return i.format&&i.indentBy.length>0&&(r="\n"),e(t,i,"",r)}}},e={},i=function i(r){var s=e[r];if(void 0!==s)return s.exports;var n=e[r]={exports:{}};return t[r](n,n.exports,i),n.exports}(784);XMLBuilder=i})();
+
+
+var clear_exception_timer = null;
+window.Session = {
+    reload_from_disk: function(project){
+        clearInterval(save_session_interval);
+        localStorage.project = project;
+        if (localStorage[localStorage.project]){
+            for (var member in session) delete session[member];
+            let data = JSON.parse(localStorage[localStorage.project]);
+            delete data.initialized;
+            delete data.exception;
+            Object.assign(session,data);
+        }
+        start_save_session_interval();
+    },
+    show_exception: function(message){
+        clearTimeout(clear_exception_timer);
+        session.exception = message;
+        clear_exception_timer = setTimeout(function(){
+            session.exception = "";
+        },5000);
+    },
+    disable_editing: function(){
+        session.editing_disabled = true;
+        session.hide_edit_button = true;
+    },
+    enable_editing: function(){
+        session.hide_edit_button = false;
+    }
+};
+
+document.addEventListener('tracepaper:session:initialized', async () => {
+    Session.reload_from_disk(localStorage.project);
+});
+
+var save_session_interval = null;
+function start_save_session_interval(){
+    setInterval(function(){
+    if (localStorage.project){
+        localStorage[localStorage.project] = JSON.stringify(session);
+    }
+    },1000);
+}
+
+if (localStorage.project){
+    Session.reload_from_disk(localStorage.project);
+}
+
+
+window.Documentation = {
+    subject_index: async function(subject){
+        let meta = await fetch('/docs/' + subject + '/index.json');
+        try{
+            return JSON.parse(await meta.text());
+        } catch {
+            return [];
+        }
+    },
+    get_html: async function(path){
+        let content = await fetch(path);
+        content = await content.text();
+        return convertMarkdownToHtml(content);
+    },
+    open: async function(subject,key=""){
+        Navigation.execute_open_tab("documentation/" + subject);
+        await sleep(100);
+        await Documentation.fetch_data(subject,key);
+    },
+    load: function(file){
+        Documentation.fetch_data(file.split("/").at(-1));
+    },
+    fetch_data: async function(subject,key=""){
+        session.type = "documentation";
+        tab_state.files = await Documentation.subject_index(subject);
+        try{
+            tab_state.index = files.map(x => x.path.endsWith(key + ".md")).indexOf(true);
+        }catch{
+            tab_state.index = tab_state.index <= tab_state.files.length ? tab_state.index : 0;
+        }
+    }
 }
 
 var directed_diagram = false;
@@ -545,529 +1365,6 @@ window.draw_modal = function(){
 
 
 
-window.Documentation = {
-    subject_index: async function(subject){
-        let meta = await fetch('/docs/' + subject + '/index.json');
-        try{
-            return JSON.parse(await meta.text());
-        } catch {
-            return [];
-        }
-    },
-    get_html: async function(path){
-        let content = await fetch(path);
-        content = await content.text();
-        return convertMarkdownToHtml(content);
-    },
-    open: async function(subject,key=""){
-        Navigation.execute_open_tab("documentation/" + subject);
-        await sleep(100);
-        await Documentation.fetch_data(subject,key);
-    },
-    load: function(file){
-        Documentation.fetch_data(file.split("/").at(-1));
-    },
-    fetch_data: async function(subject,key=""){
-        session.type = "documentation";
-        tab_state.files = await Documentation.subject_index(subject);
-        try{
-            tab_state.index = files.map(x => x.path.endsWith(key + ".md")).indexOf(true);
-        }catch{
-            tab_state.index = tab_state.index <= tab_state.files.length ? tab_state.index : 0;
-        }
-    }
-}
-
-import http from '/js/http.js'
-
-const dir = '/project';
-const proxy = "https://git.draftsman.io";
-var auto_save = null;
-var sync_interval = null;
-var fs = null;
-
-var branch = "main";
-var checked_out_repository = "";
-var file_check = {};
-
-const options = {
-    ignoreAttributes : false,
-    format: true,
-    attributeNamePrefix : "att_"
-};
-
-var parser = null;
-var builder = null;
-
-document.addEventListener('tracepaper:context:changed', async () => {
-    if (!parser || !builder){
-        parser = new XMLParser(options);
-        builder = new XMLBuilder(options);
-    }
-    if (context.repository && context.repository != checked_out_repository){
-        clearInterval(auto_save);
-        clearInterval(sync_interval);
-        checked_out_repository = context.repository;
-        try{
-            await connect_repository();
-        }catch(err){
-            console.error(err);
-        }
-        await load_model();
-        auto_save = setInterval(save_model_to_disk,1000);
-        sync_interval = setInterval(sync_model,5*60*1000);
-        await sleep(500);
-        session.initialized = true;
-        block = false;
-    }
-});
-
-window.clear_storage = async function(force=false){
-    clearInterval(auto_save);
-    clearInterval(sync_interval);
-    clearInterval(save_session_interval);
-    var databases = await indexedDB.databases();
-    for (var r of databases){
-        indexedDB.deleteDatabase(r.name);
-    }
-    Draftsman.sign_out();
-}
-
-async function reload_model(){
-    clearInterval(auto_save);
-    while (save_model_to_disk_block){
-        await sleep(10);
-    }
-    await load_model();
-    auto_save = setInterval(save_model_to_disk,1000);
-}
-
-async function sync_model(){
-    await pull_model();
-    await reload_model();
-}
-
-var save_model_to_disk_block = false;
-
-async function write_model_element(file,content){
-      let placeholder = "placeholder-6a3eacfc-85ff-4414-938d-511785c46536";
-      let json = JSON.stringify(content);
-      json = json.replaceAll('"true"','"' + placeholder + '"');
-      json = JSON.parse(json);
-      let xml = builder.build(json);
-      xml = xml.replaceAll(placeholder,"true");
-      await FileSystem.write(file,xml);
-}
-
-async function save_model_to_disk(){
-    if (save_model_to_disk_block){return}else{save_model_to_disk_block = true}
-    try{
-        for (var member in report) delete report[member];
-        hard_deletes = [];
-        hard_writes = {};
-        document.dispatchEvent(new CustomEvent('tracepaper:model:prepare-save'));
-        await sleep(100);
-        let isRefactored = false;
-        if (meta && meta.roles){
-            await FileSystem.write("meta.json",JSON.stringify(meta,null,2));
-        }
-        await Object.entries(documentation).forEach(async entry => {
-            await FileSystem.write(entry[0],entry[1].content);
-        });
-        await Object.entries(model).forEach(async entry => {
-              let element = entry[1][Object.keys(entry[1]).at(0)];
-              if (element && "att_mark_for_deletion" in element && element["att_mark_for_deletion"]){
-                  await FileSystem.delete(entry[0]);
-                  delete model[entry[0]];
-                  let doc = entry[0].replace(".xml",".md");
-                  if (doc in documentation){
-                    await FileSystem.delete(doc);
-                    delete documentation[doc];
-                  }
-                  isRefactored = true;
-              } else{
-                  if (element){
-                    delete element.att_mark_for_deletion;
-                    delete element.att_file_path;
-                  }
-                  await write_model_element(entry[0],entry[1]);
-              }
-        });
-        await Object.entries(code).forEach(async entry => {
-            await FileSystem.write(entry[0],entry[1].content);
-        });
-
-        //Cleanup
-        let files = await FileSystem.listFiles();
-        await files.filter(
-                file => file != "meta.json"
-                    && file != ".gitignore"
-                    && !(file in documentation)
-                    && !(file in model)
-                    && !(file in code)
-                    && !(file in logs)
-                    && !(file in templates)
-            ).forEach(async file => {
-            isRefactored = true;
-            await FileSystem.delete(file);
-        });
-        await hard_deletes.forEach(async file => {
-            await FileSystem.delete(file);
-        });
-        await Object.keys(hard_writes).forEach(async file => {
-            await write_model_element(file,hard_writes[file]);
-        });
-        let status = await get_status_matrix();
-        session.staged_files = deduplicate(status.map(x => x[0]));
-        if (isRefactored){
-            await sleep(1000);
-            document.dispatchEvent(new CustomEvent('tracepaper:model:loaded'));
-        }
-        if (JSON.stringify(session.staged_files) != stage_history){
-            Diagram.draw();
-            stage_history = JSON.stringify(session.staged_files);
-        }
-    }catch(err){
-        console.error(err);
-    }
-    save_model_to_disk_block = false;
-}
-var stage_history = "";
-
-async function load_file(file){
-    try{
-        let content = await FileSystem.read(file);
-            file_check[file] = content;
-            if (file == "meta.json"){
-                let data = JSON.parse(content);
-                Object.assign(meta,data);
-                meta.roles = make_sure_is_list(meta.roles);
-            }
-            else if (file.endsWith(".xml")){
-                content = parser.parse(content);
-                model[file] = content;
-            }
-            else if (file.endsWith(".py")){
-                code[file] = {content:content};
-            }
-            else if(file.startsWith("templates/")){
-                templates[file] = {content:content};
-            }
-            else if(file.endsWith(".md")){
-                documentation[file] = {content:content};
-            }else if(file.endsWith(".log")){
-                logs[file] = content;
-                localStorage[file] = content;
-            }
-            else {
-                console.log(file,content);
-            }
-    }catch(err){
-        console.log("Could not load file:",file,err);
-    }
-}
-
-async function load_model(){
-    clear_model();
-    let files = await FileSystem.listFiles();
-    await files.forEach(async file => {
-        await load_file(file);
-    });
-    await sleep(500);
-    document.dispatchEvent(new CustomEvent('tracepaper:model:loaded'));
-}
-
-function extract_file_name(path){
-    return path.split('/').at(-1).split('.').at(0);
-}
-
-function clear_model(){
-    for (var member in model) delete model[member];
-    for (var member in meta) delete meta[member];
-    for (var member in documentation) delete documentation[member];
-}
-
-async function connect_repository(){
-        fs = new LightningFS(localStorage.project);
-        if (await FileSystem.read("README.md") == "file not found"){
-            console.log("clone");
-            await git.clone({ fs, http, dir, url: checked_out_repository, corsProxy: proxy });
-
-            console.log("set author");
-            await git.setConfig({
-              fs,
-              dir: dir,
-              path: 'user.name',
-              value: context.fullName
-            })
-        }
-        await pull_model();
-}
-
-async function pull_model(){
-    if (!await FileSystem.staged_files()){
-      console.log("checkout: " + branch);
-      await FileSystem.checkout_branch(branch);
-      prepare_folder_structure();
-      const currentDate = new Date();
-      session.last_pulled = currentDate.getTime();
-    }
-}
-
-var hard_deletes = [];
-var hard_writes = {};
-
-const trigger_build = `
-mutation TriggerBuild($buildId: String = "", $drn: String = "") {
-  Project {
-    build(input: {drn: $drn, buildId: $buildId}) {
-      correlationId
-    }
-  }
-}
-`;
-
-window.FileSystem = {
-    sync_model: sync_model,
-    hardWrite: function(path,content){
-        hard_writes[path] = content;
-    },
-    hardDelete: function(path){
-        hard_deletes.push(path);
-    },
-    clean_and_pull: function(){
-        session.editing_disabled = false;
-        delete session.exception;
-        indexedDB.deleteDatabase(localStorage.project);
-        localStorage[localStorage.project] = JSON.stringify(session);
-        setTimeout(function(){location.reload()},500);
-    },
-    listFiles: async function(){
-        return await git.listFiles({ fs, dir: dir, ref: 'HEAD' });
-    },
-    staged_files: async function(){
-        let status = await get_status_matrix();
-        return status.length != 0;
-    },
-    read: async function(filepath){
-        try{
-            return await fs.promises.readFile(dir + "/" + filepath, "utf8");
-        } catch {
-            return "file not found";
-        }
-    },
-    write: async function(filepath,content){
-        if (!content || file_check[filepath] == content){
-            return;
-        }
-        file_check[filepath] = content;
-        await FileSystem.create_dir(filepath);
-        await fs.promises.writeFile(dir + "/" + filepath, content,"utf8");
-        await git.add({ fs, dir: dir, filepath: filepath });
-    },
-    delete: async function(filepath){
-        try{
-            await git.remove({ fs, dir: dir, filepath: filepath });
-            await fs.promises.unlink(dir + "/" + filepath);
-        }catch{}
-    },
-    create_dir: async function(path){
-        var subdir = dir;
-        for (const sub of path.split('/')){
-            if (!sub || sub.includes(".")){
-                continue;
-            }
-            subdir += '/' + sub;
-            try{
-                await fs.promises.mkdir(subdir);
-            } catch{}
-        }
-    },
-    commit: async function(message){
-        clearInterval(auto_save);
-        let sha = await git.commit({
-          fs,
-          dir: dir,
-          author: {
-            name: context.fullName,
-            email: context.username + '@example.com',
-          },
-          message: message
-        });
-        let pushResult = await git.push({
-          fs,
-          http,
-          dir: dir,
-          remote: 'origin',
-          force: true,
-          ref: branch,
-          corsProxy: proxy
-        })
-        await FileSystem.pull();
-        await reload_model();
-        await sleep(100);
-        Navigation.hard_reload_tab();
-        if (session.trigger_build_after_commit){
-            let buildId = moment().format("YYYY-MM-DD[T]hh:mm")
-            let data = await Draftsman.query(trigger_build,{drn:localStorage.project,buildId:buildId});
-            console.log(data);
-            Navigation.execute_open_tab("build/" + localStorage.project + ":" +buildId);
-        }
-    },
-    get_history: async function(){
-        return await git.log({fs,dir:dir});
-    },
-    pull: async function(){
-        await git.fetch({fs,dir: dir,http: http});
-        await git.pull({fs,http,dir: dir});
-    },
-    checkout_branch: async function(branch){
-        await git.fetch({
-          fs,
-          dir: dir,
-          http: http
-        })
-        await git.checkout({
-          fs,
-          dir: dir,
-          ref: branch
-        })
-        await git.pull({
-          fs,
-          http,
-          dir: dir
-        })
-    },
-    checkout_commit: async function(commit){
-        await git.checkout({
-          fs,
-          dir: dir,
-          ref: commit.oid
-        });
-        Navigation.execute_open_tab("README.md");
-        await reload_model();
-
-        let message = "Revision [";
-        let id = crc32(commit.oid);
-        message += id;
-        message += "] is read-only. Reload this page to return back to the last revision.";
-        message += ' <button type="button" class="btn btn-outline-danger" @click="FileSystem.revert_to(';
-        message += "'"+ id +"'";
-        message += ')">Revert to revision '+ id +'</button>';
-        message += '<br><br><button type="button" class="btn btn-outline-danger" @click="FileSystem.clean_and_pull()">Cancel</button>';
-        session.exception = message;
-        session.editing_disabled = true;
-    },
-    revert_to: async function(id){
-        let file_stash = {};
-        var files = await git.listFiles({ fs, dir: dir, ref: 'HEAD' })
-        for (const file of files) {
-            file_stash[file] = await FileSystem.read(file);
-        }
-        await FileSystem.checkout_branch(branch);
-        await cleanup_git_directory();
-        for (const [path, content] of Object.entries(file_stash)) {
-          await FileSystem.write(path,content);
-        }
-        session.editing_disabled = false;
-        delete session.exception;
-        Navigation.execute_open_tab("README.md");
-        await reload_model();
-    },
-    file_status: async function(path){
-        let status = await git.status({ fs, dir: dir, filepath: path });
-        return status;
-    },
-    remove_from_staging: async function(path,noreload=false){
-        clearInterval(auto_save);
-        let file_status = await FileSystem.file_status(path);
-        await git.resetIndex({ fs, dir: dir, filepath: path });
-        await git.checkout({
-          fs,
-          dir: dir,
-          ref: branch,
-          force: true,
-          filepaths: [path]
-        });
-        if (!noreload && file_status != "added"){
-            await load_file(path);
-        }
-        if (!noreload && file_status == "added"){
-            await FileSystem.delete(path);
-        }
-        if (!noreload){
-            document.dispatchEvent(new CustomEvent('tracepaper:model:loaded'));
-            await sleep(100);
-            Navigation.hard_reload_tab();
-        }
-        let status = await get_status_matrix();
-        session.staged_files = deduplicate(status.map(x => x[0]));
-        clearInterval(auto_save);
-        auto_save = setInterval(save_model_to_disk,1000);
-    }
-}
-
-
-async function prepare_folder_structure(){
-    await [   "/commands",
-        "/domain",
-        "/lib",
-        "/notifiers",
-        "/patterns",
-        "/expressions",
-        "/scenarios",
-        "/views"].forEach(async path => {
-        try{await fs.promises.mkdir(dir + path);} catch{}
-    });
-}
-
-var makeCRCTable = function(){
-    var c;
-    var crcTable = [];
-    for(var n =0; n < 256; n++){
-        c = n;
-        for(var k =0; k < 8; k++){
-            c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
-        }
-        crcTable[n] = c;
-    }
-    return crcTable;
-}
-
-window.crc32 = function(str) {
-    var crcTable = window.crcTable || (window.crcTable = makeCRCTable());
-    var crc = 0 ^ (-1);
-
-    for (var i = 0; i < str.length; i++ ) {
-        crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
-    }
-
-    return (crc ^ (-1)) >>> 0;
-};
-
-async function cleanup_git_directory(){
-        var files = await git.listFiles({ fs, dir: dir, ref: 'HEAD' })
-        for (const file of files) {
-            await git.remove({ fs, dir: dir, filepath: file });
-            await fs.promises.unlink(dir + "/" + file);
-        }
-        await prepare_folder_structure();
-    }
-
-async function get_status_matrix(){
-        let status = await git.statusMatrix({fs,dir: dir});
-        return status.filter(x => !(x[1] == 1 && x[3] == 1));
-    }
-
-
-var i18n_data = await fetch('/assets/language.properties');
-i18n_data = await i18n_data.text();
-
-i18n_data.split("\n").filter(x => x != "").forEach(x => {
-    var element = x.split("=");
-    label[element[0]] = element[1];
-});
-
 var navigation_block = false;
 setInterval(function(){
     navigation_block = false;
@@ -1355,363 +1652,82 @@ document.addEventListener('tracepaper:model:loaded', async () => {
     });
     session.tab_history = session.tab_history.filter(tab => files.includes(tab));
 });
-window.regions = [
-    {
-        "name": "Stockholm",
-        "full_name": "EU (Stockholm)",
-        "code": "eu-north-1",
-        "public": true,
-        "zones": [
-            "eu-north-1a",
-            "eu-north-1b",
-            "eu-north-1c"
-        ]
-    },
-    {
-        "name": "Ireland",
-        "full_name": "EU (Ireland)",
-        "code": "eu-west-1",
-        "public": true,
-        "zones": [
-            "eu-west-1a",
-            "eu-west-1b",
-            "eu-west-1c"
-        ]
-    },
-    {
-        "name": "London",
-        "full_name": "EU (London)",
-        "code": "eu-west-2",
-        "public": true,
-        "zones": [
-            "eu-west-2a",
-            "eu-west-2b",
-            "eu-west-2c"
-        ]
-    },
-    {
-        "name": "Paris",
-        "full_name": "EU (Paris)",
-        "code": "eu-west-3",
-        "public": true,
-        "zones": [
-            "eu-west-3a",
-            "eu-west-3b",
-            "eu-west-3c"
-        ]
-    },
-    {
-        "name": "Frankfurt",
-        "full_name": "EU (Frankfurt)",
-        "code": "eu-central-1",
-        "public": true,
-        "zones": [
-            "eu-central-1a",
-            "eu-central-1b",
-            "eu-central-1c"
-        ]
-    },
-    {
-        "name": "Milan",
-        "full_name": "EU (Milan)",
-        "code": "eu-south-1",
-        "public": true,
-        "zones": [
-            "eu-south-1a",
-            "eu-south-1b",
-            "eu-south-1c"
-        ]
-    },
-	{
-		"name": "N. Virginia",
-		"full_name": "US East (N. Virginia)",
-		"code": "us-east-1",
-		"public": true,
-		"zones": [
-			"us-east-1a",
-			"us-east-1b",
-			"us-east-1c",
-			"us-east-1d",
-			"us-east-1e",
-			"us-east-1f"
-		]
-	},
-	{
-		"name": "Ohio",
-		"full_name": "US East (Ohio)",
-		"code": "us-east-2",
-		"public": true,
-		"zones": [
-			"us-east-2a",
-			"us-east-2b",
-			"us-east-2c"
-		]
-	},
-	{
-		"name": "N. California",
-		"full_name": "US West (N. California)",
-		"code": "us-west-1",
-		"public": true,
-		"zone_limit": 2,
-		"zones": [
-			"us-west-1a",
-			"us-west-1b",
-			"us-west-1c"
-		]
-	},
-	{
-		"name": "Oregon",
-		"full_name": "US West (Oregon)",
-		"code": "us-west-2",
-		"public": true,
-		"zones": [
-			"us-west-2a",
-			"us-west-2b",
-			"us-west-2c",
-			"us-west-2d"
-		]
-	},
-	{
-		"name": "GovCloud West",
-		"full_name": "AWS GovCloud (US)",
-		"code": "us-gov-west-1",
-		"public": false,
-		"zones": [
-			"us-gov-west-1a",
-			"us-gov-west-1b",
-			"us-gov-west-1c"
-		]
-	},
-	{
-		"name": "GovCloud East",
-		"full_name": "AWS GovCloud (US-East)",
-		"code": "us-gov-east-1",
-		"public": false,
-		"zones": [
-			"us-gov-east-1a",
-			"us-gov-east-1b",
-			"us-gov-east-1c"
-		]
-	},
-	{
-		"name": "Canada",
-		"full_name": "Canada (Central)",
-		"code": "ca-central-1",
-		"public": true,
-		"zones": [
-			"ca-central-1a",
-			"ca-central-1b",
-			"ca-central-1c",
-			"ca-central-1d"
-		]
-	},
-	{
-		"name": "Cape Town",
-		"full_name": "Africa (Cape Town)",
-		"code": "af-south-1",
-		"public": true,
-		"zones": [
-			"af-south-1a",
-			"af-south-1b",
-			"af-south-1c"
-		]
-	},
-	{
-		"name": "Tokyo",
-		"full_name": "Asia Pacific (Tokyo)",
-		"code": "ap-northeast-1",
-		"public": true,
-		"zone_limit": 3,
-		"zones": [
-			"ap-northeast-1a",
-			"ap-northeast-1b",
-			"ap-northeast-1c",
-			"ap-northeast-1d"
-		]
-	},
-	{
-		"name": "Seoul",
-		"full_name": "Asia Pacific (Seoul)",
-		"code": "ap-northeast-2",
-		"public": true,
-		"zones": [
-			"ap-northeast-2a",
-			"ap-northeast-2b",
-			"ap-northeast-2c",
-			"ap-northeast-2d"
-		]
-	},
-	{
-		"name": "Osaka",
-		"full_name": "Asia Pacific (Osaka-Local)",
-		"code": "ap-northeast-3",
-		"public": true,
-		"zones": [
-			"ap-northeast-3a",
-			"ap-northeast-3b",
-			"ap-northeast-3c"
-		]
-	},
-	{
-		"name": "Singapore",
-		"full_name": "Asia Pacific (Singapore)",
-		"code": "ap-southeast-1",
-		"public": true,
-		"zones": [
-			"ap-southeast-1a",
-			"ap-southeast-1b",
-			"ap-southeast-1c"
-		]
-	},
-	{
-		"name": "Sydney",
-		"full_name": "Asia Pacific (Sydney)",
-		"code": "ap-southeast-2",
-		"public": true,
-		"zones": [
-			"ap-southeast-2a",
-			"ap-southeast-2b",
-			"ap-southeast-2c"
-		]
-	},
-	{
-		"name": "Jakarta",
-		"full_name": "Asia Pacific (Jakarta)",
-		"code": "ap-southeast-3",
-		"public": true,
-		"zones": [
-			"ap-southeast-3a",
-			"ap-southeast-3b",
-			"ap-southeast-3c"
-		]
-	},
-	{
-		"name": "Hong Kong",
-		"full_name": "Asia Pacific (Hong Kong)",
-		"code": "ap-east-1",
-		"public": true,
-		"zones": [
-			"ap-east-1a",
-			"ap-east-1b",
-			"ap-east-1c"
-		]
-	},
-	{
-		"name": "Mumbai",
-		"full_name": "Asia Pacific (Mumbai)",
-		"code": "ap-south-1",
-		"public": true,
-		"zones": [
-			"ap-south-1a",
-			"ap-south-1b",
-			"ap-south-1c"
-		]
-	},
-	{
-		"name": "São Paulo",
-		"full_name": "South America (São Paulo)",
-		"code": "sa-east-1",
-		"public": true,
-		"zone_limit": 2,
-		"zones": [
-			"sa-east-1a",
-			"sa-east-1b",
-			"sa-east-1c"
-		]
-	},
-	{
-		"name": "Bahrain",
-		"full_name": "Middle East (Bahrain)",
-		"code": "me-south-1",
-		"public": true,
-		"zones": [
-			"me-south-1a",
-			"me-south-1b",
-			"me-south-1c"
-		]
-	},
-	{
-		"name": "Beijing",
-		"full_name": "China (Beijing)",
-		"code": "cn-north-1",
-		"public": false,
-		"zones": [
-			"cn-north-1a",
-			"cn-north-1b",
-			"cn-north-1c"
-		]
-	},
-	{
-		"name": "Ningxia",
-		"full_name": "China (Ningxia)",
-		"code": "cn-northwest-1",
-		"public": false,
-		"zones": [
-			"cn-northwest-1a",
-			"cn-northwest-1b",
-			"cn-northwest-1c"
-		]
-	}
-]
 
-window.create_pipeline = function(region){
-    let url = 'https://' + region.code + '.console.aws.amazon.com/cloudformation/home?region='
-        + region.code + '#/stacks/create/review?templateURL=https://s3.eu-central-1.amazonaws.com/templates.draftsman.io/draftsman-application-pipeline-v5.yml&stackName='
-        + session.projectName.toLowerCase() + '-main-pipeline&param_GithubWorkspace='
-        + context.code_repo.split('/').at(-2).toLowerCase() + '&param_RepositoryName='
-        + context.code_repo.split('/').at(-1).toLowerCase() + '&param_RepositoryBranch=main&param_ProjectName='
-        + session.projectName.toLowerCase() + '&param_DRN='
-        + localStorage.project + '&param_GraphQL=' + api_url + '&param_APIKEY=' + api_key;
-    window.open(url, '_blank');
-}
-
-var clear_exception_timer = null;
-window.Session = {
-    reload_from_disk: function(project){
-        clearInterval(save_session_interval);
-        localStorage.project = project;
-        if (localStorage[localStorage.project]){
-            for (var member in session) delete session[member];
-            let data = JSON.parse(localStorage[localStorage.project]);
-            delete data.initialized;
-            delete data.exception;
-            Object.assign(session,data);
+window.Validation = {
+    must_be_camel_cased: function(path,element,fieldName,key){
+        make_sure_is_list(element).forEach(x => {
+            if (key){
+                x = x[key];
+            }
+            if (!x.match(camel_cased)){
+                Validation.register(path,`${fieldName} ${x} must be camelCased`);
+            }
+        });
+    },
+    register: function(file,issue){
+        if (!(file in report)){
+            report[file] = [];
         }
-        start_save_session_interval();
+        report[file].push(issue);
     },
-    show_exception: function(message){
-        clearTimeout(clear_exception_timer);
-        session.exception = message;
-        clear_exception_timer = setTimeout(function(){
-            session.exception = "";
-        },5000);
-    },
-    disable_editing: function(){
-        session.editing_disabled = true;
-        session.hide_edit_button = true;
-    },
-    enable_editing: function(){
-        session.hide_edit_button = false;
+    has_issues: function(){
+        session.trigger_build_after_commit = Object.values(report).filter(x => x.length != 0).length == 0;
+        return Object.values(report).filter(x => x.length != 0).length != 0;
     }
 };
 
-document.addEventListener('tracepaper:session:initialized', async () => {
-    Session.reload_from_disk(localStorage.project);
+window.Context = {
+    reload: async function(){
+        await sleep(1000);
+        await Draftsman.force_reload_data();
+        await sleep(10);
+        load_context();
+    },
+    open_workspace: function(event){
+        let workspace = get_attribute(event,"name");
+        localStorage.workspace = workspace;
+        context.selected_workspace = context.workspace.filter(x => x.name == localStorage.workspace).at(0);
+    },
+    open_project: function(event){
+        Session.reload_from_disk(get_attribute(event,"drn"));
+        load_context();
+    },
+    close_workspace: function(){
+        delete context.selected_workspace;
+        localStorage.removeItem("workspace");
+    },
+    close_project: function(){
+        delete context.selected_project;
+        localStorage.removeItem("project");
+        Session.reload_from_disk("");
+        checked_out_repository = "";
+    }
+}
+
+document.addEventListener('draftsman:initialized', async () => {
+    load_context();
+    if (!context.repository){
+        session.initialized = true;
+    }
 });
 
-var save_session_interval = null;
-function start_save_session_interval(){
-    setInterval(function(){
-    if (localStorage.project){
-        localStorage[localStorage.project] = JSON.stringify(session);
+function load_context(){
+    if (Alpine.store("context").get != null){
+        Object.assign(context,Alpine.store("context").get);
     }
-    },1000);
+    if (localStorage.workspace && context.workspace){
+        context.selected_workspace = context.workspace.filter(x => x.name == localStorage.workspace).at(0);
+    }
+    if (localStorage.project && context.selected_workspace){
+        context.selected_project = context.selected_workspace.projects.filter(x => x.drn == localStorage.project).at(0);
+    }
+    if (context.selected_project){
+        reset_proxy_token();
+        context.repository = context.selected_project.repositories.filter(x => x.name == "model").at(0).url;
+        context.code_repo = context.selected_project.repositories.filter(x => x.name == "code").at(0).url;
+    }
+    document.dispatchEvent(new CustomEvent('tracepaper:context:changed'));
 }
-
-if (localStorage.project){
-    Session.reload_from_disk(localStorage.project);
-}
-
 
 function deduplicate(elements){
     let array = [];
@@ -1830,390 +1846,72 @@ window.get_lorem_picsum = function(el){
     return `https://picsum.photos/seed/${el.id}/250`
 }
 
-window.Validation = {
-    must_be_camel_cased: function(path,element,fieldName,key){
-        make_sure_is_list(element).forEach(x => {
-            if (key){
-                x = x[key];
-            }
-            if (!x.match(camel_cased)){
-                Validation.register(path,`${fieldName} ${x} must be camelCased`);
-            }
-        });
-    },
-    register: function(file,issue){
-        if (!(file in report)){
-            report[file] = [];
-        }
-        report[file].push(issue);
-    },
-    has_issues: function(){
-        session.trigger_build_after_commit = Object.values(report).filter(x => x.length != 0).length == 0;
-        return Object.values(report).filter(x => x.length != 0).length != 0;
-    }
-};
-var XMLBuilder;(()=>{var t={784:(t,e,i)=>{"use strict";var r=i(687),s={attributeNamePrefix:"@_",attributesGroupName:!1,textNodeName:"#text",ignoreAttributes:!0,cdataPropName:!1,format:!1,indentBy:"  ",suppressEmptyNode:!1,suppressUnpairedNode:!0,suppressBooleanAttributes:!0,tagValueProcessor:function(t,e){return e},attributeValueProcessor:function(t,e){return e},preserveOrder:!1,commentPropName:!1,unpairedTags:[],entities:[{regex:new RegExp("&","g"),val:"&amp;"},{regex:new RegExp(">","g"),val:"&gt;"},{regex:new RegExp("<","g"),val:"&lt;"},{regex:new RegExp("'","g"),val:"&apos;"},{regex:new RegExp('"',"g"),val:"&quot;"}],processEntities:!0,stopNodes:[],oneListGroup:!1};function n(t){this.options=Object.assign({},s,t),this.options.ignoreAttributes||this.options.attributesGroupName?this.isAttribute=function(){return!1}:(this.attrPrefixLen=this.options.attributeNamePrefix.length,this.isAttribute=h),this.processTextOrObjNode=o,this.options.format?(this.indentate=a,this.tagEndChar=">\n",this.newLine="\n"):(this.indentate=function(){return""},this.tagEndChar=">",this.newLine="")}function o(t,e,i){var r=this.j2x(t,i+1);return void 0!==t[this.options.textNodeName]&&1===Object.keys(t).length?this.buildTextValNode(t[this.options.textNodeName],e,r.attrStr,i):this.buildObjectNode(r.val,e,r.attrStr,i)}function a(t){return this.options.indentBy.repeat(t)}function h(t){return!!t.startsWith(this.options.attributeNamePrefix)&&t.substr(this.attrPrefixLen)}n.prototype.build=function(t){return this.options.preserveOrder?r(t,this.options):(Array.isArray(t)&&this.options.arrayNodeName&&this.options.arrayNodeName.length>1&&((e={})[this.options.arrayNodeName]=t,t=e),this.j2x(t,0).val);var e},n.prototype.j2x=function(t,e){var i="",r="";for(var s in t)if(void 0===t[s]);else if(null===t[s])"?"===s[0]?r+=this.indentate(e)+"<"+s+"?"+this.tagEndChar:r+=this.indentate(e)+"<"+s+"/"+this.tagEndChar;else if(t[s]instanceof Date)r+=this.buildTextValNode(t[s],s,"",e);else if("object"!=typeof t[s]){var n=this.isAttribute(s);if(n)i+=this.buildAttrPairStr(n,""+t[s]);else if(s===this.options.textNodeName){var o=this.options.tagValueProcessor(s,""+t[s]);r+=this.replaceEntitiesValue(o)}else r+=this.buildTextValNode(t[s],s,"",e)}else if(Array.isArray(t[s])){for(var a=t[s].length,h="",p=0;p<a;p++){var u=t[s][p];void 0===u||(null===u?"?"===s[0]?r+=this.indentate(e)+"<"+s+"?"+this.tagEndChar:r+=this.indentate(e)+"<"+s+"/"+this.tagEndChar:"object"==typeof u?this.options.oneListGroup?h+=this.j2x(u,e+1).val:h+=this.processTextOrObjNode(u,s,e):h+=this.buildTextValNode(u,s,"",e))}this.options.oneListGroup&&(h=this.buildObjectNode(h,s,"",e)),r+=h}else if(this.options.attributesGroupName&&s===this.options.attributesGroupName)for(var d=Object.keys(t[s]),l=d.length,c=0;c<l;c++)i+=this.buildAttrPairStr(d[c],""+t[s][d[c]]);else r+=this.processTextOrObjNode(t[s],s,e);return{attrStr:i,val:r}},n.prototype.buildAttrPairStr=function(t,e){return e=this.options.attributeValueProcessor(t,""+e),e=this.replaceEntitiesValue(e),this.options.suppressBooleanAttributes&&"true"===e?" "+t:" "+t+'="'+e+'"'},n.prototype.buildObjectNode=function(t,e,i,r){if(""===t)return"?"===e[0]?this.indentate(r)+"<"+e+i+"?"+this.tagEndChar:this.indentate(r)+"<"+e+i+this.closeTag(e)+this.tagEndChar;var s="</"+e+this.tagEndChar,n="";return"?"===e[0]&&(n="?",s=""),i&&-1===t.indexOf("<")?this.indentate(r)+"<"+e+i+n+">"+t+s:!1!==this.options.commentPropName&&e===this.options.commentPropName&&0===n.length?this.indentate(r)+"\x3c!--"+t+"--\x3e"+this.newLine:this.indentate(r)+"<"+e+i+n+this.tagEndChar+t+this.indentate(r)+s},n.prototype.closeTag=function(t){var e="";return-1!==this.options.unpairedTags.indexOf(t)?this.options.suppressUnpairedNode||(e="/"):e=this.options.suppressEmptyNode?"/":"></"+t,e},n.prototype.buildTextValNode=function(t,e,i,r){if(!1!==this.options.cdataPropName&&e===this.options.cdataPropName)return this.indentate(r)+"<![CDATA["+t+"]]>"+this.newLine;if(!1!==this.options.commentPropName&&e===this.options.commentPropName)return this.indentate(r)+"\x3c!--"+t+"--\x3e"+this.newLine;if("?"===e[0])return this.indentate(r)+"<"+e+i+"?"+this.tagEndChar;var s=this.options.tagValueProcessor(e,t);return""===(s=this.replaceEntitiesValue(s))?this.indentate(r)+"<"+e+i+this.closeTag(e)+this.tagEndChar:this.indentate(r)+"<"+e+i+">"+s+"</"+e+this.tagEndChar},n.prototype.replaceEntitiesValue=function(t){if(t&&t.length>0&&this.options.processEntities)for(var e=0;e<this.options.entities.length;e++){var i=this.options.entities[e];t=t.replace(i.regex,i.val)}return t},t.exports=n},687:t=>{function e(t,o,a,h){for(var p="",u=!1,d=0;d<t.length;d++){var l,c=t[d],f=i(c);if(l=0===a.length?f:a+"."+f,f!==o.textNodeName)if(f!==o.cdataPropName)if(f!==o.commentPropName)if("?"!==f[0]){var g=h;""!==g&&(g+=o.indentBy);var N=h+"<"+f+r(c[":@"],o),x=e(c[f],o,l,g);-1!==o.unpairedTags.indexOf(f)?o.suppressUnpairedNode?p+=N+">":p+=N+"/>":x&&0!==x.length||!o.suppressEmptyNode?x&&x.endsWith(">")?p+=N+">"+x+h+"</"+f+">":(p+=N+">",x&&""!==h&&(x.includes("/>")||x.includes("</"))?p+=h+o.indentBy+x+h:p+=x,p+="</"+f+">"):p+=N+"/>",u=!0}else{var v=r(c[":@"],o),m="?xml"===f?"":h,b=c[f][0][o.textNodeName];p+=m+"<"+f+(b=0!==b.length?" "+b:"")+v+"?>",u=!0}else p+=h+"\x3c!--"+c[f][0][o.textNodeName]+"--\x3e",u=!0;else u&&(p+=h),p+="<![CDATA["+c[f][0][o.textNodeName]+"]]>",u=!1;else{var E=c[f];s(l,o)||(E=n(E=o.tagValueProcessor(f,E),o)),u&&(p+=h),p+=E,u=!1}}return p}function i(t){for(var e=Object.keys(t),i=0;i<e.length;i++){var r=e[i];if(":@"!==r)return r}}function r(t,e){var i="";if(t&&!e.ignoreAttributes)for(var r in t){var s=e.attributeValueProcessor(r,t[r]);!0===(s=n(s,e))&&e.suppressBooleanAttributes?i+=" "+r.substr(e.attributeNamePrefix.length):i+=" "+r.substr(e.attributeNamePrefix.length)+'="'+s+'"'}return i}function s(t,e){var i=(t=t.substr(0,t.length-e.textNodeName.length-1)).substr(t.lastIndexOf(".")+1);for(var r in e.stopNodes)if(e.stopNodes[r]===t||e.stopNodes[r]==="*."+i)return!0;return!1}function n(t,e){if(t&&t.length>0&&e.processEntities)for(var i=0;i<e.entities.length;i++){var r=e.entities[i];t=t.replace(r.regex,r.val)}return t}t.exports=function(t,i){var r="";return i.format&&i.indentBy.length>0&&(r="\n"),e(t,i,"",r)}}},e={},i=function i(r){var s=e[r];if(void 0!==s)return s.exports;var n=e[r]={exports:{}};return t[r](n,n.exports,i),n.exports}(784);XMLBuilder=i})();
 
+var i18n_data = await fetch('/assets/language.properties');
+i18n_data = await i18n_data.text();
 
-window.Aggregates = {
+i18n_data.split("\n").filter(x => x != "").forEach(x => {
+    var element = x.split("=");
+    label[element[0]] = element[1];
+});
+
+window.Expressions = {
     list: function(){
-        let resultset = [];
-        Object.keys(model).filter(key => key.startsWith('domain/') && key.endsWith("/root.xml")).forEach(key => {
-            resultset.push(Aggregates.get(key));
-        });
-        return resultset;
+        return Object.entries(model).filter(x => x[0].startsWith('expressions/')).map(x => x[1]["expression"]);
     },
-    get: function(path){
-        let root = model[path]["aggregate"];
-        root.field = make_sure_is_list(root.field);
-
-        let events = Modeler.get_child_models(path.replace("root.xml","events/"),"event",function(event){
-            event.field = make_sure_is_list(event.field);
-            event[NESTED] = make_sure_is_list(event[NESTED]);
-            event[NESTED].forEach(nested => {
-                nested.field = make_sure_is_list(nested.field);
-            });
-        });
-
-        let flows = Modeler.get_child_models(path.replace("root.xml","behavior-flows/"),"command",Behavior.repair);
-
-        let entities = Modeler.get_child_models(path.replace("root.xml","entities/"),NESTED,function(entity){
-            entity.field = make_sure_is_list(entity.field);
-        });
-
-        let handlers = Modeler.get_child_models(path.replace("root.xml","event-handlers/"),HANDLER,function(handler){
-            handler.mapping = make_sure_is_list(handler.mapping);
-            handler[NESTED_MAPPING] = make_sure_is_list(handler[NESTED_MAPPING]);
-            handler[NESTED_MAPPING].forEach(nested => {
-                nested.mapping = make_sure_is_list(nested.mapping);
-            });
-        });
-
-        if (!root["att_event-ttl"]){root["att_event-ttl"] = -1};
-        if (!root["att_snapshot-interval"]){root["att_snapshot-interval"] = 100};
-        if (!root["att_backup-interval-days"]){root["att_backup-interval-days"] = 0};
-        if(!root["att_backup-ttl-days"]){root["att_backup-ttl-days"] = 0};
-        return Alpine.reactive({
-            root: root,
-            events: events,
-            flows: flows,
-            entities: entities,
-            handlers: handlers,
-            subdomain: path.split('/')[1],
-            name: path.split('/')[2],
-            path: path
-        });
-    },
-    load_navigation: function(){
-        session.aggregates = {};
-        Aggregates.list().forEach(aggregate => {
-            if (aggregate.subdomain in session.aggregates){
-                session.aggregates[aggregate.subdomain].push(aggregate);
-            } else {
-                session.aggregates[aggregate.subdomain] = [aggregate];
+    load: function(){
+        tab_state.expressions = Expressions.list();
+        Object.keys(model).filter(key => key.startsWith('expressions/')).forEach(key => {
+            let doc = key.replace(".xml",".md");
+            if (!(doc in documentation)){
+                documentation[doc] = {content:""};
             }
         });
+        session.type = "expressions";
     },
-    load: function(file){
-        session.type = "aggregate";
-        tab_state.aggregate = Aggregates.get(file);
-        Modeler.load_documentation(file.replace(".xml",".md"));
-        if(!tab_state.handler_mode){tab_state.handler_mode = 'table'};
-        if(!tab_state.view){tab_state.view = "document"};
-        if(!tab_state.handler_selected_entity){tab_state.handler_selected_entity = 'root'};
-        if(tab_state.handler_selected_entity == 'root'){tab_state.handler_entity = tab_state.aggregate};
-        if(!tab_state.handler_selected_source){tab_state.handler_selected_source = 'root'};
-        try{
-            Aggregates.load_document_model(tab_state.view);
-        }catch{}
-        try{
-            Aggregates.force_select_event(tab_state.event);
-        }catch(err){console.error("--->",err)}
-    },
-    load_document_model: function(view, selected_event=""){
-        let model = ""
-        if (tab_state.document_model){
-            model = tab_state.document_model.att_name;
+    remove: blockingDecorator(function(name){
+            let path = "expressions/" + name;
+            delete model[path + ".xml"];
+            delete documentation[path + ".md"];
+            Expressions.load();
+        }),
+    rename: blockingDecorator(function(old_name,new_name){
+        if (!new_name.match(camel_cased)){
+            Session.show_exception("Expression reference must be camelCased");
+            return;
         }
 
-        if (view == "document"){
-            tab_state.document_model = tab_state.aggregate.root;
-            tab_state.nested_documents = tab_state.aggregate.entities;
-        } else {
-            tab_state.document_model = tab_state.aggregate.events.filter(x => x.att_name == selected_event).at(0);
-            tab_state.nested_documents = tab_state.document_model[NESTED];
+        let oldPath = "expressions/" + old_name;
+        let newPath = "expressions/" + new_name;
+
+        model[newPath + ".xml"] = model[oldPath + ".xml"];
+        model[newPath + ".xml"].expression.att_name = new_name;
+        delete model[oldPath + ".xml"];
+        documentation[newPath + ".md"] = documentation[oldPath + ".md"];
+        delete documentation[oldPath + ".md"];
+        Expressions.load();
+    }),
+    create: blockingDecorator(function(name){
+        if (!name.match(camel_cased)){
+            Session.show_exception("Expression reference must be camelCased");
+            return;
         }
-        if (model != tab_state.document_model.att_name){
-            tab_state.document_selected_entity = "root";
+        let path = "expressions/" + name + ".xml";
+        if (path in model){
+            Session.show_exception("There is already a expression defined with name: "+name);
+            return;
         }
-    },
-    create_new: blockingDecorator(function(subdomain){
-        let name = "NewAggregate";
-        let path = "domain/" +subdomain + "/" + name + "/root.xml";
-        let doc = "domain/" +subdomain + "/" + name + "/root.md";
-        let added = Modeler.insert_model(path,{
-            "aggregate": {
-                "att_name": name,
-                "att_business-key": "fieldName",
-                "field": [{
-                    "att_name": "fieldName",
-                    "att_type": "String"
-                }]
+        Modeler.insert_model(path,{
+            expression: {
+                att_name: name,
+                att_type: "ActorEventRole",
+                att_input: "input",
+                att_expression: ""
             }
         });
-        Modeler.insert_documentation(doc,"~~Aggregate model template~~");
-        if (added){
-            setTimeout(function(){
-                Navigation.execute_open_tab(path);
-            },500);
-        }
-    }),
-    remove: blockingDecorator(function(){
-        if (!session.tab.startsWith("domain/") && !session.tab.endsWith("/root.xml")){
-            Session.show_exception("Could not remove aggregate: " + session.tab);
-            return
-        }
-        let path = session.tab.replace("","");
-        Object.keys(model).filter(key => key.startsWith(path)).forEach(key => {delete model[key]});
-        Object.keys(documentation).filter(key => key.startsWith(path)).forEach(key => {delete documentation[key]});
-        Navigation.execute_close_tab(session.tab);
-        Modeler.render();
-    }),
-    rename:blockingDecorator(function(name){
-        if (!session.tab.startsWith("domain/") && !session.tab.endsWith("/root.xml")){
-            Session.show_exception("Could not rename aggregate: " + session.tab);
-            return
-        }
-        if (!name.match(pascal_cased)){
-            Session.show_exception("Aggregate name must be PascalCased");
-            return;
-        }
-        let oldPath = "domain/" + tab_state.aggregate.subdomain + "/" + tab_state.aggregate.root.att_name + "/";
-        let newPath = "domain/" + tab_state.aggregate.subdomain + "/" + name + "/";
-        tab_state.aggregate.root.att_name = name;
-        tab_state.aggregate.name = name;
-        Object.keys(model).filter(key => key.startsWith(oldPath)).forEach(key => {
-            model[key.replace(oldPath,newPath)] = model[key];
-            delete model[key];
-        });
-        Object.keys(documentation).filter(key => key.startsWith(oldPath)).forEach(key => {
-            documentation[key.replace(oldPath,newPath)] = documentation[key];
-            delete documentation[key];
-        });
-        Navigation.execute_close_tab(session.tab);
-        Navigation.execute_open_tab(newPath + "root.xml");
-        Modeler.render();
-    }),
-    add_element_collection: blockingDecorator(function(){
-        let path = session.tab.replace("root.xml","entities/newEntity.xml");
-        model[path] = {
-            "nested-object": {
-                att_name: "newEntity",
-                "att_business-key" : "newField",
-                field: [{
-                    att_name: "newField",
-                    att_type: "String"
-                }]
-            }
-        };
-        Navigation.reload_tab();
-    }),
-    remove_element_collection: blockingDecorator(function(name){
-        let path = `domain/${tab_state.aggregate.subdomain}/${tab_state.aggregate.root.att_name}/entities/${name}.xml`;
-        let doc  = `domain/${tab_state.aggregate.subdomain}/${tab_state.aggregate.root.att_name}/entities/${name}.md`;
-        delete model[path];
-        delete documentation[path];
-        Navigation.reload_tab();
-    }),
-    rename_collection: blockingDecorator(function(oldName,newName){
-        setTimeout(function(){
-            let root = session.tab.replace("root.xml","entities/");
-            let oldPath = root + oldName;
-            let newPath = root + newName;
-            console.log(oldPath,newPath);
-            model[newPath + ".xml"] = model[oldPath + ".xml"];
-            delete model[oldPath + ".xml"];
-            documentation[newPath + ".md"] = documentation[oldPath + ".md"];
-            delete documentation[oldPath + ".md"];
-            Aggregates.load(session.tab);
-        },1000);
-    }),
-    add_collection_to_event: blockingDecorator(function(){
-        if (tab_state.nested_documents.filter(x => x.att_name == "newEntity").length != 0){
-            return;
-        }
-        tab_state.nested_documents.push({
-            att_name: "newEntity",
-            field: [{
-                att_name: "newField",
-                att_type: "String"
-            }]
-        });
-        Navigation.reload_tab();
-    }),
-    remove_collection_from_event: blockingDecorator(function(name){
-        tab_state.nested_documents = tab_state.nested_documents.filter(x => x.att_name != name);
-        tab_state.document_model[NESTED] = tab_state.nested_documents;
-        setTimeout(Navigation.reload_tab,100);
-    }),
-    change_view: blockingDecorator(function(view){
-        tab_state.view = "";
-        setTimeout(function(){tab_state.view = view},100);
-    }),
-    force_select_event: function(event){
-        if (tab_state.aggregate.events.filter(x => x.att_name == event.att_name).length == 0){
-            event = null;
-        } else {
-            event = tab_state.aggregate.events.filter(x => x.att_name == event.att_name).at(0);
-        }
-        if (event){
-            tab_state.selected_event = event.att_name;
-            tab_state.event = event;
-        }else{
-            tab_state.event = tab_state.aggregate.events.at(0);
-            tab_state.selected_event = tab_state.event.att_name;
-        }
-        let handlers = tab_state.aggregate.handlers.filter(x => x.att_on == tab_state.selected_event);
-        if (handlers.length != 0){
-            tab_state.handler = handlers.at(0);
-        }else{
-            let handler = {
-                att_on: tab_state.selected_event,
-                mapping: [],
-                "nested-mapping": []
-            };
-            let path = tab_state.aggregate.path.replace("root.xml",`event-handlers/${event.att_name}.xml`);
-            model[path] = {};
-            model[path][HANDLER] = handler;
-            tab_state.handler = model[path][HANDLER];
-        }
-        if(!tab_state.handler_selected_entity){
-            tab_state.handler_selected_entity = "root";
-            tab_state.handler_entity = tab_state.aggregate.root;
-        }
-    },
-    select_event: blockingDecorator(function(event){
-        Aggregates.force_select_event(event);
-    }),
-    sync_handler: function(){
-        let path = tab_state.aggregate.path.replace("root.xml",`event-handlers/${tab_state.event.att_name}.xml`);
-        if (!(path in model)){
-            model[path] = {};
-        }
-        model[path][HANDLER] = tab_state.handler;
-    },
-    switch_handler_type: blockingDecorator(function(){
-        if ('att_code' in tab_state.handler){
-          delete tab_state.handler.att_code;
-        }else{
-          tab_state.handler.att_code = '';
-          tab_state.handler.mapping = [];
-          tab_state.handler[NESTED_MAPPING] = [];
-          delete tab_state.handler['att_business-key'];
-        };
-        tab_state.aggregate.handlers = tab_state.aggregate.handlers.map(x => {
-            if (x.att_on == tab_state.handler.att_on){
-                return tab_state.handler;
-            } else {
-                return x;
-            }
-        });
-    }),
-    create_new_event: blockingDecorator(function(name){
-        if (!name.match(pascal_cased)){
-            Session.show_exception("Domain event name must be PascalCased");
-            return;
-        }
-        let events = Events.list().map(x => x.att_name);
-        if(events.includes(name)){
-            Session.show_exception("This domain already contains an event with the name: " + name);
-            return;
-        }
-        let aggregate = tab_state.aggregate;
-        let path = aggregate.path.replace("root.xml",`events/${name}.xml`);
-        console.log(aggregate);
-        let event = {
-          att_name: name,
-          att_source: `${aggregate.subdomain}.${aggregate.root.att_name}`,
-          att_type: "DomainEvent",
-          field: JSON.parse(JSON.stringify(aggregate.root.field.filter(x => field_types.includes(x.att_type)))),
-          "nested-object": JSON.parse(JSON.stringify(aggregate.entities))
-        }
-        event["nested-object"].forEach(nested => {
-            nested.field = nested.field.filter(x => field_types.includes(x.att_type));
-        });
-        model[path] = {event:event};
-        Navigation.fresh_reload(aggregate.path);
-        tab_state.view = 'events';
-        tab_state.selected_event = event.att_name;
-        tab_state.event = event;
-        tab_state.handler = {
-            att_on: name,
-            mapping: [],
-            "nested-mapping": []
-        };
-        path = aggregate.path.replace("root.xml",`event-handlers/${name}.xml`);
-        model[path] = {};
-        model[path][HANDLER] = tab_state.handler;
-    }),
-    delete_event: blockingDecorator(function(){
-        let name = tab_state.selected_event;
-        let aggregate = tab_state.aggregate;
-        let event_path = aggregate.path.replace("root.xml",`events/${name}.xml`);
-        let handler_path = aggregate.path.replace("root.xml",`event-handlers/${name}.xml`);
-        delete model[event_path];
-        delete model[handler_path];
-        Navigation.fresh_reload(aggregate.path);
-        tab_state.view = 'events';
+        Expressions.load();
     })
 }
-
-document.addEventListener('tracepaper:model:loaded', async () => {
-    Aggregates.load_navigation();
-});
-
-document.addEventListener('tracepaper:model:prepare-save', () => {
-    Aggregates.list().forEach(aggregate => {
-        aggregate.root.att_name = aggregate.name;
-        if (aggregate.root['att_backup-interval-days'] == 0){
-            aggregate.root['att_backup-ttl-days'] = 0;
-        }
-        aggregate.root.field.forEach(field => {
-            delete field.att_pk;
-        });
-        aggregate.entities.forEach(entity => {
-            entity.field.forEach(field => {
-                delete field.att_pk;
-            });
-        });
-        aggregate.handlers.forEach(handler => {
-            try{
-            let path = aggregate.path.replace("root.xml",`event-handlers/${handler.att_on}.xml`);
-            let check = make_sure_is_list(handler[NESTED_MAPPING]).length;
-            handler[NESTED_MAPPING] = make_sure_is_list(handler[NESTED_MAPPING]).filter(x => x.mapping.length != 0);
-            if (!handler.att_code && handler[NESTED_MAPPING].length == 0 && handler.mapping.length == 0){
-                FileSystem.hardDelete(path);
-            } else if (check != make_sure_is_list(handler[NESTED_MAPPING]).length){
-                let obj = {};
-                obj[HANDLER] = handler;
-                FileSystem.hardWrite(path, obj);
-            }
-            }catch(err){console.error(err)}
-        });
-
-        //Validation
-        Validation.must_be_camel_cased(aggregate.path,aggregate.root.field,"Document field","att_name")
-        aggregate.entities.forEach(entity => {
-            Validation.must_be_camel_cased(aggregate.path,entity.field,`Document collection (${entity.att_name}) field`,"att_name")
-        });
-        aggregate.events.forEach(event=>{
-            Validation.must_be_camel_cased(aggregate.path,event.field,`Field in event (${event.att_name})`,"att_name");
-            event[NESTED].forEach(nested => {
-                Validation.must_be_camel_cased(aggregate.path,nested.field,`Field in event (${event.att_name}) collection (${nested.att_name})`,"att_name");
-            });
-        })
-    });
-});
 
 window.Behavior = {
     get: function(path){
@@ -2711,259 +2409,6 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
     });
 });
 
-const builds_query = `
-query GetBuilds($key_begins_with: String = "") {
-  Build {
-    filter(key_begins_with: $key_begins_with) {
-      resultset {
-        drn
-        lastEvent
-        status
-      }
-    }
-  }
-}
-`
-
-window.Builds = {
-    load: function(){
-        session.type = "build";
-        session.tabs.map(x=> x.split("#").at(0)).filter(x=> x.startsWith("build/") && x != session.tab).forEach(tab=> {
-            try{
-                console.log("auto close tab:",tab);
-                Navigation.execute_close_tab(tab);
-            }catch{}
-        });
-    },
-    fetch_builds: async function(){
-        let data = await Draftsman.query(builds_query,{key_begins_with:localStorage.project});
-        let builds = data.Build.filter.resultset;
-        builds.sort((a,b) => b.lastEvent-a.lastEvent);
-        tab_state.builds = builds;
-        return builds;
-    },
-    open_build: blockingDecorator(function(drn){
-        Navigation.execute_close_tab(session.tab);
-        Navigation.execute_open_tab("build/" + drn);
-    })
-}
-
-window.Code = {
-    list_modules: function(){
-        return Object.keys(code).map(key => key.replace("lib/","").replace(".py","")).concat("");
-    },
-    get_methods: function(module,filter="(flow):"){
-        return code[module].content.split("\n").filter(x => x.startsWith("def ") && x.endsWith(filter))
-            .map(x => x.replace("def ","").replace(filter,""));
-    },
-    create_new: blockingDecorator(function(){
-        let path = "lib/NewModule.py";
-        if (Object.keys(code).includes(path)){
-            Session.show_exception("Module with name 'NewModule' already exists");
-            return;
-        }
-        code[path] = {content:code_template}
-        Navigation.execute_open_tab(path);
-    }),
-    load: function(file){
-        tab_state.code = code[file];
-        let doc = file.replace('.py','.md')
-        Modeler.load_documentation(doc);
-        session.type = "code";
-    },
-    remove: blockingDecorator(function(){
-        delete code[session.tab];
-        delete documentation[session.tab.replace(".py",".md")];
-        Navigation.execute_close_tab(session.tab);
-    }),
-    rename: blockingDecorator(function(name){
-        if (!name.match(pascal_cased)){
-            Session.show_exception("Python module must be PascalCased");
-            return;
-        }
-
-        let oldPath = session.tab;
-        let newPath = "lib/" + name + ".py";
-
-        code[newPath] = code[oldPath];
-        delete code[oldPath];
-        documentation[newPath.replace(".py",".md")] = documentation[oldPath.replace(".py",".md")];
-        delete documentation[oldPath.replace(".py",".md")];
-
-        Navigation.execute_close_tab(oldPath);
-        Navigation.execute_open_tab(newPath);
-        Modeler.render();
-    })
-}
-
-window.Commands = {
-    get_attribute_sources: function(){
-        let sources = [];
-        sources = sources.concat(Commands.list());
-        sources = sources.concat(Aggregates.list());
-        return sources;
-    },
-    load_commands: function(){
-        session.command_names = [];
-        Object.keys(model).filter(key => key.startsWith('commands/')).forEach(key => {
-            let name = key.replace("commands/","").replace("Requested.xml","");
-            session.command_names.push(name);
-        });
-    },
-    load: function(file){
-        let doc = file.replace('.xml','.md')
-        Modeler.load_documentation(doc);
-        tab_state.command = Commands.get(file);
-        session.type = "command";
-        tab_state.document_model = tab_state.command;
-        tab_state.nested_documents = tab_state.command[NESTED]
-    },
-    add_element_collection: blockingDecorator(function(){
-        tab_state.command['nested-object'].push({
-            "att_name" : "collection-name-" + makeid(4),
-            "field": [{
-                "att_name" : "fieldname-" + makeid(4),
-                "att_type" : "String"
-            }]
-        });
-        Navigation.reload_tab();
-    }),
-    remove_element_collection: blockingDecorator(function(name){
-        tab_state.command[NESTED] = tab_state.command[NESTED].filter(x => x.att_name != name);
-        Navigation.reload_tab();
-    }),
-    list: function(){
-        return Object.keys(model).filter(key => key.startsWith("commands/")).map(key => Commands.get(key))
-    },
-    get: function(path){
-        let command = model[path]["event"];
-        command['field'] = make_sure_is_list(command['field']);
-        command['nested-object'] = make_sure_is_list(command['nested-object']);
-        command['nested-object'].forEach(entity => {
-            entity.field = make_sure_is_list(entity.field);
-        });
-        return Alpine.reactive(command);
-    },
-    create_new: blockingDecorator(function(){
-        let name = "NewFunctionRequested";
-        let path = "commands/" + name + ".xml";
-        let doc = "commands/" + name + ".md";
-        let added = Modeler.insert_model(path,{
-            "event": {
-                "att_graphql-namespace": "Function",
-                "att_graphql-name": "new",
-                "att_name": "NewFunctionRequested",
-                "att_authorization": "authenticated",
-                "att_type": "ActorEvent",
-                "field": [],
-                NESTED: []
-            }
-        });
-        Modeler.insert_documentation(doc,"~~Command model template~~");
-        if (added){
-            setTimeout(function(){
-                Navigation.execute_open_tab(path);
-            },500);
-        }
-    }),
-    copy_attributes: blockingDecorator(function(source){
-        console.log(source);
-        if (source.att_name){
-            tab_state.command.field = tab_state.command.field.concat(deep_copy(source.field));
-            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(deep_copy(source["nested-object"]));
-        } else {
-            console.log(source);
-            tab_state.command.field = tab_state.command.field.concat(source.root.field.filter(x => field_types.includes(x.att_type)));
-            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source.entities.map(entity => {
-                return {
-                    "att_name": entity.att_name,
-                    "field": entity.field.filter(x => field_types.includes(x.att_type))
-                }
-            }));
-        }
-    }),
-    remove: blockingDecorator(function(){
-        delete model[session.tab];
-        delete documentation[session.tab.replace(".xml",".md")];
-    })
-}
-
-function deep_copy(data){
-    return JSON.parse(JSON.stringify(data));
-}
-
-document.addEventListener('tracepaper:model:loaded', async () => {
-    Commands.load_commands();
-});
-
-document.addEventListener('tracepaper:model:prepare-save', () => {
-    // Refactor and validate
-    Object.keys(model).filter(key => key.startsWith("commands/")).forEach(key => {
-        let command = Commands.get(key);
-        let path = key;
-        let name = key.replace("commands/","").replace(".xml","");
-        if (name != command.att_name){
-            // Rename files
-            delete model[key];
-            path = "commands/" + command.att_name + ".xml";
-            model[path] = {event:command};
-            let doc = key.replace(".xml",".md");
-            documentation["commands/" + command.att_name + ".md"] = documentation[doc];
-            delete documentation[doc];
-
-            //Switch tab
-            FileSystem.remove_from_staging(key,true);
-            FileSystem.remove_from_staging(key.replace(".xml",".md"),true);
-            Navigation.execute_close_tab(key);
-            setTimeout(function(){
-                Navigation.execute_open_tab(path);
-            },1000);
-        }
-
-        // Refactor and validate subscribers
-        let fields = command.field.map(x => x.att_name);
-        fields = fields.concat(command[NESTED].map(x => x.att_name));
-        Aggregates.list().forEach(aggregate => {
-            aggregate.flows.forEach(flow => {
-                flow.trigger.forEach(trigger => {
-                    if (name != command.att_name && trigger.att_source == name){
-                        trigger.att_source = command.att_name;
-                    }
-                });
-            });
-        });
-        Notifiers.list().forEach(notifier => {
-            notifier.trigger.forEach(trigger => {
-                if (name != command.att_name && trigger.att_source == name){
-                    trigger.att_source = command.att_name;
-                }
-
-                if (trigger.att_source == command.att_name){
-                   trigger.mapping.forEach(mapping => {
-                    if (!mapping.att_value.startsWith("#") && !fields.includes(mapping.att_value)){
-                        Validation.register(notifier.att_file_path,`Trigger ${trigger.att_source} maps a non existing command-field '${mapping.att_value}' to flow variable '${mapping.att_target}'`);
-                    }
-                   });
-               }
-            });
-        });
-
-        //Validate command
-        command.field.filter(f => !f.att_name.match(camel_cased)).forEach(f => {
-            Validation.register(path,`Field ${f.att_name} must be camelCased`);
-        });
-        command[NESTED].filter(e => !e.att_name.match(camel_cased)).forEach(e => {
-            Validation.register(path,`Entity ${e.att_name} must be camelCased`);
-        });
-        command[NESTED].forEach(e => {
-            e.field.filter(f => !f.att_name.match(camel_cased)).forEach(f => {
-                Validation.register(path,`Field ${f.att_name} in entity ${e.att_name} must be camelCased`);
-            });
-        });
-    });
-    Commands.load_commands();
-});
-
 window.Events = {
     list: function(){
         let events = Object.keys(model).filter(key => key.includes("/events/")).map(key => model[key]["event"]);
@@ -2978,64 +2423,6 @@ window.Events = {
     get: function(name){
         return Events.list().filter(x => x.att_name == name).at(0);
     }
-}
-
-window.Expressions = {
-    list: function(){
-        return Object.entries(model).filter(x => x[0].startsWith('expressions/')).map(x => x[1]["expression"]);
-    },
-    load: function(){
-        tab_state.expressions = Expressions.list();
-        Object.keys(model).filter(key => key.startsWith('expressions/')).forEach(key => {
-            let doc = key.replace(".xml",".md");
-            if (!(doc in documentation)){
-                documentation[doc] = {content:""};
-            }
-        });
-        session.type = "expressions";
-    },
-    remove: blockingDecorator(function(name){
-            let path = "expressions/" + name;
-            delete model[path + ".xml"];
-            delete documentation[path + ".md"];
-            Expressions.load();
-        }),
-    rename: blockingDecorator(function(old_name,new_name){
-        if (!new_name.match(camel_cased)){
-            Session.show_exception("Expression reference must be camelCased");
-            return;
-        }
-
-        let oldPath = "expressions/" + old_name;
-        let newPath = "expressions/" + new_name;
-
-        model[newPath + ".xml"] = model[oldPath + ".xml"];
-        model[newPath + ".xml"].expression.att_name = new_name;
-        delete model[oldPath + ".xml"];
-        documentation[newPath + ".md"] = documentation[oldPath + ".md"];
-        delete documentation[oldPath + ".md"];
-        Expressions.load();
-    }),
-    create: blockingDecorator(function(name){
-        if (!name.match(camel_cased)){
-            Session.show_exception("Expression reference must be camelCased");
-            return;
-        }
-        let path = "expressions/" + name + ".xml";
-        if (path in model){
-            Session.show_exception("There is already a expression defined with name: "+name);
-            return;
-        }
-        Modeler.insert_model(path,{
-            expression: {
-                att_name: name,
-                att_type: "ActorEventRole",
-                att_input: "input",
-                att_expression: ""
-            }
-        });
-        Expressions.load();
-    })
 }
 
 const summary_cache = {};
@@ -3294,340 +2681,47 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
     }
 });
 
-window.Notifiers = {
-    list: function(){
-        let resultset = [];
-        Object.keys(model).filter(key => key.startsWith('notifiers/')).forEach(key => {
-            resultset.push(Notifiers.get(key));
-        });
-        return resultset;
+window.Code = {
+    list_modules: function(){
+        return Object.keys(code).map(key => key.replace("lib/","").replace(".py","")).concat("");
     },
-    get: function(path){
-        let notifier = model[path]["notifier"];
-        notifier.trigger = make_sure_is_list(notifier.trigger);
-        notifier.trigger.forEach(trigger=> {
-            trigger.mapping = make_sure_is_list(trigger.mapping);
-        });
-        notifier.activity = make_sure_is_list(notifier.activity);
-        notifier.activity.forEach(activity=> {
-            activity.activity = make_sure_is_list(activity.activity);
-            if(!activity.att_id){
-                activity.att_id = makeid(6);
-            }
-        });
-        notifier.att_file_path = path;
-        return notifier;
-    },
-    load_navigation: function(){
-        let updated = Object.keys(model).filter(key => key.startsWith('notifiers/')).map(key => key.replace("notifiers/","").replace(".xml",""));
-        session.notifier_names = updated;
+    get_methods: function(module,filter="(flow):"){
+        return code[module].content.split("\n").filter(x => x.startsWith("def ") && x.endsWith(filter))
+            .map(x => x.replace("def ","").replace(filter,""));
     },
     create_new: blockingDecorator(function(){
-            let name = "NewNotifier";
-            let path = "notifiers/" + name + ".xml";
-            let doc = "notifiers/" + name + ".md";
-            let added = Modeler.insert_model(path,{
-                "notifier": {
-                    "att_name": name
-                }
-            });
-            Modeler.insert_documentation(doc,"~~View model template~~");
-            if (added){
-                setTimeout(function(){
-                    Navigation.execute_open_tab(path);
-                },500);
-            }
-        }),
-    load: function(file){
-        tab_state.notifier = Notifiers.get(file);
-        let doc = file.replace('.xml','.md')
-        Modeler.load_documentation(doc);
-        tab_state.triggers = tab_state.notifier.trigger;
-        session.type = "notifier";
-        if(!tab_state.mode){tab_state.mode="flow"};
-    },
-    remove: blockingDecorator(function(){
-            delete model[session.tab];
-            delete documentation[session.tab.replace(".xml",".md")];
-            Navigation.execute_close_tab(session.tab);
-        }),
-    rename: blockingDecorator(function(name){
-            if (!name.match(pascal_cased)){
-                Session.show_exception("Notifier must be PascalCased");
-                return;
-            }
-
-            let oldPath = session.tab;
-            let newPath = "notifiers/" + name + ".xml";
-
-            tab_state.notifier.att_name = name;
-
-            model[newPath] = model[oldPath];
-            delete model[oldPath];
-            documentation[newPath.replace(".xml",".md")] = documentation[oldPath.replace(".xml",".md")];
-            delete documentation[oldPath.replace(".xml",".md")];
-
-            Navigation.execute_close_tab(oldPath);
-            Navigation.execute_open_tab(newPath);
-            Modeler.render();
-        }),
-    equalize_trigger_flowvars: function(){
-        let flowVars = [];
-        let arrays = [];
-        tab_state.notifier.trigger.forEach(trigger => {
-            trigger.mapping.filter(mapping => mapping.att_value != "#''").forEach(mapping => {
-               if (!flowVars.includes(mapping.att_target)){
-                flowVars.push(mapping.att_target);
-               }
-               if ('att_nested' in mapping &&  mapping.att_nested){
-                arrays.push(mapping.att_target);
-               }
-            });
-        });
-        tab_state.notifier.trigger = tab_state.notifier.trigger.map(trigger => {
-            trigger.mapping = flowVars.map(flowVar => {
-                let mapping = trigger.mapping.filter(x => x.att_target == flowVar);
-                if (mapping.length != 0){
-                    return mapping.at(0);
-                } else if (arrays.includes(flowVar)) {
-                    return {att_target: flowVar, att_value: "#[]"};
-                } else {
-                    return {att_target: flowVar, att_value: "#''"};
-                }
-            });
-            return trigger;
-        });
-    },
-    update_trigger: blockingDecorator(function(source,update){
-        let trigger = tab_state.notifier.trigger.filter(x => x.att_source == source).at(0);
-        trigger.att_source = update;
-        try{
-            let event = Events.get(update);
-            let mappings = {};
-            trigger.mapping.forEach(x => {
-                mappings[x.att_value] = x;
-            });
-            trigger.mapping = event.field.map(x => {return {att_target: x.att_name, att_value: x.att_name};});
-            Object.keys(mappings).filter(x => x.startsWith('#')).forEach(
-                x => trigger.mapping.push(mappings[x])
-            );
-        }catch(err){console.error(err)}
-        Notifiers.equalize_trigger_flowvars();
-    }),
-    add_trigger: blockingDecorator(function(source){
-        let trigger = {att_source: source,mapping:[]};
-        if (!source.startsWith("@")){
-            let event = Events.get(source);
-            trigger.mapping = event.field.map(x => {return {att_target: x.att_name, att_value: x.att_name};});
-            trigger.mapping = trigger.mapping.concat(event[NESTED].map(x => {return {att_target: x.att_name, att_value: x.att_name, att_nested: true};}));
-        }
-        tab_state.notifier.trigger.push(trigger);
-//        let keys = event.field.filter(x => x.att_name == tab_state.aggregate.root["att_business-key"]);
-//        trigger["att_key-field"] = keys.length != 0 ? keys.at(0).att_name : event.field.at(0).att_name;
-        Notifiers.equalize_trigger_flowvars();
-    }),
-    remove_trigger: blockingDecorator(function(source){
-        tab_state.notifier.trigger = tab_state.notifier.trigger.filter(x => x.att_source != source);
-        Notifiers.equalize_trigger_flowvars();
-    }),
-    get_flow_variables: function(nested){
-        if (!tab_state.notifier){return []}
-        let flowVars = [""];
-        tab_state.notifier.trigger.forEach(trigger => {
-            trigger.mapping.forEach(mapping => {
-               if (!flowVars.includes(mapping.att_target)){
-                flowVars.push(mapping.att_target);
-               }
-            });
-        });
-        function add_variables(activity){
-            if (activity.att_type == 'set-variable'){
-                flowVars.push(activity.att_name);
-            }
-            if (activity.att_type == 'code'){
-                if ('att_code' in activity){
-                    let content = activity.att_code;
-                    content.split("|LB|").filter(line => line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)).forEach(line => {
-                        let variable = line.replace("flow.","").split("=").at(0).trim();
-                        flowVars.push(variable);
-                    });
-                } else {
-                    let content = code[activity["att_python-file"]].content;
-                    let method_detected = false;
-                    content.split("\n").forEach(line => {
-                        if (line.startsWith(`def ${activity.att_handler}(flow):`)){
-                            method_detected = true;
-                        } else if (line.startsWith("def")){
-                            method_detected = false;
-                        }
-                        if (method_detected && line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)){
-                            let variable = line.replace("flow.","").split("=").at(0).trim();
-                            flowVars.push(variable);
-                        }
-                    });
-                }
-            }
-        }
-        tab_state.notifier.activity.forEach(activity => {
-            add_variables(activity);
-        });
-        if (nested && Object.keys(nested).length != 0){
-            nested.activity.forEach(activity => {
-               add_variables(activity);
-            })
-        }
-        return flowVars;
-    },
-    add_activity: blockingDecorator(function(notifier,type){
-        var new_activity = {att_type: type};
-        new_activity.att_id = makeid(6);
-        notifier.activity.push(new_activity);
-    })
-}
-
-document.addEventListener('tracepaper:model:loaded', async () => {
-    Notifiers.load_navigation();
-    setTimeout(Notifiers.load_navigation,1000);
-});
-
-document.addEventListener('tracepaper:model:prepare-save', () => {
-    if (!("notifiers/InitializeSystemUser.xml" in model)){
-        model["notifiers/InitializeSystemUser.xml"] = {
-            notifier: {
-                att_name: "InitializeSystemUser",
-                trigger: {
-                    att_source: "@afterDeployment",
-                    mapping: {
-                        att_target: "dummy",
-                        att_value: "#''"
-                    }
-                },
-                activity: {
-                    att_type: "iam-create-systemuser",
-                    "att_fail-silent": "true",
-                    att_id:"vMB9LZ"
-                }
-            }
-        }
-    }
-});
-
-window.Patterns = {
-    list: function(){
-        return Object.entries(model).filter(x => x[0].startsWith('patterns/')).map(x => x[1]["pattern"]["att_name"]);
-    },
-    load: function(){
-        tab_state.patterns = Object.entries(model).filter(x => x[0].startsWith('patterns/')).map(x => x[1]["pattern"]);
-        Object.keys(model).filter(key => key.startsWith('patterns/')).forEach(key => {
-            let doc = key.replace(".xml",".md");
-            if (!(doc in documentation)){
-                documentation[doc] = {content:""};
-            }
-        });
-        session.type = "patterns";
-    },
-    remove: blockingDecorator(function(name){
-        let path = "patterns/" + name;
-        delete model[path + ".xml"];
-        delete documentation[path + ".md"];
-        Patterns.load();
-    }),
-    rename: blockingDecorator(function(old_name,new_name){
-            if (!new_name.match(pascal_cased)){
-                Session.show_exception("Pattern must be PascalCased");
-                return;
-            }
-
-            let oldPath = "patterns/" + old_name;
-            let newPath = "patterns/" + new_name;
-
-            model[newPath + ".xml"] = model[oldPath + ".xml"];
-            model[newPath + ".xml"].pattern.att_name = new_name;
-            delete model[oldPath + ".xml"];
-            documentation[newPath + ".md"] = documentation[oldPath + ".md"];
-            delete documentation[oldPath + ".md"];
-            Patterns.load();
-        }),
-    create: blockingDecorator(function(name){
-        if (!name.match(pascal_cased)){
-            Session.show_exception("Pattern must be PascalCased");
+        let path = "lib/NewModule.py";
+        if (Object.keys(code).includes(path)){
+            Session.show_exception("Module with name 'NewModule' already exists");
             return;
         }
-        let path = "patterns/" + name + ".xml";
-        if (path in model){
-            Session.show_exception("There is already a pattern defined with name: "+name);
-            return;
-        }
-        Modeler.insert_model(path,{
-            pattern: {
-                att_name: name,
-                att_regex: '^([A-Z]{1}[a-z]+)+$'
-            }
-        });
-        Patterns.load();
-    })
-}
-
-window.Projections = {
-    load_projections: function(){
-        session.projection_names = [];
-        Object.keys(model).filter(key => key.startsWith('projections/')).forEach(key => {
-            let name = key.replace("projections/","").replace(".xml","");
-            session.projection_names.push(name);
-        });
-    },
-    load: function(file){
-        let doc = file.replace('.xml','.md')
-        Modeler.load_documentation(doc);
-        tab_state.projection = Projections.get(file);
-        session.type = "projection";
-    },
-    list: function(){
-        return Object.keys(model).filter(key => key.startsWith("projections/")).map(key => Projections.get(key))
-    },
-    get: function(path){
-        let projection = model[path]["projection"];
-        projection['input'] = make_sure_is_list(projection['input']);
-        return Alpine.reactive(projection);
-    },
-    create_new: blockingDecorator(function(){
-        let name = "NewProjection";
-        let path = "projections/" + name + ".xml";
-        let doc = "projections/" + name + ".md";
-        let added = Modeler.insert_model(path,{
-            "projection": {
-                "att_graphql-namespace": "Projection",
-                "att_field-name": "new",
-                "att_authorization": "authenticated",
-                "att_return": "NewFunctionRequested",
-                "att_name": "NewProjection",
-                "att_code": projection_code_template,
-                input: []
-            }
-        });
-        Modeler.insert_documentation(doc,"~~Projection model template~~");
-        if (added){
-            setTimeout(function(){
-                Navigation.execute_open_tab(path);
-            },500);
-        }
+        code[path] = {content:code_template}
+        Navigation.execute_open_tab(path);
     }),
+    load: function(file){
+        tab_state.code = code[file];
+        let doc = file.replace('.py','.md')
+        Modeler.load_documentation(doc);
+        session.type = "code";
+    },
     remove: blockingDecorator(function(){
-        delete model[session.tab];
-        delete documentation[session.tab.replace(".xml",".md")];
+        delete code[session.tab];
+        delete documentation[session.tab.replace(".py",".md")];
         Navigation.execute_close_tab(session.tab);
     }),
     rename: blockingDecorator(function(name){
-        if(name == tab_state.projection.att_name){return}
+        if (!name.match(pascal_cased)){
+            Session.show_exception("Python module must be PascalCased");
+            return;
+        }
+
         let oldPath = session.tab;
-        let newPath = "projections/" + name + ".xml";
+        let newPath = "lib/" + name + ".py";
 
-        tab_state.projection.att_name = name;
-
-        model[newPath] = model[oldPath];
-        delete model[oldPath];
-        documentation[newPath.replace(".xml",".md")] = documentation[oldPath.replace(".xml",".md")];
-        delete documentation[oldPath.replace(".xml",".md")];
+        code[newPath] = code[oldPath];
+        delete code[oldPath];
+        documentation[newPath.replace(".py",".md")] = documentation[oldPath.replace(".py",".md")];
+        delete documentation[oldPath.replace(".py",".md")];
 
         Navigation.execute_close_tab(oldPath);
         Navigation.execute_open_tab(newPath);
@@ -3635,11 +2729,42 @@ window.Projections = {
     })
 }
 
-document.addEventListener('tracepaper:model:loaded', async () => {
-    Projections.load_projections();
-    setTimeout(Projections.load_projections,1000);
-});
+const builds_query = `
+query GetBuilds($key_begins_with: String = "") {
+  Build {
+    filter(key_begins_with: $key_begins_with) {
+      resultset {
+        drn
+        lastEvent
+        status
+      }
+    }
+  }
+}
+`
 
+window.Builds = {
+    load: function(){
+        session.type = "build";
+        session.tabs.map(x=> x.split("#").at(0)).filter(x=> x.startsWith("build/") && x != session.tab).forEach(tab=> {
+            try{
+                console.log("auto close tab:",tab);
+                Navigation.execute_close_tab(tab);
+            }catch{}
+        });
+    },
+    fetch_builds: async function(){
+        let data = await Draftsman.query(builds_query,{key_begins_with:localStorage.project});
+        let builds = data.Build.filter.resultset;
+        builds.sort((a,b) => b.lastEvent-a.lastEvent);
+        tab_state.builds = builds;
+        return builds;
+    },
+    open_build: blockingDecorator(function(drn){
+        Navigation.execute_close_tab(session.tab);
+        Navigation.execute_open_tab("build/" + drn);
+    })
+}
 
 window.Scenarios = {
     list: function(){
@@ -3937,75 +3062,352 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
 });
 
 
-window.Subdomains = {
+window.Patterns = {
+    list: function(){
+        return Object.entries(model).filter(x => x[0].startsWith('patterns/')).map(x => x[1]["pattern"]["att_name"]);
+    },
+    load: function(){
+        tab_state.patterns = Object.entries(model).filter(x => x[0].startsWith('patterns/')).map(x => x[1]["pattern"]);
+        Object.keys(model).filter(key => key.startsWith('patterns/')).forEach(key => {
+            let doc = key.replace(".xml",".md");
+            if (!(doc in documentation)){
+                documentation[doc] = {content:""};
+            }
+        });
+        session.type = "patterns";
+    },
+    remove: blockingDecorator(function(name){
+        let path = "patterns/" + name;
+        delete model[path + ".xml"];
+        delete documentation[path + ".md"];
+        Patterns.load();
+    }),
+    rename: blockingDecorator(function(old_name,new_name){
+            if (!new_name.match(pascal_cased)){
+                Session.show_exception("Pattern must be PascalCased");
+                return;
+            }
+
+            let oldPath = "patterns/" + old_name;
+            let newPath = "patterns/" + new_name;
+
+            model[newPath + ".xml"] = model[oldPath + ".xml"];
+            model[newPath + ".xml"].pattern.att_name = new_name;
+            delete model[oldPath + ".xml"];
+            documentation[newPath + ".md"] = documentation[oldPath + ".md"];
+            delete documentation[oldPath + ".md"];
+            Patterns.load();
+        }),
+    create: blockingDecorator(function(name){
+        if (!name.match(pascal_cased)){
+            Session.show_exception("Pattern must be PascalCased");
+            return;
+        }
+        let path = "patterns/" + name + ".xml";
+        if (path in model){
+            Session.show_exception("There is already a pattern defined with name: "+name);
+            return;
+        }
+        Modeler.insert_model(path,{
+            pattern: {
+                att_name: name,
+                att_regex: '^([A-Z]{1}[a-z]+)+$'
+            }
+        });
+        Patterns.load();
+    })
+}
+
+window.Notifiers = {
     list: function(){
         let resultset = [];
-        Object.keys(documentation).filter(key => key.startsWith('domain/') && key.endsWith("/README.md")).forEach(key => {
-           resultset.push(key.split('/').at(1));
+        Object.keys(model).filter(key => key.startsWith('notifiers/')).forEach(key => {
+            resultset.push(Notifiers.get(key));
         });
         return resultset;
     },
+    get: function(path){
+        let notifier = model[path]["notifier"];
+        notifier.trigger = make_sure_is_list(notifier.trigger);
+        notifier.trigger.forEach(trigger=> {
+            trigger.mapping = make_sure_is_list(trigger.mapping);
+        });
+        notifier.activity = make_sure_is_list(notifier.activity);
+        notifier.activity.forEach(activity=> {
+            activity.activity = make_sure_is_list(activity.activity);
+            if(!activity.att_id){
+                activity.att_id = makeid(6);
+            }
+        });
+        notifier.att_file_path = path;
+        return notifier;
+    },
+    load_navigation: function(){
+        let updated = Object.keys(model).filter(key => key.startsWith('notifiers/')).map(key => key.replace("notifiers/","").replace(".xml",""));
+        session.notifier_names = updated;
+    },
     create_new: blockingDecorator(function(){
-        let doc = "domain/NewSubdomain/README.md";
-        let added = Modeler.insert_documentation(doc,"New Subdomain");
-        if (added){
-            setTimeout(function(){
-                Navigation.execute_open_tab(doc);
-            },500);
-        }
-    }),
+            let name = "NewNotifier";
+            let path = "notifiers/" + name + ".xml";
+            let doc = "notifiers/" + name + ".md";
+            let added = Modeler.insert_model(path,{
+                "notifier": {
+                    "att_name": name
+                }
+            });
+            Modeler.insert_documentation(doc,"~~View model template~~");
+            if (added){
+                setTimeout(function(){
+                    Navigation.execute_open_tab(path);
+                },500);
+            }
+        }),
     load: function(file){
-        if (!(file in documentation)) {
-            documentation[file] = {content:""};
-        }
-        session.documentation = documentation[file];
-        session.type = "subdomain";
+        tab_state.notifier = Notifiers.get(file);
+        let doc = file.replace('.xml','.md')
+        Modeler.load_documentation(doc);
+        tab_state.triggers = tab_state.notifier.trigger;
+        session.type = "notifier";
+        if(!tab_state.mode){tab_state.mode="flow"};
     },
     remove: blockingDecorator(function(){
-        if (!session.tab.startsWith("domain/") && !session.tab.endsWith("/readme.md")){
-            Session.show_exception("Could not remove subdomain: " + session.tab);
-            return
-        }
-        let path = session.tab.replace("README.md","");
-        Object.keys(model).filter(key => key.startsWith(path)).forEach(key => {delete model[key]});
-        Object.keys(documentation).filter(key => key.startsWith(path)).forEach(key => {delete documentation[key]});
-        Navigation.execute_close_tab(session.tab);
-        Modeler.render();
-    }),
+            delete model[session.tab];
+            delete documentation[session.tab.replace(".xml",".md")];
+            Navigation.execute_close_tab(session.tab);
+        }),
     rename: blockingDecorator(function(name){
-        if (!session.tab.startsWith("domain/") && !session.tab.endsWith("/readme.md")){
-            Session.show_exception("Could not rename subdomain: " + session.tab);
-            return
-        }
-        if (!name.match(pascal_cased)){
-            Session.show_exception("Subdomain name must be PascalCased");
-            return;
-        }
-        let oldPath = session.tab.replace("README.md","");
-        let newPath = "domain/" + name + "/";
-        Object.keys(model).filter(key => key.startsWith(oldPath)).forEach(key => {
-            model[key.replace(oldPath,newPath)] = model[key];
-            delete model[key];
+            if (!name.match(pascal_cased)){
+                Session.show_exception("Notifier must be PascalCased");
+                return;
+            }
+
+            let oldPath = session.tab;
+            let newPath = "notifiers/" + name + ".xml";
+
+            tab_state.notifier.att_name = name;
+
+            model[newPath] = model[oldPath];
+            delete model[oldPath];
+            documentation[newPath.replace(".xml",".md")] = documentation[oldPath.replace(".xml",".md")];
+            delete documentation[oldPath.replace(".xml",".md")];
+
+            Navigation.execute_close_tab(oldPath);
+            Navigation.execute_open_tab(newPath);
+            Modeler.render();
+        }),
+    equalize_trigger_flowvars: function(){
+        let flowVars = [];
+        let arrays = [];
+        tab_state.notifier.trigger.forEach(trigger => {
+            trigger.mapping.filter(mapping => mapping.att_value != "#''").forEach(mapping => {
+               if (!flowVars.includes(mapping.att_target)){
+                flowVars.push(mapping.att_target);
+               }
+               if ('att_nested' in mapping &&  mapping.att_nested){
+                arrays.push(mapping.att_target);
+               }
+            });
         });
-        Object.keys(documentation).filter(key => key.startsWith(oldPath)).forEach(key => {
-            documentation[key.replace(oldPath,newPath)] = documentation[key];
-            delete documentation[key];
+        tab_state.notifier.trigger = tab_state.notifier.trigger.map(trigger => {
+            trigger.mapping = flowVars.map(flowVar => {
+                let mapping = trigger.mapping.filter(x => x.att_target == flowVar);
+                if (mapping.length != 0){
+                    return mapping.at(0);
+                } else if (arrays.includes(flowVar)) {
+                    return {att_target: flowVar, att_value: "#[]"};
+                } else {
+                    return {att_target: flowVar, att_value: "#''"};
+                }
+            });
+            return trigger;
         });
-        Navigation.execute_close_tab(session.tab);
-        Navigation.execute_open_tab(newPath + "README.md");
-        session.subdomain_names = Subdomains.list();
-        })
+    },
+    update_trigger: blockingDecorator(function(source,update){
+        let trigger = tab_state.notifier.trigger.filter(x => x.att_source == source).at(0);
+        trigger.att_source = update;
+        try{
+            let event = Events.get(update);
+            let mappings = {};
+            trigger.mapping.forEach(x => {
+                mappings[x.att_value] = x;
+            });
+            trigger.mapping = event.field.map(x => {return {att_target: x.att_name, att_value: x.att_name};});
+            Object.keys(mappings).filter(x => x.startsWith('#')).forEach(
+                x => trigger.mapping.push(mappings[x])
+            );
+        }catch(err){console.error(err)}
+        Notifiers.equalize_trigger_flowvars();
+    }),
+    add_trigger: blockingDecorator(function(source){
+        let trigger = {att_source: source,mapping:[]};
+        if (!source.startsWith("@")){
+            let event = Events.get(source);
+            trigger.mapping = event.field.map(x => {return {att_target: x.att_name, att_value: x.att_name};});
+            trigger.mapping = trigger.mapping.concat(event[NESTED].map(x => {return {att_target: x.att_name, att_value: x.att_name, att_nested: true};}));
+        }
+        tab_state.notifier.trigger.push(trigger);
+//        let keys = event.field.filter(x => x.att_name == tab_state.aggregate.root["att_business-key"]);
+//        trigger["att_key-field"] = keys.length != 0 ? keys.at(0).att_name : event.field.at(0).att_name;
+        Notifiers.equalize_trigger_flowvars();
+    }),
+    remove_trigger: blockingDecorator(function(source){
+        tab_state.notifier.trigger = tab_state.notifier.trigger.filter(x => x.att_source != source);
+        Notifiers.equalize_trigger_flowvars();
+    }),
+    get_flow_variables: function(nested){
+        if (!tab_state.notifier){return []}
+        let flowVars = [""];
+        tab_state.notifier.trigger.forEach(trigger => {
+            trigger.mapping.forEach(mapping => {
+               if (!flowVars.includes(mapping.att_target)){
+                flowVars.push(mapping.att_target);
+               }
+            });
+        });
+        function add_variables(activity){
+            if (activity.att_type == 'set-variable'){
+                flowVars.push(activity.att_name);
+            }
+            if (activity.att_type == 'code'){
+                if ('att_code' in activity){
+                    let content = activity.att_code;
+                    content.split("|LB|").filter(line => line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)).forEach(line => {
+                        let variable = line.replace("flow.","").split("=").at(0).trim();
+                        flowVars.push(variable);
+                    });
+                } else {
+                    let content = code[activity["att_python-file"]].content;
+                    let method_detected = false;
+                    content.split("\n").forEach(line => {
+                        if (line.startsWith(`def ${activity.att_handler}(flow):`)){
+                            method_detected = true;
+                        } else if (line.startsWith("def")){
+                            method_detected = false;
+                        }
+                        if (method_detected && line.replaceAll(" ","").match(/^(flow.[\w]+)={1}/g)){
+                            let variable = line.replace("flow.","").split("=").at(0).trim();
+                            flowVars.push(variable);
+                        }
+                    });
+                }
+            }
+        }
+        tab_state.notifier.activity.forEach(activity => {
+            add_variables(activity);
+        });
+        if (nested && Object.keys(nested).length != 0){
+            nested.activity.forEach(activity => {
+               add_variables(activity);
+            })
+        }
+        return flowVars;
+    },
+    add_activity: blockingDecorator(function(notifier,type){
+        var new_activity = {att_type: type};
+        new_activity.att_id = makeid(6);
+        notifier.activity.push(new_activity);
+    })
 }
 
 document.addEventListener('tracepaper:model:loaded', async () => {
-    session.subdomain_names = Subdomains.list();
+    Notifiers.load_navigation();
+    setTimeout(Notifiers.load_navigation,1000);
 });
 
-window.Templates = {
-    list: function(){
-        return Object.keys(templates).map(x => x.replace("templates/",""));
+document.addEventListener('tracepaper:model:prepare-save', () => {
+    if (!("notifiers/InitializeSystemUser.xml" in model)){
+        model["notifiers/InitializeSystemUser.xml"] = {
+            notifier: {
+                att_name: "InitializeSystemUser",
+                trigger: {
+                    att_source: "@afterDeployment",
+                    mapping: {
+                        att_target: "dummy",
+                        att_value: "#''"
+                    }
+                },
+                activity: {
+                    att_type: "iam-create-systemuser",
+                    "att_fail-silent": "true",
+                    att_id:"vMB9LZ"
+                }
+            }
+        }
     }
+});
+
+window.Projections = {
+    load_projections: function(){
+        session.projection_names = [];
+        Object.keys(model).filter(key => key.startsWith('projections/')).forEach(key => {
+            let name = key.replace("projections/","").replace(".xml","");
+            session.projection_names.push(name);
+        });
+    },
+    load: function(file){
+        let doc = file.replace('.xml','.md')
+        Modeler.load_documentation(doc);
+        tab_state.projection = Projections.get(file);
+        session.type = "projection";
+    },
+    list: function(){
+        return Object.keys(model).filter(key => key.startsWith("projections/")).map(key => Projections.get(key))
+    },
+    get: function(path){
+        let projection = model[path]["projection"];
+        projection['input'] = make_sure_is_list(projection['input']);
+        return Alpine.reactive(projection);
+    },
+    create_new: blockingDecorator(function(){
+        let name = "NewProjection";
+        let path = "projections/" + name + ".xml";
+        let doc = "projections/" + name + ".md";
+        let added = Modeler.insert_model(path,{
+            "projection": {
+                "att_graphql-namespace": "Projection",
+                "att_field-name": "new",
+                "att_authorization": "authenticated",
+                "att_return": "NewFunctionRequested",
+                "att_name": "NewProjection",
+                "att_code": projection_code_template,
+                input: []
+            }
+        });
+        Modeler.insert_documentation(doc,"~~Projection model template~~");
+        if (added){
+            setTimeout(function(){
+                Navigation.execute_open_tab(path);
+            },500);
+        }
+    }),
+    remove: blockingDecorator(function(){
+        delete model[session.tab];
+        delete documentation[session.tab.replace(".xml",".md")];
+        Navigation.execute_close_tab(session.tab);
+    }),
+    rename: blockingDecorator(function(name){
+        if(name == tab_state.projection.att_name){return}
+        let oldPath = session.tab;
+        let newPath = "projections/" + name + ".xml";
+
+        tab_state.projection.att_name = name;
+
+        model[newPath] = model[oldPath];
+        delete model[oldPath];
+        documentation[newPath.replace(".xml",".md")] = documentation[oldPath.replace(".xml",".md")];
+        delete documentation[oldPath.replace(".xml",".md")];
+
+        Navigation.execute_close_tab(oldPath);
+        Navigation.execute_open_tab(newPath);
+        Modeler.render();
+    })
 }
+
+document.addEventListener('tracepaper:model:loaded', async () => {
+    Projections.load_projections();
+    setTimeout(Projections.load_projections,1000);
+});
+
 
 window.Views = {
     list: function(){
@@ -4409,5 +3811,603 @@ document.addEventListener('tracepaper:model:prepare-save', () => {
                 //TODO check if module and method exist
             }
         });
+    });
+});
+
+window.Commands = {
+    get_attribute_sources: function(){
+        let sources = [];
+        sources = sources.concat(Commands.list());
+        sources = sources.concat(Aggregates.list());
+        return sources;
+    },
+    load_commands: function(){
+        session.command_names = [];
+        Object.keys(model).filter(key => key.startsWith('commands/')).forEach(key => {
+            let name = key.replace("commands/","").replace("Requested.xml","");
+            session.command_names.push(name);
+        });
+    },
+    load: function(file){
+        let doc = file.replace('.xml','.md')
+        Modeler.load_documentation(doc);
+        tab_state.command = Commands.get(file);
+        session.type = "command";
+        tab_state.document_model = tab_state.command;
+        tab_state.nested_documents = tab_state.command[NESTED]
+    },
+    add_element_collection: blockingDecorator(function(){
+        tab_state.command['nested-object'].push({
+            "att_name" : "collection-name-" + makeid(4),
+            "field": [{
+                "att_name" : "fieldname-" + makeid(4),
+                "att_type" : "String"
+            }]
+        });
+        Navigation.reload_tab();
+    }),
+    remove_element_collection: blockingDecorator(function(name){
+        tab_state.command[NESTED] = tab_state.command[NESTED].filter(x => x.att_name != name);
+        Navigation.reload_tab();
+    }),
+    list: function(){
+        return Object.keys(model).filter(key => key.startsWith("commands/")).map(key => Commands.get(key))
+    },
+    get: function(path){
+        let command = model[path]["event"];
+        command['field'] = make_sure_is_list(command['field']);
+        command['nested-object'] = make_sure_is_list(command['nested-object']);
+        command['nested-object'].forEach(entity => {
+            entity.field = make_sure_is_list(entity.field);
+        });
+        return Alpine.reactive(command);
+    },
+    create_new: blockingDecorator(function(){
+        let name = "NewFunctionRequested";
+        let path = "commands/" + name + ".xml";
+        let doc = "commands/" + name + ".md";
+        let added = Modeler.insert_model(path,{
+            "event": {
+                "att_graphql-namespace": "Function",
+                "att_graphql-name": "new",
+                "att_name": "NewFunctionRequested",
+                "att_authorization": "authenticated",
+                "att_type": "ActorEvent",
+                "field": [],
+                NESTED: []
+            }
+        });
+        Modeler.insert_documentation(doc,"~~Command model template~~");
+        if (added){
+            setTimeout(function(){
+                Navigation.execute_open_tab(path);
+            },500);
+        }
+    }),
+    copy_attributes: blockingDecorator(function(source){
+        console.log(source);
+        if (source.att_name){
+            tab_state.command.field = tab_state.command.field.concat(deep_copy(source.field));
+            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(deep_copy(source["nested-object"]));
+        } else {
+            console.log(source);
+            tab_state.command.field = tab_state.command.field.concat(source.root.field.filter(x => field_types.includes(x.att_type)));
+            tab_state.command["nested-object"] = tab_state.command["nested-object"].concat(source.entities.map(entity => {
+                return {
+                    "att_name": entity.att_name,
+                    "field": entity.field.filter(x => field_types.includes(x.att_type))
+                }
+            }));
+        }
+    }),
+    remove: blockingDecorator(function(){
+        delete model[session.tab];
+        delete documentation[session.tab.replace(".xml",".md")];
+    })
+}
+
+function deep_copy(data){
+    return JSON.parse(JSON.stringify(data));
+}
+
+document.addEventListener('tracepaper:model:loaded', async () => {
+    Commands.load_commands();
+});
+
+document.addEventListener('tracepaper:model:prepare-save', () => {
+    // Refactor and validate
+    Object.keys(model).filter(key => key.startsWith("commands/")).forEach(key => {
+        let command = Commands.get(key);
+        let path = key;
+        let name = key.replace("commands/","").replace(".xml","");
+        if (name != command.att_name){
+            // Rename files
+            delete model[key];
+            path = "commands/" + command.att_name + ".xml";
+            model[path] = {event:command};
+            let doc = key.replace(".xml",".md");
+            documentation["commands/" + command.att_name + ".md"] = documentation[doc];
+            delete documentation[doc];
+
+            //Switch tab
+            FileSystem.remove_from_staging(key,true);
+            FileSystem.remove_from_staging(key.replace(".xml",".md"),true);
+            Navigation.execute_close_tab(key);
+            setTimeout(function(){
+                Navigation.execute_open_tab(path);
+            },1000);
+        }
+
+        // Refactor and validate subscribers
+        let fields = command.field.map(x => x.att_name);
+        fields = fields.concat(command[NESTED].map(x => x.att_name));
+        Aggregates.list().forEach(aggregate => {
+            aggregate.flows.forEach(flow => {
+                flow.trigger.forEach(trigger => {
+                    if (name != command.att_name && trigger.att_source == name){
+                        trigger.att_source = command.att_name;
+                    }
+                });
+            });
+        });
+        Notifiers.list().forEach(notifier => {
+            notifier.trigger.forEach(trigger => {
+                if (name != command.att_name && trigger.att_source == name){
+                    trigger.att_source = command.att_name;
+                }
+
+                if (trigger.att_source == command.att_name){
+                   trigger.mapping.forEach(mapping => {
+                    if (!mapping.att_value.startsWith("#") && !fields.includes(mapping.att_value)){
+                        Validation.register(notifier.att_file_path,`Trigger ${trigger.att_source} maps a non existing command-field '${mapping.att_value}' to flow variable '${mapping.att_target}'`);
+                    }
+                   });
+               }
+            });
+        });
+
+        //Validate command
+        command.field.filter(f => !f.att_name.match(camel_cased)).forEach(f => {
+            Validation.register(path,`Field ${f.att_name} must be camelCased`);
+        });
+        command[NESTED].filter(e => !e.att_name.match(camel_cased)).forEach(e => {
+            Validation.register(path,`Entity ${e.att_name} must be camelCased`);
+        });
+        command[NESTED].forEach(e => {
+            e.field.filter(f => !f.att_name.match(camel_cased)).forEach(f => {
+                Validation.register(path,`Field ${f.att_name} in entity ${e.att_name} must be camelCased`);
+            });
+        });
+    });
+    Commands.load_commands();
+});
+
+window.Templates = {
+    list: function(){
+        return Object.keys(templates).map(x => x.replace("templates/",""));
+    }
+}
+
+window.Subdomains = {
+    list: function(){
+        let resultset = [];
+        Object.keys(documentation).filter(key => key.startsWith('domain/') && key.endsWith("/README.md")).forEach(key => {
+           resultset.push(key.split('/').at(1));
+        });
+        return resultset;
+    },
+    create_new: blockingDecorator(function(){
+        let doc = "domain/NewSubdomain/README.md";
+        let added = Modeler.insert_documentation(doc,"New Subdomain");
+        if (added){
+            setTimeout(function(){
+                Navigation.execute_open_tab(doc);
+            },500);
+        }
+    }),
+    load: function(file){
+        if (!(file in documentation)) {
+            documentation[file] = {content:""};
+        }
+        session.documentation = documentation[file];
+        session.type = "subdomain";
+    },
+    remove: blockingDecorator(function(){
+        if (!session.tab.startsWith("domain/") && !session.tab.endsWith("/readme.md")){
+            Session.show_exception("Could not remove subdomain: " + session.tab);
+            return
+        }
+        let path = session.tab.replace("README.md","");
+        Object.keys(model).filter(key => key.startsWith(path)).forEach(key => {delete model[key]});
+        Object.keys(documentation).filter(key => key.startsWith(path)).forEach(key => {delete documentation[key]});
+        Navigation.execute_close_tab(session.tab);
+        Modeler.render();
+    }),
+    rename: blockingDecorator(function(name){
+        if (!session.tab.startsWith("domain/") && !session.tab.endsWith("/readme.md")){
+            Session.show_exception("Could not rename subdomain: " + session.tab);
+            return
+        }
+        if (!name.match(pascal_cased)){
+            Session.show_exception("Subdomain name must be PascalCased");
+            return;
+        }
+        let oldPath = session.tab.replace("README.md","");
+        let newPath = "domain/" + name + "/";
+        Object.keys(model).filter(key => key.startsWith(oldPath)).forEach(key => {
+            model[key.replace(oldPath,newPath)] = model[key];
+            delete model[key];
+        });
+        Object.keys(documentation).filter(key => key.startsWith(oldPath)).forEach(key => {
+            documentation[key.replace(oldPath,newPath)] = documentation[key];
+            delete documentation[key];
+        });
+        Navigation.execute_close_tab(session.tab);
+        Navigation.execute_open_tab(newPath + "README.md");
+        session.subdomain_names = Subdomains.list();
+        })
+}
+
+document.addEventListener('tracepaper:model:loaded', async () => {
+    session.subdomain_names = Subdomains.list();
+});
+
+window.Aggregates = {
+    list: function(){
+        let resultset = [];
+        Object.keys(model).filter(key => key.startsWith('domain/') && key.endsWith("/root.xml")).forEach(key => {
+            resultset.push(Aggregates.get(key));
+        });
+        return resultset;
+    },
+    get: function(path){
+        let root = model[path]["aggregate"];
+        root.field = make_sure_is_list(root.field);
+
+        let events = Modeler.get_child_models(path.replace("root.xml","events/"),"event",function(event){
+            event.field = make_sure_is_list(event.field);
+            event[NESTED] = make_sure_is_list(event[NESTED]);
+            event[NESTED].forEach(nested => {
+                nested.field = make_sure_is_list(nested.field);
+            });
+        });
+
+        let flows = Modeler.get_child_models(path.replace("root.xml","behavior-flows/"),"command",Behavior.repair);
+
+        let entities = Modeler.get_child_models(path.replace("root.xml","entities/"),NESTED,function(entity){
+            entity.field = make_sure_is_list(entity.field);
+        });
+
+        let handlers = Modeler.get_child_models(path.replace("root.xml","event-handlers/"),HANDLER,function(handler){
+            handler.mapping = make_sure_is_list(handler.mapping);
+            handler[NESTED_MAPPING] = make_sure_is_list(handler[NESTED_MAPPING]);
+            handler[NESTED_MAPPING].forEach(nested => {
+                nested.mapping = make_sure_is_list(nested.mapping);
+            });
+        });
+
+        if (!root["att_event-ttl"]){root["att_event-ttl"] = -1};
+        if (!root["att_snapshot-interval"]){root["att_snapshot-interval"] = 100};
+        if (!root["att_backup-interval-days"]){root["att_backup-interval-days"] = 0};
+        if(!root["att_backup-ttl-days"]){root["att_backup-ttl-days"] = 0};
+        return Alpine.reactive({
+            root: root,
+            events: events,
+            flows: flows,
+            entities: entities,
+            handlers: handlers,
+            subdomain: path.split('/')[1],
+            name: path.split('/')[2],
+            path: path
+        });
+    },
+    load_navigation: function(){
+        session.aggregates = {};
+        Aggregates.list().forEach(aggregate => {
+            if (aggregate.subdomain in session.aggregates){
+                session.aggregates[aggregate.subdomain].push(aggregate);
+            } else {
+                session.aggregates[aggregate.subdomain] = [aggregate];
+            }
+        });
+    },
+    load: function(file){
+        session.type = "aggregate";
+        tab_state.aggregate = Aggregates.get(file);
+        Modeler.load_documentation(file.replace(".xml",".md"));
+        if(!tab_state.handler_mode){tab_state.handler_mode = 'table'};
+        if(!tab_state.view){tab_state.view = "document"};
+        if(!tab_state.handler_selected_entity){tab_state.handler_selected_entity = 'root'};
+        if(tab_state.handler_selected_entity == 'root'){tab_state.handler_entity = tab_state.aggregate};
+        if(!tab_state.handler_selected_source){tab_state.handler_selected_source = 'root'};
+        try{
+            Aggregates.load_document_model(tab_state.view);
+        }catch{}
+        try{
+            Aggregates.force_select_event(tab_state.event);
+        }catch(err){console.error("--->",err)}
+    },
+    load_document_model: function(view, selected_event=""){
+        let model = ""
+        if (tab_state.document_model){
+            model = tab_state.document_model.att_name;
+        }
+
+        if (view == "document"){
+            tab_state.document_model = tab_state.aggregate.root;
+            tab_state.nested_documents = tab_state.aggregate.entities;
+        } else {
+            tab_state.document_model = tab_state.aggregate.events.filter(x => x.att_name == selected_event).at(0);
+            tab_state.nested_documents = tab_state.document_model[NESTED];
+        }
+        if (model != tab_state.document_model.att_name){
+            tab_state.document_selected_entity = "root";
+        }
+    },
+    create_new: blockingDecorator(function(subdomain){
+        let name = "NewAggregate";
+        let path = "domain/" +subdomain + "/" + name + "/root.xml";
+        let doc = "domain/" +subdomain + "/" + name + "/root.md";
+        let added = Modeler.insert_model(path,{
+            "aggregate": {
+                "att_name": name,
+                "att_business-key": "fieldName",
+                "field": [{
+                    "att_name": "fieldName",
+                    "att_type": "String"
+                }]
+            }
+        });
+        Modeler.insert_documentation(doc,"~~Aggregate model template~~");
+        if (added){
+            setTimeout(function(){
+                Navigation.execute_open_tab(path);
+            },500);
+        }
+    }),
+    remove: blockingDecorator(function(){
+        if (!session.tab.startsWith("domain/") && !session.tab.endsWith("/root.xml")){
+            Session.show_exception("Could not remove aggregate: " + session.tab);
+            return
+        }
+        let path = session.tab.replace("","");
+        Object.keys(model).filter(key => key.startsWith(path)).forEach(key => {delete model[key]});
+        Object.keys(documentation).filter(key => key.startsWith(path)).forEach(key => {delete documentation[key]});
+        Navigation.execute_close_tab(session.tab);
+        Modeler.render();
+    }),
+    rename:blockingDecorator(function(name){
+        if (!session.tab.startsWith("domain/") && !session.tab.endsWith("/root.xml")){
+            Session.show_exception("Could not rename aggregate: " + session.tab);
+            return
+        }
+        if (!name.match(pascal_cased)){
+            Session.show_exception("Aggregate name must be PascalCased");
+            return;
+        }
+        let oldPath = "domain/" + tab_state.aggregate.subdomain + "/" + tab_state.aggregate.root.att_name + "/";
+        let newPath = "domain/" + tab_state.aggregate.subdomain + "/" + name + "/";
+        tab_state.aggregate.root.att_name = name;
+        tab_state.aggregate.name = name;
+        Object.keys(model).filter(key => key.startsWith(oldPath)).forEach(key => {
+            model[key.replace(oldPath,newPath)] = model[key];
+            delete model[key];
+        });
+        Object.keys(documentation).filter(key => key.startsWith(oldPath)).forEach(key => {
+            documentation[key.replace(oldPath,newPath)] = documentation[key];
+            delete documentation[key];
+        });
+        Navigation.execute_close_tab(session.tab);
+        Navigation.execute_open_tab(newPath + "root.xml");
+        Modeler.render();
+    }),
+    add_element_collection: blockingDecorator(function(){
+        let path = session.tab.replace("root.xml","entities/newEntity.xml");
+        model[path] = {
+            "nested-object": {
+                att_name: "newEntity",
+                "att_business-key" : "newField",
+                field: [{
+                    att_name: "newField",
+                    att_type: "String"
+                }]
+            }
+        };
+        Navigation.reload_tab();
+    }),
+    remove_element_collection: blockingDecorator(function(name){
+        let path = `domain/${tab_state.aggregate.subdomain}/${tab_state.aggregate.root.att_name}/entities/${name}.xml`;
+        let doc  = `domain/${tab_state.aggregate.subdomain}/${tab_state.aggregate.root.att_name}/entities/${name}.md`;
+        delete model[path];
+        delete documentation[path];
+        Navigation.reload_tab();
+    }),
+    rename_collection: blockingDecorator(function(oldName,newName){
+        setTimeout(function(){
+            let root = session.tab.replace("root.xml","entities/");
+            let oldPath = root + oldName;
+            let newPath = root + newName;
+            console.log(oldPath,newPath);
+            model[newPath + ".xml"] = model[oldPath + ".xml"];
+            delete model[oldPath + ".xml"];
+            documentation[newPath + ".md"] = documentation[oldPath + ".md"];
+            delete documentation[oldPath + ".md"];
+            Aggregates.load(session.tab);
+        },1000);
+    }),
+    add_collection_to_event: blockingDecorator(function(){
+        if (tab_state.nested_documents.filter(x => x.att_name == "newEntity").length != 0){
+            return;
+        }
+        tab_state.nested_documents.push({
+            att_name: "newEntity",
+            field: [{
+                att_name: "newField",
+                att_type: "String"
+            }]
+        });
+        Navigation.reload_tab();
+    }),
+    remove_collection_from_event: blockingDecorator(function(name){
+        tab_state.nested_documents = tab_state.nested_documents.filter(x => x.att_name != name);
+        tab_state.document_model[NESTED] = tab_state.nested_documents;
+        setTimeout(Navigation.reload_tab,100);
+    }),
+    change_view: blockingDecorator(function(view){
+        tab_state.view = "";
+        setTimeout(function(){tab_state.view = view},100);
+    }),
+    force_select_event: function(event){
+        if (tab_state.aggregate.events.filter(x => x.att_name == event.att_name).length == 0){
+            event = null;
+        } else {
+            event = tab_state.aggregate.events.filter(x => x.att_name == event.att_name).at(0);
+        }
+        if (event){
+            tab_state.selected_event = event.att_name;
+            tab_state.event = event;
+        }else{
+            tab_state.event = tab_state.aggregate.events.at(0);
+            tab_state.selected_event = tab_state.event.att_name;
+        }
+        let handlers = tab_state.aggregate.handlers.filter(x => x.att_on == tab_state.selected_event);
+        if (handlers.length != 0){
+            tab_state.handler = handlers.at(0);
+        }else{
+            let handler = {
+                att_on: tab_state.selected_event,
+                mapping: [],
+                "nested-mapping": []
+            };
+            let path = tab_state.aggregate.path.replace("root.xml",`event-handlers/${event.att_name}.xml`);
+            model[path] = {};
+            model[path][HANDLER] = handler;
+            tab_state.handler = model[path][HANDLER];
+        }
+        if(!tab_state.handler_selected_entity){
+            tab_state.handler_selected_entity = "root";
+            tab_state.handler_entity = tab_state.aggregate.root;
+        }
+    },
+    select_event: blockingDecorator(function(event){
+        Aggregates.force_select_event(event);
+    }),
+    sync_handler: function(){
+        let path = tab_state.aggregate.path.replace("root.xml",`event-handlers/${tab_state.event.att_name}.xml`);
+        if (!(path in model)){
+            model[path] = {};
+        }
+        model[path][HANDLER] = tab_state.handler;
+    },
+    switch_handler_type: blockingDecorator(function(){
+        if ('att_code' in tab_state.handler){
+          delete tab_state.handler.att_code;
+        }else{
+          tab_state.handler.att_code = '';
+          tab_state.handler.mapping = [];
+          tab_state.handler[NESTED_MAPPING] = [];
+          delete tab_state.handler['att_business-key'];
+        };
+        tab_state.aggregate.handlers = tab_state.aggregate.handlers.map(x => {
+            if (x.att_on == tab_state.handler.att_on){
+                return tab_state.handler;
+            } else {
+                return x;
+            }
+        });
+    }),
+    create_new_event: blockingDecorator(function(name){
+        if (!name.match(pascal_cased)){
+            Session.show_exception("Domain event name must be PascalCased");
+            return;
+        }
+        let events = Events.list().map(x => x.att_name);
+        if(events.includes(name)){
+            Session.show_exception("This domain already contains an event with the name: " + name);
+            return;
+        }
+        let aggregate = tab_state.aggregate;
+        let path = aggregate.path.replace("root.xml",`events/${name}.xml`);
+        console.log(aggregate);
+        let event = {
+          att_name: name,
+          att_source: `${aggregate.subdomain}.${aggregate.root.att_name}`,
+          att_type: "DomainEvent",
+          field: JSON.parse(JSON.stringify(aggregate.root.field.filter(x => field_types.includes(x.att_type)))),
+          "nested-object": JSON.parse(JSON.stringify(aggregate.entities))
+        }
+        event["nested-object"].forEach(nested => {
+            nested.field = nested.field.filter(x => field_types.includes(x.att_type));
+        });
+        model[path] = {event:event};
+        Navigation.fresh_reload(aggregate.path);
+        tab_state.view = 'events';
+        tab_state.selected_event = event.att_name;
+        tab_state.event = event;
+        tab_state.handler = {
+            att_on: name,
+            mapping: [],
+            "nested-mapping": []
+        };
+        path = aggregate.path.replace("root.xml",`event-handlers/${name}.xml`);
+        model[path] = {};
+        model[path][HANDLER] = tab_state.handler;
+    }),
+    delete_event: blockingDecorator(function(){
+        let name = tab_state.selected_event;
+        let aggregate = tab_state.aggregate;
+        let event_path = aggregate.path.replace("root.xml",`events/${name}.xml`);
+        let handler_path = aggregate.path.replace("root.xml",`event-handlers/${name}.xml`);
+        delete model[event_path];
+        delete model[handler_path];
+        Navigation.fresh_reload(aggregate.path);
+        tab_state.view = 'events';
+    })
+}
+
+document.addEventListener('tracepaper:model:loaded', async () => {
+    Aggregates.load_navigation();
+});
+
+document.addEventListener('tracepaper:model:prepare-save', () => {
+    Aggregates.list().forEach(aggregate => {
+        aggregate.root.att_name = aggregate.name;
+        if (aggregate.root['att_backup-interval-days'] == 0){
+            aggregate.root['att_backup-ttl-days'] = 0;
+        }
+        aggregate.root.field.forEach(field => {
+            delete field.att_pk;
+        });
+        aggregate.entities.forEach(entity => {
+            entity.field.forEach(field => {
+                delete field.att_pk;
+            });
+        });
+        aggregate.handlers.forEach(handler => {
+            try{
+            let path = aggregate.path.replace("root.xml",`event-handlers/${handler.att_on}.xml`);
+            let check = make_sure_is_list(handler[NESTED_MAPPING]).length;
+            handler[NESTED_MAPPING] = make_sure_is_list(handler[NESTED_MAPPING]).filter(x => x.mapping.length != 0);
+            if (!handler.att_code && handler[NESTED_MAPPING].length == 0 && handler.mapping.length == 0){
+                FileSystem.hardDelete(path);
+            } else if (check != make_sure_is_list(handler[NESTED_MAPPING]).length){
+                let obj = {};
+                obj[HANDLER] = handler;
+                FileSystem.hardWrite(path, obj);
+            }
+            }catch(err){console.error(err)}
+        });
+
+        //Validation
+        Validation.must_be_camel_cased(aggregate.path,aggregate.root.field,"Document field","att_name")
+        aggregate.entities.forEach(entity => {
+            Validation.must_be_camel_cased(aggregate.path,entity.field,`Document collection (${entity.att_name}) field`,"att_name")
+        });
+        aggregate.events.forEach(event=>{
+            Validation.must_be_camel_cased(aggregate.path,event.field,`Field in event (${event.att_name})`,"att_name");
+            event[NESTED].forEach(nested => {
+                Validation.must_be_camel_cased(aggregate.path,nested.field,`Field in event (${event.att_name}) collection (${nested.att_name})`,"att_name");
+            });
+        })
     });
 });
