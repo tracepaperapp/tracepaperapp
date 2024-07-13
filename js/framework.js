@@ -619,7 +619,7 @@ async function execute_load_data(alias,filter){
     }
     var data = await Draftsman.query(query,variable_mapping,!authorized);
     aliases.forEach(alias => {
-        if (!data[alias]){return}
+        if (!data[alias]){return} 
         try {
             Alpine.store(alias, data[alias]);
             let key = "store_" + alias + "_" + location;
