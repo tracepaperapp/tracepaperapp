@@ -136,7 +136,7 @@ window.View = {
                     let entities = await Aggregate.get_entities(file);
                     let fields = entities.filter(x => x.att_name == mapping.att_value).at(0).field.map(x => x.att_name);
                     let view = model.field.filter(x => x.att_name == mapping.att_target).at(0).att_ref;
-                    view = await Modeler.get_view_by_name(view);
+                    view = await Modeler.get_view_by_name(view,true);
                     view.field.forEach(x => {
                         if (!Object.keys(template).includes(x.att_name)){
                             template[x.att_name] = fields.includes(x.att_name) ? x.att_name : '';
@@ -174,7 +174,7 @@ window.View = {
             let entity = entities.filter(x => x.att_name == fields[i].att_name).at(0);
             code += `entity.${entity.att_name} = [{`;
 
-            let view = await Modeler.get_view_by_name(fields[i].att_ref);
+            let view = await Modeler.get_view_by_name(fields[i].att_ref,true);
             view.field.filter(x => entity.field.map(x => x.att_name).includes(x.att_name)).forEach(x => {
                 code += `\n\t\t"${x.att_name}": value["${x.att_name}"],`;
             });

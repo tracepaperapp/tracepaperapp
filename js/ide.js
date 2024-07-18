@@ -153,7 +153,6 @@ window.FileSystem = {
             await fs.promises.writeFile(dir + "/" + filepath, content,"utf8");
             await git.add({ fs, dir: dir, filepath: filepath });
         }
-
     },
     rename: async function(oldPath,newPath){
         await FileSystem.create_dir(newPath);
@@ -631,7 +630,7 @@ const options = {
 
 var parser = new XMLParser(options);
 var builder = new XMLBuilder(options);
-var model_cache = {};
+let model_cache = {};
 
 window.Modeler = {
     exists: async function(file){
@@ -873,6 +872,7 @@ window.Modeler = {
                 }
             }catch{}
             await Modeler.save_model(file,content);
+            model_cache[file] = content;
         }
     },
     auto_save: true,
@@ -927,14 +927,16 @@ window.Modeler = {
     }
 }
 
-var sync_lock = false;
-setInterval(async function(){
-    if (localStorage.project_drn && Modeler.auto_save && !sync_lock && sessionStorage.checkout == localStorage.project_drn){
-        sync_lock = true;
+async function sync_to_disk(){
+    if (localStorage.project_drn && Modeler.auto_save && !sessionStorage.lock &&sessionStorage.checkout == localStorage.project_drn){
+        sessionStorage.lock = "locked";
         await Modeler.sync_to_disk();
-        sync_lock = false;
     }
-},1000);
+    setTimeout(function(){
+        sessionStorage.removeItem("lock");
+    },100);
+}
+setInterval(sync_to_disk,1000)
 
 var search_engine = null;
 
@@ -1019,6 +1021,23 @@ window.Session = {
         session.last_save = "";
         session.last_pull = "";
         start_save_session_interval();
+    },
+    get_users: async function(){
+        let query_string = `
+        query FilterUser {
+          User {
+            filter {
+               resultset {
+                username
+                fullName
+              }
+            }
+          }
+        }
+        `;
+        var data = await Draftsman.query(query_string);
+        console.log(data);
+        return data.User.filter.resultset.filter(x => x.username != "");
     },
     show_exception: function(message){
         clearTimeout(clear_exception_timer);
@@ -1316,12 +1335,18 @@ async function validate_and_repair_model(){
     for (let i = 0; i < files.length; i++){
         let file = files[i];
         if (file.startsWith("commands/") && file.endsWith(".xml")){
-            let command = await Modeler.get(file);
-            command.att_type = "ActorEvent";
+            let command = await Modeler.get(file,true);
+            if (command.att_type != "ActorEvent"){
+                command.att_type = "ActorEvent";
+                await Modeler.save_model(file,{event:command});
+            }
         }
         if (file.startsWith("domain/") && file.includes("/events/") &&file.endsWith(".xml")){
-            let event = await Modeler.get(file);
-            event.att_type = "DomainEvent";
+            let event = await Modeler.get(file,true);
+            if (event.att_type != "DomainEvent"){
+                event.att_type = "DomainEvent";
+                await Modeler.save_model(file,{event:event});
+            }
         }
         //TODO Validations
     }
@@ -2914,7 +2939,7 @@ window.View = {
                     let entities = await Aggregate.get_entities(file);
                     let fields = entities.filter(x => x.att_name == mapping.att_value).at(0).field.map(x => x.att_name);
                     let view = model.field.filter(x => x.att_name == mapping.att_target).at(0).att_ref;
-                    view = await Modeler.get_view_by_name(view);
+                    view = await Modeler.get_view_by_name(view,true);
                     view.field.forEach(x => {
                         if (!Object.keys(template).includes(x.att_name)){
                             template[x.att_name] = fields.includes(x.att_name) ? x.att_name : '';
@@ -2952,7 +2977,7 @@ window.View = {
             let entity = entities.filter(x => x.att_name == fields[i].att_name).at(0);
             code += `entity.${entity.att_name} = [{`;
 
-            let view = await Modeler.get_view_by_name(fields[i].att_ref);
+            let view = await Modeler.get_view_by_name(fields[i].att_ref,true);
             view.field.filter(x => entity.field.map(x => x.att_name).includes(x.att_name)).forEach(x => {
                 code += `\n\t\t"${x.att_name}": value["${x.att_name}"],`;
             });
@@ -3138,7 +3163,7 @@ window.Scenario = {
         commandName = commandName.charAt(0).toUpperCase() + commandName.slice(1);
         commandName += elements.join("");
         commandName += "Requested";
-        let command = await Modeler.get_by_name(commandName);
+        let command = await Modeler.get_by_name(commandName,true);
         let retval = {};
         command["nested-object"].filter(x => x.att_name == collection).at(0).field.forEach(x => {
             retval[x.att_name] = x.att_type == "String" ? "string" : x.att_type == "Boolean" ? true : 0;

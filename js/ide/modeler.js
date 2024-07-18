@@ -7,7 +7,7 @@ const options = {
 
 var parser = new XMLParser(options);
 var builder = new XMLBuilder(options);
-var model_cache = {};
+let model_cache = {};
 
 window.Modeler = {
     exists: async function(file){
@@ -249,6 +249,7 @@ window.Modeler = {
                 }
             }catch{}
             await Modeler.save_model(file,content);
+            model_cache[file] = content;
         }
     },
     auto_save: true,
@@ -303,11 +304,13 @@ window.Modeler = {
     }
 }
 
-var sync_lock = false;
-setInterval(async function(){
-    if (localStorage.project_drn && Modeler.auto_save && !sync_lock && sessionStorage.checkout == localStorage.project_drn){
-        sync_lock = true;
+async function sync_to_disk(){
+    if (localStorage.project_drn && Modeler.auto_save && !sessionStorage.lock &&sessionStorage.checkout == localStorage.project_drn){
+        sessionStorage.lock = "locked";
         await Modeler.sync_to_disk();
-        sync_lock = false;
     }
-},1000);
+    setTimeout(function(){
+        sessionStorage.removeItem("lock");
+    },100);
+}
+setInterval(sync_to_disk,1000)

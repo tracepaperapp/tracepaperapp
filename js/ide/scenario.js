@@ -78,7 +78,7 @@ window.Scenario = {
         commandName = commandName.charAt(0).toUpperCase() + commandName.slice(1);
         commandName += elements.join("");
         commandName += "Requested";
-        let command = await Modeler.get_by_name(commandName);
+        let command = await Modeler.get_by_name(commandName,true);
         let retval = {};
         command["nested-object"].filter(x => x.att_name == collection).at(0).field.forEach(x => {
             retval[x.att_name] = x.att_type == "String" ? "string" : x.att_type == "Boolean" ? true : 0;

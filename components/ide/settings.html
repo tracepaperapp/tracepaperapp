@@ -181,6 +181,19 @@
                     <tr>
                         <th>Collaborators in workspace</th>
                         <td>
+                            <ui-trace-table></ui-trace-table>
+
+                            <draftsman-mutation command="AuthorizeUserWorkspace"
+                                                x-include="/prepared-statements/commands/AuthorizeUserWorkspace.txt"
+                                                authenticated>
+                            </draftsman-mutation>
+
+                            <draftsman-trace command="AuthorizeUserWorkspace"
+                                             component="AssignBusinessRole-Notifier"
+                                             status="success"
+                                             @trace="Draftsman.empty_track_and_trace_log();Draftsman.force_reload_data();">
+                            </draftsman-trace>
+
                             <table class="table">
                                 <thead>
                                 <tr>
@@ -192,9 +205,83 @@
                                 <template x-for="user in workspace.iam" :key="user.username">
                                     <tr>
                                         <th x-text="user.user.fullName"></th>
-                                        <td x-text="user.businessRole"></td>
+                                        <td>
+                                            <select class="select w-full max-w-xs"
+                                                    @change.debounce="
+                                                    const lastIndex = localStorage.project_drn.lastIndexOf(':');
+                                                    const drn = localStorage.project_drn.slice(0, lastIndex);
+                                                    $store.mutation.send('AuthorizeUserWorkspace',{
+                                                        drn: drn,
+                                                        username: user.username,
+                                                        businessRole: user.businessRole
+                                                    })"
+                                                    x-model="user.businessRole">
+                                                <option>viewer</option>
+                                                <option>developer</option>
+                                                <option>administrator</option>
+                                                <option>removed</option>
+                                            </select>
+                                        </td>
                                     </tr>
                                 </template>
+                                <tr>
+                                    <td>
+                                        <div x-data="{id: makeid(6),users: [],search: '',invites: []}">
+                                            <button class="btn btn-ghost"
+                                                    @click="document.getElementById(id).showModal();users = await Session.get_users()"><i class="fa-solid fa-plus"></i></button>
+                                            <dialog :id="id" class="modal">
+                                                <div class="modal-box">
+                                                    <h3 class="font-bold text-lg">Invite user to workspace</h3>
+                                                    <p class="py-4" x-effect="invites = users.filter(x => !workspace.iam.map(y => y.username).includes(x.username)).filter(x => x.username.toLowerCase().includes(search.toLowerCase()) || x.fullName.toLowerCase().includes(search.toLowerCase()))">
+
+                                                        <input type="text" placeholder="Search..."
+                                                               x-model="search"
+                                                               class="input input-bordered input-primary w-full" />
+                                                        <hr>
+                                                        <table class="table"
+                                                               x-cloak x-transition
+                                                               x-show="invites.length > 0 && invites.length < 6">
+                                                            <thead>
+                                                            <tr>
+                                                                <th>User</th>
+                                                                <th>Assign business role</th>
+                                                            </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            <template
+                                                                    :key="invite.username"
+                                                                    x-for="invite in invites">
+                                                                <tr>
+                                                                    <td x-text="invite.fullName"></td>
+                                                                    <td>
+                                                                        <select class="select w-full max-w-xs"
+                                                                                @change.debounce="
+                                                    const lastIndex = localStorage.project_drn.lastIndexOf(':');
+                                                    const drn = localStorage.project_drn.slice(0, lastIndex);
+                                                    $store.mutation.send('AuthorizeUserWorkspace',{
+                                                        drn: drn,
+                                                        username: invite.username,
+                                                        businessRole: $el.value
+                                                    });document.getElementById(id).close()">
+                                                                            <option></option>
+                                                                            <option>viewer</option>
+                                                                            <option>developer</option>
+                                                                            <option>administrator</option>
+                                                                        </select>
+                                                                    </td>
+                                                                </tr>
+                                                            </template>
+                                                            </tbody>
+                                                        </table>
+                                                    </p>
+                                                </div>
+                                                <form method="dialog" class="modal-backdrop">
+                                                    <button>close</button>
+                                                </form>
+                                            </dialog>
+                                        </div>
+                                    </td>
+                                </tr>
                                 </tbody>
                             </table>
                         </td>

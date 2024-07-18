@@ -81,7 +81,6 @@ window.FileSystem = {
             await fs.promises.writeFile(dir + "/" + filepath, content,"utf8");
             await git.add({ fs, dir: dir, filepath: filepath });
         }
-
     },
     rename: async function(oldPath,newPath){
         await FileSystem.create_dir(newPath);

@@ -21,12 +21,18 @@ async function validate_and_repair_model(){
     for (let i = 0; i < files.length; i++){
         let file = files[i];
         if (file.startsWith("commands/") && file.endsWith(".xml")){
-            let command = await Modeler.get(file);
-            command.att_type = "ActorEvent";
+            let command = await Modeler.get(file,true);
+            if (command.att_type != "ActorEvent"){
+                command.att_type = "ActorEvent";
+                await Modeler.save_model(file,{event:command});
+            }
         }
         if (file.startsWith("domain/") && file.includes("/events/") &&file.endsWith(".xml")){
-            let event = await Modeler.get(file);
-            event.att_type = "DomainEvent";
+            let event = await Modeler.get(file,true);
+            if (event.att_type != "DomainEvent"){
+                event.att_type = "DomainEvent";
+                await Modeler.save_model(file,{event:event});
+            }
         }
         //TODO Validations
     }

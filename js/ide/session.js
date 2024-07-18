@@ -49,6 +49,23 @@ window.Session = {
         session.last_pull = "";
         start_save_session_interval();
     },
+    get_users: async function(){
+        let query_string = `
+        query FilterUser {
+          User {
+            filter {
+               resultset {
+                username
+                fullName
+              }
+            }
+          }
+        }
+        `;
+        var data = await Draftsman.query(query_string);
+        console.log(data);
+        return data.User.filter.resultset.filter(x => x.username != "");
+    },
     show_exception: function(message){
         clearTimeout(clear_exception_timer);
         session.exception = message;
