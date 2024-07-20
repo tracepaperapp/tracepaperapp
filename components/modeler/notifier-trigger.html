@@ -17,11 +17,11 @@
                 <tr x-show="event.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition
                     class="hover cursor-pointer"
                     @click="Notifier.update_trigger(trigger,event);document.getElementById(id).close()">
-                  <td>
+                  <th scope="row">
                     <span x-text="event"></span>&nbsp;
                     <div x-show="event == trigger.att_source" x-cloak x-transition
                          class="badge badge-primary badge-outline">current</div>
-                  </td>
+                  </th>
                 </tr>
               </template>
             </table>

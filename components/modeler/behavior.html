@@ -38,9 +38,9 @@
                            !model.trigger.map(x => x.att_source).includes(event)" x-cloak x-transition
                   class="hover cursor-pointer"
                   @click="Behavior.add_trigger(model,event);add_trigger.close();await Modeler.sync_to_disk();$dispatch('redraw')">
-                <td>
+                <th scope="row">
                   <span x-text="event"></span>&nbsp;
-                </td>
+                </th>
               </tr>
             </template>
           </table>

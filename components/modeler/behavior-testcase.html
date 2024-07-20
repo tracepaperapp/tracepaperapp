@@ -107,9 +107,9 @@
             <template x-for="event in events" :key="event">
               <tr class="hover cursor-pointer"
                   @click="let expected = {'att_domain-event': event};await Behavior.init_expected_event(expected);testcase.expected.push(expected);document.getElementById(id).close()">
-                <td>
+                <th scope="row">
                   <span x-text="event"></span>&nbsp;
-                </td>
+                </th>
               </tr>
             </template>
           </table>

@@ -309,8 +309,8 @@
                                                                 @click="document.getElementById(id).close();expectation.att_command = component;"
                                                                 :class="component == expectation.att_command ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
                                                                 x-cloak x-transition>
-                                                                <th x-show="!component.includes('-Notifier')" x-cloak x-transition>Behavior</th>
-                                                                <th x-show="component.includes('-Notifier')" x-cloak x-transition>Notifier</th>
+                                                                <th scope="row" x-show="!component.includes('-Notifier')" x-cloak x-transition>Behavior</th>
+                                                                <th scope="row" x-show="component.includes('-Notifier')" x-cloak x-transition>Notifier</th>
                                                                 <td x-text="component"></td>
                                                             </tr>
                                                         </template>
@@ -352,8 +352,8 @@
                                                             @click="document.getElementById(id).close();activity['expected-trace'].push({att_command: component, att_status: 'success'})"
                                                             class="cursor-pointer"
                                                             x-cloak x-transition>
-                                                            <th x-show="!component.includes('-Notifier')" x-cloak x-transition>Behavior</th>
-                                                            <th x-show="component.includes('-Notifier')" x-cloak x-transition>Notifier</th>
+                                                            <th scope="row" x-show="!component.includes('-Notifier')" x-cloak x-transition>Behavior</th>
+                                                            <th scope="row" x-show="component.includes('-Notifier')" x-cloak x-transition>Notifier</th>
                                                             <td x-text="component"></td>
                                                         </tr>
                                                     </template>
