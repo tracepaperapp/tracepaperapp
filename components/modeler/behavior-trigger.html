@@ -1,7 +1,7 @@
 <template x-component="trigger">
   <table class="table">
     <tr x-data="{id: makeid(6)}">
-      <th>Trigger event</th>
+      <th scope="row">Trigger event</th>
       <td x-data="{events: [], search: ''}" x-effect="events = await Modeler.list_events()">
         <p class="editable" @click="document.getElementById(id).showModal()" x-text="trigger.att_source"></p>
         <dialog :id="id" class="modal">
@@ -34,7 +34,7 @@
       </td>
     </tr>
     <tr>
-      <th>Business key</th>
+      <th scope="row">Business key</th>
       <template x-if="!trigger['att_key-field'] || !trigger['att_key-field'].startsWith('#')">
         <td>
           <select class="editable" x-model="trigger['att_key-field']">
@@ -56,7 +56,7 @@
       </template>
     </tr>
     <tr x-show="trigger['att_idempotency-key']" x-cloak x-transition>
-      <th>Idempotency TTL</th>
+      <th scope="row">Idempotency TTL</th>
       <td>
         <ui-editable-text-field
                 :value="trigger['att_idempotency-ttl'] ? trigger['att_idempotency-ttl'] : '24 * 60 * 60'"
@@ -65,9 +65,9 @@
     </tr>
     <tr><td colspan="3"></td></tr>
     <tr>
-      <th>Flow variable</th>
-      <th>Event field</th>
-      <th>Idempotency Check</th>
+      <th scope="col">Flow variable</th>
+      <th scope="col">Event field</th>
+      <th scope="col">Idempotency Check</th>
     </tr>
     <template x-for="mapping in trigger.mapping" :key="mapping.att_target">
       <tr>

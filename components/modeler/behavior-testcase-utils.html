@@ -2,8 +2,8 @@
   <div>
     <table class="table">
       <tr>
-        <th>Attribute Name</th>
-        <th>Value</th>
+        <th scope="col">Attribute Name</th>
+        <th scope="col">Value</th>
       </tr>
       <template x-for="(value,fkey) in state" :key="fkey">
         <tr>
@@ -20,8 +20,8 @@
               <template x-for="(entity,bkey) in value" :key="bkey">
                 <table class="table">
                   <tr>
-                    <th>Attribute Name</th>
-                    <th>Value</th>
+                    <th scope="col">Attribute Name</th>
+                    <th scope="col">Value</th>
                     <td class="text-end">
                       <ui-delete-button
                               @delete.once.stop="delete state[fkey][bkey];if(Object.keys(state[fkey]).length == 0){delete state[fkey]};$dispatch('updated')"></ui-delete-button>
@@ -81,7 +81,7 @@
                   </tr>
                 </template>
                 <tr x-show="!('version' in state)" x-cloak x-transition>
-                  <th>version</th>
+                  <th scope="row">version</th>
                   <td>
                     <button class="btn btn-ghost"
                             @click="state['version'] = 1;$dispatch('updated')"><i class="fa-solid fa-plus"></i></button>
@@ -111,7 +111,7 @@
 <template x-component="test-trigger">
   <table class="table">
     <tr>
-      <th>Trigger event</th>
+      <th scope="row">Trigger event</th>
       <td>
         <select class="editable"
                 @change="Behavior.update_test_trigger(testcase,testcase['att_trigger-event'])"
@@ -123,8 +123,8 @@
       </td>
     </tr>
     <tr>
-      <th>key</th>
-      <th>value</th>
+      <th scope="col">key</th>
+      <th scope="col">value</th>
     </tr>
     <template x-for="input in testcase.input" :key="input.att_name">
       <tr>

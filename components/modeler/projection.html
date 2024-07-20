@@ -5,15 +5,15 @@
         </div>
         <table class="table">
             <tr>
-                <th>Name</th>
+                <th scope="row">Name</th>
                 <td x-text="model.att_name" onclick="rename_projection.showModal()" class="editable"></td>
             </tr>
             <tr>
-                <th>GraphQL namespace</th>
+                <th scope="row">GraphQL namespace</th>
                 <td x-text="model['att_graphql-namespace']" onclick="rename_projection.showModal()" class="editable"></td>
             </tr>
             <tr>
-                <th>GraphQL method name</th>
+                <th scope="row">GraphQL method name</th>
                 <td>
                     <ui-editable-text-field
                             :value="model['att_field-name']"
@@ -23,7 +23,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Authorization mode</th>
+                <th scope="row">Authorization mode</th>
                 <td>
                     <select class="editable" x-model="model.att_authorization">
                         <option value="anonymous">Anonymous</option>
@@ -34,7 +34,7 @@
             </tr>
             <template x-if="model.att_authorization == 'role'">
                 <tr x-init="if(!model.att_role){model.att_role = ''}" x-show="model.att_authorization == 'role'" x-transition x-cloak>
-                    <th>Required role</th>
+                    <th scope="row">Required role</th>
                     <td x-show="!model.att_role.startsWith('#')" x-transition x-cloak>
                         <select class="editable"
                                 x-data="{roles: []}"
@@ -53,7 +53,7 @@
                 </tr>
             </template>
             <tr>
-                <th>Return object</th>
+                <th scope="row">Return object</th>
                 <td>
                     <select @change="$dispatch('redraw')" class="editable" x-model="model.att_return">
                         <option>-</option>
@@ -64,7 +64,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Return type</th>
+                <th scope="row">Return type</th>
                 <td>
                     <select class="editable" x-model="model['att_return-type']">
                         <option value="single object">Single object</option>
@@ -80,9 +80,9 @@
         </div>
         <table class="table">
             <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Required</th>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
+                <th scope="col">Required</th>
             </tr>
             <template x-for="field in model.input">
                 <tr>
@@ -131,7 +131,7 @@
                 <div class="py-4" x-data="{name: '', path: ''}">
                     <table class="table">
                         <tr>
-                            <th>Name</th>
+                            <th scope="row">Name</th>
                             <td >
                                 <ui-editable-text-field
                                         :value="model.att_name"
@@ -141,7 +141,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>GraphQL namespace</th>
+                            <th scope="row">GraphQL namespace</th>
                             <td>
                                 <ui-editable-text-field
                                         :value="model['att_graphql-namespace']"

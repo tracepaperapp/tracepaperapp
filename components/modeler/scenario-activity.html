@@ -89,13 +89,13 @@
                 <!-- Variables -->
                 <template x-if="['set-variables'].includes(activity.att_type)">
                     <tr>
-                        <th>Variables</th>
+                        <th scope="row">Variables</th>
                         <td>
                             <table class="table">
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Type</th>
-                                    <th>Value</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Value</th>
                                 </tr>
                                 <template x-for="input in activity.input" :key="input.att_name">
                                     <tr>
@@ -120,7 +120,7 @@
                                                        x-init="data = JSON.parse(input.att_value)">
                                                     <template x-for="(row,index) in data">
                                                         <tr>
-                                                            <th>Item <span x-text="index + 1"></span>
+                                                            <th scope="row">Item <span x-text="index + 1"></span>
                                                                 <ui-add-button modal-title="Nested variable name"
                                                                                :pattern="lower_or_camel_cased"
                                                                                :message="lower_or_camel_cased_message"
@@ -203,13 +203,13 @@
                 <!-- Inputs -->
                 <template x-if="['mutation','query'].includes(activity.att_type)">
                     <tr>
-                        <th>Inputs</th>
+                        <th scope="row">Inputs</th>
                         <td>
                             <table class="table">
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Type</th>
-                                    <th>Value</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Value</th>
                                 </tr>
                                 <template x-for="input in activity.input" :key="input.att_name">
                                     <tr>
@@ -233,7 +233,7 @@
                                                        x-init="data = JSON.parse(input.att_value)">
                                                     <template x-for="(row,index) in data">
                                                         <tr>
-                                                            <th>Item <span x-text="index + 1"></span></th>
+                                                            <th scope="row">Item <span x-text="index + 1"></span></th>
                                                             <td>
                                                                 <table class="table bordered border-primary">
                                                                     <template x-for="k in Object.keys(row)">
@@ -280,12 +280,12 @@
                 <!-- Expected Traces -->
                 <template x-if="['mutation'].includes(activity.att_type)">
                     <tr>
-                        <th>Expected invocations</th>
+                        <th scope="row">Expected invocations</th>
                         <td x-data="{traces: []}" x-effect="traces = activity['expected-trace'].map(x => x.att_command)">
                             <table class="table">
                                 <tr>
-                                    <th>Component</th>
-                                    <th>Processing status</th>
+                                    <th scope="col">Component</th>
+                                    <th scope="col">Processing status</th>
                                 </tr>
                                 <template x-for="expectation in activity['expected-trace']" :key="expectation.att_command">
                                     <tr>
@@ -374,13 +374,13 @@
                 <!-- Expected Values -->
                 <template x-if="activity.att_type == 'query'">
                     <tr>
-                        <th>Expected values</th>
+                        <th scope="row">Expected values</th>
                         <td>
                             <table class="table">
                                 <tr>
-                                    <th>Path</th>
-                                    <th>Type</th>
-                                    <th>Expected value</th>
+                                    <th scope="col">Path</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Expected value</th>
                                 </tr>
                                 <template x-for="(expectation,j) in activity['expect-value']" :key="index + '-' + j">
                                     <tr>
@@ -455,12 +455,12 @@
                 <!-- Extract Values -->
                 <template x-if="activity.att_type == 'query'">
                     <tr>
-                        <th>Extractions</th>
+                        <th  scope="row">Extractions</th>
                         <td>
                             <table class="table">
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Path</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Path</th>
                                 </tr>
                                 <template x-for="(extraction,j) in activity['extract-value']" :key="index + '-' + j">
                                     <tr>
@@ -523,7 +523,7 @@
                 <!-- Role -->
                 <template x-if="activity.att_type == 'grant-role'">
                     <tr>
-                        <th>Role</th>
+                        <th scope="row">Role</th>
                         <td x-show="activity.att_role" x-cloak x-transition>
                             <ui-editable-text-field
                                     :value="activity.att_role"
@@ -543,7 +543,7 @@
                 <!-- Sleep -->
                 <template x-if="activity.att_type == 'wait'">
                     <tr>
-                        <th>Wait for</th>
+                        <th scope="row">Wait for</th>
                         <td>
                             <input type="number" x-model="activity.att_milliseconds" min="1" max="10000" class="input input-ghost editable" /> Milliseconds
                         </td>
@@ -553,7 +553,7 @@
                 <!-- Switch User -->
                 <template x-if="activity.att_type == 'switch-user'">
                     <tr>
-                        <th>Switch to user number</th>
+                        <th scope="row">Switch to user number</th>
                         <td x-show="!Number.isInteger(Number(activity['att_user-number']))" x-cloak x-transition>
                             <select class="editable" x-model="activity['att_user-number']">
                                 <template x-for="fvar in flow_vars" :key="fvar">

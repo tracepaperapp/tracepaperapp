@@ -2,7 +2,7 @@
     <div class="overflow-x-auto">
         <table class="table table-xs">
             <tr>
-                <th>Data retention</th>
+                <th scope="row">Data retention</th>
                 <td>
                     <input type="number" x-model="model['att_data-retention-days']"
                            min="-1" step="1"
@@ -14,7 +14,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Exclude from notification mechanism</th>
+                <th scope="row">Exclude from notification mechanism</th>
                 <td>
                     <input type="checkbox"
                            @change="model['att_att_exclude-notification'] = $el.checked ? 'true' : 'false'"
@@ -23,7 +23,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Namespace</th>
+                <th scope="row">Namespace</th>
                 <td x-data="{namespace: ''}" x-effect="namespace = file.replace('views/','').split('/').filter(x => !x.includes('.xml')).join('.')">
                     <ui-editable-text-field
                             :value="namespace"

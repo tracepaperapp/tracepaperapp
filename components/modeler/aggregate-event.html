@@ -10,9 +10,9 @@
       <table class="table">
         <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Default</th>
+          <th scope="col">Name</th>
+          <th scope="col">Type</th>
+          <th scope="col">Default</th>
         </tr>
         </thead>
         <tbody>
@@ -61,9 +61,9 @@
             <table class="table">
               <tbody>
               <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Default</th>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
+                <th scope="col">Default</th>
               </tr>
               <template x-for="field in entity.field" :key="field.att_name">
                 <tr>
@@ -135,9 +135,9 @@
           <template x-if="!('att_code' in mapping)">
             <table class="table">
                 <tr>
-                  <th>Document field</th>
-                  <th>Mapping</th>
-                  <th>Event field</th>
+                  <th scope="col">Document field</th>
+                  <th scope="col">Mapping</th>
+                  <th scope="col">Event field</th>
                 </tr>
                 <template x-for="field in root.field" :key="field.att_name">
                   <tr x-data="{field_mapping: {}}"
@@ -208,9 +208,9 @@
                         </select>
                         <table class="table">
                           <tr>
-                            <th>Document field</th>
-                            <th>Mapping</th>
-                            <th>Event field</th>
+                            <th scope="col">Document field</th>
+                            <th scope="col">Mapping</th>
+                            <th scope="col">Event field</th>
                           </tr>
                           <template x-for="field in entity.field" :key="field.att_name">
                             <tr x-data="{nested_mapping: {}}" x-effect="nested_mapping = Aggregate.get_event_handler_mapping(field,field_mapping)">

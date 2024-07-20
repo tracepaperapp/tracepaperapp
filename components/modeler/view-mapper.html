@@ -10,7 +10,7 @@
                 <div class="collapse-content">
                     <table class="table">
                         <tr>
-                            <th>Source domain</th>
+                            <th scope="row">Source domain</th>
                             <td>
                                 <select @change="$dispatch('redraw')" class="editable" x-model="handler['att_sub-domain']">
                                     <option>-</option>
@@ -21,7 +21,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Source aggregate</th>
+                            <th scope="row">Source aggregate</th>
                             <td>
                                 <select @change="$dispatch('redraw');View.get_default_mapping(model,handler)" class="editable" x-model="handler.att_aggregate">
                                     <option>-</option>
@@ -32,7 +32,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Business key</th>
+                            <th scope="row">Business key</th>
                             <td>
                                 <select class="editable" x-model="handler['att_key-mapping']">
                                     <option>-</option>
@@ -43,7 +43,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Processing strategy</th>
+                            <th scope="row">Processing strategy</th>
                             <td>
                                 <select class="editable" x-model="handler.att_processor">
                                     <option value="item">Item</option>
@@ -52,7 +52,7 @@
                             </td>
                         </tr>
                         <tr x-show="handler.att_processor == 'dictionary'" x-cloak x-transition>
-                            <th>Aggregate collection</th>
+                            <th scope="row">Aggregate collection</th>
                             <td>
                                 <select class="editable" x-model="handler.att_dictionary">
                                     <option>-</option>
@@ -67,10 +67,10 @@
                     <table class="table table-xs">
                         <thead>
                         <tr>
-                            <th>View field</th>
-                            <th>Mapping</th>
-                            <th>Aggregate field</th>
-                            <th>Nested mapping</th>
+                            <th scope="col">View field</th>
+                            <th scope="col">Mapping</th>
+                            <th scope="col">Aggregate field</th>
+                            <th scope="col">Nested mapping</th>
                         </tr>
                         </thead>
                         <template x-for="field in model.field.filter(x => view_field_types.includes(x.att_type))" :key="field.att_name">
@@ -136,8 +136,8 @@
                                              x-effect="await sleep(10);template = await View.read_template(model,handler,mapping,template)">
                                             <table class="table">
                                                 <tr>
-                                                    <th>View field</th>
-                                                    <th>Source field</th>
+                                                    <th scope="col">View field</th>
+                                                    <th scope="col">Source field</th>
                                                     <td>
                                                         <i @click="template = await View.read_template(model,handler,mapping,template)" class="cursor-pointer fa-solid fa-rotate-right"></i>
                                                     </td>

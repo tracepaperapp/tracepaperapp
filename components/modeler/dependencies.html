@@ -6,8 +6,8 @@
         </div>
         <table class="table">
             <tr>
-                <th>Package Name</th>
-                <th>Version</th>
+                <th scope="col">Package Name</th>
+                <th scope="col">Version</th>
             </tr>
             <template x-for="dependency in model.global.dependency" :key="dependency.att_name">
                 <tr>

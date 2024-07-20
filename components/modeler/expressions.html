@@ -12,7 +12,7 @@
           <div class="collapse-content">
             <table class="table">
               <tr>
-                <th>Name</th>
+                <th scope="row">Name</th>
                 <td>
                   <ui-editable-text-field
                           :value="expression.model.att_name"
@@ -22,7 +22,7 @@
                 </td>
               </tr>
               <tr>
-                <th>Type</th>
+                <th scope="row">Type</th>
                 <td>
                   <select class="editable" x-model="expression.model.att_type">
                     <option value="ActorEventRole">API authorization expression</option>
@@ -31,7 +31,7 @@
                 </td>
               </tr>
               <tr>
-                <th>Inputs</th>
+                <th scope="row">Inputs</th>
                 <td>
                   <ui-editable-text-field
                           :value="expression.model.att_input"
@@ -41,7 +41,7 @@
                 </td>
               </tr>
               <tr>
-                <th>Expression</th>
+                <th scope="row">Expression</th>
                 <td>
                   <ui-editable-text-field
                           :value="expression.model.att_expression"

@@ -2,7 +2,7 @@
     <div x-data="{meta: {}}" x-init="meta = await Modeler.get('meta.json')">
         <table class="table">
             <tr>
-                <th>Role</th>
+                <th scope="col">Role</th>
             </tr>
             <template x-for="role in meta.roles" :key="role">
                 <tr>

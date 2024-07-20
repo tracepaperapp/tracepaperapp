@@ -8,7 +8,7 @@
             <div x-data="{activities: []}" x-effect="let update = activity.activity;await sleep(1);if(activities != update){activities = update}">
                 <table class="table">
                     <tr>
-                        <th>Source array</th>
+                        <th scope="row">Source array</th>
                         <td>
                             <ui-bind-flowvar :value="activity.att_array"
                                              @updated.debounce.stop="activity.att_array = $event.detail.value"></ui-bind-flowvar>
@@ -102,14 +102,14 @@
     <table class="table">
         <template x-if="activity.att_type == 'create-iam-group'">
             <tr x-show="activity.att_type == 'create-iam-group'" x-cloak x-transition>
-                <th>Group name</th>
+                <th scope="row">Group name</th>
                 <td><ui-bind-flowvar :value="activity['att_group-name']"
                                      @updated.debounce.stop="activity['att_group-name'] = $event.detail.value"></ui-bind-flowvar></td>
             </tr>
         </template>
         <template x-if="activity.att_type == 'delete-iam-group'">
             <tr x-show="activity.att_type == 'delete-iam-group'" x-cloak x-transition>
-                <th>Group name</th>
+                <th scope="row">Group name</th>
                 <td><ui-bind-flowvar :value="activity['att_group-name']"
                                      @updated.debounce.stop="activity['att_group-name'] = $event.detail.value"></ui-bind-flowvar></td>
             </tr>
@@ -117,12 +117,12 @@
         <template x-if="activity.att_type == 'add-user-to-iam-group'">
             <tbody x-show="activity.att_type == 'add-user-to-iam-group'" x-cloak x-transition>
                 <tr>
-                    <th>Group name</th>
+                    <th scope="row">Group name</th>
                     <td><ui-bind-flowvar :value="activity['att_group-name']"
                                          @updated.debounce.stop="activity['att_group-name'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Username</th>
+                    <th scope="row">Username</th>
                     <td><ui-bind-flowvar :value="activity['att_username']"
                                          @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
@@ -131,12 +131,12 @@
         <template x-if="activity.att_type == 'remove-user-from-iam-group'">
             <tbody x-show="activity.att_type == 'remove-user-from-iam-group'" x-cloak x-transition>
             <tr>
-                <th>Group name</th>
+                <th scope="row">Group name</th>
                 <td><ui-bind-flowvar :value="activity['att_group-name']"
                                      @updated.debounce.stop="activity['att_group-name'] = $event.detail.value"></ui-bind-flowvar></td>
             </tr>
             <tr>
-                <th>Username</th>
+                <th scope="row">Username</th>
                 <td><ui-bind-flowvar :value="activity['att_username']"
                                      @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
             </tr>
@@ -145,7 +145,7 @@
         <template x-if="activity.att_type == 'retrieve-email-from-iam'">
             <tbody x-show="activity.att_type == 'retrieve-email-from-iam'" x-cloak x-transition>
                 <tr>
-                    <th>Variable name</th>
+                    <th scope="row">Variable name</th>
                     <td>
                         <ui-editable-text-field
                                 :value="activity.att_name"
@@ -154,7 +154,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Username</th>
+                    <th scope="row">Username</th>
                     <td><ui-bind-flowvar :value="activity['att_username']"
                                          @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
@@ -163,7 +163,7 @@
         <template x-if="activity.att_type == 'render-template'">
             <tbody x-show="activity.att_type == 'render-template'" x-cloak x-transition>
             <tr>
-                <th>Variable name</th>
+                <th scope="row">Variable name</th>
                 <td>
                     <ui-editable-text-field
                             :value="activity.att_name"
@@ -172,7 +172,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Template file</th>
+                <th scope="row">Template file</th>
                 <td x-data="{templates: null}" x-effect="templates = await Modeler.list_templates()">
                     <select class="editable" x-model="activity['att_template-file']">
                         <option>-</option>
@@ -189,28 +189,28 @@
         <template x-if="activity.att_type == 'send-email'">
             <tbody x-show="activity.att_type == 'send-email'" x-cloak x-transition>
                 <tr>
-                    <th>Sender</th>
+                    <th scope="row">Sender</th>
                     <td><ui-editable-text-field
                             :value="activity.att_sender"
                             @updated.debounce="activity.att_sender = $event.detail.value"></ui-editable-text-field></td>
                 </tr>
                 <tr>
-                    <th>Receiver</th>
+                    <th scope="row">Receiver</th>
                     <td><ui-bind-flowvar :value="activity.att_receiver"
                                          @updated.debounce.stop="activity.att_receiver = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Subject</th>
+                    <th scope="row">Subject</th>
                     <td><ui-bind-flowvar :value="activity.att_subject"
                                          @updated.debounce.stop="activity.att_subject = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Text Body</th>
+                    <th scope="row">Text Body</th>
                     <td><ui-bind-flowvar :value="activity.att_text"
                                          @updated.debounce.stop="activity.att_text = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>HTML Body</th>
+                    <th scope="row">HTML Body</th>
                     <td><ui-bind-flowvar :value="activity.att_html"
                                          @updated.debounce.stop="activity.att_html = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
@@ -219,17 +219,17 @@
         <template x-if="activity.att_type == 'send-graphql-notification'">
             <tbody x-show="activity.att_type == 'send-graphql-notification'" x-cloak x-transition>
                 <tr>
-                    <th>Identifier</th>
+                    <th scope="row">Identifier</th>
                     <td><ui-bind-flowvar :value="activity.att_identifier"
                                          @updated.debounce.stop="activity.att_subject = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Notification type</th>
+                    <th scope="row">Notification type</th>
                     <td><ui-bind-flowvar :value="activity['att_notification-type']"
                                          @updated.debounce.stop="activity['att_notification-type'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Message</th>
+                    <th scope="row">Message</th>
                     <td><ui-bind-flowvar :value="activity.att_message"
                                          @updated.debounce.stop="activity.att_message = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
@@ -238,22 +238,22 @@
         <template x-if="activity.att_type == 'write-file'">
             <tbody x-show="activity.att_type == 'write-file'" x-cloak x-transition>
                 <tr>
-                    <th>File name</th>
+                    <th scope="row">File name</th>
                     <td><ui-bind-flowvar :value="activity['att_file-name']"
                                          @updated.debounce.stop="activity['att_file-name'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Directory Path</th>
+                    <th scope="row">Directory Path</th>
                     <td><ui-bind-flowvar :value="activity['att_path']"
                                          @updated.debounce.stop="activity['att_path'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Content</th>
+                    <th scope="row">Content</th>
                     <td><ui-bind-flowvar :value="activity['att_content']"
                                          @updated.debounce.stop="activity['att_content'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Bucket</th>
+                    <th scope="row">Bucket</th>
                     <td>
                         <ui-editable-text-field
                                 :value="activity.att_bucket"
@@ -265,7 +265,7 @@
         <template x-if="activity.att_type == 'fetch-property'">
             <tbody x-show="activity.att_type == 'fetch-property'" x-cloak x-transition>
                 <tr>
-                    <th>Variable name</th>
+                    <th scope="row">Variable name</th>
                     <td>
                         <ui-editable-text-field
                                 :value="activity.att_name"
@@ -274,7 +274,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Key</th>
+                    <th scope="row">Key</th>
                     <td><ui-bind-flowvar :value="activity['att_key']"
                                          @updated.debounce.stop="activity['att_key'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
@@ -283,12 +283,12 @@
         <template x-if="activity.att_type == 'get-token'">
             <tbody x-show="activity.att_type == 'get-token'" x-cloak x-transition>
                 <tr>
-                    <th>Username</th>
+                    <th scope="row">Username</th>
                     <td><ui-bind-flowvar :value="activity['att_username']"
                                          @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Password</th>
+                    <th scope="row">Password</th>
                     <td><ui-bind-flowvar :value="activity['att_password']"
                                          @updated.debounce.stop="activity['att_password'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
@@ -307,17 +307,17 @@
         <template x-if="activity.att_type == 'iam-create-user'">
             <tbody x-show="activity.att_type == 'iam-create-user'" x-cloak x-transition>
                 <tr>
-                    <th>Username</th>
+                    <th scope="row">Username</th>
                     <td><ui-bind-flowvar :value="activity['att_username']"
                                          @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Password</th>
+                    <th scope="row">Password</th>
                     <td><ui-bind-flowvar :value="activity['att_password']"
                                          @updated.debounce.stop="activity['att_password'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Email</th>
+                    <th scope="row">Email</th>
                     <td><ui-bind-flowvar :value="activity['att_email']"
                                          @updated.debounce.stop="activity['att_email'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
@@ -325,7 +325,7 @@
         </template>
         <template x-if="activity.att_type == 'iam-delete-user'">
             <tr x-show="activity.att_type == 'iam-delete-user'" x-cloak x-transition>
-                <th>Username</th>
+                <th scope="row">Username</th>
                 <td><ui-bind-flowvar :value="activity['att_username']"
                                      @updated.debounce.stop="activity['att_username'] = $event.detail.value"></ui-bind-flowvar></td>
             </tr>
@@ -333,7 +333,7 @@
         <template x-if="activity.att_type == 'set-variable'">
             <tbody x-show="activity.att_type == 'set-variable'" x-cloak x-transition>
                 <tr>
-                    <th>Variable name</th>
+                    <th scope="row">Variable name</th>
                     <td>
                         <ui-editable-text-field
                                 :value="activity.att_name"
@@ -342,7 +342,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Expression</th>
+                    <th scope="row">Expression</th>
                     <td>
                         <ui-editable-text-field
                                 :value="activity.att_expression"
@@ -354,7 +354,7 @@
         <template x-if="activity.att_type == 'call-internal-api' && !activity.att_query">
             <tbody x-show="activity.att_type == 'call-internal-api'" x-cloak x-transition>
                 <tr>
-                    <th>Variable name</th>
+                    <th scope="row">Variable name</th>
                     <td>
                         <ui-editable-text-field
                                 :value="activity.att_name"
@@ -363,7 +363,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Template file</th>
+                    <th scope="row">Template file</th>
                     <td x-data="{templates: null}" x-effect="templates = await Modeler.list_templates()">
                         <select class="editable" x-model="activity['att_template-file']">
                             <option>-</option>
@@ -380,7 +380,7 @@
         <template x-if="activity.att_type == 'call-internal-api' && activity.att_query">
             <tbody x-show="activity.att_type == 'call-internal-api'" x-cloak x-transition>
             <tr>
-                <th>Variable name</th>
+                <th scope="row">Variable name</th>
                 <td>
                     <ui-editable-text-field
                             :value="activity.att_name"
@@ -398,7 +398,7 @@
         <template x-if="activity.att_type == 'code' && !activity.att_code">
             <tbody x-show="activity.att_type == 'code'" x-cloak x-transition>
                 <tr>
-                    <th>Module</th>
+                    <th scope="row">Module</th>
                     <td x-data="{modules: []}" x-init="modules = await Modeler.list_python_modules()">
                         <select class="editable" x-model="activity['att_python-file']">
                             <option>-</option>
@@ -410,7 +410,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Function</th>
+                    <th scope="row">Function</th>
                     <td x-data="{methods: []}" x-effect="methods = await Modeler.get_methods(activity['att_python-file'],'notifier')">
                         <select class="editable" x-model="activity.att_handler">
                             <option>-</option>
@@ -440,7 +440,7 @@
         <template x-if="activity.att_type == 'HTTP'">
             <tbody x-show="activity.att_type == 'HTTP'" x-cloak x-transition>
                 <tr>
-                <th>Variable name</th>
+                <th scope="row">Variable name</th>
                 <td>
                     <ui-editable-text-field
                             :value="activity.att_name"
@@ -449,12 +449,12 @@
                 </td>
             </tr>
                 <tr>
-                    <th>URL</th>
+                    <th scope="row">URL</th>
                     <td><ui-bind-flowvar :value="activity['att_url']"
                                          @updated.debounce.stop="activity['att_url'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Method</th>
+                    <th scope="row">Method</th>
                     <td>
                         <select class="editable" x-model="activity.att_method">
                             <option>-</option>
@@ -469,25 +469,25 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Load JSON</th>
+                    <th scope="row">Load JSON</th>
                     <td>
                         <input type="checkbox" :checked="activity['att_load-json'] == 'true'"
                                @change="activity['att_load-json'] = $el.checked ? 'true' : 'false'" class="checkbox checkbox-primary" />
                     </td>
                 </tr>
                 <tr>
-                    <th>Parameters</th>
+                    <th scope="row">Parameters</th>
                     <td><ui-bind-flowvar :value="activity['att_params']"
                                          @updated.debounce.stop="activity['att_params'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <tr>
-                    <th>Headers</th>
+                    <th scope="row">Headers</th>
                     <td><ui-bind-flowvar :value="activity['att_headers']"
                                          @updated.debounce.stop="activity['att_headers'] = $event.detail.value"></ui-bind-flowvar></td>
                 </tr>
                 <template x-if="!activity.att_body">
                     <tr>
-                        <th>Template file</th>
+                        <th scope="row">Template file</th>
                         <td x-data="{templates: null}" x-effect="templates = await Modeler.list_templates()">
                             <select class="editable" x-model="activity['att_template-file']">
                                 <option>-</option>
@@ -502,7 +502,7 @@
                 </template>
                 <template>
                     <tr>
-                        <th>Body</th>
+                        <th scope="row">Body</th>
                         <td>
                             <ui-inline-code :code="activity.att_body" @updated.debounce.stop="activity.att_body = $event.detail.code"></ui-inline-code>
                         </td>
@@ -519,7 +519,7 @@
         </template>
         <template x-if="activity.att_type == 'invalidate-cdn'">
             <tr x-show="activity.att_type == 'invalidate-cdn'" x-cloak x-transition>
-                <th>URI</th>
+                <th scope="row">URI</th>
                 <td><ui-bind-flowvar :value="activity['att_uri']"
                                      @updated.debounce.stop="activity['att_uri'] = $event.detail.value"></ui-bind-flowvar></td>
             </tr>
