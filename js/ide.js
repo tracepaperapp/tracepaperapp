@@ -2384,6 +2384,8 @@ window.Navigation = {
 }
 
 window.addEventListener("message", async function(event) {
+    if (event.origin !== location.origin)
+        return;
     if (event.data.type == "popout"){
         Navigation.close(event.data.file);
     } else if (event.data.type == "diagram"){
