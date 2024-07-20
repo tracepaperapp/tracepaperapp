@@ -23,7 +23,7 @@ function downloadURI(uri, name) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  delete link;
+  link.remove();
 }
 
 function deduplicate(elements){

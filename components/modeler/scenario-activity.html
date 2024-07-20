@@ -407,7 +407,7 @@
                                                                                         await sleep(10);
                                                                                         document.getElementById(id).showModal()">
                                                                 <td x-text="field.name"></td>
-                                                                <td x-text="field.type"></td>
+                                                                <th scope="row" x-text="field.type"></th>
                                                             </tr>
                                                         </template>
                                                     </table>
@@ -494,7 +494,7 @@
                                                                                         fields = await Scenario.query_path_helper(activity,extraction);
                                                                                         document.getElementById(id).showModal()">
                                                                 <td x-text="field.name"></td>
-                                                                <td x-text="field.type"></td>
+                                                                <th scope="row" x-text="field.type"></th>
                                                             </tr>
                                                         </template>
                                                     </table>

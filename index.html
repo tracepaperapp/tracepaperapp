@@ -77,6 +77,7 @@
                             && session.frame !='/modeler#settings'
                             && !session.frame.startsWith('/modeler#build/')">
                             <iframe :src="session.frame"
+                                    title="modeler"
                                     id="modeler-container"
                                     width="99%"
                                     :height="0.8 * window.innerHeight"></iframe>
@@ -84,6 +85,7 @@
                         <template x-if="loaded && session.frame && session.frame.startsWith('/modeler#build/')">
                             <iframe :src="'/build?key=' + localStorage.project_drn + ':' + session.frame.split('/').at(-1)"
                                     width="99%"
+                                    title="build"
                                     :height="0.8 * window.innerHeight"></iframe>
                         </template>
                         <template x-if="loaded && session.frame && session.frame =='/modeler#settings'">

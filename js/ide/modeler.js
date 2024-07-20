@@ -38,7 +38,6 @@ window.Modeler = {
         } else {
             return [];
         }
-        model.content
     },
     list_templates: async function(){
             let files = await FileSystem.listFiles();

@@ -667,7 +667,6 @@ window.Modeler = {
         } else {
             return [];
         }
-        model.content
     },
     list_templates: async function(){
             let files = await FileSystem.listFiles();
@@ -1666,7 +1665,7 @@ window.Behavior = {
     prepare_state_variable_type: function(oldValue, newValue){
         if (typeof(oldValue) === "number") {
             return Number(newValue)
-        } else if (typeof(oldValue) === "number") {
+        } else if (typeof(oldValue) === "boolean") {
             return JSON.parse(newValue.toLowerCase());
         } else {
             return newValue;
