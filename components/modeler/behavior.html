@@ -194,7 +194,7 @@
             Case:&nbsp;
             <span x-text="testcase.att_name"></span>
           </div>
-          <div class="collapse-content" x-import="modeler/behavior-testcase">
+          <div class="collapse-content" x-data="{show: false}" x-init="setTimeout(function(){show=true},500)" x-import="modeler/behavior-testcase">
             <ui-test-case></ui-test-case>
             <ui-delete-button
                     @delete.once.stop="model['test-case'] = model['test-case'].filter(x => x.att_name != testcase.att_name)"></ui-delete-button>
@@ -207,7 +207,9 @@
                      @updated.debounce.stop="
                       let testcase = await Behavior.add_testcase(model,$event.detail.value);
                       model[TEST].push(testcase);
-                      await Modeler.sync_to_disk();"></ui-add-button>
+                      await Modeler.sync_to_disk();
+                      await sleep(100);
+                      location.reload();"></ui-add-button>
     </div>
 
   </div>

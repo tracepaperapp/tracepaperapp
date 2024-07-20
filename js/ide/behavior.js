@@ -251,5 +251,14 @@ window.Behavior = {
         await Modeler.save_model(file,behavior);
         await sleep(1000);
         Navigation.open(file);
+    },
+    prepare_state_variable_type: function(oldValue, newValue){
+        if (typeof(oldValue) === "number") {
+            return Number(newValue)
+        } else if (typeof(oldValue) === "number") {
+            return JSON.parse(newValue.toLowerCase());
+        } else {
+            return newValue;
+        }
     }
 }

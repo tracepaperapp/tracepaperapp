@@ -101,8 +101,14 @@ async function connect_repository(){
         });
         reload_tab = true;
     } else {
-        console.log("Pull", localStorage.project_name);
-        await FileSystem.pull();
+        if(await FileSystem.staged_files()){
+            console.log("local changes found, push to remote");
+            await push_to_remote();
+            await sleep(1000);
+        }else{
+            console.log("Pull", localStorage.project_name);
+            await FileSystem.pull();
+        }
     }
     }catch(exception){
         console.error("could not connect repo -->",exception);
@@ -1656,6 +1662,15 @@ window.Behavior = {
         await Modeler.save_model(file,behavior);
         await sleep(1000);
         Navigation.open(file);
+    },
+    prepare_state_variable_type: function(oldValue, newValue){
+        if (typeof(oldValue) === "number") {
+            return Number(newValue)
+        } else if (typeof(oldValue) === "number") {
+            return JSON.parse(newValue.toLowerCase());
+        } else {
+            return newValue;
+        }
     }
 }
 window.Pattern = {

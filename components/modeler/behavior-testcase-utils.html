@@ -12,7 +12,7 @@
             <td>
               <ui-editable-text-field
                       :value="value"
-                      @updated.debounce="state[fkey] = $event.detail.value;"></ui-editable-text-field>
+                      @updated.debounce="state[fkey] = Behavior.prepare_state_variable_type(state[fkey],$event.detail.value)"></ui-editable-text-field>
             </td>
           </template>
           <template x-if="typeof value === 'object' && !Array.isArray(value) && value !== null">
@@ -37,7 +37,7 @@
                         <td colspan="2">
                           <ui-editable-text-field
                                   :value="value"
-                                  @updated.debounce="entity[key] = $event.detail.value;"></ui-editable-text-field>
+                                  @updated.debounce="entity[key] = Behavior.prepare_state_variable_type(entity[key],$event.detail.value);"></ui-editable-text-field>
                         </td>
                       </template>
                     </tr>
