@@ -7,7 +7,7 @@
                     <p class="py-6">
                         <table class="table">
                             <tr>
-                                <th>Workspace</th>
+                                <th scope="row">Workspace</th>
                                 <td>
                                     <select class="select select-bordered w-full max-w-xs" x-model="project.workspaceDrn">
                                         <option></option>
@@ -19,7 +19,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Name</th>
+                                <th scope="row">Name</th>
                                 <td>
                                     <ui-editable-text-field
                                             :value="project.name"
@@ -29,7 +29,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Github account</th>
+                                <th scope="row">Github account</th>
                                 <td>
                                     <ui-editable-text-field
                                             :value="github_account"
@@ -37,7 +37,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Model repository</th>
+                                <th scope="row">Model repository</th>
                                 <td>
                                     <ui-editable-text-field
                                             :value="project.modelRepo"
@@ -60,7 +60,7 @@
                                 </td>
                             </tr>
                             <tr>
-                        <th>Code repository</th>
+                        <th scope="row">Code repository</th>
                         <td>
                             <ui-editable-text-field
                                     :value="project.codeRepo"
@@ -83,7 +83,7 @@
                         </td>
                     </tr>
                             <tr>
-                        <th>GUI repository (beta)</th>
+                        <th scope="row">GUI repository (beta)</th>
                         <td>
                             <ui-editable-text-field
                                     :value="project.guiRepo"

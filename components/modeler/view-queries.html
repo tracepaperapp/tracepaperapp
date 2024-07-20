@@ -11,7 +11,7 @@
                 <table class="table">
                     <template x-if="query.att_type != 'get'">
                         <tr x-show="query.att_type != 'get'" x-transition x-cloak>
-                            <th>Use canonical search</th>
+                            <th scope="row">Use canonical search</th>
                             <td>
                                 <select class="editable"
                                         x-model="query['att_use-canonical-search']">

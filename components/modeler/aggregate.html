@@ -10,8 +10,8 @@
       <table class="table">
         <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
+          <th scope="col">Name</th>
+          <th scope="col">Type</th>
         </tr>
         </thead>
         <tbody>
@@ -55,7 +55,7 @@
             <table class="table">
               <tbody>
               <tr>
-                <th>Business key</th>
+                <th scope="row">Business key</th>
                 <td>
                   <select class="select select-ghost w-full h-full editable" x-model="entity['att_business-key']">
                     <option></option>
@@ -66,8 +66,8 @@
                 </td>
               </tr>
               <tr>
-                <th>Name</th>
-                <th>Type</th>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
               </tr>
               <template x-for="field in entity.field" :key="field.att_name">
                 <tr>

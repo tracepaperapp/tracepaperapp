@@ -8,7 +8,7 @@
       <table class="table">
         <tbody>
           <tr>
-            <th>API path</th>
+            <th scope="row">API path</th>
             <td x-data="{namespace: '',name: ''}">
               <a class="editable" @click="namespace=model['att_graphql-namespace'];name=model['att_graphql-name'];edit_command_namespace.showModal()">
                 <span x-text="model['att_graphql-namespace']"></span>.<span x-text="model['att_graphql-name']"></span>
@@ -18,24 +18,24 @@
                   <h3 class="font-bold text-lg">Update GraphQL path & Command name</h3>
                   <table class="table">
                     <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                      <th>GraphQL namespace</th>
+                      <th scope="row">GraphQL namespace</th>
                       <td x-text="namespace"
                           @focusout="namespace = $el.innerText;error = !check_pattern(namespace,graphql_namespace)" contenteditable>
                       </td>
                       <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
                     </tr>
                     <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                      <th>GraphQL method name</th>
+                      <th scope="row">GraphQL method name</th>
                       <td x-text="name"
                           @focusout="name = $el.innerText;error = !check_pattern(name,lower_or_camel_cased)" contenteditable></td>
                       <td x-show="error" x-cloak x-transition x-text="camel_cased_message"></td>
                     </tr>
                     <tr>
-                      <th>Name</th>
+                      <th scope="row">Name</th>
                       <td><span x-text="capitalizeFirstLetter(name)"></span><span x-text="namespace.replaceAll('.','')"></span></td>
                     </tr>
                     <tr>
-                      <th>Event Name</th>
+                      <th scope="row">Event Name</th>
                       <td><span x-text="capitalizeFirstLetter(name)"></span><span x-text="namespace.replaceAll('.','')"></span>Requested</td>
                     </tr>
                   </table>
@@ -51,15 +51,15 @@
             </td>
           </tr>
           <tr>
-            <th>Name</th>
+            <th scope="row">Name</th>
             <td x-text="model.att_name.replace('Requested','')"></td>
           </tr>
           <tr>
-            <th>Event Name</th>
+            <th scope="row">Event Name</th>
             <td x-text="model.att_name"></td>
           </tr>
           <tr>
-            <th>Authorization mode</th>
+            <th scope="row">Authorization mode</th>
             <td>
               <select class="editable" x-model="model.att_authorization">
                 <option value="anonymous">Anonymous</option>
@@ -70,7 +70,7 @@
           </tr>
           <template x-if="model.att_authorization == 'role'">
             <tr x-init="if(!model.att_role){model.att_role = ''}" x-show="model.att_authorization == 'role'" x-transition x-cloak>
-              <th>Required role</th>
+              <th scope="row">Required role</th>
               <td x-show="!model.att_role.startsWith('#')" x-transition x-cloak>
                 <select class="editable"
                         x-data="{roles: []}"
@@ -96,11 +96,11 @@
       <table class="table">
         <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Default</th>
-          <th>Pattern</th>
-          <th>Autofill</th>
+          <th scope="col">Name</th>
+          <th scope="col">Type</th>
+          <th scope="col">Default</th>
+          <th scope="col">Pattern</th>
+          <th scope="col">Autofill</th>
         </tr>
         </thead>
         <tbody>

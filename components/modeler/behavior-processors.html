@@ -5,7 +5,7 @@
       <div x-show="processor.att_type == 'emit-event'" x-cloak x-transition>
         <table class="table" x-data="{mappings: []}" x-effect="let update = processor.mapping;await sleep(10);if(mappings!=update){mappings = update}">
           <tr>
-            <th>Domain event</th>
+            <th scope="row">Domain event</th>
             <td x-data="{events: []}" x-init="events = await Behavior.get_emitable_events()">
               <select class="editable" @change="Behavior.update_emit_event(processor,$el.value)">
                 <option>-</option>
@@ -16,8 +16,8 @@
             </td>
           </tr>
           <tr>
-            <th>Field name</th>
-            <th>Value</th>
+            <th scope="col">Field name</th>
+            <th scope="col">Value</th>
           </tr>
           <template x-for="mapping in mappings" :key="mapping.att_target">
             <tr>
@@ -49,7 +49,7 @@
       <div x-show="processor.att_type == 'validator'" x-cloak x-transition>
         <table class="table">
           <tr>
-            <th>Rule</th>
+            <th scope="row">Rule</th>
             <td>
               <ui-editable-text-field
                       :value="processor.att_condition"
@@ -57,7 +57,7 @@
             </td>
           </tr>
           <tr>
-            <th>Message</th>
+            <th scope="row">Message</th>
             <td>
               <ui-editable-text-field
                       :value="processor.att_exception"
@@ -76,7 +76,7 @@
       <div x-show="processor.att_type == 'code'" x-cloak x-transition>
         <table class="table">
           <tr>
-            <th>Module</th>
+            <th scope="row">Module</th>
             <td x-data="{modules: []}" x-init="modules = await Modeler.list_python_modules()">
               <select class="editable" x-model="processor.att_file">
                 <option>-</option>
@@ -88,7 +88,7 @@
             </td>
           </tr>
           <tr>
-            <th>Function</th>
+            <th scope="row">Function</th>
             <td x-data="{methods: []}" x-effect="methods = await Modeler.get_methods(processor.att_file,'behavior')">
               <select class="editable" x-model="processor.att_handler">
                 <option>-</option>
@@ -111,7 +111,7 @@
       <div x-show="processor.att_type == 'set-variable'" x-cloak x-transition>
         <table class="table">
           <tr>
-            <th>Variable name</th>
+            <th scope="row">Variable name</th>
             <td>
               <ui-editable-text-field
                       :value="processor.att_name"
@@ -120,7 +120,7 @@
             </td>
           </tr>
           <tr>
-            <th>Expression</th>
+            <th scope="row">Expression</th>
             <td>
               <ui-editable-text-field
                       :value="processor.att_expression"
@@ -134,7 +134,7 @@
       <div x-show="processor.att_type == 'update-key'" x-cloak x-transition>
         <table class="table">
           <tr>
-            <th>New business key</th>
+            <th scope="row">New business key</th>
             <td>
               <select class="editable" x-model="processor.att_key">
                 <option>-</option>

@@ -72,24 +72,24 @@
                     <div x-show="stage!=0 && type == 'command'" x-cloak x-transition>
                         <table class="table">
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>GraphQL namespace</th>
+                                <th scope="row">GraphQL namespace</th>
                                 <td x-text="data.namespace"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,graphql_namespace);if(!error){data.namespace = $el.innerText}" contenteditable>
                                 </td>
                                 <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
                             </tr>
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>GraphQL method name</th>
+                                <th scope="row">GraphQL method name</th>
                                 <td x-text="data.name"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,lower_or_camel_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
                                 <td x-show="error" x-cloak x-transition x-text="camel_cased_message"></td>
                             </tr>
                             <tr>
-                                <th>Name</th>
+                                <th scope="row">Name</th>
                                 <td><span x-text="capitalizeFirstLetter(data.name)"></span><span x-text="data.namespace.replaceAll('.','')"></span></td>
                             </tr>
                             <tr>
-                                <th>Event Name</th>
+                                <th scope="row">Event Name</th>
                                 <td><span x-text="capitalizeFirstLetter(data.name)"></span><span x-text="data.namespace.replaceAll('.','')"></span>Requested</td>
                             </tr>
                         </table>
@@ -140,21 +140,21 @@
                     <div x-show="stage!=0 && type == 'aggregate'" x-cloak x-transition>
                         <table class="table">
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Subdomain</th>
+                                <th scope="row">Subdomain</th>
                                 <td x-text="data.subdomain"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.subdomain = $el.innerText}" contenteditable>
                                 </td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
                             </tr>
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Aggregate Name</th>
+                                <th scope="row">Aggregate Name</th>
                                 <td x-text="data.aggregate"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.aggregate = $el.innerText}" contenteditable>
                                 </td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
                             </tr>
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Business key</th>
+                                <th scope="row">Business key</th>
                                 <td x-text="data.key"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,lower_or_camel_cased);if(!error){data.key = $el.innerText}" contenteditable>
                                 </td>
@@ -206,21 +206,21 @@
                     <div x-show="stage!=0 && type == 'event'" x-cloak x-transition>
                         <table class="table">
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Subdomain</th>
+                                <th scope="row">Subdomain</th>
                                 <td x-text="data.subdomain"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.subdomain = $el.innerText}" contenteditable>
                                 </td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
                             </tr>
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Aggregate</th>
+                                <th scope="row">Aggregate</th>
                                 <td x-text="data.selected_aggregate"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.selected_aggregate = $el.innerText}" contenteditable>
                                 </td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
                             </tr>
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Event Name</th>
+                                <th scope="row">Event Name</th>
                                 <td x-text="data.event"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.event = $el.innerText}" contenteditable>
                                 </td>
@@ -239,21 +239,21 @@
                     <div x-show="stage!=0 && type == 'behavior'" x-cloak x-transition>
                     <table class="table">
                         <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                            <th>Subdomain</th>
+                            <th scope="row">Subdomain</th>
                             <td x-text="data.subdomain"
                                 @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.subdomain = $el.innerText}" contenteditable>
                             </td>
                             <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
                         </tr>
                         <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                            <th>Aggregate</th>
+                            <th scope="row">Aggregate</th>
                             <td x-text="data.selected_aggregate"
                                 @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.selected_aggregate = $el.innerText}" contenteditable>
                             </td>
                             <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
                         </tr>
                         <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                            <th>Behavior Name</th>
+                            <th scope="row">Behavior Name</th>
                             <td x-text="data.name"
                                 @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable>
                             </td>
@@ -272,7 +272,7 @@
                     <div x-show="stage!=0 && type == 'notifier'" x-cloak x-transition>
                     <table class="table">
                         <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                            <th>Notifier Name</th>
+                            <th scope="row">Notifier Name</th>
                             <td x-text="data.name"
                                 @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable>
                             </td>
@@ -291,14 +291,14 @@
                     <div x-show="stage!=0 && type == 'view'" x-cloak x-transition>
                         <table class="table">
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>GraphQL namespace</th>
+                                <th scope="row">GraphQL namespace</th>
                                 <td x-text="data.namespace"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,graphql_namespace);if(!error){data.namespace = $el.innerText}" contenteditable>
                                 </td>
                                 <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
                             </tr>
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>View name</th>
+                                <th scope="row">View name</th>
                                 <td x-text="data.name"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
@@ -314,14 +314,14 @@
                     <div x-show="stage!=0 && type == 'projection'" x-cloak x-transition>
                         <table class="table">
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>GraphQL namespace</th>
+                                <th scope="row">GraphQL namespace</th>
                                 <td x-text="data.namespace"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,graphql_namespace);if(!error){data.namespace = $el.innerText}" contenteditable>
                                 </td>
                                 <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
                             </tr>
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Projection name</th>
+                                <th scope="row">Projection name</th>
                                 <td x-text="data.name"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
@@ -337,7 +337,7 @@
                     <div x-show="stage!=0 && type == 'code'" x-cloak x-transition>
                         <table class="table">
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Module name</th>
+                                <th scope="row">Module name</th>
                                 <td x-text="data.name"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
@@ -361,7 +361,7 @@
 
                         <table class="table">
                             <tr>
-                                <th>Name</th>
+                                <th scope="row">Name</th>
                                 <td>
                                     <ui-editable-text-field
                                             :value="data.name"
@@ -371,7 +371,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Type</th>
+                                <th scope="row">Type</th>
                                 <td>
                                     <select class="editable" x-model="data.type">
                                         <option>-</option>
@@ -381,7 +381,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Inputs</th>
+                                <th scope="row">Inputs</th>
                                 <td>
                                     <ui-editable-text-field
                                             :value="data.input"
@@ -391,7 +391,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Expression</th>
+                                <th scope="row">Expression</th>
                                 <td>
                                     <ui-editable-text-field
                                             :value="data.expression"
@@ -418,7 +418,7 @@
 
                     <table class="table">
                         <tr>
-                            <th>Name</th>
+                            <th scope="row">Name</th>
                             <td>
                                 <ui-editable-text-field
                                         :value="data.name"
@@ -428,7 +428,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Regular expression</th>
+                            <th scope="row">Regular expression</th>
                             <td>
                                 <ui-editable-text-field
                                         :value="data.regex"
@@ -449,7 +449,7 @@
                     <div x-show="stage!=0 && type == 'scenario'" x-cloak x-transition>
                         <table class="table">
                             <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                                <th>Scenario name</th>
+                                <th scope="row">Scenario name</th>
                                 <td x-text="data.name"
                                     @keypress="if($event.key == 'Enter'){$event.preventDefault()}" @focusout="error = !check_pattern($el.innerText,pascal_cased);if(!error){data.name = $el.innerText}" contenteditable></td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>

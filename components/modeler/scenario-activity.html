@@ -5,7 +5,7 @@
                 <!-- Command -->
                 <template x-if="activity.att_type == 'mutation'">
                     <tr>
-                        <th>Command</th>
+                        <th scope="row">Command</th>
                         <td x-data="{id: makeid(6),search: ''}">
                                             <span class="editable p-2"
                                                   @click="document.getElementById(id).showModal()"
@@ -24,7 +24,7 @@
                                                 @click="document.getElementById(id).close();Scenario.update_command(activity,command)"
                                                 :class="command == activity.att_path ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
                                                 x-cloak x-transition>
-                                                <th>Command</th>
+                                                <th scope="row">Command</th>
                                                 <td x-text="command"></td>
                                             </tr>
                                         </template>
@@ -42,7 +42,7 @@
                 <!-- Query -->
                 <template x-if="activity.att_type == 'query'">
                     <tr>
-                        <th>Query</th>
+                        <th scope="row">Query</th>
                         <td x-data="{id: makeid(6),search: ''}">
                                             <span class="editable"
                                                   @click="document.getElementById(id).showModal()"
@@ -78,7 +78,7 @@
 
                 <!-- Description -->
                 <tr>
-                    <th>Description</th>
+                    <th scope="row">Description</th>
                     <td>
                         <ui-editable-text-field
                                 :value="activity.att_description"

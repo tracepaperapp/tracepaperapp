@@ -68,9 +68,9 @@
 <template x-component="event-mapper">
   <table class="table">
     <tr>
-      <th>Document field</th>
-      <th>Mapping</th>
-      <th>Event field</th>
+      <th scope="col">Document field</th>
+      <th scope="col">Mapping</th>
+      <th scope="col">Event field</th>
     </tr>
     <template x-for="field in fields" :key="field.att_name">
       <tr x-data="{field_mapping: {}}"

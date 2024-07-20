@@ -10,7 +10,7 @@
             <div class="collapse-content">
                 <table class="table">
                     <tr>
-                        <th>Source domain</th>
+                        <th scope="row">Source domain</th>
                         <td>
                             <select @change="$dispatch('redraw')" class="editable" x-model="handler['att_sub-domain']">
                                 <option>-</option>
@@ -21,7 +21,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Source aggregate</th>
+                        <th scope="row">Source aggregate</th>
                         <td>
                             <select @change="$dispatch('redraw');handler['#text'] = await View.get_initial_inline_code(model,handler)" class="editable" x-model="handler.att_aggregate">
                                 <option>-</option>

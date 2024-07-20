@@ -6,11 +6,11 @@
         </div>
         <table class="table">
             <tr>
-                <th>Project name:</th>
+                <th scope="row">Project name:</th>
                 <td x-text="project.name"></td>
             </tr>
             <tr>
-                <th>Repositories:</th>
+                <th scope="row">Repositories:</th>
                 <td>
                     <table class="table">
                         <template x-for="repo in project.repositories">
@@ -35,7 +35,7 @@
                 </td>
             </tr>
             <tr>
-                <th>Pipeline</th>
+                <th scope="row">Pipeline</th>
                 <td x-show="project.pipelines.length == 0" x-cloak x-transition>
                     <button class="btn" onclick="pipeline_setup.showModal()">Setup pipeline</button>
                     <dialog id="pipeline_setup" class="modal">
@@ -77,11 +77,11 @@
                 </td>
             </tr>
             <tr>
-                <th>QA gate settings</th>
+                <th scope="row">QA gate settings</th>
                 <td>
                     <table class="table">
                         <tr>
-                            <th>Purge DB before test</th>
+                            <th scope="row">Purge DB before test</th>
                             <td>
                                 <input type="checkbox" :checked="config['functional-scenarios']['att_clean-db'] == 'true'"
                                        @change="config['functional-scenarios']['att_clean-db'] = $el.checked ? 'true' : 'false'"
@@ -89,7 +89,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Purge IAM before test</th>
+                            <th scope="row">Purge IAM before test</th>
                             <td>
                                 <input type="checkbox" :checked="config['functional-scenarios']['att_clean-iam'] == 'true'"
                                        @change="config['functional-scenarios']['att_clean-iam'] = $el.checked ? 'true' : 'false'"
@@ -97,7 +97,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Minimum event coverage</th>
+                            <th scope="row">Minimum event coverage</th>
                             <td>
                                 <label class="input input-bordered py-2">
                                     <input x-model="config['functional-scenarios']['att_minimum-event-coverage']"
@@ -107,7 +107,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Minimum view coverage</th>
+                            <th scope="row">Minimum view coverage</th>
                             <td>
                                 <label class="input input-bordered py-2">
                                     <input x-model="config['functional-scenarios']['att_minimum-view-coverage']"
@@ -162,7 +162,7 @@
             <table class="table">
                 <tbody>
                 <tr>
-                    <th>
+                    <th scope="row">
                         Projects in workspace
                     </th>
                     <td>
@@ -179,7 +179,7 @@
                 </tr>
                 <template x-if="workspace.subscriptionType != 'personal'">
                     <tr>
-                        <th>Collaborators in workspace</th>
+                        <th scope="row">Collaborators in workspace</th>
                         <td>
                             <ui-trace-table></ui-trace-table>
 
@@ -197,8 +197,8 @@
                             <table class="table">
                                 <thead>
                                 <tr>
-                                    <th>User</th>
-                                    <th>Business role</th>
+                                    <th scope="col">User</th>
+                                    <th scope="col">Business role</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -243,8 +243,8 @@
                                                                x-show="invites.length > 0 && invites.length < 6">
                                                             <thead>
                                                             <tr>
-                                                                <th>User</th>
-                                                                <th>Assign business role</th>
+                                                                <th scope="col">User</th>
+                                                                <th scope="col">Assign business role</th>
                                                             </tr>
                                                             </thead>
                                                             <tbody>
