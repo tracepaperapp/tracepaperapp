@@ -43,7 +43,7 @@
                     <template x-for="build in builds" :key="build.lastEvent">
                         <tr class="cursor-pointer" @click="Navigation.open('build/' + build.drn.replace(localStorage.project_drn + ':',''));build_history.close();">
                             <td x-text="moment(Number(build.lastEvent)*1000).format('YYYY-MM-DD h:mm:ss')"></td>
-                            <th x-text="build.status"></th>
+                            <th scope="row" x-text="build.status"></th>
                         </tr>
                     </template>
                 </table>

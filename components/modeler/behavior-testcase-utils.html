@@ -73,7 +73,7 @@
               <table class="table">
                 <template x-for="field in root.field.filter(x => !(x.att_name in state))" :key="field.att_name">
                   <tr>
-                    <th x-text="field.att_name"></th>
+                    <th scope="row" x-text="field.att_name"></th>
                     <td>
                       <button class="btn btn-ghost"
                               @click="state[field.att_name] = field.att_type == 'String' ? 'text' : field.att_type == 'Boolean' ? false : 0"><i class="fa-solid fa-plus"></i></button>
@@ -89,7 +89,7 @@
                 </tr>
                 <template x-for="entity in entities" :key="entity.att_name">
                   <tr x-show="!(entity.att_name in state)" x-cloak x-transition>
-                    <th x-text="entity.att_name"></th>
+                    <th scope="row" x-text="entity.att_name"></th>
                     <td>
                       <button class="btn btn-ghost"
                               @click="state[entity.att_name] = {}"><i class="fa-solid fa-plus"></i></button>
@@ -149,7 +149,7 @@
               </tr>
               <template x-for="(value,key) in obj" :key="key">
                 <tr>
-                  <th x-text="key"></th>
+                  <th scope="row" x-text="key"></th>
                   <td>
                     <ui-editable-text-field
                             :value="value"

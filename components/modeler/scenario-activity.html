@@ -61,7 +61,7 @@
                                                 @click="document.getElementById(id).close();await Scenario.update_query(activity,queries,query)"
                                                 :class="query == activity.att_path ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
                                                 x-cloak x-transition>
-                                                <th x-text="queries[query].type"></th>
+                                                <th scope="row" x-text="queries[query].type"></th>
                                                 <td x-text="query"></td>
                                             </tr>
                                         </template>
@@ -131,7 +131,7 @@
                                                                 <table class="table bordered border-primary">
                                                                     <template x-for="k in Object.keys(row)">
                                                                         <tr x-data="{type: ''}" x-init="type = typeof row[k]">
-                                                                            <th x-text="k"></th>
+                                                                            <th scope="row" x-text="k"></th>
                                                                             <td x-effect="if(type && type != typeof row[k]){
                                                                                                 row[k] = type == 'string' ? 'value' : type == 'number' ? 0 : false
                                                                                             }">
@@ -238,7 +238,7 @@
                                                                 <table class="table bordered border-primary">
                                                                     <template x-for="k in Object.keys(row)">
                                                                         <tr>
-                                                                            <th x-text="k"></th>
+                                                                            <th scope="row" x-text="k"></th>
                                                                             <td>
                                                                                 <ui-editable-text-field
                                                                                         :value="row[k]"

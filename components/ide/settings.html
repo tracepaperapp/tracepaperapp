@@ -15,7 +15,7 @@
                     <table class="table">
                         <template x-for="repo in project.repositories">
                             <tr>
-                                <th x-text="repo.name"></th>
+                                <th scope="row" x-text="repo.name"></th>
                                 <td>
                                     <span x-text="repo.status"></span>
                                     <span x-show="repo.status != 'initialized'">
@@ -51,7 +51,7 @@
                             <template x-for="region in selection"
                                       :key="region.full_name">
                                 <tr class="cursor-pointer" @click="create_pipeline(region,project);pipeline_setup.close()">
-                                    <th x-text="region.name + ' (' + region.code + ')'"></th>
+                                    <th scope="row" x-text="region.name + ' (' + region.code + ')'"></th>
                                 </tr>
                             </template>
                         </table>
@@ -138,7 +138,7 @@
                             <tbody>
                             <template x-for="(value,key) in deployment">
                                 <tr>
-                                    <th x-text="key"></th>
+                                    <th scope="row" x-text="key"></th>
                                     <td x-text="value"></td>
                                 </tr>
                             </template>
@@ -170,7 +170,7 @@
                             <tbody>
                             <template x-for="project in workspace.projects" :key="project.drn">
                                 <tr class="cursor-pointer" @click="Project.open(project.drn)">
-                                    <th x-text="project.name"></th>
+                                    <th scope="row" x-text="project.name"></th>
                                 </tr>
                             </template>
                             </tbody>
@@ -204,7 +204,7 @@
                                 <tbody>
                                 <template x-for="user in workspace.iam" :key="user.username">
                                     <tr>
-                                        <th x-text="user.user.fullName"></th>
+                                        <th scope="row" x-text="user.user.fullName"></th>
                                         <td>
                                             <select class="select w-full max-w-xs"
                                                     @change.debounce="
