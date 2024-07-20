@@ -6,7 +6,7 @@
   <meta name="description" content="devConf, een DevOps conferentie in het zuiden" />
   <title>config</title>
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
-  <script src="https://unpkg.com/alpinejs" defer></script>
+  <script src="/js/tp/alpine.js" defer></script>
 </head>
 <body x-data="{env: ''}"
       x-effect="env = localStorage['staging-environment'] == 'false' ? 'production' : 'staging'"
