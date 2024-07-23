@@ -56,14 +56,35 @@ window.deepcopy = function(obj){
     return JSON.parse(JSON.stringify(obj));
 }
 
+var ace_initialized = false;
 window.render_python_editor = async function(id,code){
     await sleep(100);
+    if (!ace_initialized){
+        ace_initialized = true;
+        let langTools = ace.require('ace/ext/language_tools');
+//        var customCompleter = {
+//          getCompletions: function(editor, session, pos, prefix, callback) {
+//                callback(null, [
+//                {name: "cp", value: "complete", score: 1, meta: "global"}
+//                ]);
+//
+//          }
+//
+//         }
+//        langTools.addCompleter(customCompleter);
+    }
     var editor = ace.edit(id);
-    let theme = localStorage.theme == "dark" ? "ace/theme/twilight" : "ace/theme/github";
-    editor.setTheme(theme);
+    let theme = localStorage.theme == "dark" ? "ace/theme/github_dark" : "ace/theme/github";
     editor.session.setMode('ace/mode/python');
     code = code.replaceAll('|LB|','\n');
     editor.setValue(code,1);
+    editor.setTheme(theme);
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: true
+    });
+    console.log(editor.getOptions());
     return editor;
 }
 
