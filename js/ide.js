@@ -741,6 +741,9 @@ window.Modeler = {
         }
         if (file.endsWith(".xml")){
             let root = Object.keys(content).at(0);
+            if (root == "?xml"){
+                root = Object.keys(content).at(1);
+            }
             content = content[root];
             let type = Modeler.determine_type(file);
             content = Modeler.prepare_model(type,content);
@@ -2015,13 +2018,17 @@ window.Diagram = {
         } else{
             node_color = Diagram.hexToRgb(colors[type],alpha);
         }
+        let font_color = localStorage.theme == 'dark' && shapes[type] != "box"? '#ffffff' : "#343434";
         Diagram.nodes[name] = {
            "id": name,
            "label": name,
            "size": size,
            "shape": shapes[type],
            "color": node_color,
-           "type": type
+           "type": type,
+           "font": {
+            "color": font_color
+           }
        }
     },
     add_edge: function(from,to,label="",dashes=false){
@@ -2792,7 +2799,8 @@ window.deepcopy = function(obj){
 window.render_python_editor = async function(id,code){
     await sleep(100);
     var editor = ace.edit(id);
-    editor.setTheme('ace/theme/github');
+    let theme = localStorage.theme == "dark" ? "ace/theme/twilight" : "ace/theme/github";
+    editor.setTheme(theme);
     editor.session.setMode('ace/mode/python');
     code = code.replaceAll('|LB|','\n');
     editor.setValue(code,1);

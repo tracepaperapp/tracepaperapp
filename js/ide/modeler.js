@@ -112,6 +112,9 @@ window.Modeler = {
         }
         if (file.endsWith(".xml")){
             let root = Object.keys(content).at(0);
+            if (root == "?xml"){
+                root = Object.keys(content).at(1);
+            }
             content = content[root];
             let type = Modeler.determine_type(file);
             content = Modeler.prepare_model(type,content);

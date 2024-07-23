@@ -284,13 +284,17 @@ window.Diagram = {
         } else{
             node_color = Diagram.hexToRgb(colors[type],alpha);
         }
+        let font_color = localStorage.theme == 'dark' && shapes[type] != "box"? '#ffffff' : "#343434";
         Diagram.nodes[name] = {
            "id": name,
            "label": name,
            "size": size,
            "shape": shapes[type],
            "color": node_color,
-           "type": type
+           "type": type,
+           "font": {
+            "color": font_color
+           }
        }
     },
     add_edge: function(from,to,label="",dashes=false){

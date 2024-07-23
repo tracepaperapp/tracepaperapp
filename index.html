@@ -36,13 +36,14 @@
         <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
         <script src="/js/tp/tailwind.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <script src="/js/tp/daisy-theme-change.js"></script>
         <!-- -->
-    </head> 
+    </head>
     <body x-data="session"
           x-import="ide/menu-bar;ide/file-browser;ide/tab-bar;utils/tables">
         <ui-menu-bar></ui-menu-bar>
         <div class="grid grid-cols-12 gap-3 h-[91vh]">
-            <div class="col-span-2 bg-blue-100 h-full">
+            <div class="col-span-2 bg-primary-content h-full">
                 <ui-file-browser></ui-file-browser>
             </div>
             <div class="col-span-10">

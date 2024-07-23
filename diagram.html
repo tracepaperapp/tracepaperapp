@@ -32,6 +32,7 @@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="/js/tp/tailwind.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="/js/tp/daisy-theme-change.js"></script>
     <!-- -->
 
 </head>
@@ -49,8 +50,8 @@
                 })}" x-init="file = location.hash.replace('#','')"
      @update.debounce.1000ms="Diagram.draw(file,'project-diagram','500px',selection)">
     <div class="grid grid-cols-12 gap-3">
-        <div class="col-span-10">
-            <div id="project-diagram" x-init="Diagram.draw(file,'project-diagram','500px',selection)"></div>
+        <div class="col-span-10" x-data="{h: 900}" x-init="h = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)">
+            <div id="project-diagram" x-init="Diagram.draw(file,'project-diagram',h + 'px',selection)"></div>
         </div>
         <label class="col-span-2">
             <label class="label cursor-pointer">

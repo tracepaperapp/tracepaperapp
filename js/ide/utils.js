@@ -59,7 +59,8 @@ window.deepcopy = function(obj){
 window.render_python_editor = async function(id,code){
     await sleep(100);
     var editor = ace.edit(id);
-    editor.setTheme('ace/theme/github');
+    let theme = localStorage.theme == "dark" ? "ace/theme/twilight" : "ace/theme/github";
+    editor.setTheme(theme);
     editor.session.setMode('ace/mode/python');
     code = code.replaceAll('|LB|','\n');
     editor.setValue(code,1);
