@@ -70,7 +70,16 @@
                                         </template>
                                     </select>
                                 </td>
-                                <td x-text="filter.att_operand"></td>
+                                <td>
+                                    <select class="editable" x-model="filter.att_operand">
+                                        <option>equals</option>
+                                        <option>not_equals</option>
+                                        <option>less_than</option>
+                                        <option>greater_than</option>
+                                        <option>less_than_equals</option>
+                                        <option>greater_than_equals</option>
+                                    </select>
+                                </td>
                                 <td>
                                     <ui-delete-button @delete.once="query['filter-clause'] = query['filter-clause'].filter(x => x.att_id != filter.att_id)"></ui-delete-button>
                                 </td>
