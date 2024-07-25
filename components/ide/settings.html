@@ -148,7 +148,6 @@
                 </div>
             </template>
         </div>
-
         <div x-data="{drn: '',workspace: {}}"
              class="data-element"
              @refresh="workspace = $store.context.get.workspace.filter(x => x.drn == drn).at(0)"

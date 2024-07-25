@@ -88,13 +88,13 @@
                                     title="build"
                                     :height="0.8 * window.innerHeight"></iframe>
                         </template>
-                        <template x-if="loaded && session.frame && session.frame =='/modeler#settings'">
+
                         <div x-show="loaded && session.frame && session.frame =='/modeler#settings'"
                              x-import="ide/settings"
                              x-cloak x-transition>
                             <ui-settings></ui-settings>
                         </div>
-                        </template>
+
                     </div>
                 </div>
             </div>

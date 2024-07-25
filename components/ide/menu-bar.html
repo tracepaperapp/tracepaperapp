@@ -81,9 +81,9 @@
       <span class="loading loading-infinity loading-md" x-show="session.loading" x-transition x-cloak></span>
     </div>
     <div class="navbar-end" x-import="ide/model-wizard;ide/search;ide/trigger-build">
-      <div class="prose" x-show="!window.chrome" x-cloak x-transition>
-        <span class="link" style="color: red;">A <a href="https://en.wikipedia.org/wiki/Chromium_(web_browser)" target="_blank">chromium based browser is recommended!</span>
-      </div>
+      <template x-if="!window.chrome">
+        <div class="link" style="color: red;">A <a href="https://en.wikipedia.org/wiki/Chromium_(web_browser)" target="_blank">chromium based browser is recommended!</div>
+      </template>
       <div x-show="session.saving" x-cloak x-transition>
         <span class="loading loading-ring loading-xs"></span>&nbsp;
         <span class="text-slate-400">Saving</span>&nbsp;
