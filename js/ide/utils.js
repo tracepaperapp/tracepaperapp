@@ -27,6 +27,18 @@ window.make_sure_is_list = function(elements,deduplicate=true){
     }
 }
 
+window.deduplicate_on_attribute = function(elements,name){
+     let array = [];
+     let check = [];
+     elements.forEach(x =>{
+         if (!(check.includes(x[name]))){
+             array.push(x);
+             check.push(x[name]);
+         }
+     });
+     return array;
+}
+
 window.check_pattern = function(value,pattern){
    if (!pattern || value.match(pattern)){
        return true;

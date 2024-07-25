@@ -34,6 +34,14 @@ async function validate_and_repair_model(){
                 await Modeler.save_model(file,{event:event});
             }
         }
+        if (file.startsWith("domain/") && file.includes("/entities/") && file.endsWith(".xml")){
+            let entity = await Modeler.get(file,true);
+            let array = deduplicate_on_attribute(entity.field,"att_name");
+            if (array.length < entity.field.length){
+                entity.field = array;
+                await Modeler.save_model(file,{"nested-object":entity});
+            }
+        }
         //TODO Validations
     }
 }

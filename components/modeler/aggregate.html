@@ -39,7 +39,7 @@
         </tr>
         </tbody>
       </table>
-      <div x-data="{entities: []}" x-effect="entities = await Aggregate.get_entities(file)">
+      <div x-data="{entities: []}" x-effect="entities = await Aggregate.get_entities(file,true)">
         <template x-for="entity in entities" :key="entity.att_name">
           <div class="mt-5">
             <div class="prose">
@@ -91,7 +91,9 @@
                   <ui-add-button modal-title="Field name"
                                  :pattern="lower_or_camel_cased"
                                  :message="lower_or_camel_cased_message"
-                                 @updated.debounce.stop="entity.field.push({att_name: $event.detail.value,att_type: 'String'})"></ui-add-button>
+                                 @updated.debounce.stop="
+                                  entity.field.push({att_name: $event.detail.value,att_type: 'String'});
+                                  entity.field = deduplicate_on_attribute(entity.field,'att_name')"></ui-add-button>
                 </td>
               </tr>
               </tbody>

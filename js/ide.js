@@ -1092,12 +1092,14 @@ window.sleep = function(ms) {
 }
 
 window.Aggregate = {
-    get_entities: async function(root){
+    get_entities: async function(root,managed=false){
         let files = await FileSystem.listFiles();
         files = files.filter(x => x.startsWith(root.replace("root.xml","entities/")) && x.endsWith(".xml"));
         let entities = [];
         for (let i = 0; i < files.length; i++){
-            entities.push(await Modeler.get(files[i],true));
+            let entity = await Modeler.get(files[i],!managed);
+            entity.field = make_sure_is_list(entity.field);
+            entities.push(entity);
         }
         return entities;
     },
@@ -1354,6 +1356,14 @@ async function validate_and_repair_model(){
             if (event.att_type != "DomainEvent"){
                 event.att_type = "DomainEvent";
                 await Modeler.save_model(file,{event:event});
+            }
+        }
+        if (file.startsWith("domain/") && file.includes("/entities/") && file.endsWith(".xml")){
+            let entity = await Modeler.get(file,true);
+            let array = deduplicate_on_attribute(entity.field,"att_name");
+            if (array.length < entity.field.length){
+                entity.field = array;
+                await Modeler.save_model(file,{"nested-object":entity});
             }
         }
         //TODO Validations
@@ -2765,6 +2775,18 @@ window.make_sure_is_list = function(elements,deduplicate=true){
     } else {
         return [];
     }
+}
+
+window.deduplicate_on_attribute = function(elements,name){
+     let array = [];
+     let check = [];
+     elements.forEach(x =>{
+         if (!(check.includes(x[name]))){
+             array.push(x);
+             check.push(x[name]);
+         }
+     });
+     return array;
 }
 
 window.check_pattern = function(value,pattern){

@@ -1,11 +1,13 @@
 
 window.Aggregate = {
-    get_entities: async function(root){
+    get_entities: async function(root,managed=false){
         let files = await FileSystem.listFiles();
         files = files.filter(x => x.startsWith(root.replace("root.xml","entities/")) && x.endsWith(".xml"));
         let entities = [];
         for (let i = 0; i < files.length; i++){
-            entities.push(await Modeler.get(files[i],true));
+            let entity = await Modeler.get(files[i],!managed);
+            entity.field = make_sure_is_list(entity.field);
+            entities.push(entity);
         }
         return entities;
     },
