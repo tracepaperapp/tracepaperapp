@@ -55,17 +55,17 @@
                         </a></li>
                     </ul>
                     <template x-if="stage == 0">
-                        <div @keyup.c.window="stage = 1;title = 'Add command';type = 'command'"
-                             @keyup.a.window="stage = 1;title = 'Add aggregate';type = 'aggregate'"
-                             @keyup.d.window="stage = 1;title = 'Add domain event';type = 'event'"
-                             @keyup.b.window="stage = 1;title = 'Add behavior flow';type = 'behavior'"
-                             @keyup.n.window="stage = 1;title = 'Add notifier';type = 'notifier'"
-                             @keyup.v.window="stage = 1;title = 'Add view';type = 'view'"
-                             @keyup.p.window="stage = 1;title = 'Add projection';type = 'projection'"
-                             @keyup.m.window="stage = 1;title = 'Add python module';type = 'code'"
-                             @keyup.e.window="stage = 1;title = 'Add expression';type = 'expression'"
-                             @keyup.r.window="stage = 1;title = 'Add pattern';type = 'pattern'"
-                             @keyup.s.window="stage = 1;title = 'Add scenario';type = 'scenario'"></div>
+                        <div @keyup.c.window="if (stage == 0){stage = 1;title = 'Add command';type = 'command'}"
+                             @keyup.a.window="if (stage == 0){stage = 1;title = 'Add aggregate';type = 'aggregate'}"
+                             @keyup.d.window="if (stage == 0){stage = 1;title = 'Add domain event';type = 'event'}"
+                             @keyup.b.window="if (stage == 0){stage = 1;title = 'Add behavior flow';type = 'behavior'}"
+                             @keyup.n.window="if (stage == 0){stage = 1;title = 'Add notifier';type = 'notifier'}"
+                             @keyup.v.window="if (stage == 0){stage = 1;title = 'Add view';type = 'view'}"
+                             @keyup.p.window="if (stage == 0){stage = 1;title = 'Add projection';type = 'projection'}"
+                             @keyup.m.window="if (stage == 0){stage = 1;title = 'Add python module';type = 'code'}"
+                             @keyup.e.window="if (stage == 0){stage = 1;title = 'Add expression';type = 'expression'}"
+                             @keyup.r.window="if (stage == 0){stage = 1;title = 'Add pattern';type = 'pattern'}"
+                             @keyup.s.window="if (stage == 0){stage = 1;title = 'Add scenario';type = 'scenario'}"></div>
                     </template>
 
                     <!-- Command -->
