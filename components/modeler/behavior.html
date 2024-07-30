@@ -208,8 +208,7 @@
                       let testcase = await Behavior.add_testcase(model,$event.detail.value);
                       model[TEST].push(testcase);
                       await Modeler.sync_to_disk();
-                      await sleep(100);
-                      location.reload();"></ui-add-button>
+                      await sleep(100);"></ui-add-button>
     </div>
 
   </div>

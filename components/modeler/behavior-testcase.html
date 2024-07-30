@@ -40,7 +40,6 @@
           testcase['expected-state'] = {'#text': JSON.stringify(obj,null,2), att_pk: 'businessKey'};
           await Modeler.sync_to_disk();
           await sleep(500);
-          location.reload();
          } else if (root && 'att_business-key' in root && testcase['expected-state'] && testcase['expected-state'].att_pk){
             let obj = JSON.parse(testcase['expected-state']['#text']);
             obj[root['att_business-key']] = testcase['expected-state'].att_pk;
