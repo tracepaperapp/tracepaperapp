@@ -85,6 +85,7 @@
                             <td>
                                 <input type="checkbox" :checked="config['functional-scenarios']['att_clean-db'] == 'true'"
                                        @change="config['functional-scenarios']['att_clean-db'] = $el.checked ? 'true' : 'false'"
+                                       :disabled="session.editing_disabled"
                                        class="checkbox checkbox-primary" />
                             </td>
                         </tr>
@@ -93,6 +94,7 @@
                             <td>
                                 <input type="checkbox" :checked="config['functional-scenarios']['att_clean-iam'] == 'true'"
                                        @change="config['functional-scenarios']['att_clean-iam'] = $el.checked ? 'true' : 'false'"
+                                       :disabled="session.editing_disabled"
                                        class="checkbox checkbox-primary" />
                             </td>
                         </tr>
@@ -101,6 +103,7 @@
                             <td>
                                 <label class="input input-bordered py-2">
                                     <input x-model="config['functional-scenarios']['att_minimum-event-coverage']"
+                                           :disabled="session.editing_disabled"
                                            type="number" class="grow" min="0" max="100" step="1"/>
                                     %
                                 </label>
@@ -111,6 +114,7 @@
                             <td>
                                 <label class="input input-bordered py-2">
                                     <input x-model="config['functional-scenarios']['att_minimum-view-coverage']"
+                                           :disabled="session.editing_disabled"
                                            type="number" class="grow" min="0" max="100" step="1"/>
                                     %
                                 </label>

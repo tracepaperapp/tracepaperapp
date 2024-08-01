@@ -15,23 +15,32 @@ window.Notifier = {
         return notifier;
     },
     add_trigger: async function(model,event){
-            let trigger = {};
+            let trigger = {mapping: []};
             model.trigger.push(trigger);
             await Notifier.update_trigger(trigger,event);
         },
     update_trigger: async function(trigger, event){
-        let event_model = await Modeler.get_by_name(event,true );
         trigger.att_source = event;
-        trigger.mapping = event_model.field.map(x => {return{
-            att_target: x.att_name,
-            att_value: x.att_name
-        }});
-        event_model["nested-object"].forEach(x => {
+        if (event.startsWith("@")){
+           if (trigger.mapping.length == 0){
             trigger.mapping.push({
-                 att_target: x.att_name,
-                 att_value: x.att_name
-             });
-        });
+                att_target: "dummy",
+                att_value: "#'dummy value'"
+            });
+           }
+        } else {
+            let event_model = await Modeler.get_by_name(event,true );
+            trigger.mapping = event_model.field.map(x => {return{
+                att_target: x.att_name,
+                att_value: x.att_name
+            }});
+            event_model["nested-object"].forEach(x => {
+                trigger.mapping.push({
+                     att_target: x.att_name,
+                     att_value: x.att_name
+                 });
+            });
+        }
         await sleep(100);
         Notifier.balance_triggers();
     },

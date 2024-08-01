@@ -121,6 +121,7 @@
             <label class="cursor-pointer label">
               <span class="label-text">Custom code mapper</span>
               <input type="checkbox" class="toggle toggle-primary"
+                     disabled="!session.editing_disabled"
                      @change="if($el.checked){
                         mapping.att_code = '';
                         mapping.mapping = [];

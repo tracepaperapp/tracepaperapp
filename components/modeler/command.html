@@ -10,44 +10,53 @@
           <tr>
             <th scope="row">API path</th>
             <td x-data="{namespace: '',name: ''}">
-              <a class="editable" @click="namespace=model['att_graphql-namespace'];name=model['att_graphql-name'];edit_command_namespace.showModal()">
-                <span x-text="model['att_graphql-namespace']"></span>.<span x-text="model['att_graphql-name']"></span>
-              </a>
-              <dialog id="edit_command_namespace" class="modal">
-                <div class="modal-box w-11/12 max-w-5xl">
-                  <h3 class="font-bold text-lg">Update GraphQL path & Command name</h3>
-                  <table class="table">
-                    <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                      <th scope="row">GraphQL namespace</th>
-                      <td x-text="namespace"
-                          @focusout="namespace = $el.innerText;error = !check_pattern(namespace,graphql_namespace)" contenteditable>
-                      </td>
-                      <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
-                    </tr>
-                    <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
-                      <th scope="row">GraphQL method name</th>
-                      <td x-text="name"
-                          @focusout="name = $el.innerText;error = !check_pattern(name,lower_or_camel_cased)" contenteditable></td>
-                      <td x-show="error" x-cloak x-transition x-text="camel_cased_message"></td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Name</th>
-                      <td><span x-text="capitalizeFirstLetter(name)"></span><span x-text="namespace.replaceAll('.','')"></span></td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Event Name</th>
-                      <td><span x-text="capitalizeFirstLetter(name)"></span><span x-text="namespace.replaceAll('.','')"></span>Requested</td>
-                    </tr>
-                  </table>
-                  </p>
-                  <div class="modal-action">
-                    <form method="dialog">
-                      <button class="btn">Close</button>
-                      <button class="btn btn-success" @click="Command.rename(model,name,namespace)">Save</button>
-                    </form>
-                  </div>
+              <template x-if="!session.editing_disabled">
+                <div>
+                  <a class="editable" @click="namespace=model['att_graphql-namespace'];name=model['att_graphql-name'];edit_command_namespace.showModal()">
+                    <span x-text="model['att_graphql-namespace']"></span>.<span x-text="model['att_graphql-name']"></span>
+                  </a>
+                  <dialog id="edit_command_namespace" class="modal">
+                    <div class="modal-box w-11/12 max-w-5xl">
+                      <h3 class="font-bold text-lg">Update GraphQL path & Command name</h3>
+                      <table class="table">
+                        <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                          <th scope="row">GraphQL namespace</th>
+                          <td x-text="namespace"
+                              @focusout="namespace = $el.innerText;error = !check_pattern(namespace,graphql_namespace)" contenteditable>
+                          </td>
+                          <td x-show="error" x-cloak x-transition x-text="graphql_namespace_message"></td>
+                        </tr>
+                        <tr x-data="{error: false}" :class="error ? 'bg-error' : ''">
+                          <th scope="row">GraphQL method name</th>
+                          <td x-text="name"
+                              @focusout="name = $el.innerText;error = !check_pattern(name,lower_or_camel_cased)" contenteditable></td>
+                          <td x-show="error" x-cloak x-transition x-text="camel_cased_message"></td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Name</th>
+                          <td><span x-text="capitalizeFirstLetter(name)"></span><span x-text="namespace.replaceAll('.','')"></span></td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Event Name</th>
+                          <td><span x-text="capitalizeFirstLetter(name)"></span><span x-text="namespace.replaceAll('.','')"></span>Requested</td>
+                        </tr>
+                      </table>
+                      </p>
+                      <div class="modal-action">
+                        <form method="dialog">
+                          <button class="btn">Close</button>
+                          <button class="btn btn-success" @click="Command.rename(model,name,namespace)">Save</button>
+                        </form>
+                      </div>
+                    </div>
+                  </dialog>
                 </div>
-              </dialog>
+              </template>
+              <template x-if="session.editing_disabled">
+                <span>
+                  <span x-text="model['att_graphql-namespace']"></span>.<span x-text="model['att_graphql-name']"></span>
+                </span>
+              </template>
             </td>
           </tr>
           <tr>
@@ -122,10 +131,17 @@
               </select>
             </td>
             <td>
-              <input type="checkbox" :checked="'att_default' in field"
-                     @change="if($el.checked){field.att_default = 'default value'}else{delete field.att_default}" class="checkbox checkbox-xs" />
-              <template x-if="'att_default' in field">
-                <span x-text="field.att_default" @focusout.debounce.stop="field.att_default = $el.innerText" contenteditable></span>
+              <template x-if="!session.editing_disabled">
+                <div>
+                  <input type="checkbox" :checked="'att_default' in field"
+                         @change="if($el.checked){field.att_default = 'default value'}else{delete field.att_default}" class="checkbox checkbox-xs" />
+                  <template x-if="'att_default' in field">
+                    <span x-text="field.att_default" @focusout.debounce.stop="field.att_default = $el.innerText" contenteditable></span>
+                  </template>
+                </div>
+              </template>
+              <template x-if="session.editing_disabled">
+                <span x-text="field.att_default"></span>
               </template>
             </td>
             <td>

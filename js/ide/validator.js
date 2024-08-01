@@ -60,12 +60,12 @@ let initial_config = `<draftsman project-name="#name#" xmlns="https://tracepaper
 
 let setup_environment = `
 <notifier name="SetupEnvironment">
-  <trigger source="@afterDeployment">
+  <trigger source="@rate(1 day)">
     <mapping target="dummy" value="#&apos;&apos;"></mapping>
   </trigger>
   <activity type="iam-create-systemuser" fail-silent="true" id="vMB9LZ"></activity>
-  <activity id="vkYuPh" type="create-iam-group" group-name="#&apos;expresion&apos;"></activity>
-  <activity id="wjJU3t" group-name="#&apos;administrator&apos;" type="add-user-to-iam-group" username="#&apos;expresion&apos;"></activity>
+  <activity id="vkYuPh" fail-silent="true" type="create-iam-group" group-name="#&apos;administrator&apos;"></activity>
+  <activity id="wjJU3t" fail-silent="true" group-name="#&apos;administrator&apos;" type="add-user-to-iam-group" username="#&apos;system-user&apos;"></activity>
 </notifier>`;
 
 let setup_environment_docs = `

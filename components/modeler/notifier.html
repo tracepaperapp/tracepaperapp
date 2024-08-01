@@ -21,7 +21,7 @@
                 </div>
             </div>
         </template>
-        <div x-data="{events: [], search: ''}" x-effect="events = await Modeler.list_events()">
+        <div x-data="{events: [], search: ''}" x-effect="events = await Modeler.list_events();events = events.concat(['@cron(0 0 * * ? *)','@rate(1 minute)'])">
             <button class="btn btn-ghost" onclick="add_trigger.showModal()"><i class="fa-solid fa-plus"></i>&nbsp;
                 Add trigger</button>
             <dialog id="add_trigger" class="modal">

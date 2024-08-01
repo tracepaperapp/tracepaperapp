@@ -33,6 +33,64 @@ document.addEventListener('alpine:init', async () => {
         }
     });
 });
+
+
+// Disable/Enable editing
+window.addEventListener("load", function(){
+    if (!location.pathname.startsWith("/modeler")){return}
+    setTimeout(function(){
+
+        // Editable class
+        let collection = document.getElementsByClassName("editable");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+          }
+        }
+
+        // select class
+        collection = document.getElementsByClassName("select-ghost");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+          }
+        }
+
+        // input class
+        collection = document.getElementsByClassName("input-ghost");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+          }
+        }
+
+        // checkbox class
+        collection = document.getElementsByClassName("checkbox");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+          }
+        }
+
+        // Content editable
+        if (session.editing_disabled){
+            collection = document.querySelectorAll('[contenteditable="true"]');
+            for (let i = 0; i < collection.length; i++) {
+              collection[i].setAttribute("contenteditable", false);
+            }
+        }
+
+        // editor buttons
+        collection = document.getElementsByClassName("btn");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+            collection[i].style.display = 'none';
+          }
+        }
+    },1000);
+});
+
 window.Session = {
     reload_from_disk: function(project){
         clearInterval(save_session_interval);
@@ -75,10 +133,9 @@ window.Session = {
     },
     disable_editing: function(){
         session.editing_disabled = true;
-        session.hide_edit_button = true;
     },
     enable_editing: function(){
-        session.hide_edit_button = false;
+        session.editing_disabled = false;
     },
     load_data: function (updated_value,original){
         setTimeout(function(){

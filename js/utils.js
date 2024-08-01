@@ -110,3 +110,26 @@ function create_toc(element){
     },100);
     return toc;
 }
+
+const Experimental = {
+    sign_out: function(){
+        let logout_uri = `${localStorage["aws-congnito-ui"]}/logout?client_id=${localStorage["aws-congnito-app-id"]}&logout_uri=${window.location.origin}`;
+        for(var i in localStorage){
+            localStorage.removeItem(i);
+        }
+        location = logout_uri;
+    },
+    update_credentials: function(target_location){
+        if (target_location){
+            sessionStorage["prevLoc"] = target_location;
+        } else {
+            sessionStorage["prevLoc"] = location;
+        }
+        Draftsman.clear_cache();
+        location = `${localStorage["aws-congnito-ui"]}/logout?client_id=${localStorage["aws-congnito-app-id"]}&logout_uri=${window.location.origin}/auth`;
+    },
+    show_trace_modal: function(){
+        let modal = new bootstrap.Modal(document.getElementById("traceModal"), {});
+        modal.show();
+    }
+}

@@ -14,6 +14,7 @@
             <li>
               <a @click="project_modal.showModal()">Open project</a>
               <a @click="Project.create()">Start new project</a>
+              <a @click="Experimental.sign_out()">Sign out</a>
             </li>
         </ul>
         <dialog id="project_modal" class="modal">
@@ -88,9 +89,14 @@
         <span class="loading loading-ring loading-xs"></span>&nbsp;
         <span class="text-slate-400">Saving</span>&nbsp;
       </div>
-      <ui-model-wizard></ui-model-wizard>
+
+      <template x-if="!session.editing_disabled">
+        <ui-model-wizard></ui-model-wizard>
+      </template>
       <ui-search></ui-search>
-      <ui-trigger-build></ui-trigger-build>
+      <template x-if="!session.editing_disabled">
+        <ui-trigger-build></ui-trigger-build>
+      </template>
       <ui-build-history></ui-build-history>
 
 

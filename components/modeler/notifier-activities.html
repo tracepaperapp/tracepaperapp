@@ -534,6 +534,17 @@
                        placeholder="Expression" class="input input-ghost w-full editable" />
             </td>
         </tr>
+        <tr>
+            <td>
+                <small>Fail silent:</small>
+            </td>
+            <td>
+                <input type="checkbox"
+                       @change="activity['att_fail-silent'] = $el.checked ? 'true' : 'false'"
+                       :checked="activity['att_fail-silent'] && activity['att_fail-silent'] == 'true'"
+                       class="checkbox" />
+            </td>
+        </tr>
     </table>
 </template>
 <template x-component="bind-flowvar">

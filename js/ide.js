@@ -1014,6 +1014,64 @@ document.addEventListener('alpine:init', async () => {
         }
     });
 });
+
+
+// Disable/Enable editing
+window.addEventListener("load", function(){
+    if (!location.pathname.startsWith("/modeler")){return}
+    setTimeout(function(){
+
+        // Editable class
+        let collection = document.getElementsByClassName("editable");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+          }
+        }
+
+        // select class
+        collection = document.getElementsByClassName("select-ghost");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+          }
+        }
+
+        // input class
+        collection = document.getElementsByClassName("input-ghost");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+          }
+        }
+
+        // checkbox class
+        collection = document.getElementsByClassName("checkbox");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+          }
+        }
+
+        // Content editable
+        if (session.editing_disabled){
+            collection = document.querySelectorAll('[contenteditable="true"]');
+            for (let i = 0; i < collection.length; i++) {
+              collection[i].setAttribute("contenteditable", false);
+            }
+        }
+
+        // editor buttons
+        collection = document.getElementsByClassName("btn");
+        for (let i = 0; i < collection.length; i++) {
+          if (session.editing_disabled){
+            collection[i].setAttribute("disabled", true);
+            collection[i].style.display = 'none';
+          }
+        }
+    },1000);
+});
+
 window.Session = {
     reload_from_disk: function(project){
         clearInterval(save_session_interval);
@@ -1056,10 +1114,9 @@ window.Session = {
     },
     disable_editing: function(){
         session.editing_disabled = true;
-        session.hide_edit_button = true;
     },
     enable_editing: function(){
-        session.hide_edit_button = false;
+        session.editing_disabled = false;
     },
     load_data: function (updated_value,original){
         setTimeout(function(){
@@ -1384,12 +1441,12 @@ let initial_config = `<draftsman project-name="#name#" xmlns="https://tracepaper
 
 let setup_environment = `
 <notifier name="SetupEnvironment">
-  <trigger source="@afterDeployment">
+  <trigger source="@rate(1 day)">
     <mapping target="dummy" value="#&apos;&apos;"></mapping>
   </trigger>
   <activity type="iam-create-systemuser" fail-silent="true" id="vMB9LZ"></activity>
-  <activity id="vkYuPh" type="create-iam-group" group-name="#&apos;expresion&apos;"></activity>
-  <activity id="wjJU3t" group-name="#&apos;administrator&apos;" type="add-user-to-iam-group" username="#&apos;expresion&apos;"></activity>
+  <activity id="vkYuPh" fail-silent="true" type="create-iam-group" group-name="#&apos;administrator&apos;"></activity>
+  <activity id="wjJU3t" fail-silent="true" group-name="#&apos;administrator&apos;" type="add-user-to-iam-group" username="#&apos;system-user&apos;"></activity>
 </notifier>`;
 
 let setup_environment_docs = `
@@ -2139,23 +2196,32 @@ window.Notifier = {
         return notifier;
     },
     add_trigger: async function(model,event){
-            let trigger = {};
+            let trigger = {mapping: []};
             model.trigger.push(trigger);
             await Notifier.update_trigger(trigger,event);
         },
     update_trigger: async function(trigger, event){
-        let event_model = await Modeler.get_by_name(event,true );
         trigger.att_source = event;
-        trigger.mapping = event_model.field.map(x => {return{
-            att_target: x.att_name,
-            att_value: x.att_name
-        }});
-        event_model["nested-object"].forEach(x => {
+        if (event.startsWith("@")){
+           if (trigger.mapping.length == 0){
             trigger.mapping.push({
-                 att_target: x.att_name,
-                 att_value: x.att_name
-             });
-        });
+                att_target: "dummy",
+                att_value: "#'dummy value'"
+            });
+           }
+        } else {
+            let event_model = await Modeler.get_by_name(event,true );
+            trigger.mapping = event_model.field.map(x => {return{
+                att_target: x.att_name,
+                att_value: x.att_name
+            }});
+            event_model["nested-object"].forEach(x => {
+                trigger.mapping.push({
+                     att_target: x.att_name,
+                     att_value: x.att_name
+                 });
+            });
+        }
         await sleep(100);
         Notifier.balance_triggers();
     },
@@ -2340,6 +2406,10 @@ window.Navigation = {
         document.dispatchEvent(new CustomEvent('soft-reload'));
     },
     open: function(file){
+        if (session.tab == file){
+            Navigation.force_reload();
+            return;
+        }
         push_to_remote();
         session.tab = file;
         location.hash = file;
@@ -2391,11 +2461,14 @@ window.Navigation = {
         },1000);
     },
     force_reload: async function(file){
+        let history = session.tab;
         session.tab = "";
         await sleep(1);
-        await FileSystem.auto_commit();
+        if (file){
+            await FileSystem.auto_commit();
+        }
         await sleep(1);
-        session.tab = file;
+        session.tab = file ? file : history;
     }
 }
 
@@ -2846,7 +2919,7 @@ window.render_python_editor = async function(id,code){
         enableSnippets: true,
         enableLiveAutocompletion: true
     });
-    console.log(editor.getOptions());
+    editor.setReadOnly(session.editing_disabled);
     return editor;
 }
 

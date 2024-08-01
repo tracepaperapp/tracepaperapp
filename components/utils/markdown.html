@@ -3,7 +3,7 @@
         <div x-show="!edit" x-cloak x-transition>
             <article class="prose"
                      x-html="Modeler.convertMarkdownToHtml($prop('content'))"></article>
-            <div @click="edit=true" class="text-right">
+            <div x-show="!session.editing_disabled" x-cloak x-transition @click="edit=true" class="text-right">
                 <i class="fa-regular fa-pen-to-square"></i>
             </div>
         </div>

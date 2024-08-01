@@ -4,6 +4,10 @@ window.Navigation = {
         document.dispatchEvent(new CustomEvent('soft-reload'));
     },
     open: function(file){
+        if (session.tab == file){
+            Navigation.force_reload();
+            return;
+        }
         push_to_remote();
         session.tab = file;
         location.hash = file;
@@ -55,11 +59,14 @@ window.Navigation = {
         },1000);
     },
     force_reload: async function(file){
+        let history = session.tab;
         session.tab = "";
         await sleep(1);
-        await FileSystem.auto_commit();
+        if (file){
+            await FileSystem.auto_commit();
+        }
         await sleep(1);
-        session.tab = file;
+        session.tab = file ? file : history;
     }
 }
 

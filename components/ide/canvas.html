@@ -131,7 +131,8 @@
                   <ui-view-settings></ui-view-settings>
                 </div>
               </template>
-              <div class="card-actions justify-end" x-show="!['readme','expressions','dependencies','patterns','roles'].includes(type)" x-cloak x-transition>
+              <div class="card-actions justify-end"
+                   x-show="!['readme','expressions','dependencies','patterns','roles'].includes(type) && !session.editing_disabled" x-cloak x-transition>
                 <i class="fa-regular fa-trash-can" @click="delete_confirmation.showModal()"></i>
               </div>
             </div>

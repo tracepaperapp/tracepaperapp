@@ -96,7 +96,7 @@ window.render_python_editor = async function(id,code){
         enableSnippets: true,
         enableLiveAutocompletion: true
     });
-    console.log(editor.getOptions());
+    editor.setReadOnly(session.editing_disabled);
     return editor;
 }
 

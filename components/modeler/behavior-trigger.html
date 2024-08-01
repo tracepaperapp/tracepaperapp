@@ -3,34 +3,41 @@
     <tr x-data="{id: makeid(6)}">
       <th scope="row">Trigger event</th>
       <td x-data="{events: [], search: ''}" x-effect="events = await Modeler.list_events()">
-        <p class="editable" @click="document.getElementById(id).showModal()" x-text="trigger.att_source"></p>
-        <dialog :id="id" class="modal">
-          <div class="modal-box">
-            <h3 class="font-bold text-lg">Edit trigger</h3>
-            <p class="py-4">
-              <input type="text" placeholder="Search..."
-                     x-model="search"
-                     class="input input-bordered input-primary w-full" />
-              <br>
-            <table class="table">
-              <template x-for="event in events" :key="event">
-                <tr x-show="event.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition
-                    class="hover cursor-pointer"
-                    @click="Behavior.update_trigger(trigger,event);document.getElementById(id).close()">
-                  <th scope="row">
-                    <span x-text="event"></span>&nbsp;
-                    <div x-show="event == trigger.att_source" x-cloak x-transition
-                         class="badge badge-primary badge-outline">current</div>
-                  </th>
-                </tr>
-              </template>
-            </table>
-            </p>
+        <template x-if="!session.editing_disabled">
+          <div>
+            <p class="editable" @click="document.getElementById(id).showModal()" x-text="trigger.att_source"></p>
+            <dialog :id="id" class="modal">
+              <div class="modal-box">
+                <h3 class="font-bold text-lg">Edit trigger</h3>
+                <p class="py-4">
+                  <input type="text" placeholder="Search..."
+                         x-model="search"
+                         class="input input-bordered input-primary w-full" />
+                  <br>
+                <table class="table">
+                  <template x-for="event in events" :key="event">
+                    <tr x-show="event.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition
+                        class="hover cursor-pointer"
+                        @click="Behavior.update_trigger(trigger,event);document.getElementById(id).close()">
+                      <th scope="row">
+                        <span x-text="event"></span>&nbsp;
+                        <div x-show="event == trigger.att_source" x-cloak x-transition
+                             class="badge badge-primary badge-outline">current</div>
+                      </th>
+                    </tr>
+                  </template>
+                </table>
+                </p>
+              </div>
+              <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+              </form>
+            </dialog>
           </div>
-          <form method="dialog" class="modal-backdrop">
-            <button>close</button>
-          </form>
-        </dialog>
+        </template>
+        <template x-if="session.editing_disabled">
+          <p x-text="trigger.att_source"></p>
+        </template>
       </td>
     </tr>
     <tr>

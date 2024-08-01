@@ -7,34 +7,41 @@
                     <tr>
                         <th scope="row">Command</th>
                         <td x-data="{id: makeid(6),search: ''}">
-                                            <span class="editable p-2"
-                                                  @click="document.getElementById(id).showModal()"
-                                                  x-text="activity.att_path"></span>
-                            <dialog :id="id" class="modal">
-                                <div class="modal-box">
-                                    <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
-                                    <p class="py-4">
-                                        <input type="text"
-                                               placeholder="search..."
-                                               x-model="search"
-                                               class="input w-full" />
-                                    <table class="table">
-                                        <template x-for="command in commands">
-                                            <tr x-show="command.toLowerCase().includes(search.toLowerCase())"
-                                                @click="document.getElementById(id).close();Scenario.update_command(activity,command)"
-                                                :class="command == activity.att_path ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
-                                                x-cloak x-transition>
-                                                <th scope="row">Command</th>
-                                                <td x-text="command"></td>
-                                            </tr>
-                                        </template>
-                                    </table>
-                                    </p>
+                            <template x-if="!session.editing_disabled">
+                                <div>
+                                    <span class="editable p-2"
+                                          @click="document.getElementById(id).showModal()"
+                                          x-text="activity.att_path"></span>
+                                    <dialog :id="id" class="modal">
+                                        <div class="modal-box">
+                                            <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
+                                            <p class="py-4">
+                                                <input type="text"
+                                                       placeholder="search..."
+                                                       x-model="search"
+                                                       class="input w-full" />
+                                            <table class="table">
+                                                <template x-for="command in commands">
+                                                    <tr x-show="command.toLowerCase().includes(search.toLowerCase())"
+                                                        @click="document.getElementById(id).close();Scenario.update_command(activity,command)"
+                                                        :class="command == activity.att_path ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
+                                                        x-cloak x-transition>
+                                                        <th scope="row">Command</th>
+                                                        <td x-text="command"></td>
+                                                    </tr>
+                                                </template>
+                                            </table>
+                                            </p>
+                                        </div>
+                                        <form method="dialog" class="modal-backdrop">
+                                            <button>close</button>
+                                        </form>
+                                    </dialog>
                                 </div>
-                                <form method="dialog" class="modal-backdrop">
-                                    <button>close</button>
-                                </form>
-                            </dialog>
+                            </template>
+                            <template x-if="session.editing_disabled">
+                                <span x-text="activity.att_path"></span>
+                            </template>
                         </td>
                     </tr>
                 </template>
@@ -44,34 +51,41 @@
                     <tr>
                         <th scope="row">Query</th>
                         <td x-data="{id: makeid(6),search: ''}">
-                                            <span class="editable"
-                                                  @click="document.getElementById(id).showModal()"
-                                                  x-text="activity.att_path"></span>
-                            <dialog :id="id" class="modal">
-                                <div class="modal-box">
-                                    <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
-                                    <p class="py-4">
-                                        <input type="text"
-                                               placeholder="search..."
-                                               x-model="search"
-                                               class="input w-full" />
-                                    <table class="table">
-                                        <template x-for="query in Object.keys(queries)">
-                                            <tr x-show="query.toLowerCase().includes(search.toLowerCase())"
-                                                @click="document.getElementById(id).close();await Scenario.update_query(activity,queries,query)"
-                                                :class="query == activity.att_path ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
-                                                x-cloak x-transition>
-                                                <th scope="row" x-text="queries[query].type"></th>
-                                                <td x-text="query"></td>
-                                            </tr>
-                                        </template>
-                                    </table>
-                                    </p>
+                            <template x-if="!session.editing_disabled">
+                                <div>
+                                    <span class="editable"
+                                          @click="document.getElementById(id).showModal()"
+                                          x-text="activity.att_path"></span>
+                                    <dialog :id="id" class="modal">
+                                        <div class="modal-box">
+                                            <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
+                                            <p class="py-4">
+                                                <input type="text"
+                                                       placeholder="search..."
+                                                       x-model="search"
+                                                       class="input w-full" />
+                                            <table class="table">
+                                                <template x-for="query in Object.keys(queries)">
+                                                    <tr x-show="query.toLowerCase().includes(search.toLowerCase())"
+                                                        @click="document.getElementById(id).close();await Scenario.update_query(activity,queries,query)"
+                                                        :class="query == activity.att_path ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
+                                                        x-cloak x-transition>
+                                                        <th scope="row" x-text="queries[query].type"></th>
+                                                        <td x-text="query"></td>
+                                                    </tr>
+                                                </template>
+                                            </table>
+                                            </p>
+                                        </div>
+                                        <form method="dialog" class="modal-backdrop">
+                                            <button>close</button>
+                                        </form>
+                                    </dialog>
                                 </div>
-                                <form method="dialog" class="modal-backdrop">
-                                    <button>close</button>
-                                </form>
-                            </dialog>
+                            </template>
+                            <template x-if="session.editing_disabled">
+                                <span x-text="activity.att_path"></span>
+                            </template>
                         </td>
                     </tr>
                 </template>
@@ -290,37 +304,44 @@
                                 <template x-for="expectation in activity['expected-trace']" :key="expectation.att_command">
                                     <tr>
                                         <td x-data="{id: makeid(6),search: ''}">
-                                                            <span class="editable"
-                                                                  @click="document.getElementById(id).showModal()"
-                                                                  x-text="expectation.att_command"></span>
-                                            <dialog :id="id" class="modal">
-                                                <div class="modal-box">
-                                                    <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
-                                                    <p class="py-4">
-                                                        <input type="text"
-                                                               placeholder="search..."
-                                                               x-model="search"
-                                                               class="input w-full" />
-                                                    <table class="table">
-                                                        <template x-for="component in components.filter(x =>
+                                            <template x-if="!session.editing_disabled">
+                                                <div>
+                                                    <span class="editable"
+                                                          @click="document.getElementById(id).showModal()"
+                                                          x-text="expectation.att_command"></span>
+                                                    <dialog :id="id" class="modal">
+                                                        <div class="modal-box">
+                                                            <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
+                                                            <p class="py-4">
+                                                                <input type="text"
+                                                                       placeholder="search..."
+                                                                       x-model="search"
+                                                                       class="input w-full" />
+                                                            <table class="table">
+                                                                <template x-for="component in components.filter(x =>
                                                                                 !traces.includes(x) || x == expectation.att_command
                                                                             )">
-                                                            <tr x-show="component.toLowerCase().includes(search.toLowerCase())"
-                                                                @click="document.getElementById(id).close();expectation.att_command = component;"
-                                                                :class="component == expectation.att_command ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
-                                                                x-cloak x-transition>
-                                                                <th scope="row" x-show="!component.includes('-Notifier')" x-cloak x-transition>Behavior</th>
-                                                                <th scope="row" x-show="component.includes('-Notifier')" x-cloak x-transition>Notifier</th>
-                                                                <td x-text="component"></td>
-                                                            </tr>
-                                                        </template>
-                                                    </table>
-                                                    </p>
+                                                                    <tr x-show="component.toLowerCase().includes(search.toLowerCase())"
+                                                                        @click="document.getElementById(id).close();expectation.att_command = component;"
+                                                                        :class="component == expectation.att_command ? 'bg-primary-content cursor-pointer' : 'cursor-pointer'"
+                                                                        x-cloak x-transition>
+                                                                        <th scope="row" x-show="!component.includes('-Notifier')" x-cloak x-transition>Behavior</th>
+                                                                        <th scope="row" x-show="component.includes('-Notifier')" x-cloak x-transition>Notifier</th>
+                                                                        <td x-text="component"></td>
+                                                                    </tr>
+                                                                </template>
+                                                            </table>
+                                                            </p>
+                                                        </div>
+                                                        <form method="dialog" class="modal-backdrop">
+                                                            <button>close</button>
+                                                        </form>
+                                                    </dialog>
                                                 </div>
-                                                <form method="dialog" class="modal-backdrop">
-                                                    <button>close</button>
-                                                </form>
-                                            </dialog>
+                                            </template>
+                                            <template x-if="session.editing_disabled">
+                                                <span x-text="expectation.att_command"></span>
+                                            </template>
                                         </td>
                                         <td>
                                             <select class="editable" x-model="expectation.att_status">
@@ -385,38 +406,45 @@
                                 <template x-for="(expectation,j) in activity['expect-value']" :key="index + '-' + j">
                                     <tr>
                                         <td x-data="{id: $persist(makeid(6)).as(index + '-' + j).using(sessionStorage)}">
-                                            <span class="editable p-2"
-                                                  @click="document.getElementById(id).showModal()"
-                                                  x-text="expectation.att_name"></span>
-                                            <dialog :id="id" class="modal">
-                                                <div class="modal-box">
-                                                    <h3 class="font-bold text-lg">Path builder</h3>
-                                                    <p class="py-4">
-                                                        <ui-editable-text-field :value="expectation.att_name"
-                                                                                @updated.debounce="
+                                            <template x-if="!session.editing_disabled">
+                                                <div>
+                                                    <span class="editable p-2"
+                                                          @click="document.getElementById(id).showModal()"
+                                                          x-text="expectation.att_name"></span>
+                                                    <dialog :id="id" class="modal">
+                                                        <div class="modal-box">
+                                                            <h3 class="font-bold text-lg">Path builder</h3>
+                                                            <p class="py-4">
+                                                                <ui-editable-text-field :value="expectation.att_name"
+                                                                                        @updated.debounce="
                                                                                                 expectation.att_name = $event.detail.value;
                                                                                                 expectation.att_type = await Scenario.determine_type(activity,expectation)"></ui-editable-text-field>
 
-                                                    <table class="table" x-data="{fields: []}" x-init="fields = await Scenario.query_path_helper(activity,expectation)" x-effect="fields = await Scenario.query_path_helper(activity,expectation)">
-                                                        <template x-for="field in fields" :key="field.name">
-                                                            <tr class="cursor-pointer"
-                                                                @click.stop="await sleep(500);
+                                                            <table class="table" x-data="{fields: []}" x-init="fields = await Scenario.query_path_helper(activity,expectation)" x-effect="fields = await Scenario.query_path_helper(activity,expectation)">
+                                                                <template x-for="field in fields" :key="field.name">
+                                                                    <tr class="cursor-pointer"
+                                                                        @click.stop="await sleep(500);
                                                                                         let update = Scenario.update_path(expectation,field);
                                                                                         expectation.att_name = update[0];
                                                                                         expectation.att_type = update[1];
                                                                                         await sleep(10);
                                                                                         document.getElementById(id).showModal()">
-                                                                <td x-text="field.name"></td>
-                                                                <th scope="row" x-text="field.type"></th>
-                                                            </tr>
-                                                        </template>
-                                                    </table>
-                                                    </p>
+                                                                        <td x-text="field.name"></td>
+                                                                        <th scope="row" x-text="field.type"></th>
+                                                                    </tr>
+                                                                </template>
+                                                            </table>
+                                                            </p>
+                                                        </div>
+                                                        <form method="dialog" class="modal-backdrop">
+                                                            <button>close</button>
+                                                        </form>
+                                                    </dialog>
                                                 </div>
-                                                <form method="dialog" class="modal-backdrop">
-                                                    <button>close</button>
-                                                </form>
-                                            </dialog>
+                                            </template>
+                                            <template x-if="session.editing_disabled">
+                                                <span x-text="expectation.att_name"></span>
+                                            </template>
                                         </td>
                                         <td x-text="expectation.att_type"></td>
                                         <td>
@@ -472,38 +500,45 @@
 
                                         </td>
                                         <td x-data="{id: $persist(makeid(6)).as(index + '+' + j).using(sessionStorage)}">
-                                                            <span class="editable p-2"
-                                                                  @click="document.getElementById(id).showModal()"
-                                                                  x-text="extraction.att_name"></span>
-                                            <dialog :id="id" class="modal">
-                                                <div class="modal-box">
-                                                    <h3 class="font-bold text-lg">Path builder</h3>
-                                                    <p class="py-4">
-                                                        <ui-editable-text-field :value="extraction.att_name"
-                                                                                @updated.debounce="
+                                            <template x-if="!session.editing_disabled">
+                                                <div>
+                                                    <span class="editable p-2"
+                                                          @click="document.getElementById(id).showModal()"
+                                                          x-text="extraction.att_name"></span>
+                                                    <dialog :id="id" class="modal">
+                                                        <div class="modal-box">
+                                                            <h3 class="font-bold text-lg">Path builder</h3>
+                                                            <p class="py-4">
+                                                                <ui-editable-text-field :value="extraction.att_name"
+                                                                                        @updated.debounce="
                                                                                                 extraction.att_name = $event.detail.value;fields = await Scenario.query_path_helper(activity,extraction);"></ui-editable-text-field>
 
-                                                    <table class="table" x-data="{fields: []}"
-                                                           x-effect="fields = await Scenario.query_path_helper(activity,extraction)">
-                                                        <template x-for="field in fields" :key="field.name">
-                                                            <tr class="cursor-pointer"
-                                                                @click.stop="await sleep(500);
+                                                            <table class="table" x-data="{fields: []}"
+                                                                   x-effect="fields = await Scenario.query_path_helper(activity,extraction)">
+                                                                <template x-for="field in fields" :key="field.name">
+                                                                    <tr class="cursor-pointer"
+                                                                        @click.stop="await sleep(500);
                                                                                         let update = Scenario.update_path(extraction,field);
                                                                                         extraction.att_name = update[0];
                                                                                         await sleep(10);
                                                                                         fields = await Scenario.query_path_helper(activity,extraction);
                                                                                         document.getElementById(id).showModal()">
-                                                                <td x-text="field.name"></td>
-                                                                <th scope="row" x-text="field.type"></th>
-                                                            </tr>
-                                                        </template>
-                                                    </table>
-                                                    </p>
+                                                                        <td x-text="field.name"></td>
+                                                                        <th scope="row" x-text="field.type"></th>
+                                                                    </tr>
+                                                                </template>
+                                                            </table>
+                                                            </p>
+                                                        </div>
+                                                        <form method="dialog" class="modal-backdrop">
+                                                            <button>close</button>
+                                                        </form>
+                                                    </dialog>
                                                 </div>
-                                                <form method="dialog" class="modal-backdrop">
-                                                    <button>close</button>
-                                                </form>
-                                            </dialog>
+                                            </template>
+                                            <template x-if="session.editing_disabled">
+                                                <span x-text="extraction.att_name"></span>
+                                            </template>
                                         </td>
                                         <td>
                                             <ui-delete-button @delete.once="activity['extract-value'] = activity['extract-value'].filter(x => x['att_put-key'] != extraction['att_put-key'])"
