@@ -28,6 +28,7 @@
                                 <option value="anonymous">Anonymous</option>
                                 <option value="authenticated">Authenticated</option>
                                 <option value="role">Role</option>
+                                <option value="user">User must match</option>
                             </select>
                         </td>
                     </tr>
@@ -50,6 +51,28 @@
                             </td>
                             <td x-show="query.att_role.startsWith('#')" x-transition x-cloak>
                                 <p x-text="query.att_role" @focusout="query.att_role = $el.innerText" contenteditable></p>
+                            </td>
+                        </tr>
+                    </template>
+                    <template x-if="query.att_authorization == 'user'">
+                        <tr x-init="if(!query['att_username-field']){query['att_username-field'] = ''}" x-show="query.att_authorization == 'user'" x-transition x-cloak>
+                            <th scope="row">User name field</th>
+                            <td>
+                                <select class="editable"
+                                        x-model="query['att_username-field']">
+                                    <option></option>
+                                    <template x-if="query.att_type == 'get'">
+                                        <option :value="key" :selected="'key' == query['att_username-field']">key</option>
+                                    </template>
+                                    <template x-if="query.att_type != 'get' && query['att_use-canonical-search'] == 'true'">
+                                        <option :value="key_begins_with"
+                                                :selected="'key_begins_with' == query['att_username-field']">key_begins_with</option>
+                                    </template>
+                                    <template x-for="filter in query['filter-clause']" :key="filter['att_field-name']">
+                                        <option :value="filter['att_field-name']" x-text="filter['att_field-name']"
+                                                :selected="filter['att_field-name'] == query['att_username-field']"></option>
+                                    </template>
+                                </select>
                             </td>
                         </tr>
                     </template>
