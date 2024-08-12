@@ -3,12 +3,14 @@
 <head>
     <script src='https://8x8.vc/vpaas-magic-cookie-f4dd38e84cc6407b8d0de81c5e2a96db/external_api.js' async></script>
     <style>html, body, #jaas-container { height: 100%; }</style>
+    <script src="/js/configuration.js"></script>
+    <script src="/js/configuration-staging.js"></script>
     <script type="text/javascript">
         window.onload = () => {
           const api = new JitsiMeetExternalAPI("8x8.vc", {
             roomName: "vpaas-magic-cookie-f4dd38e84cc6407b8d0de81c5e2a96db/SampleAppEffectiveLoansTreatNext",
             parentNode: document.querySelector('#jaas-container'),
-                          jwt: "eyJraWQiOiJ2cGFhcy1tYWdpYy1jb29raWUtZjRkZDM4ZTg0Y2M2NDA3YjhkMGRlODFjNWUyYTk2ZGIvZTkwOTNiLVNBTVBMRV9BUFAiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJqaXRzaSIsImlzcyI6ImNoYXQiLCJpYXQiOjE3MjM0NTgyNzEsImV4cCI6MTcyMzQ2NTQ3MSwibmJmIjoxNzIzNDU4MjY2LCJzdWIiOiJ2cGFhcy1tYWdpYy1jb29raWUtZjRkZDM4ZTg0Y2M2NDA3YjhkMGRlODFjNWUyYTk2ZGIiLCJjb250ZXh0Ijp7ImZlYXR1cmVzIjp7ImxpdmVzdHJlYW1pbmciOmZhbHNlLCJvdXRib3VuZC1jYWxsIjpmYWxzZSwic2lwLW91dGJvdW5kLWNhbGwiOmZhbHNlLCJ0cmFuc2NyaXB0aW9uIjpmYWxzZSwicmVjb3JkaW5nIjpmYWxzZX0sInVzZXIiOnsiaGlkZGVuLWZyb20tcmVjb3JkZXIiOmZhbHNlLCJtb2RlcmF0b3IiOnRydWUsIm5hbWUiOiJUZXN0IFVzZXIiLCJpZCI6Imdvb2dsZS1vYXV0aDJ8MTAzNTM5ODY0NjY2NDEwODY4MTk2IiwiYXZhdGFyIjoiIiwiZW1haWwiOiJ0ZXN0LnVzZXJAY29tcGFueS5jb20ifX0sInJvb20iOiIqIn0.GmYaNIy0W7-CX-oo1lYvzFaSeiwCCnpya5NU2dbS8uAnf778ZBcjfB9FagOWbctvp0xIkcatyDHaXDWw3mdHDgtKft9FtDdeskCo_rJ7ek18GaMYvaaG2nIYxMphaN0fufjDAW49lXkT6LPxRuzLM6lpN5pgqOSCLs2HmZTBAMrwn2c47yXYdxp5BERFhZThugbTpuMif7ZCafpEq7gjcWVbvEFYc7_B233a_Qpzjvl5u8DSfPz3klq7xAASl0ZAQgOqz0q_McE9x3UI7hAHDbmtDRLjn6SmWOLjw0BnH9i9yqM2zStpHIfQqLkCYLenCyZR8t5yMjduiu_PaWu76A"
+            jwt: "eyJhbGciOiJSUzI1NiIsImtpZCI6InZwYWFzLW1hZ2ljLWNvb2tpZS1mNGRkMzhlODRjYzY0MDdiOGQwZGU4MWM1ZTJhOTZkYi8xZTIzOTciLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE3MjM0ODAxNzMsIm5iZlRpbWUiOjE3MjM0NzI5NjMsInJvb20iOiIqIiwic3ViIjoidnBhYXMtbWFnaWMtY29va2llLWY0ZGQzOGU4NGNjNjQwN2I4ZDBkZTgxYzVlMmE5NmRiIiwiY29udGV4dCI6eyJ1c2VyIjp7Im1vZGVyYXRvciI6InRydWUiLCJpZCI6IjQ5MWYyM2EyLWIzM2YtNDE4ZS1iNTc4LTUwZWFjYTQ0ZGI5OCIsIm5hbWUiOiJCbyBIYW5zc2VuIiwiZW1haWwiOiIifSwiZmVhdHVyZXMiOnsibGl2ZXN0cmVhbWluZyI6InRydWUiLCJyZWNvcmRpbmciOiJ0cnVlIiwib3V0Ym91bmQtY2FsbCI6InRydWUiLCJ0cmFuc2NyaXB0aW9uIjoidHJ1ZSJ9fSwiaXNzIjoiY2hhdCIsImF1ZCI6ImppdHNpIn0.W8452LtILn514B8bAa4JmuhdodNUvqgNvcGWC9BGQNYid3hoFZMuO2a2z6PCTPBZs9Q9c8DWFuqeMmNs-5oA93KQnqZUhHRRbaHHR7WjsmwO2hUH7RlaDFIpjTrqq0Hudc_9owyWdOagE-iueCTdSWSTRp3gVdXcl7hofft8-GmyZUkuWxcKrsMJ1YUCcT5akPn9ead-VAfaSdOsZVoNc5rygWAYxs_gNpisHoBEaqtFpV_rEPhir057x-6wnFiz3"
           });
         }
     </script>

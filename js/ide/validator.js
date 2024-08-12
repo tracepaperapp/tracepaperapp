@@ -1,7 +1,9 @@
 
+let validation_enabled = false;
+setTimeout(function(){validation_enabled = true},10000);
 async function validate_and_repair_model(){
+    if (!validation_enabled){return}
     let files = await FileSystem.listFiles();
-
     // Initialize config
     if (!files.includes("config.xml")){
         await FileSystem.write("config.xml", initial_config.replace("#name#",localStorage.project_name));
