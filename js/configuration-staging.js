@@ -8,4 +8,4 @@ if (localStorage["staging-environment"] && localStorage["staging-environment"] =
 	api_url = "https://vkgmx3ronvbxpln4joim26bsv4.appsync-api.eu-west-1.amazonaws.com/graphql";
 	api_ws = "wss://vkgmx3ronvbxpln4joim26bsv4.appsync-realtime-api.eu-west-1.amazonaws.com/graphql";
 	api_key = "da2-ehi36kttnzes5br5uelit2qh7y";
-}
+} 
