@@ -5,15 +5,30 @@
     <style>html, body, #jaas-container { height: 100%; }</style>
     <script src="/js/configuration.js"></script>
     <script src="/js/configuration-staging.js"></script>
+    <script>var must_be_signed_in = true;</script>
+
+    <link rel="stylesheet" href="/css/draftsman.css" />
+    <script src="/js/framework.js"></script>
+    <script src="/js/cache.js"></script>
+    <script src="/js/tp/vimesh.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/tp/alpine-persist.js"></script>
+    <script src="/js/tp/alpine.js" defer></script>
+
     <script type="text/javascript">
-        window.onload = () => {
-          const api = new JitsiMeetExternalAPI("8x8.vc", {
-            roomName: "vpaas-magic-cookie-f4dd38e84cc6407b8d0de81c5e2a96db/SampleAppEffectiveLoansTreatNext",
+        function open_video_call(room,jwt){
+            const api = new JitsiMeetExternalAPI("8x8.vc", {
+            roomName: room,
             parentNode: document.querySelector('#jaas-container'),
-            jwt: "eyJhbGciOiJSUzI1NiIsImtpZCI6InZwYWFzLW1hZ2ljLWNvb2tpZS1mNGRkMzhlODRjYzY0MDdiOGQwZGU4MWM1ZTJhOTZkYi8xZTIzOTciLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE3MjM0ODAxNzMsIm5iZlRpbWUiOjE3MjM0NzI5NjMsInJvb20iOiIqIiwic3ViIjoidnBhYXMtbWFnaWMtY29va2llLWY0ZGQzOGU4NGNjNjQwN2I4ZDBkZTgxYzVlMmE5NmRiIiwiY29udGV4dCI6eyJ1c2VyIjp7Im1vZGVyYXRvciI6InRydWUiLCJpZCI6IjQ5MWYyM2EyLWIzM2YtNDE4ZS1iNTc4LTUwZWFjYTQ0ZGI5OCIsIm5hbWUiOiJCbyBIYW5zc2VuIiwiZW1haWwiOiIifSwiZmVhdHVyZXMiOnsibGl2ZXN0cmVhbWluZyI6InRydWUiLCJyZWNvcmRpbmciOiJ0cnVlIiwib3V0Ym91bmQtY2FsbCI6InRydWUiLCJ0cmFuc2NyaXB0aW9uIjoidHJ1ZSJ9fSwiaXNzIjoiY2hhdCIsImF1ZCI6ImppdHNpIn0.W8452LtILn514B8bAa4JmuhdodNUvqgNvcGWC9BGQNYid3hoFZMuO2a2z6PCTPBZs9Q9c8DWFuqeMmNs-5oA93KQnqZUhHRRbaHHR7WjsmwO2hUH7RlaDFIpjTrqq0Hudc_9owyWdOagE-iueCTdSWSTRp3gVdXcl7hofft8-GmyZUkuWxcKrsMJ1YUCcT5akPn9ead-VAfaSdOsZVoNc5rygWAYxs_gNpisHoBEaqtFpV_rEPhir057x-6wnFiz3"
+            jwt: jwt
           });
         }
     </script>
 </head>
-<body><div id="jaas-container" /></body>
+<body x-data>
+    <draftsman-query alias="jitsi" x-include="/prepared-statements/jitsi-token.txt" authenticated>
+    </draftsman-query>
+    <div class="data-element" @refresh="open_video_call($store.jitsi.jaasToken.room,$store.jitsi.jaasToken.token)"></div>
+    <div id="jaas-container" />
+</body>
 </html>

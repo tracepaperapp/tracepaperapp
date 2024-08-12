@@ -37,9 +37,9 @@
          else if (!testcase['expected-state']){
           let obj = {};
           obj[root['att_business-key']] = 'businessKey';
-          testcase['expected-state'] = {'#text': JSON.stringify(obj,null,2), att_pk: 'businessKey'};
+          let expected = {'#text': JSON.stringify(obj,null,2), att_pk: 'businessKey'};
+          testcase['expected-state'] = expected;
           await Modeler.sync_to_disk();
-          await sleep(500);
          } else if (root && 'att_business-key' in root && testcase['expected-state'] && testcase['expected-state'].att_pk){
             let obj = JSON.parse(testcase['expected-state']['#text']);
             obj[root['att_business-key']] = testcase['expected-state'].att_pk;
@@ -105,7 +105,12 @@
           <table class="table">
             <template x-for="event in events" :key="event">
               <tr class="hover cursor-pointer"
-                  @click="let expected = {'att_domain-event': event};await Behavior.init_expected_event(expected);testcase.expected.push(expected);document.getElementById(id).close()">
+                  @click="
+                  let expected = {'att_domain-event': event};
+                  await Behavior.init_expected_event(expected);
+                  testcase.expected.push(expected);
+                  document.getElementById(id).close();
+                  ">
                 <th scope="row">
                   <span x-text="event"></span>&nbsp;
                 </th>
@@ -124,7 +129,7 @@
     <div x-data="{state:null}"
          @updated.debounce="testcase['expected-state']['#text'] = JSON.stringify(state);testcase['expected-state'].att_pk =  state[root['att_business-key']]"
          x-show="testcase['expected-state']" x-cloak x-transition
-         x-init="if('expected-state' in testcase && !state){state = JSON.parse(testcase['expected-state']['#text'].replace('\n',''))}">
+         x-effect="if('expected-state' in testcase && !state){state = JSON.parse(testcase['expected-state']['#text'].replace('\n',''))}">
 
       <div tabindex="0" class="collapse collapse-plus border border-accent mt-2">
         <input type="checkbox" :checked="sessionStorage[file + testcase.att_name + 'expected-state'] == 'true'"

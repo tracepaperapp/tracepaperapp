@@ -1,0 +1,8 @@
+query MyQuery($room: String = "Support Call") {
+  JaasToken {
+    jaasToken(roomId: $room) {
+      room
+      token
+    }
+  }
+}
