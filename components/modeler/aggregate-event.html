@@ -117,17 +117,16 @@
           <div x-init="root = await Modeler.get(file.split('/events/').at(0) + '/root.xml',true)"></div>
           <div x-init="entities = await Aggregate.get_entities(file.split('/events/').at(0) + '/root.xml')"></div>
 
+          <p x-text="typeof session.editing_disabled"></p>
           <div class="form-control w-52">
             <label class="cursor-pointer label">
               <span class="label-text">Custom code mapper</span>
               <input type="checkbox" class="toggle toggle-primary"
-                     disabled="!session.editing_disabled"
+                     :disabled="session.editing_disabled"
                      @change="if($el.checked){
-                        mapping.att_code = '';
-                        mapping.mapping = [];
+                        await Aggregate.initialize_code_mapper(session.tab,model,mapping);
                      }else{
-                        delete mapping.att_code;
-                        mapping.mapping = [];
+                        await Aggregate.initialize_mapper(session.tab,model,mapping);
                      }"
                      :checked="'att_code' in mapping" />
             </label>
@@ -214,11 +213,15 @@
                             <th scope="col">Event field</th>
                           </tr>
                           <template x-for="field in entity.field" :key="field.att_name">
-                            <tr x-data="{nested_mapping: {}}" x-effect="nested_mapping = Aggregate.get_event_handler_mapping(field,field_mapping)">
+                            <tr x-data="{nested_mapping: {}}"
+                                x-effect="nested_mapping = Aggregate.get_event_handler_mapping(field,field_mapping)">
                               <td x-text="field.att_name"></td>
                               <td>
                                 <select class="editable" @change="if(!Aggregate.isMapped(field,field_mapping)){
                         nested_mapping.att_target = field.att_name;
+                        if (entity.field.filter(x => x.att_name == field.att_name).length !=0 ){
+                          nested_mapping.att_value = field.att_name;
+                        }
                         field_mapping.mapping.push(nested_mapping);
                       } else if ($el.value == 'unmapped'){
                         field_mapping.mapping = field_mapping.mapping.filter(x => x.att_target != field.att_name)
@@ -232,7 +235,7 @@
                               <td x-show="Aggregate.isMapped(field,field_mapping)" x-cloak x-transition>
                                 <select class="editable" x-model="nested_mapping.att_value">
                                   <option>-not set-</option>
-                                  <template x-for="event_field in entity.field" :key="event_fiel.att_name">
+                                  <template x-for="event_field in entity.field" :key="event_field.att_name">
                                     <option :value="event_field.att_name"
                                             :selected="event_field.att_name == nested_mapping.att_value"
                                             x-text="event_field.att_name" ></option>

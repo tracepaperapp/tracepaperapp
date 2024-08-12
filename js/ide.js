@@ -1310,9 +1310,8 @@ window.Aggregate = {
             await sleep(1000);
             Navigation.open(file);
         },
-    create_event_handler: async function(file,model){
-        let handler = {};
-        handler.att_on = model.att_name;
+    initialize_mapper: async function(file,model,handler){
+        delete handler.att_code;
         handler.mapping = [];
         handler["nested-mapping"] = [];
         let root = file.split("events/").at(0) + "root.xml";
@@ -1327,26 +1326,63 @@ window.Aggregate = {
         });
         for (let i = 0; i < model["nested-object"].length; i++){
             let source = root.replace("root.xml","entities/") + model["nested-object"][i].att_name + ".xml";
-            source = await Modeler.get(source,true);
-            let nested = {};
-            nested.att_source = model["nested-object"][i].att_name;
-            nested.att_target = model["nested-object"][i].att_name;
-            nested.mapping = [];
-            let fields = model["nested-object"][i].field.map(x => x.att_name);
-            source.field.filter(x => fields.includes(x.att_name)).forEach(x => {
-                nested.mapping.push({
-                    att_target: x.att_name,
-                    att_value: x.att_name,
-                    att_operand: "set"
+            try{
+                source = await Modeler.get(source,true);
+                let nested = {};
+                nested.att_source = model["nested-object"][i].att_name;
+                nested.att_target = model["nested-object"][i].att_name;
+                nested.att_strategy = "extend";
+                nested.mapping = [];
+                let fields = model["nested-object"][i].field.map(x => x.att_name);
+                source.field.filter(x => fields.includes(x.att_name)).forEach(x => {
+                    nested.mapping.push({
+                        att_target: x.att_name,
+                        att_value: x.att_name,
+                        att_operand: "set"
+                    });
                 });
-            });
-            if (fields.includes(source["att_business-key"])){
-                nested["att_business-key"] = source["att_business-key"];
-            }
-            if (nested.mapping.length != 0){
-                handler["nested-mapping"].push(nested);
+                if (fields.includes(source["att_business-key"])){
+                    nested["att_business-key"] = source["att_business-key"];
+                }
+                if (nested.mapping.length != 0){
+                    handler["nested-mapping"].push(nested);
+                }
+            } catch{
+                console.log("No automatic mapping for: ",source);
             }
         }
+    },
+    initialize_code_mapper: async function(file,model,handler){
+        handler.mapping = [];
+        handler['nested-mapping'] = [];
+        let code = '#self.isDeleted = "soft/hard"|LB|';
+        let root = file.split("events/").at(0) + "root.xml";
+        let document = await Modeler.get(root,true);
+        let root_fields = model.field.map(x => x.att_name);
+        document.field.filter(x => root_fields.includes(x.att_name) ).forEach(x => {
+            code += `self.${x.att_name} = event.${x.att_name}|LB|`;
+        });
+        for (let i = 0; i < model["nested-object"].length; i++){
+            let source = root.replace("root.xml","entities/") + model["nested-object"][i].att_name + ".xml";
+            try{
+                source = await Modeler.get(source,true);
+                code += `for item in event.${model["nested-object"][i].att_name}:|LB|`;
+                let fields = model["nested-object"][i].field.map(x => x.att_name);
+                let key = fields.includes(source['att_business-key']) ? source['att_business-key'] : "-businss-key-field-";
+                code += `\ttarget = retrieve_nested_target(item["${key}"], self.task, {})|LB|`;
+                source.field.filter(x => fields.includes(x.att_name)).forEach(x => {
+                    code += `\ttarget["${x.att_name}"] = item["${x.att_name}"]|LB|`;
+                });
+            } catch {
+                console.log("No automatic mapping for: ", model["nested-object"][i].att_name);
+            }
+        }
+        handler.att_code = code;
+    },
+    create_event_handler: async function(file,model){
+        let handler = {};
+        handler.att_on = model.att_name;
+        await Aggregate.initialize_mapper(file,model,handler);
         handler = {"event-handler": handler};
         await Modeler.save_model(file.replace("/events/","/event-handlers/"),handler);
         Navigation.reload(file);
