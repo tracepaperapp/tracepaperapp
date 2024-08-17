@@ -145,19 +145,41 @@ window.Aggregate = {
             let event = {};
             event.att_name = data.event;
             event.att_source = data.subdomain + "." + data.selected_aggregate;
-            let root = "domain/" + data.subdomain + "/" + data.selected_aggregate + "/root.xml";
-            let source = await Modeler.get(root,true);
-            event.field = deepcopy(source.field);
-            event["nested-object"] = [];
-            let files = await FileSystem.listFiles();
-            files = files.filter(x => x.startsWith(root.replace("root.xml","entities/")) && x.endsWith(".xml"));
-            for (let i = 0; i < files.length; i++){
-                let source = await Modeler.get(files[i],true);
-                delete source["att_business-key"];
-                event["nested-object"].push(source);
+
+            if (data.entity == "root"){
+                let root = "domain/" + data.subdomain + "/" + data.selected_aggregate + "/root.xml";
+                let source = await Modeler.get(root,true);
+                event.field = deepcopy(source.field);
+                event["nested-object"] = [];
+                let files = await FileSystem.listFiles();
+                files = files.filter(x => x.startsWith(root.replace("root.xml","entities/")) && x.endsWith(".xml"));
+                for (let i = 0; i < files.length; i++){
+                    let source = await Modeler.get(files[i],true);
+                    delete source["att_business-key"];
+                    event["nested-object"].push(source);
+                }
+            } else {
+                let entity = "domain/" + data.subdomain + "/" + data.selected_aggregate + "/entities/" + data.entity + ".xml";
+                let source = await Modeler.get(entity,true);
+                event.field = deepcopy(source.field);
+
+                let handler = {};
+                handler.att_on = data.event;
+                let code = "";
+                let key = source['att_business-key'] ? source['att_business-key'] : "-businss-key-field-";
+                code += `target = retrieve_nested_target(event["${key}"], self.${data.entity}, {})|LB|`;
+                source.field.forEach(field => {
+                    code += `target["${field.att_name}"] = event.${field.att_name}|LB|`;
+                });
+                code += `self.${data.entity}[event["${key}"]] = target`;
+                handler.att_code = code;
+                handler = {"event-handler":handler};
+                await Modeler.save_model(file.replace("/events/","/event-handlers/"),handler);
             }
+
             event = {"event":event};
             await Modeler.save_model(file,event);
+
             await sleep(1000);
             Navigation.open(file);
         },

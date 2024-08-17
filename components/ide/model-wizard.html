@@ -226,6 +226,25 @@
                                 </td>
                                 <td x-show="error" x-cloak x-transition x-text="pascal_cased_message"></td>
                             </tr>
+                            <tr x-data="{entities: []}"
+                                x-effect="entities = await Modeler.domain_event_wizard(data);if(!data.entity){data.entity = 'root'}">
+                                <th scope="row">Target</th>
+                                <td>
+                                    <template x-for="entity in entities" :key="entity">
+                                        <div class="form-control">
+                                            <label class="label cursor-pointer">
+                                                <span class="label-text" x-text="entity"></span>
+                                                <input type="radio" name="entity"
+                                                       class="radio checked:bg-blue-500"
+                                                       @change="if($el.checked){
+                                                            data.entity = entity;
+                                                       }"
+                                                       :checked="data.entity == entity" />
+                                            </label>
+                                        </div>
+                                    </template>
+                                </td>
+                            </tr>
                         </table>
 
                         <hr class="mt-5">

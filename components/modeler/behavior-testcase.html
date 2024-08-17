@@ -3,7 +3,7 @@
 
     <!-- Initial state -->
     <div x-data="{state:{}}"
-         @updated.debounce="testcase.state = JSON.stringify(state)"
+         x-effect="testcase.state = JSON.stringify(state,null,2)"
          x-init="if('state' in testcase && Object.keys(state).length == 0){state = JSON.parse(testcase.state.replace('\n',''))}">
 
       <div tabindex="0" class="collapse collapse-plus border border-accent mt-2">
@@ -129,7 +129,7 @@
     <div x-data="{state:null}"
          @updated.debounce="testcase['expected-state']['#text'] = JSON.stringify(state);testcase['expected-state'].att_pk =  state[root['att_business-key']]"
          x-show="testcase['expected-state']" x-cloak x-transition
-         x-effect="if('expected-state' in testcase && !state){state = JSON.parse(testcase['expected-state']['#text'].replace('\n',''))}">
+         x-effect="if('expected-state' in testcase && !state){state = await Behavior.prepare_expected_state(testcase)}">
 
       <div tabindex="0" class="collapse collapse-plus border border-accent mt-2">
         <input type="checkbox" :checked="sessionStorage[file + testcase.att_name + 'expected-state'] == 'true'"

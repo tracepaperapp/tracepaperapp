@@ -22,7 +22,7 @@ window.Modeler = {
         let files = await FileSystem.listFiles();
         return files.filter(x => x.endsWith(".xml"))
             .filter(x => x.startsWith("commands/") || x.includes("/events/"))
-            .map(x => x.split("/").at(-1).replace('.xml','')).sort();
+            .map(x => x.split("/").at(-1).replace('.xml','')).sort().concat(["FileUploaded"]);
     },
     list_python_modules: async function(){
         let files = await FileSystem.listFiles();
@@ -122,6 +122,21 @@ window.Modeler = {
         return content;
     },
     get_by_name: async function(name,readonly=false){
+        if (name == "FileUploaded"){
+            console.log("The FileUploaded model is only available as readonly!");
+            return {
+                att_name: "FileUploaded",
+                att_type: "DomainEvent",
+                att_source: "appsync",
+                field: [
+                    {att_name: "bucket", att_type: "String"},
+                    {att_name: "uri", att_type: "String"},
+                    {att_name: "location", att_type: "String"},
+                    {att_name: "username", att_type: "String"}
+                ],
+                "nested-object": []
+            };
+        }
         let files = await FileSystem.listFiles();
         files = files.filter(x => x.endsWith(name + ".xml"));
         files = files.filter(x => !x.includes("/event-handlers/"))
@@ -303,6 +318,14 @@ window.Modeler = {
             data.namespace = session.tab.replace('views/','').split('/').filter(x => !x.includes('.xml')).join('.');
         }
         return data;
+    },
+    domain_event_wizard: async function(data){
+        let files = await FileSystem.listFiles();
+        let entities = files.filter( x =>
+            x.startsWith(`domain/${data.subdomain}/${data.selected_aggregate}/entities/`)
+            && x.endsWith('.xml')).map(x => x.split("/").at(-1).replace(".xml",""));
+        entities.unshift("root");
+        return entities;
     }
 }
 

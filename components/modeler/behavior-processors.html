@@ -6,7 +6,7 @@
         <table class="table" x-data="{mappings: []}" x-effect="let update = processor.mapping;await sleep(10);if(mappings!=update){mappings = update}">
           <tr>
             <th scope="row">Domain event</th>
-            <td x-data="{events: []}" x-init="events = await Behavior.get_emitable_events()">
+            <td x-data="{events: []}" x-init="await sleep(500);events = await Behavior.get_emitable_events()">
               <select class="editable" @change="Behavior.update_emit_event(processor,$el.value)">
                 <option>-</option>
                 <template x-for="event in events">

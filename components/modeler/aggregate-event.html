@@ -117,7 +117,6 @@
           <div x-init="root = await Modeler.get(file.split('/events/').at(0) + '/root.xml',true)"></div>
           <div x-init="entities = await Aggregate.get_entities(file.split('/events/').at(0) + '/root.xml')"></div>
 
-          <p x-text="typeof session.editing_disabled"></p>
           <div class="form-control w-52">
             <label class="cursor-pointer label">
               <span class="label-text">Custom code mapper</span>

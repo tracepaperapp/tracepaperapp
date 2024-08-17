@@ -651,7 +651,7 @@ window.Modeler = {
         let files = await FileSystem.listFiles();
         return files.filter(x => x.endsWith(".xml"))
             .filter(x => x.startsWith("commands/") || x.includes("/events/"))
-            .map(x => x.split("/").at(-1).replace('.xml','')).sort();
+            .map(x => x.split("/").at(-1).replace('.xml','')).sort().concat(["FileUploaded"]);
     },
     list_python_modules: async function(){
         let files = await FileSystem.listFiles();
@@ -751,6 +751,21 @@ window.Modeler = {
         return content;
     },
     get_by_name: async function(name,readonly=false){
+        if (name == "FileUploaded"){
+            console.log("The FileUploaded model is only available as readonly!");
+            return {
+                att_name: "FileUploaded",
+                att_type: "DomainEvent",
+                att_source: "appsync",
+                field: [
+                    {att_name: "bucket", att_type: "String"},
+                    {att_name: "uri", att_type: "String"},
+                    {att_name: "location", att_type: "String"},
+                    {att_name: "username", att_type: "String"}
+                ],
+                "nested-object": []
+            };
+        }
         let files = await FileSystem.listFiles();
         files = files.filter(x => x.endsWith(name + ".xml"));
         files = files.filter(x => !x.includes("/event-handlers/"))
@@ -932,6 +947,14 @@ window.Modeler = {
             data.namespace = session.tab.replace('views/','').split('/').filter(x => !x.includes('.xml')).join('.');
         }
         return data;
+    },
+    domain_event_wizard: async function(data){
+        let files = await FileSystem.listFiles();
+        let entities = files.filter( x =>
+            x.startsWith(`domain/${data.subdomain}/${data.selected_aggregate}/entities/`)
+            && x.endsWith('.xml')).map(x => x.split("/").at(-1).replace(".xml",""));
+        entities.unshift("root");
+        return entities;
     }
 }
 
@@ -1294,19 +1317,41 @@ window.Aggregate = {
             let event = {};
             event.att_name = data.event;
             event.att_source = data.subdomain + "." + data.selected_aggregate;
-            let root = "domain/" + data.subdomain + "/" + data.selected_aggregate + "/root.xml";
-            let source = await Modeler.get(root,true);
-            event.field = deepcopy(source.field);
-            event["nested-object"] = [];
-            let files = await FileSystem.listFiles();
-            files = files.filter(x => x.startsWith(root.replace("root.xml","entities/")) && x.endsWith(".xml"));
-            for (let i = 0; i < files.length; i++){
-                let source = await Modeler.get(files[i],true);
-                delete source["att_business-key"];
-                event["nested-object"].push(source);
+
+            if (data.entity == "root"){
+                let root = "domain/" + data.subdomain + "/" + data.selected_aggregate + "/root.xml";
+                let source = await Modeler.get(root,true);
+                event.field = deepcopy(source.field);
+                event["nested-object"] = [];
+                let files = await FileSystem.listFiles();
+                files = files.filter(x => x.startsWith(root.replace("root.xml","entities/")) && x.endsWith(".xml"));
+                for (let i = 0; i < files.length; i++){
+                    let source = await Modeler.get(files[i],true);
+                    delete source["att_business-key"];
+                    event["nested-object"].push(source);
+                }
+            } else {
+                let entity = "domain/" + data.subdomain + "/" + data.selected_aggregate + "/entities/" + data.entity + ".xml";
+                let source = await Modeler.get(entity,true);
+                event.field = deepcopy(source.field);
+
+                let handler = {};
+                handler.att_on = data.event;
+                let code = "";
+                let key = source['att_business-key'] ? source['att_business-key'] : "-businss-key-field-";
+                code += `target = retrieve_nested_target(event["${key}"], self.${data.entity}, {})|LB|`;
+                source.field.forEach(field => {
+                    code += `target["${field.att_name}"] = event.${field.att_name}|LB|`;
+                });
+                code += `self.${data.entity}[event["${key}"]] = target`;
+                handler.att_code = code;
+                handler = {"event-handler":handler};
+                await Modeler.save_model(file.replace("/events/","/event-handlers/"),handler);
             }
+
             event = {"event":event};
             await Modeler.save_model(file,event);
+
             await sleep(1000);
             Navigation.open(file);
         },
@@ -1534,6 +1579,9 @@ window.Behavior = {
         flow[TEST].forEach(test => {
             test.input = make_sure_is_list(test.input);
             test.expected = make_sure_is_list(test.expected);
+            test.expected.forEach(event => {
+                event.field = make_sure_is_list(event.field);
+            });
         });
         return flow;
     },
@@ -1777,6 +1825,22 @@ window.Behavior = {
             return JSON.parse(newValue.toLowerCase());
         } else {
             return newValue;
+        }
+    },
+    prepare_expected_state: async function(testcase){
+        if (    !testcase['expected-state'] ||
+                !testcase['expected-state']['#text'] ||
+                testcase['expected-state']['#text'].includes("undefined") ||
+                testcase['expected-state']['#text'] == "{}" ||
+                testcase['expected-state']['#text'] == ""){
+            let root = await Behavior.get_root();
+            let key = root["att_business-key"];
+            let obj = {};
+            testcase.att_pk = testcase.att_pk ? testcase.att_pk : "-business-key-";
+            obj[key] = testcase.att_pk;
+            return obj;
+        }else{
+            return JSON.parse(testcase['expected-state']['#text'].replace('\n',''));
         }
     }
 }

@@ -16,6 +16,9 @@ window.Behavior = {
         flow[TEST].forEach(test => {
             test.input = make_sure_is_list(test.input);
             test.expected = make_sure_is_list(test.expected);
+            test.expected.forEach(event => {
+                event.field = make_sure_is_list(event.field);
+            });
         });
         return flow;
     },
@@ -259,6 +262,22 @@ window.Behavior = {
             return JSON.parse(newValue.toLowerCase());
         } else {
             return newValue;
+        }
+    },
+    prepare_expected_state: async function(testcase){
+        if (    !testcase['expected-state'] ||
+                !testcase['expected-state']['#text'] ||
+                testcase['expected-state']['#text'].includes("undefined") ||
+                testcase['expected-state']['#text'] == "{}" ||
+                testcase['expected-state']['#text'] == ""){
+            let root = await Behavior.get_root();
+            let key = root["att_business-key"];
+            let obj = {};
+            testcase.att_pk = testcase.att_pk ? testcase.att_pk : "-business-key-";
+            obj[key] = testcase.att_pk;
+            return obj;
+        }else{
+            return JSON.parse(testcase['expected-state']['#text'].replace('\n',''));
         }
     }
 }

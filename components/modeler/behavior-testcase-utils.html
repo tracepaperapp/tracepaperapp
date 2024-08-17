@@ -134,35 +134,37 @@
                   :value="input.att_value"
                   @updated.debounce="input.att_value = $event.detail.value;"></ui-editable-text-field>
         </td>
-        <td x-data="{collection: []}"
-            x-init="collection = JSON.parse(input['#text'])"
-            x-effect="input['#text'] = JSON.stringify(collection,null,2);if(input['#text'] == '[]'){delete input['#text']}"
-            x-show="input.att_type == 'NestedObject'" x-cloak x-transition>
-          <template x-for="(obj,index) in collection" :key="JSON.stringify(obj)">
-            <table class="table">
-              <tr>
-                <td>Object <span x-text="index + 1"></span></td>
-                <td class="text-end">
-                  <ui-delete-button
-                          @delete.once.stop="collection.splice(index,1)"></ui-delete-button>
-                </td>
-              </tr>
-              <template x-for="(value,key) in obj" :key="key">
+        <template x-if="input.att_type == 'NestedObject'">
+          <td x-data="{collection: []}"
+              x-init="collection = JSON.parse(input['#text'])"
+              x-effect="input['#text'] = JSON.stringify(collection,null,2);if(input['#text'] == '[]'){delete input['#text']}"
+              x-show="input.att_type == 'NestedObject'" x-cloak x-transition>
+            <template x-for="(obj,index) in collection" :key="JSON.stringify(obj)">
+              <table class="table">
                 <tr>
-                  <th scope="row" x-text="key"></th>
-                  <td>
-                    <ui-editable-text-field
-                            :value="value"
-                            @updated.debounce="obj[key] = $event.detail.value;"></ui-editable-text-field>
+                  <td>Object <span x-text="index + 1"></span></td>
+                  <td class="text-end">
+                    <ui-delete-button
+                            @delete.once.stop="collection.splice(index,1)"></ui-delete-button>
                   </td>
                 </tr>
-              </template>
-            </table>
-          </template>
-          <button class="btn btn-ghost" @click="collection.push(await Behavior.initialize_nested(testcase['att_trigger-event'],input.att_name))">
-            <i class="fa-solid fa-plus"></i>
-          </button>
-        </td>
+                <template x-for="(value,key) in obj" :key="key">
+                  <tr>
+                    <th scope="row" x-text="key"></th>
+                    <td>
+                      <ui-editable-text-field
+                              :value="value"
+                              @updated.debounce="obj[key] = $event.detail.value;"></ui-editable-text-field>
+                    </td>
+                  </tr>
+                </template>
+              </table>
+            </template>
+            <button class="btn btn-ghost" @click="collection.push(await Behavior.initialize_nested(testcase['att_trigger-event'],input.att_name))">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </td>
+        </template>
       </tr>
     </template>
   </table>
