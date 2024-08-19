@@ -161,6 +161,18 @@
           <div x-show="!['event','dependencies','roles','scenario', 'readme'].includes(type)" x-cloak x-transition
                class="card bg-base-100 card-bordered border-primary mb-5 card-compact">
             <div class="relative p-2" x-data="{loaded:false}">
+              <div x-show="
+                loaded &&
+                session.selected_node &&
+                session.selected_node in session.all_links &&
+                session.tab != session.all_links[session.selected_node]" x-cloak x-transition>
+                <div class="tooltip" data-tip="click to open component">
+                  <div class="badge badge-primary cursor-pointer"
+                       @click.debounce="parent.postMessage({type:'open',file:session.all_links[session.selected_node]});"
+                       x-text="session.selected_node"></div>
+                </div>
+              </div>
+
               <div id="project-diagram"
                    @redraw.document="await sleep(1000);await Diagram.draw(file,'project-diagram','250px')"
                    x-init="await sleep(1);await Diagram.draw(file,'project-diagram','250px');loaded=true"></div>
