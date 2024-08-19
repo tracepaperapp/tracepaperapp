@@ -859,6 +859,60 @@ window.Modeler = {
         summary["projections"] = files.filter(x => x.startsWith('projections/') && x.endsWith('.xml')).length;
         return summary;
     },
+    render_treemap: async function(){
+        let reactiveSelection = Alpine.reactive({"selected": null});
+        let cb = [];
+        let data = [['Concept', 'Parent'],["Domain",null]];
+        let files = await FileSystem.listFiles();
+        files.filter(x => x.startsWith('domain/') && x.endsWith('.xml') && x.includes('/behavior-flows/')).forEach(x => {
+            let path = x.split("/");
+
+            let sub = path[1];
+            if (!cb.includes(sub)){
+               cb.push(sub);
+               data.push([sub,"Domain"]);
+            }
+
+            let agg = path[2];
+            if (!cb.includes(agg)){
+               cb.push(agg);
+               data.push([agg,sub]);
+            }
+
+            let behavior = path[4].replace(".xml","");
+            data.push([sub + "." + agg + "." + behavior,agg]);
+         });
+        google.charts.load('current', {'packages':['treemap']});
+        google.charts.setOnLoadCallback(function(){
+            let dataset = google.visualization.arrayToDataTable(data);
+            let tree = new google.visualization.TreeMap(document.getElementById('treemap'));
+            tree.draw(dataset, {
+              minColor: '#d1dbff',
+              midColor: '#d1dbff',
+              maxColor: '#d1dbff',
+              headerHeight: 15,
+              fontColor: 'black',
+              showScale: false
+            });
+
+            function navigate_tree(e){
+                reactiveSelection.selected = data[e.row + 1];
+            }
+
+            google.visualization.events.addListener(tree, 'drilldown', navigate_tree);
+            google.visualization.events.addListener(tree, 'rollup', function(){reactiveSelection.selected = null});
+        });
+        return reactiveSelection;
+    },
+    open_from_tree_map: function(selected){
+        if (selected.at(1) == "Domain"){
+            parent.postMessage({type:'diagram',file: `domain/${selected.at(0)}`});
+        } else if (!selected.at(0).includes(".")){
+            parent.postMessage({type:'open',file: `domain/${selected.at(1)}/${selected.at(0)}/root.xml`});
+        } else {
+            parent.postMessage({type:'open',file: `domain/${selected.at(0).replaceAll('.','/').replace(`/${selected.at(1)}/`,`/${selected.at(1)}/behavior-flows/`)}.xml`});
+        }
+    },
     rename: async function(oldPath,newPath){
         model_cache[newPath] = model_cache[oldPath];
         delete model_cache[oldPath];
