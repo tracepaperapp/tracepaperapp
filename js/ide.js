@@ -1637,7 +1637,7 @@ let initial_config = `<draftsman project-name="#name#" xmlns="https://tracepaper
 
 let setup_environment = `
 <notifier name="SetupEnvironment">
-  <trigger source="@rate(1 day)">
+  <trigger source="@afterDeployment">
     <mapping target="dummy" value="#&apos;&apos;"></mapping>
   </trigger>
   <activity type="iam-create-systemuser" fail-silent="true" id="vMB9LZ"></activity>
