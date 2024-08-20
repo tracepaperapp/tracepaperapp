@@ -1098,8 +1098,11 @@ window.SearchEngine = {
             let type = Modeler.determine_type(model);
             let name = Navigation.get_name(model);
             let modelContent = await FileSystem.read(files[i]);
+            if (type == "config"){
+                documentation.content += " pipeline qg qa quality gate deployment coverage DB database IAM testing";
+            }
             documents.push({
-                id: type == "pattern" ? "Patterns#" + model : model,
+                id: type == "pattern" ? "Patterns#" + model : type == "config" ? "settings" : model,
                 name: name,
                 documentation: documentation.content,
                 type: type,
@@ -1674,7 +1677,7 @@ document.addEventListener('keyup', (e) => {
         Shortcut.execute("guide");
     } else if (e.shiftKey && e.code == "Enter"){
         Shortcut.execute("model");
-    } else if (e.shiftKey && e.code == "Space"){
+    } else if (e.shiftKey && e.code == "Backspace"){
         Shortcut.execute("search");
     } else if (e.ctrlKey && e.code == "Enter"){
         Shortcut.execute("insert");

@@ -18,8 +18,11 @@ window.SearchEngine = {
             let type = Modeler.determine_type(model);
             let name = Navigation.get_name(model);
             let modelContent = await FileSystem.read(files[i]);
+            if (type == "config"){
+                documentation.content += " pipeline qg qa quality gate deployment coverage DB database IAM testing";
+            }
             documents.push({
-                id: type == "pattern" ? "Patterns#" + model : model,
+                id: type == "pattern" ? "Patterns#" + model : type == "config" ? "settings" : model,
                 name: name,
                 documentation: documentation.content,
                 type: type,

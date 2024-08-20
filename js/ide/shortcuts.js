@@ -14,7 +14,7 @@ document.addEventListener('keyup', (e) => {
         Shortcut.execute("guide");
     } else if (e.shiftKey && e.code == "Enter"){
         Shortcut.execute("model");
-    } else if (e.shiftKey && e.code == "Space"){
+    } else if (e.shiftKey && e.code == "Backspace"){
         Shortcut.execute("search");
     } else if (e.ctrlKey && e.code == "Enter"){
         Shortcut.execute("insert");
