@@ -18,7 +18,7 @@
                 buildId: buildId
             });
             disabled=true;
-            setTimeout(function(){disabled=false},5000)" class="btn btn-ghost btn-circle" :disabled="disabled">
+            setTimeout(function(){disabled=false},5000)" class="btn btn-ghost btn-circle" :disabled="disabled || !session.last_pull">
             <i class="fa-solid fa-rocket"></i>
         </button>
 
