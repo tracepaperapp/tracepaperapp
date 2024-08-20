@@ -1,6 +1,6 @@
 <template x-component="settings">
     <div x-data="{project:{},config: {}}"
-         x-init="config = await Modeler.get('config.xml');project = Project.get();">
+         x-effect="if(session.frame =='/modeler#settings'){config = await Modeler.get('config.xml');project = Project.get();}">
         <div class="prose">
             <h2>Project Settings</h2>
         </div>
