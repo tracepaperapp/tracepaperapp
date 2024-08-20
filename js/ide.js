@@ -77,6 +77,7 @@ const proxy = "https://git.draftsman.io";
 var fs = null;
 var branch = "main";
 var CHANGES = false;
+var filesystemInitialized = false;
 
 async function connect_repository(){
     if (location.href.indexOf("/modeler") > -1){
@@ -120,6 +121,7 @@ async function connect_repository(){
         }catch(exception){
             console.error("checkout failed -->",exception);
         }
+        filesystemInitialized = true;
         sessionStorage.checkout = localStorage.project_drn;
         setTimeout(Navigation.soft_reload,500);
         session.loading = false;
@@ -167,6 +169,10 @@ window.FileSystem = {
         await FileSystem.delete(oldPath);
     },
     delete: async function(filepath){
+        if (["config.xml","meta.json"].includes(filepath)){
+            console.log("Skip deletion of " + filepath + " because it is delete protected");
+            return;
+        }
         try{
             await git.remove({ fs, dir: dir, filepath: filepath });
             await fs.promises.unlink(dir + "/" + filepath);
@@ -263,6 +269,7 @@ if (location.pathname != "/"){
 var pull_countdown = 60;
 var push_lock = false;
 async function push_to_remote(){
+    if (!filesystemInitialized){return;};
     await validate_and_repair_model();
     if(await FileSystem.staged_files()){
         if (push_lock){return};
