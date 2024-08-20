@@ -232,7 +232,8 @@ window.View = {
             return;
         }
         let file = "views/" + data.namespace.replaceAll(".","/") + "/" + data.name + ".xml";
-        if (await Modeler.exists(file)){
+        let files = await FileSystem.listFiles();
+        if (files.filter(x => x.startsWith("views/") && x.endsWith(data.name + ".xml")).length != 0){
             Session.show_exception("File already exists, will not overwrite <br>" + file);
             return;
         }

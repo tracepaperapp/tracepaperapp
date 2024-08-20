@@ -186,19 +186,23 @@
           <!-- Tree diagram -->
           <template x-if="type == 'readme'">
             <div x-data="{selection: ''}" >
-              <div x-show="selection.selected" x-cloak x-transition>
+              <div x-show="selection.selected && !['Automations','Query Domain','Write Domain'].includes(selection.selected.at(0)) && !selection.selected.at(0).startsWith('v-')" x-cloak x-transition>
                 <button class="btn btn-outline btn-primary mt-5" @click.debounce="Modeler.open_from_tree_map(selection.selected)">
                   Open
                   <span x-text="selection.selected.at(0)"></span>
-                  <span x-show="selection.selected.at(1) == 'Domain'" x-cloak x-transition>subdomain</span>
-                  <span x-show="selection.selected.at(1) != 'Domain' &&
-                        !selection.selected.at(0).includes('.')" x-cloak x-transition>aggregate</span>
-                  <span x-show="selection.selected.at(1) != 'Domain' &&
+                  <span x-show="selection.selected.at(1) == 'Write Domain'" x-cloak x-transition>subdomain</span>
+                  <span x-show="selection.selected.at(1) != 'Write Domain' &&
+                        !selection.selected.at(0).includes('.')
+                        && !selection.selected.at(0).startsWith(':')
+                        && !selection.selected.at(0).endsWith(' view')
+                        && !selection.selected.at(0).endsWith(' projection')" x-cloak x-transition>aggregate</span>
+                  <span x-show="selection.selected.at(1) != 'Write Domain' &&
                         selection.selected.at(0).includes('.')" x-cloak x-transition>behavior</span>
                 </button>
               </div>
               <br>
               <div id="treemap" x-init="selection = await Modeler.render_treemap()" style="width: 100%; height: 250px;"></div>
+              <button class="btn btn-outline btn-primary btn-block mb-5 mt-5" @click="parent.postMessage({type:'diagram',file:''});">Open domain diagram</button>
             </div>
           </template>
 

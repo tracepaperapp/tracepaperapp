@@ -637,6 +637,7 @@ const options = {
 var parser = new XMLParser(options);
 var builder = new XMLBuilder(options);
 let model_cache = {};
+let view_path_cache = {};
 
 window.Modeler = {
     exists: async function(file){
@@ -862,7 +863,7 @@ window.Modeler = {
     render_treemap: async function(){
         let reactiveSelection = Alpine.reactive({"selected": null});
         let cb = [];
-        let data = [['Concept', 'Parent'],["Domain",null]];
+        let data = [['Concept', 'Parent'],["Domain",null],["Write Domain","Domain"],["Automations","Write Domain"],["Query Domain","Domain"]];
         let files = await FileSystem.listFiles();
         files.filter(x => x.startsWith('domain/') && x.endsWith('.xml') && x.includes('/behavior-flows/')).forEach(x => {
             let path = x.split("/");
@@ -870,7 +871,7 @@ window.Modeler = {
             let sub = path[1];
             if (!cb.includes(sub)){
                cb.push(sub);
-               data.push([sub,"Domain"]);
+               data.push([sub,"Write Domain"]);
             }
 
             let agg = path[2];
@@ -882,6 +883,50 @@ window.Modeler = {
             let behavior = path[4].replace(".xml","");
             data.push([sub + "." + agg + "." + behavior,agg]);
          });
+
+        files.filter(x => x.startsWith('notifiers/') && x.endsWith('.xml')).forEach(x => {
+            data.push([":" + x.split("/").at(-1).replace(".xml",""),"Automations"]);
+        });
+
+        cb = [];
+        files.filter(x => x.startsWith('views/') && x.endsWith('.xml')).forEach(x => {
+            let path = x.split("/");
+            path.shift();
+            let viewsub = "Query Domain"
+            path.forEach(p => {
+                if (p.endsWith(".xml")){
+                    let v = p.replace(".xml"," view");
+                    data.push([v,viewsub]);
+                    view_path_cache[v] = x;
+                }else{
+                    if (!cb.includes(p)){
+                       cb.push(p);
+                       data.push(["v-" + p,viewsub]);
+                    }
+                    viewsub = "v-" + p;
+                }
+            });
+         });
+
+        files.filter(x => x.startsWith('projections/') && x.endsWith('.xml')).forEach(x => {
+            let path = x.split("/");
+            path.shift();
+            let viewsub = "Query Domain"
+            path.forEach(p => {
+                if (p.endsWith(".xml")){
+                    let v = p.replace(".xml"," projection");
+                    data.push([v,viewsub]);
+                    view_path_cache[v] = x;
+                }else{
+                    if (!cb.includes(p)){
+                       cb.push(p);
+                       data.push(["v-" + p,viewsub]);
+                    }
+                    viewsub = "v-" + p;
+                }
+            });
+         });
+
         google.charts.load('current', {'packages':['treemap']});
         google.charts.setOnLoadCallback(function(){
             let dataset = google.visualization.arrayToDataTable(data);
@@ -905,8 +950,12 @@ window.Modeler = {
         return reactiveSelection;
     },
     open_from_tree_map: function(selected){
-        if (selected.at(1) == "Domain"){
+        if (selected.at(1) == "Write Domain"){
             parent.postMessage({type:'diagram',file: `domain/${selected.at(0)}`});
+        } else if (selected.at(0).startsWith(":")){
+            parent.postMessage({type:'open',file: `notifiers/${selected.at(0).replace(":","")}.xml`});
+        } else if (selected.at(0).endsWith(" view") || selected.at(0).endsWith(" projection")){
+            parent.postMessage({type:'open',file: view_path_cache[selected.at(0)]});
         } else if (!selected.at(0).includes(".")){
             parent.postMessage({type:'open',file: `domain/${selected.at(1)}/${selected.at(0)}/root.xml`});
         } else {
@@ -3331,7 +3380,8 @@ window.View = {
             return;
         }
         let file = "views/" + data.namespace.replaceAll(".","/") + "/" + data.name + ".xml";
-        if (await Modeler.exists(file)){
+        let files = await FileSystem.listFiles();
+        if (files.filter(x => x.startsWith("views/") && x.endsWith(data.name + ".xml")).length != 0){
             Session.show_exception("File already exists, will not overwrite <br>" + file);
             return;
         }
