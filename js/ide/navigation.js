@@ -4,6 +4,7 @@ window.Navigation = {
         document.dispatchEvent(new CustomEvent('soft-reload'));
     },
     open: function(file){
+        file = file.startsWith("Patterns") ? "Patterns" : file;
         if (session.tab == file){
             Navigation.force_reload();
             return;
