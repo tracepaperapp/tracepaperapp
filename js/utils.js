@@ -114,9 +114,11 @@ function create_toc(element){
 const Experimental = {
     sign_out: function(){
         let logout_uri = `${localStorage["aws-congnito-ui"]}/logout?client_id=${localStorage["aws-congnito-app-id"]}&logout_uri=${window.location.origin}`;
+        let env = localStorage["staging-environment"];
         for(var i in localStorage){
             localStorage.removeItem(i);
         }
+        localStorage["staging-environment"] = env;
         location = logout_uri;
     },
     update_credentials: function(target_location){

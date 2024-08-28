@@ -115,5 +115,35 @@
     <draftsman-query alias="context" x-include="/prepared-statements/get-user-context.txt" authenticated>
     </draftsman-query>
 
+    <div class="data-element" @refresh="if(!$store.context.get){new_user.showModal()}"></div>
+
+    <dialog id="new_user" class="modal">
+      <div class="modal-box">
+        <h3 class="text-lg font-bold">Looks like you are here for the first time...</h3>
+        <p class="py-4" x-data="{command: {fullName: ''}}">
+          <ui-trace-table></ui-trace-table>
+
+          <label x-show="$store.trace.length == 0" x-cloak x-transition
+                 class="input input-bordered flex items-center gap-2">
+            Choose a screen name
+            <input type="text" class="grow" placeholder="John Doe" x-model="command.fullName"/>
+          </label>
+          <small>After you tell us your name, we will create a personal workspace for you.
+          You will need to sign-in again.</small>
+          <draftsman-mutation command="CreateUser"
+                              x-include="/prepared-statements/commands/CreateUser.txt"
+                              authenticated>
+          </draftsman-mutation>
+          <draftsman-trace command="CreateUser"
+                           status="success"
+                           component="SetupWorkspace-Notifier"
+                           @trace="await sleep(1000);Experimental.sign_out()">
+          </draftsman-trace>
+          <button class="btn btn-outline btn-primary mt-5 btn-block"
+                  x-show="$store.trace.length == 0" x-cloak x-transition
+                  @click="$store.mutation.send('CreateUser',command);">Save</button>
+        </p>
+      </div>
+    </dialog>
   </div>
 </template>
