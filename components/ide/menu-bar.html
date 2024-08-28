@@ -137,7 +137,7 @@
           <draftsman-trace command="CreateUser"
                            status="success"
                            component="SetupWorkspace-Notifier"
-                           @trace="await sleep(1000);Experimental.sign_out()">
+                           @trace="sessionStorage.new_project = 'true';await sleep(1000);Experimental.sign_out()">
           </draftsman-trace>
           <button class="btn btn-outline btn-primary mt-5 btn-block"
                   x-show="$store.trace.length == 0" x-cloak x-transition
