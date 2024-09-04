@@ -1,4 +1,9 @@
-sessionStorage["hosted-signin"] = "true";
+//sessionStorage["hosted-signin"] = "true";
+
+if (localStorage["staging-environment"] && localStorage["staging-environment"] != "false" && localStorage["staging-environment"] != "true"){
+    localStorage.removeItem("staging-environment");
+}
+
 console.trace = function(){};
 
 document.addEventListener('alpine:init', async () => {
@@ -119,7 +124,12 @@ const Experimental = {
             localStorage.removeItem(i);
         }
         localStorage["staging-environment"] = env;
-        location = logout_uri;
+        if (sessionStorage["hosted-signin"]){
+            location = logout_uri;
+        } else {
+            location.reload();
+        }
+
     },
     update_credentials: function(target_location){
         if (target_location){

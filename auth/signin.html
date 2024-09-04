@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--
     <meta http-equiv="refresh" content="1; URL=/auth" />
+    -->
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta name="description" content=""/>
@@ -15,7 +17,17 @@
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
 
     <script src="/js/configuration.js"></script>
-    <script src="/js/draftsman.js"></script>
+    <script src="/js/configuration-staging.js"></script>
+
+    <link rel="stylesheet" href="/css/draftsman.css" />
+    <script src="/js/framework.js"></script>
+    <script src="/js/cache.js"></script>
+    <script src="/js/tp/vimesh.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/tp/alpine-persist.js"></script>
+    <script defer src="/js/tp/alpine-focus.js"></script>
+    <script src="/js/tp/alpine.js" defer></script>
+
     <!-- -->
 
     <script src="/js/amazon-cognito-identity.min.js"></script>
@@ -31,6 +43,7 @@
     navigate_to_referer();
   }
   function executeSignIn(username,password){
+    localStorage["username"] = username;
     signInUser(username,password,finalize_signin)
   }
 
