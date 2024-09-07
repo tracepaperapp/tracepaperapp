@@ -139,7 +139,7 @@ window.Modeler = {
             };
         }
         let files = await FileSystem.listFiles();
-        files = files.filter(x => x.endsWith(name + ".xml"));
+        files = files.filter(x => x.endsWith("/" + name + ".xml"));
         files = files.filter(x => !x.includes("/event-handlers/"))
         if (files.lenght == 0){
             throw new Error('Model not found');
@@ -152,7 +152,7 @@ window.Modeler = {
     },
     get_view_by_name: async function(name,readonly=false){
             let files = await FileSystem.listFiles();
-            files = files.filter(x => x.startsWith("views/") && x.endsWith(name + ".xml"));
+            files = files.filter(x => x.startsWith("views/") && x.endsWith( "/" + name + ".xml"));
             if (files.lenght == 0){
                 throw new Error('Model not found');
             }

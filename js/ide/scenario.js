@@ -1,5 +1,14 @@
 let scenario_cache = {};
 window.Scenario = {
+    remove_dependency: function(scenario,dependency){
+        scenario.att_extends = scenario.att_extends.replace(dependency, '').replace(';;',';');
+        if (scenario.att_extends.startsWith(";")){
+            scenario.att_extends = scenario.att_extends.substring(1);
+        }
+        if (scenario.att_extends.endsWith(";")){
+            scenario.att_extends = scenario.att_extends.slice(0,-1);
+        }
+    },
     prepare: function(scenario){
         scenario.activity = make_sure_is_list(scenario.activity);
         scenario.activity = scenario.activity.map(activity => Scenario.prepare_activity(activity));

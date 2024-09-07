@@ -43,6 +43,39 @@ var translations = {};
 window.Diagram = {
     nodes: {},
     edges: {},
+    draw_scenario: async function(file,id,height="300px"){
+        let files = await FileSystem.listFiles();
+        files = files.filter(x => x.startsWith("scenarios/"));
+        let scenarios = [];
+        for (let i = 0; i < files.length; i++){
+            scenarios.push(await Modeler.get(files[i],true))
+        }
+        let nodes = [];
+        let edges = [];
+        scenarios.forEach(s => {
+            nodes.push({
+                id: s.att_name,
+                label: s.att_name,
+                shape: "box",
+                color: file.includes(s.att_name) ? "#FFA807" : "#6E6EFD"
+            });
+            if (s.att_extends){
+                s.att_extends.split(";").forEach(r => {
+                    edges.push({ from: r, to: s.att_name, color: { inherit: "both" }, arrows: "to" });
+                });
+            }
+        });
+        var container = document.getElementById(id);
+        var data = {
+          nodes: new vis.DataSet(nodes),
+          edges: new vis.DataSet(edges)
+        };
+        var options = {
+            width: "100%",
+            height: height
+        };
+        var network = new vis.Network(container, data, options);
+    },
     draw: async function(file,id,height="300px",selection={}){
         Diagram.nodes = {};
         Diagram.edges = {};

@@ -775,7 +775,7 @@ window.Modeler = {
             };
         }
         let files = await FileSystem.listFiles();
-        files = files.filter(x => x.endsWith(name + ".xml"));
+        files = files.filter(x => x.endsWith("/" + name + ".xml"));
         files = files.filter(x => !x.includes("/event-handlers/"))
         if (files.lenght == 0){
             throw new Error('Model not found');
@@ -788,7 +788,7 @@ window.Modeler = {
     },
     get_view_by_name: async function(name,readonly=false){
             let files = await FileSystem.listFiles();
-            files = files.filter(x => x.startsWith("views/") && x.endsWith(name + ".xml"));
+            files = files.filter(x => x.startsWith("views/") && x.endsWith( "/" + name + ".xml"));
             if (files.lenght == 0){
                 throw new Error('Model not found');
             }
@@ -2069,6 +2069,39 @@ var translations = {};
 window.Diagram = {
     nodes: {},
     edges: {},
+    draw_scenario: async function(file,id,height="300px"){
+        let files = await FileSystem.listFiles();
+        files = files.filter(x => x.startsWith("scenarios/"));
+        let scenarios = [];
+        for (let i = 0; i < files.length; i++){
+            scenarios.push(await Modeler.get(files[i],true))
+        }
+        let nodes = [];
+        let edges = [];
+        scenarios.forEach(s => {
+            nodes.push({
+                id: s.att_name,
+                label: s.att_name,
+                shape: "box",
+                color: file.includes(s.att_name) ? "#FFA807" : "#6E6EFD"
+            });
+            if (s.att_extends){
+                s.att_extends.split(";").forEach(r => {
+                    edges.push({ from: r, to: s.att_name, color: { inherit: "both" }, arrows: "to" });
+                });
+            }
+        });
+        var container = document.getElementById(id);
+        var data = {
+          nodes: new vis.DataSet(nodes),
+          edges: new vis.DataSet(edges)
+        };
+        var options = {
+            width: "100%",
+            height: height
+        };
+        var network = new vis.Network(container, data, options);
+    },
     draw: async function(file,id,height="300px",selection={}){
         Diagram.nodes = {};
         Diagram.edges = {};
@@ -3452,6 +3485,15 @@ async function load_labels(){
 load_labels();
 let scenario_cache = {};
 window.Scenario = {
+    remove_dependency: function(scenario,dependency){
+        scenario.att_extends = scenario.att_extends.replace(dependency, '').replace(';;',';');
+        if (scenario.att_extends.startsWith(";")){
+            scenario.att_extends = scenario.att_extends.substring(1);
+        }
+        if (scenario.att_extends.endsWith(";")){
+            scenario.att_extends = scenario.att_extends.slice(0,-1);
+        }
+    },
     prepare: function(scenario){
         scenario.activity = make_sure_is_list(scenario.activity);
         scenario.activity = scenario.activity.map(activity => Scenario.prepare_activity(activity));

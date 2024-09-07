@@ -131,6 +131,41 @@
                   <ui-view-settings></ui-view-settings>
                 </div>
               </template>
+              <template x-if="type == 'scenario'">
+                <div x-show="type == 'scenario'" x-cloak x-transition>
+                  <table class="table table-xs"
+                         x-effect="prospect = scenarios.filter(x => !model.att_extends.includes(x) && x != model.att_name)"
+                         x-init="let files = await FileSystem.listFiles();scenarios = files.filter(x => x.startsWith('scenarios/')).map(x => x.split('/').at(-1).replace('.xml',''))"
+                         x-data="{prospect: [],scenarios:[]}">
+                    <tr>
+                      <th scope="col">Depends on</th>
+                    </tr>
+                    <template x-for="item in model.att_extends.split(';')" :key="item">
+                      <tr>
+                        <td>
+                          <span x-text="item"></span>
+                          <i class="fa-regular fa-trash-can float-end"
+                             @click="Scenario.remove_dependency(model,item);$dispatch('redraw')"></i>
+                        </td>
+                      </tr>
+                    </template>
+                    <tr x-show="prospect.length != 0" x-cloak x-transition>
+                      <td>
+                        <select @change="
+                          if(model.att_extends){model.att_extends += ';'};
+                          model.att_extends += $el.value;
+                          $dispatch('redraw');
+                          $el.value = 'Add dependency'" class="select select-ghost w-full select-xs">
+                          <option disabled selected>Add dependency</option>
+                          <template x-for="item in prospect">
+                            <option :value="item" x-text="item"></option>
+                          </template>
+                        </select>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </template>
               <div class="card-actions justify-end"
                    x-show="!['readme','expressions','dependencies','patterns','roles'].includes(type) && !session.editing_disabled" x-cloak x-transition>
                 <i class="fa-regular fa-trash-can" @click="delete_confirmation.showModal()"></i>
@@ -206,6 +241,14 @@
             </div>
           </template>
 
+          <!-- scenario diagram -->
+          <div x-show="'scenario' == type" x-cloak x-transition
+               class="card bg-base-100 card-bordered border-primary mb-5 card-compact">
+
+              <div id="scenario-diagram"
+                   @redraw.document="await sleep(1000);await Diagram.draw_scenario(file,'scenario-diagram','400px')"
+                   x-init="await sleep(1);await Diagram.draw_scenario(file,'scenario-diagram','400px');loaded=true"></div>
+            </div>
 
           <template x-if="type == 'readme'">
             <div x-show="type == 'readme'" x-cloak x-transition x-import="modeler/readme-sidebar">
