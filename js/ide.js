@@ -2073,10 +2073,13 @@ window.Diagram = {
         let files = await FileSystem.listFiles();
         files = files.filter(x => x.startsWith("scenarios/"));
         let scenarios = [];
+        let stops = [];
         for (let i = 0; i < files.length; i++){
-            scenarios.push(await Modeler.get(files[i],true))
+            let scenario = await Modeler.get(files[i],true);
+            scenarios.push(scenario);
+            stops.push(scenario.att_name);
         }
-        let nodes = [];
+        let nodes = [{id: 'START',shape:'dot',color:"#82B366",size: 10,label: "Start"},{id: 'STOP',shape:'dot',color:"#B85450",size: 10,label: "End"}];
         let edges = [];
         scenarios.forEach(s => {
             nodes.push({
@@ -2088,9 +2091,16 @@ window.Diagram = {
             if (s.att_extends){
                 s.att_extends.split(";").forEach(r => {
                     edges.push({ from: r, to: s.att_name, color: { inherit: "both" }, arrows: "to" });
+                    stops = stops.filter(x => x != r);
                 });
+            } else {
+                edges.push({ from: "START", to: s.att_name, color: { inherit: "both" }, arrows: "to" });
             }
         });
+        stops.forEach(s => {
+            edges.push({ from: s, to: "STOP", color: { inherit: "both" }, arrows: "to" });
+        });
+        console.log(stops);
         var container = document.getElementById(id);
         var data = {
           nodes: new vis.DataSet(nodes),
