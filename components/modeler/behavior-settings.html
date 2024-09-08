@@ -10,6 +10,15 @@
                            class="checkbox checkbox-info" />
                 </td>
             </tr>
+            <tr>
+                <th scope="row">May revoke soft delete</th>
+                <td>
+                    <input type="checkbox"
+                           @change="if($el.checked){model['att_reactivate-command'] = 'true'}else{model['att_reactivate-command'] = 'false'}"
+                           :checked="'att_reactivate-command' in model && model['att_reactivate-command'] == 'true'"
+                           class="checkbox checkbox-info" />
+                </td>
+            </tr>
         </table>
     </div>
 </template>

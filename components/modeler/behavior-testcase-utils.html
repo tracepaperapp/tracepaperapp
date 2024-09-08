@@ -87,6 +87,13 @@
                             @click="state['version'] = 1;$dispatch('updated')"><i class="fa-solid fa-plus"></i></button>
                   </td>
                 </tr>
+              <tr x-show="!('isDeleted' in state)" x-cloak x-transition>
+                <th scope="row">isDeleted</th>
+                <td>
+                  <button class="btn btn-ghost"
+                          @click="state['isDeleted'] = 'soft';$dispatch('updated')"><i class="fa-solid fa-plus"></i></button>
+                </td>
+              </tr>
                 <template x-for="entity in entities" :key="entity.att_name">
                   <tr x-show="!(entity.att_name in state)" x-cloak x-transition>
                     <th scope="row" x-text="entity.att_name"></th>

@@ -1959,7 +1959,7 @@ window.Behavior = {
             let root = await Behavior.get_root();
             let key = root["att_business-key"];
             let obj = {};
-            testcase.att_pk = testcase.att_pk ? testcase.att_pk : "-business-key-";
+            testcase['expected-state'].att_pk = testcase['expected-state'].att_pk ? testcase['expected-state'].att_pk : "-business-key-";
             obj[key] = testcase.att_pk;
             return obj;
         }else{
