@@ -141,7 +141,7 @@
                       <th scope="col">Depends on</th>
                     </tr>
                     <template x-for="item in model.att_extends.split(';')" :key="item">
-                      <tr>
+                      <tr x-show="item" x-cloak x-transition>
                         <td>
                           <span x-text="item"></span>
                           <i class="fa-regular fa-trash-can float-end"

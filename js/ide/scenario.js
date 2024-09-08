@@ -15,6 +15,19 @@ function fetch_flowvars_from_scenario(scenario,flow_vars,index){
     });
 }
 
+async function extract_parent_vars(parent,flow_vars){
+    let parent_scenario = await Modeler.get("scenarios/" + parent + ".xml",true);
+    fetch_flowvars_from_scenario(parent_scenario,flow_vars,10000);
+    let parents = parent_scenario.att_extends.split(";");
+    for (let i = 0; i < parents.length; i++){
+        try{
+            await extract_parent_vars(parents[i],flow_vars);
+        }catch{}
+    }
+}
+
+var inherited = [];
+
 window.Scenario = {
     remove_dependency: function(scenario,dependency){
         scenario.att_extends = scenario.att_extends.replace(dependency, '').replace(';;',';');
@@ -28,6 +41,7 @@ window.Scenario = {
     prepare: function(scenario){
         scenario.activity = make_sure_is_list(scenario.activity);
         scenario.activity = scenario.activity.map(activity => Scenario.prepare_activity(activity));
+        if(!scenario.att_extends){scenario.att_extends = ""};
         return scenario;
     },
     prepare_activity: function(activity){
@@ -82,11 +96,16 @@ window.Scenario = {
     get_flowvars: async function(scenario,index){
         let flow_vars = [];
         fetch_flowvars_from_scenario(scenario,flow_vars,index)
-        let parents = scenario.att_extends.split(";");
-        for (let i = 0; i < parents.length; i++){
-            let parent_scenario = await Modeler.get("scenarios/" + parents[i] + ".xml",true);
-            fetch_flowvars_from_scenario(parent_scenario,flow_vars,10000);
+        if (inherited.length == 0){
+            let parents = scenario.att_extends.split(";");
+            for (let i = 0; i < parents.length; i++){
+                try{
+                    await extract_parent_vars(parents[i],inherited);
+                }catch{}
+            }
         }
+        flow_vars = flow_vars.concat(inherited);
+        flow_vars = [...new Set(flow_vars)];
         flow_vars.push("#user_name#");
         flow_vars.push("#user_number#");
         return flow_vars;
