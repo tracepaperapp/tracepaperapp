@@ -18,7 +18,7 @@
                     <span x-text="Language.get('qa.' + activity.att_type)"></span>:
                     <span x-text="activity.att_description"></span>
                 </div>
-                <div class="collapse-content" x-data="{flow_vars: []}" x-init="flow_vars = Scenario.get_flowvars(model,index)">
+                <div class="collapse-content" x-data="{flow_vars: []}" x-init="flow_vars = await Scenario.get_flowvars(model,index)">
                     <div class="flex">
                         <div class="flex-initial w-[100%]">
                             <ui-activity></ui-activity>
@@ -57,7 +57,7 @@
 
                     <ul class="menu bg-primary-content w-full rounded-box" x-show="!activity.att_type" x-cloak x-transition>
                         <template x-for="type in qa_activity_types" :key="type">
-                            <li><a @click.debounce.stop="title = Language.get('qa.' + type);activity.att_type = type;flow_vars = Scenario.get_flowvars(model,model.activity.length)">
+                            <li><a @click.debounce.stop="title = Language.get('qa.' + type);activity.att_type = type;flow_vars = await Scenario.get_flowvars(model,model.activity.length)">
                                 <span x-text="Language.get('qa.' + type)"></span>
                             </a></li>
                         </template>

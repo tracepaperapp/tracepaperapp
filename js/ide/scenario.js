@@ -1,4 +1,20 @@
 let scenario_cache = {};
+
+function fetch_flowvars_from_scenario(scenario,flow_vars,index){
+    scenario.activity.forEach((activity,i) => {
+        if ( i < index){
+            if (activity.att_type == "set-variables"){
+                activity.input.forEach(input => {
+                    flow_vars.push(`#${input.att_name}#`);
+                });
+            }
+            activity["extract-value"].forEach(value => {
+                flow_vars.push(`#${value['att_put-key']}#`);
+            });
+        }
+    });
+}
+
 window.Scenario = {
     remove_dependency: function(scenario,dependency){
         scenario.att_extends = scenario.att_extends.replace(dependency, '').replace(';;',';');
@@ -63,20 +79,14 @@ window.Scenario = {
         }
         return queries;
     },
-    get_flowvars: function(scenario,index){
+    get_flowvars: async function(scenario,index){
         let flow_vars = [];
-        scenario.activity.forEach((activity,i) => {
-            if ( i < index){
-                if (activity.att_type == "set-variables"){
-                    activity.input.forEach(input => {
-                        flow_vars.push(`#${input.att_name}#`);
-                    });
-                }
-                activity["extract-value"].forEach(value => {
-                    flow_vars.push(`#${value['att_put-key']}#`);
-                });
-            }
-        });
+        fetch_flowvars_from_scenario(scenario,flow_vars,index)
+        let parents = scenario.att_extends.split(";");
+        for (let i = 0; i < parents.length; i++){
+            let parent_scenario = await Modeler.get("scenarios/" + parents[i] + ".xml",true);
+            fetch_flowvars_from_scenario(parent_scenario,flow_vars,10000);
+        }
         flow_vars.push("#user_name#");
         flow_vars.push("#user_number#");
         return flow_vars;
