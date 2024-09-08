@@ -228,7 +228,7 @@ window.Aggregate = {
     initialize_code_mapper: async function(file,model,handler){
         handler.mapping = [];
         handler['nested-mapping'] = [];
-        let code = '#self.isDeleted = "soft/hard"|LB|';
+        let code = '#self.isDeleted = "soft/hard/delayed"|LB|';
         let root = file.split("events/").at(0) + "root.xml";
         let document = await Modeler.get(root,true);
         let root_fields = model.field.map(x => x.att_name);
