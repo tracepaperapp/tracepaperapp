@@ -92,6 +92,9 @@
               <template x-for="field in event.field" :key="field.att_name">
                 <option :value="field.att_name" x-text="field.att_name" :selected="field.att_name == mapping.att_value"></option>
               </template>
+              <template x-for="field in event['nested-object']" :key="field.att_name">
+                <option :value="field.att_name" x-text="field.att_name" :selected="field.att_name == mapping.att_value"></option>
+              </template>
               <option value="#''">#''</option>
             </select>
           </template>
