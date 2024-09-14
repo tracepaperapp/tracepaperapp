@@ -3340,7 +3340,7 @@ window.View = {
         try{
             if(mapping.att_template && Object.keys(template).length == 0){
                     mapping.att_template.replace('{','').replace('}','').replaceAll(" ","").replaceAll("\n","").replaceAll('&quot;','').replaceAll('"',"").replaceAll("'","").split(',').forEach(x => {
-                        template[x.split(':').at(0)] = x.split(':').at(1).replace("value[","").replace("]","");
+                        template[x.split(':').at(0)] = x.split(':').at(1).replace("value[","").split("]").at(0);
                       });
                 }
             else {
@@ -3363,7 +3363,7 @@ window.View = {
     save_template: function(mapping,template){
         let mapping_template = '{\n';
         Object.keys(template).forEach( k => {
-            mapping_template += `"${k}": value["${template[k]}"],\n`;
+            mapping_template += `"${k}": value["${template[k]}"] if "${template[k]}" in value else "",\n`;
         });
         mapping_template += '}';
         mapping.att_template = mapping_template;
