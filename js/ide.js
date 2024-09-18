@@ -4,7 +4,7 @@ window.Expression = {
         let files = await FileSystem.listFiles();
         let expressions = files.filter(x => x.startsWith("expressions/") && x.endsWith(".xml"));
         expressions = await Promise.all(expressions.map(async x => await Modeler.get(x)));
-        return expressions.filter(x => x.att_type == 'ActorEventRole');
+        return expressions.filter(x => x.att_type == 'ActorEventRole'); 
     },
     get_keyfield_expressions: async function(){
         let files = await FileSystem.listFiles();
