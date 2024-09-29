@@ -42,6 +42,9 @@ async function connect_repository(){
     }catch(exception){
         console.error("could not connect repo -->",exception);
     }
+    // TODO check if not interferes with delete function
+    const files = await FileSystem.listFiles(); // Haal alle bestanden op in het model
+    window.ModelValidator.validateModel(files);
     setTimeout(async function(){
         console.log("Checkout branch", localStorage.project_drn + ":" + branch);
         try{

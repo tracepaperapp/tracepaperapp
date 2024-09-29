@@ -1,5 +1,6 @@
 
 let validation_enabled = false;
+//setTimeout(function(){validation_enabled = true},120000);
 setTimeout(function(){validation_enabled = true},10000);
 async function validate_and_repair_model(){
     if (!validation_enabled){return}
@@ -20,8 +21,13 @@ async function validate_and_repair_model(){
         await FileSystem.write("notifiers/SetupEnvironment.md", setup_environment_docs);
     }
 
+    /* auto repairs */
     for (let i = 0; i < files.length; i++){
         let file = files[i];
+
+        /* Auto repairs */
+
+        // Actor event
         if (file.startsWith("commands/") && file.endsWith(".xml")){
             let command = await Modeler.get(file,true);
             if (command.att_type != "ActorEvent"){
@@ -29,6 +35,8 @@ async function validate_and_repair_model(){
                 await Modeler.save_model(file,{event:command});
             }
         }
+
+        // Domain event
         if (file.startsWith("domain/") && file.includes("/events/") &&file.endsWith(".xml")){
             let event = await Modeler.get(file,true);
             if (event.att_type != "DomainEvent"){
@@ -36,6 +44,8 @@ async function validate_and_repair_model(){
                 await Modeler.save_model(file,{event:event});
             }
         }
+
+        // Aggregate sub collection
         if (file.startsWith("domain/") && file.includes("/entities/") && file.endsWith(".xml")){
             let entity = await Modeler.get(file,true);
             let array = deduplicate_on_attribute(entity.field,"att_name");
@@ -44,8 +54,9 @@ async function validate_and_repair_model(){
                 await Modeler.save_model(file,{"nested-object":entity});
             }
         }
-        //TODO Validations
     }
+
+    window.ModelValidator.validateModel(files);
 }
 
 let initial_config = `<draftsman project-name="#name#" xmlns="https://tracepaper.draftsman.io">

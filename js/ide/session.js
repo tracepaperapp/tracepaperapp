@@ -19,6 +19,7 @@ function open_frame(uri){
 }
 document.addEventListener('alpine:init', async () => {
     session = Alpine.reactive(session);
+    session.issues = [];
     label = Alpine.reactive(label);
     Alpine.data('session', () => ({
         session: session,

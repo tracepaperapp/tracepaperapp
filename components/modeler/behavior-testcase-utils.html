@@ -55,6 +55,28 @@
                                  })"></ui-add-button>
             </td>
           </template>
+          <template x-if="Array.isArray(value)">
+            <td>
+              <table class="table table-xs">
+                <template x-for="item in value" :key="item">
+                  <tr>
+                    <td x-text="item"></td>
+                    <td>
+                      <ui-delete-button
+                              @delete.once.stop="state[fkey] = state[fkey].filter(x => x != item);$dispatch('updated')"></ui-delete-button>
+                    </td>
+                  </tr>
+                </template>
+                <tr>
+                  <td></td>
+                  <td>
+                    <ui-add-button modal-title="Value"
+                                   @updated.debounce.stop="if($event.detail.value && !value.includes($event.detail.value)){value.push($event.detail.value);state[fkey] = value;$dispatch('updated')}"></ui-add-button>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </template>
           <template x-if="$prop('business-key') != fkey && typeof value !== 'object' && !Array.isArray(value) && value !== null">
             <td class="text-end">
               <ui-delete-button
@@ -76,7 +98,7 @@
                     <th scope="row" x-text="field.att_name"></th>
                     <td>
                       <button class="btn btn-ghost"
-                              @click="state[field.att_name] = field.att_type == 'String' ? 'text' : field.att_type == 'Boolean' ? false : 0"><i class="fa-solid fa-plus"></i></button>
+                              @click="state[field.att_name] = field.att_type == 'String' ? 'text' : field.att_type == 'Boolean' ? false : field.att_type == 'StringList' ? [] : 0"><i class="fa-solid fa-plus"></i></button>
                     </td>
                   </tr>
                 </template>
