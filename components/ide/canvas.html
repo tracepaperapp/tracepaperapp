@@ -5,13 +5,16 @@
        x-init="file = location.hash.replace('#','');type = Modeler.determine_type(file)" spellcheck="false">
     <div x-init="document.title = Navigation.get_name(file)"></div>
     <template x-if="type != 'dependencies'">
-      <div x-init="model = await Modeler.get(file)"></div>
+      <div x-init="model = await Modeler.get(file)" @custom-storage-update.window.debounce="model = await Modeler.get(file)"></div>
     </template>
     <template x-if="type == 'dependencies'">
-      <div x-init="model = await Modeler.get('config.xml')"></div>
+      <div x-init="model = await Modeler.get('config.xml')"
+           @custom-storage-update.window.debounce="model = await Modeler.get('config.xml')"></div>
     </template>
 
-    <div x-init="documentation = await Modeler.get(file.split('.').at(0) + '.md')"></div>
+    <div x-init="documentation = await Modeler.get(file.split('.').at(0) + '.md')"
+         @custom-storage-update.window.debounce="documentation = await Modeler.get(file.split('.').at(0) + '.md')"
+    ></div>
 
     <template x-if="session.exception">
       <div class="absolute top-5 right-5 z-50">

@@ -101,6 +101,7 @@ window.Session = {
             let data = JSON.parse(localStorage[localStorage.project]);
             delete data.initialized;
             delete data.exception;
+            delete data.unsaved_files;
             Object.assign(session,data);
         }
         session.saving = false;

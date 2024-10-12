@@ -32,7 +32,7 @@ async function connect_repository(){
     } else {
         if(await FileSystem.staged_files()){
             console.log("local changes found, push to remote");
-            await push_to_remote();
+            await commit_files_locally();
             await sleep(1000);
         }else{
             console.log("Pull", localStorage.project_name);
@@ -136,21 +136,69 @@ window.FileSystem = {
           },
           message: message
         });
-        let pushResult = await git.push({
-          fs,
-          http,
-          dir: dir,
-          remote: 'origin',
-          force: true,
-          ref: branch,
-          corsProxy: proxy
-        })
-        await FileSystem.pull();
     },
+    checkForUnpushedCommits: async function() {
+      try {
+        // Haal de lokale HEAD commit hash op
+        const localCommit = await git.resolveRef({ fs, dir, ref: branch });
+
+        // Haal de remote HEAD commit hash op
+        const remoteCommit = await git.resolveRef({
+          fs,
+          dir,
+          ref: `origin/${branch}`,
+        });
+
+        // Vergelijk de hashes
+        if (localCommit !== remoteCommit) {
+          session.unsaved_files = true;
+        } else {
+          session.unsaved_files = false;
+        }
+      } catch (err) {
+        console.error('Fout tijdens het controleren op niet-gepushte commits:', err);
+      }
+    },
+    push: async function() {
+            try {
+              // Attempt to push changes
+              await FileSystem.pull();
+              let pushResult = await git.push({
+                fs,
+                http,
+                dir: dir,
+                remote: 'origin',
+                force: true,
+                ref: branch,
+                corsProxy: proxy
+              });
+              console.log('Push successful:', pushResult);
+
+              // Pull after a successful push
+              await FileSystem.pull();
+              console.log('Pull successful after push');
+            } catch (err) {
+              // Log any errors that occur during the push or pull process
+              console.error('Error during push or pull operation:', err);
+            }
+          },
     pull: async function(){
-        await git.fetch({fs,dir: dir,http: http});
-        await git.pull({fs,http,dir: dir});
-        session.last_pull = getCurrentTime();
+          localStorage.pulling = true;
+          try {
+            await git.fetch({ fs, dir, http });
+            await git.pull({ fs, http, dir });
+          } catch (err) {
+            console.error('Error during pull operation:', err);
+
+            // If there is a merge conflict error, resolve it by forcing local changes
+            if (err.message.includes('Merge conflict')) {
+              await forceLocalMerge();
+            }
+          } finally {
+            session.last_pull = getCurrentTime();
+            await sleep(1000);
+            localStorage.pulling = false;
+          }
     },
     checkout_branch: async function(branch){
         await git.fetch({
@@ -199,7 +247,7 @@ if (location.pathname != "/"){
 
 var pull_countdown = 60;
 var push_lock = false;
-async function push_to_remote(){
+async function commit_files_locally(){
     if (!filesystemInitialized){return;};
     await validate_and_repair_model();
     if(await FileSystem.staged_files()){
@@ -217,24 +265,28 @@ async function push_to_remote(){
         }catch(err){
             console.error(err)
             console.log("Going to force pull");
-            let repo = sessionStorage.checkout;
-            sessionStorage.removeItem("checkout");
-            indexedDB.deleteDatabase(repo);
-            location.reload();
+            if (confirm("Encountered an issue, this can be solved with a forced pull but you will lose all local changes. Do you want to continue?")){
+                let repo = sessionStorage.checkout;
+                sessionStorage.removeItem("checkout");
+                indexedDB.deleteDatabase(repo);
+                location.reload();
+            }
         }finally{
             push_lock = false;
         }
     } else {
         session.saving = false;
+        FileSystem.checkForUnpushedCommits();
         pull_countdown -= 1;
         if (pull_countdown == 0){
             pull_countdown = 60;
             await FileSystem.pull();
+            Navigation.soft_reload();
         }
     }
 }
 if (location.pathname == "/"){
-    setInterval(push_to_remote,5000);
+    setInterval(commit_files_locally,1000);
 }
 
 function getCurrentTime() {
@@ -252,4 +304,53 @@ window.generateBuildId = function() {
   let hour = now.getHours().toString().padStart(2, '0');
   let minute = now.getMinutes().toString().padStart(2, '0');
   return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+async function forceLocalMerge() {
+  try {
+    console.log("Force merging local changes...");
+
+    // Fetch the latest changes from the remote repository
+    await git.fetch({ fs, http, dir });
+
+    // Merge, forcing local changes to overwrite conflicts
+    let mergeResult = await git.merge({
+      fs,
+      dir,
+      ours: branch,
+      theirs: `origin/${branch}`,
+    });
+
+    // Check if the merge failed (i.e., conflicts exist)
+    if (mergeResult.failed) {
+      console.log('Conflicts found, forcing local changes...');
+
+      // Get the list of conflicting files and forcefully add them to the index
+      const statusMatrix = await git.statusMatrix({ fs, dir });
+
+      for (let [filepath, , workdirStatus, stageStatus] of statusMatrix) {
+        if (workdirStatus === 2 && stageStatus === 3) {
+          // File with conflict: stage the local version to resolve the conflict
+          await git.add({ fs, dir, filepath });
+        }
+      }
+
+      // Commit the resolved conflicts with a message
+      await git.commit({
+        fs,
+        dir,
+        author: {
+          name: context.fullName,
+          email: context.username + '@example.com',
+        },
+        message: 'Forcefully resolved merge conflicts by keeping local changes',
+      });
+
+      console.log('Merge conflicts resolved by keeping local changes.');
+    } else {
+      console.log('Merge successful with no conflicts.');
+    }
+  } catch (err) {
+    console.error('An error occurred during the force merge:', err);
+  }
 }

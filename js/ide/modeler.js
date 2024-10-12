@@ -432,8 +432,20 @@ window.Modeler = {
     }
 }
 
+window.addEventListener('storage', (event) => {
+    if (event.key && event.newValue && event.key === "pulling" && event.newValue === "true") {
+        model_cache = {};
+    }
+    if (event.key && event.newValue && event.key === "pulling" && event.newValue === "false") {
+        window.dispatchEvent(new CustomEvent('custom-storage-update'));
+    }
+});
 async function sync_to_disk(){
-    if (localStorage.project_drn && Modeler.auto_save && !sessionStorage.lock &&sessionStorage.checkout == localStorage.project_drn){
+    if (localStorage.project_drn &&
+        Modeler.auto_save &&
+        !sessionStorage.lock &&
+        localStorage.pulling == "false" &&
+        sessionStorage.checkout == localStorage.project_drn){
         sessionStorage.lock = "locked";
         await Modeler.sync_to_disk();
     }

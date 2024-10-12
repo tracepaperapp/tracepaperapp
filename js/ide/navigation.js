@@ -9,7 +9,7 @@ window.Navigation = {
             Navigation.force_reload();
             return;
         }
-        push_to_remote();
+        //TODO kan dit weg? push_to_remote();
         session.tab = file;
         location.hash = file;
         if (!session.tabs.includes(file)){

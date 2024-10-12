@@ -81,7 +81,7 @@
       <a class="btn btn-ghost text-xl" x-text="localStorage.project_name"></a>
       <span class="loading loading-infinity loading-md" x-show="session.loading" x-transition x-cloak></span>
     </div>
-    <div class="navbar-end" x-import="ide/model-wizard;ide/search;ide/trigger-build;ide/issues-view">
+    <div class="navbar-end" x-import="ide/model-wizard;ide/search;ide/trigger-build;ide/save-button;ide/issues-view">
       <template x-if="!window.chrome">
         <div class="link" style="color: red;">A <a href="https://en.wikipedia.org/wiki/Chromium_(web_browser)" target="_blank">chromium based browser is recommended!</div>
       </template>
@@ -94,9 +94,14 @@
         <ui-model-wizard></ui-model-wizard>
       </template>
       <ui-search></ui-search>
+      <template x-if="!session.editing_disabled && session.unsaved_files">
+        <ui-save-button></ui-save-button>
+      </template>
+      <!--
       <template x-if="!session.editing_disabled">
         <ui-trigger-build></ui-trigger-build>
       </template>
+      -->
       <ui-build-history></ui-build-history>
       <ui-issues></ui-issues>
 

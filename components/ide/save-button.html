@@ -1,0 +1,31 @@
+<template x-component="save-button">
+    <div class="tooltip tooltip-bottom"
+         x-data="{disabled: false, buildId: ''}"
+         data-tip="Push changes & build">
+
+        <draftsman-mutation authenticated command="AutoBuildProject" x-include="/prepared-statements/commands/BuildProject.txt">
+        </draftsman-mutation>
+
+        <draftsman-trace command="AutoBuildProject"
+                         status="success"
+                         @trace="Navigation.open('build/' + buildId)">
+        </draftsman-trace>
+
+        <button @click.debounce="
+                    disabled = true;
+                    buildId = generateBuildId();
+                    await FileSystem.push();
+                    await sleep(1000);
+                    await FileSystem.pull();
+                    Navigation.soft_reload();
+                    $store.mutation.send('AutoBuildProject',{
+                        drn: localStorage.project_drn,
+                        buildId: buildId
+                    });
+                    setTimeout(function(){disabled=false},5000)"
+                :disabled="disabled || !session.last_pull || session.issues.length != 0"
+                class="btn btn-circle btn-outline btn-success m-1">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+        </button>
+    </div>
+</template>
