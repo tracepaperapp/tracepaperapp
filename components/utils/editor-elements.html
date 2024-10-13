@@ -50,7 +50,7 @@
   <div x-data="{countdown: -1,interval: null}" x-effect="if(countdown==0){clearInterval(interval);countdown=-1;$dispatch('delete')}">
     <button class="btn btn-ghost" @click="
       if(countdown == -1){
-        countdown = 5;
+        countdown = 0;
         interval = setInterval(function(){countdown -= 1},1000);
       } else {
         clearInterval(interval);
@@ -165,12 +165,13 @@
         <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
         <p class="py-4">
           <input type="text"
-                 @keyup.enter.debounce="
+                 @focusout.debounce="
                  let value = $el.value;
                  if($prop('pattern')){
                   if (check_pattern(value,$prop('pattern'))){
                     failed = false;
                   $dispatch('updated',{value:value});
+                  $el.value = '';
                   document.getElementById(id).close()
                   } else {
                   failed = true;
@@ -178,6 +179,7 @@
                   } else {
                   failed = false;
                   $dispatch('updated',{value:value});
+                  $el.value = '';
                   document.getElementById(id).close()
                   }"
                  class="input w-full" />
