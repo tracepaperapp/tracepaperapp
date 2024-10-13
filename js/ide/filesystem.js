@@ -124,7 +124,10 @@ window.FileSystem = {
         }
     },
     auto_commit: async function(){
-        await FileSystem.commit("Auto commit");
+        if (!sessionStorage.getItem("commit-message")) {
+            sessionStorage.setItem("commit-message",prompt("What are you working on?"));
+        }
+        await FileSystem.commit(sessionStorage.getItem("commit-message"));
     },
     commit: async function(message){
         let sha = await git.commit({
@@ -173,7 +176,7 @@ window.FileSystem = {
                 corsProxy: proxy
               });
               console.log('Push successful:', pushResult);
-
+              sessionStorage.removeItem("commit-message");
               // Pull after a successful push
               await FileSystem.pull();
               console.log('Pull successful after push');

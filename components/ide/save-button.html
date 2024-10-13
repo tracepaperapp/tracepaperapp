@@ -11,21 +11,23 @@
                          @trace="Navigation.open('build/' + buildId)">
         </draftsman-trace>
 
-        <button @click.debounce="
+        <template x-if="!session.editing_disabled && session.unsaved_files">
+            <button @click.debounce="
                     disabled = true;
                     buildId = generateBuildId();
                     await FileSystem.push();
                     await sleep(1000);
-                    await FileSystem.pull();
                     Navigation.soft_reload();
                     $store.mutation.send('AutoBuildProject',{
                         drn: localStorage.project_drn,
                         buildId: buildId
                     });
                     setTimeout(function(){disabled=false},5000)"
-                :disabled="disabled || !session.last_pull || session.issues.length != 0"
-                class="btn btn-circle btn-outline btn-success m-1">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-        </button>
+                    :disabled="disabled || !session.last_pull || session.issues.length != 0"
+                    class="btn btn-circle btn-outline btn-success m-1">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+            </button>
+        </template>
+
     </div>
 </template>
