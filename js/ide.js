@@ -138,6 +138,14 @@ async function connect_repository(){
 }
 
 window.FileSystem = {
+    force_pull: function(){
+        if (confirm("All unpublished changes will be lost. Do you want to continue?")){
+            let repo = sessionStorage.checkout;
+            sessionStorage.removeItem("checkout");
+            indexedDB.deleteDatabase(repo);
+            location.reload();
+        }
+    },
     listFiles: async function(){
         return await git.listFiles({ fs, dir: dir, ref: 'HEAD' });
     },
@@ -224,16 +232,89 @@ window.FileSystem = {
           ref: `origin/${branch}`,
         });
 
-        // Vergelijk de hashes
+        // Als de hashes niet overeenkomen, zoek naar niet-gepushte bestanden
         if (localCommit !== remoteCommit) {
+          let modifiedFiles = {};
+
+          // Vergelijk de laatste lokale commit met de remote HEAD om de niet-gepushte wijzigingen te vinden
+          await git.walk({
+            fs,
+            dir,
+            trees: [
+              git.TREE({ ref: localCommit }),  // laatste lokale commit
+              git.TREE({ ref: remoteCommit })  // remote HEAD
+            ],
+            map: async (filepath, [A, B]) => {
+              if (filepath == "." || !filepath.includes(".")) {
+                //pass
+              } else if (A && B && (await A.oid()) !== (await B.oid())) {
+                modifiedFiles[filepath] = "changed"; // Alleen gewijzigde bestanden toevoegen
+              } else if (A && !B) {
+                modifiedFiles[filepath] = "added"; // Toegevoegde bestanden toevoegen
+              } else if (!A && B) {
+                modifiedFiles[filepath] = "removed"; // Verwijderde bestanden toevoegen
+              }
+            }
+          });
+
           session.unsaved_files = true;
+          session.pending_commits = Object.keys(modifiedFiles).length; // Aantal unieke gewijzigde bestanden
+          session.modified_files = modifiedFiles;
         } else {
           session.unsaved_files = false;
+          session.pending_commits = 0;
+          session.modified_files = null;
         }
       } catch (err) {
-        console.error('Fout tijdens het controleren op niet-gepushte commits:', err);
+        console.error('Fout tijdens het controleren op niet-gepushte bestanden:', err);
       }
     },
+//    checkForUnpushedCommits: async function() {
+//      try {
+//        // Haal de lokale HEAD commit hash op
+//        const localCommit = await git.resolveRef({ fs, dir, ref: branch });
+//
+//        // Haal de remote HEAD commit hash op
+//        const remoteCommit = await git.resolveRef({
+//          fs,
+//          dir,
+//          ref: `origin/${branch}`,
+//        });
+//
+//        // Als de hashes niet overeenkomen, zoek naar niet-gepushte commits
+//        if (localCommit !== remoteCommit) {
+//          const localCommits = await git.log({
+//            fs,
+//            dir,
+//            ref: branch,
+//            depth: 1000, // Het maximum aantal commits dat je wilt controleren
+//          });
+//
+//          const remoteCommits = await git.log({
+//            fs,
+//            dir,
+//            ref: `origin/${branch}`,
+//            depth: 1000,
+//          });
+//
+//          // Filter de commits die in lokaal maar niet in remote voorkomen
+//          const unpushedCommits = localCommits.filter(
+//            (localCommit) =>
+//              !remoteCommits.some(
+//                (remoteCommit) => remoteCommit.oid === localCommit.oid
+//              )
+//          );
+//
+//          session.unsaved_files = true;
+//          session.pending_commits = unpushedCommits.length; // Hier wordt het aantal niet-gepushte commits geteld
+//        } else {
+//          session.unsaved_files = false;
+//          session.pending_commits = 0;
+//        }
+//      } catch (err) {
+//        console.error('Fout tijdens het controleren op niet-gepushte commits:', err);
+//      }
+//    },
     push: async function() {
             try {
               // Attempt to push changes
@@ -339,13 +420,6 @@ async function commit_files_locally(){
             SearchEngine.index(true);
         }catch(err){
             console.error(err)
-            console.log("Going to force pull");
-            if (confirm("Encountered an issue, this can be solved with a forced pull but you will lose all local changes. Do you want to continue?")){
-                let repo = sessionStorage.checkout;
-                sessionStorage.removeItem("checkout");
-                indexedDB.deleteDatabase(repo);
-                location.reload();
-            }
         }finally{
             push_lock = false;
         }
@@ -3358,7 +3432,7 @@ window.ModelValidator = {
     },
 
     async validateModel(files) {
-        return;//TODO finish validation
+        //return;//TODO finish validation
         this.errors = [];
         for (const file of files.filter(x => !x.endsWith(".log") && !x.endsWith(".md"))) {
             const type = Modeler.determine_type(file);

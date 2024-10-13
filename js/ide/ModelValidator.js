@@ -131,7 +131,7 @@ window.ModelValidator = {
     },
 
     async validateModel(files) {
-        return;//TODO finish validation
+        //return;//TODO finish validation
         this.errors = [];
         for (const file of files.filter(x => !x.endsWith(".log") && !x.endsWith(".md"))) {
             const type = Modeler.determine_type(file);

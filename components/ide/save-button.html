@@ -11,22 +11,78 @@
                          @trace="Navigation.open('build/' + buildId)">
         </draftsman-trace>
 
+<!--        <template x-if="!session.editing_disabled && session.unsaved_files">-->
+<!--            <div class="relative inline-block">-->
+<!--                &lt;!&ndash; Button &ndash;&gt;-->
+<!--                <button-->
+<!--                        @click.debounce="-->
+<!--      disabled = true;-->
+<!--      buildId = generateBuildId();-->
+<!--      await FileSystem.push();-->
+<!--      await sleep(1000);-->
+<!--      Navigation.soft_reload();-->
+<!--      $store.mutation.send('AutoBuildProject', {-->
+<!--        drn: localStorage.project_drn,-->
+<!--        buildId: buildId-->
+<!--      });-->
+<!--      setTimeout(function() { disabled = false }, 5000)"-->
+<!--                        :disabled="disabled || !session.last_pull || session.issues.length != 0"-->
+<!--                        class="btn btn-circle btn-outline btn-success m-1">-->
+<!--                    <i class="fa-solid fa-cloud-arrow-up"></i>-->
+<!--                </button>-->
+
+<!--                &lt;!&ndash; Badge for showing number (e.g., pending commits) &ndash;&gt;-->
+<!--                <span v-if="session.pending_commits > 0"-->
+<!--                      x-text="session.pending_commits"-->
+<!--                      class="absolute top-0 right-0 inline-block px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">-->
+<!--  </span>-->
+<!--            </div>-->
+<!--        </template>-->
+
         <template x-if="!session.editing_disabled && session.unsaved_files">
-            <button @click.debounce="
-                    disabled = true;
-                    buildId = generateBuildId();
-                    await FileSystem.push();
-                    await sleep(1000);
-                    Navigation.soft_reload();
-                    $store.mutation.send('AutoBuildProject',{
-                        drn: localStorage.project_drn,
-                        buildId: buildId
-                    });
-                    setTimeout(function(){disabled=false},5000)"
-                    :disabled="disabled || !session.last_pull || session.issues.length != 0"
-                    class="btn btn-circle btn-outline btn-success m-1">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-            </button>
+            <div class="relative inline-block" x-data="{showModal: false}">
+                <!-- Button -->
+                <button
+                        @mouseover="showModal = true"
+                        @mouseleave="showModal = false"
+                        @click.debounce="
+                        if (confirm('Push changes to remote and start build?')){
+        disabled = true;
+        buildId = generateBuildId();
+        await FileSystem.push();
+        await sleep(1000);
+        Navigation.soft_reload();
+        $store.mutation.send('AutoBuildProject', {
+          drn: localStorage.project_drn,
+          buildId: buildId
+        });
+        setTimeout(function() { disabled = false }, 5000)}"
+                        :disabled="disabled || !session.last_pull || session.issues.length != 0"
+                        class="btn btn-circle btn-outline btn-success m-1">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </button>
+
+                <!-- Badge for showing number (e.g., pending commits) -->
+                <span v-if="session.pending_commits > 0"
+                      x-text="session.pending_commits"
+                      class="absolute top-0 right-0 inline-block px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+    </span>
+
+                <!-- Modal -->
+                <div x-show="showModal" x-transition
+                     class="absolute left-0 mt-9 w-300 p-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                    <table class="table table-xs">
+                        <template x-for="(status, file) in session.modified_files" :key="file">
+                            <tr>
+                                <td>
+                                    <span x-text="file"></span><br>
+                                    <span x-text="status"></span>
+                                </td>
+                            </tr>
+                        </template>
+                    </table>
+                </div>
+            </div>
         </template>
 
     </div>
