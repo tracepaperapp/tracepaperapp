@@ -66,14 +66,33 @@ async function connect_repository(){
 }
 
 window.FileSystem = {
-    force_pull: function(){
+    force_pull: async function(){
         if (confirm("All unpublished changes will be lost. Do you want to continue?")){
+            await FileSystem.generate_zip();
+            await sleep(1000);
             let repo = sessionStorage.checkout;
             sessionStorage.removeItem("checkout");
             indexedDB.deleteDatabase(repo);
             location.reload();
         }
     },
+    generate_zip: async function() {
+        const zip = new JSZip();
+        const files = await FileSystem.listFiles();
+
+        for (const file of files) {
+          const content = await FileSystem.read(file);
+          zip.file(file, content);
+        }
+
+        // Generate the zip file and trigger the download
+        zip.generateAsync({ type: 'blob' }).then((content) => {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(content);
+          link.download = localStorage.project_name + '-model-'+ generateBuildId().replaceAll("-","").replace("T","").replace(":","") +'.zip';
+          link.click();
+        });
+      },
     listFiles: async function(){
         return await git.listFiles({ fs, dir: dir, ref: 'HEAD' });
     },
