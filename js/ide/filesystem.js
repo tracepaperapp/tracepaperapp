@@ -43,8 +43,10 @@ async function connect_repository(){
         console.error("could not connect repo -->",exception);
     }
     // TODO check if not interferes with delete function
-    const files = await FileSystem.listFiles(); // Haal alle bestanden op in het model
-    window.ModelValidator.validateModel(files);
+    setTimeout(async () => {
+        let files = await FileSystem.listFiles();
+        await window.ModelValidator.validateModel(files);
+    }, 10000);
     setTimeout(async function(){
         console.log("Checkout branch", localStorage.project_drn + ":" + branch);
         try{
@@ -64,6 +66,7 @@ async function connect_repository(){
     },100);
 
 }
+var file_list_cache = null;
 
 window.FileSystem = {
     force_pull: async function(){
@@ -94,16 +97,26 @@ window.FileSystem = {
         });
       },
     listFiles: async function(){
-        return await git.listFiles({ fs, dir: dir, ref: 'HEAD' });
+        if (file_list_cache == null){
+            file_list_cache = await git.listFiles({ fs, dir: dir, ref: 'HEAD' });
+            setTimeout(function(){file_list_cache = null},10000);
+        }
+        return [...file_list_cache];
     },
     read: async function(filepath){
+        await sleep(Math.floor(Math.random() * 5 ));
         try{
             return await fs.promises.readFile(dir + "/" + filepath, "utf8");
         } catch {
             if (filepath.endsWith(".md")){
                 return "documentation";
             } else {
-                return "file not found";
+                try{
+                    await sleep(Math.floor(Math.random() * 5 ));
+                    return await fs.promises.readFile(dir + "/" + filepath, "utf8");
+                } catch {
+                    return "file not found";
+                }
             }
         }
     },
@@ -382,7 +395,7 @@ async function commit_files_locally(){
     }
 }
 if (location.pathname == "/"){
-    setInterval(commit_files_locally,1000);
+    setInterval(commit_files_locally,5000);
 }
 
 function getCurrentTime() {

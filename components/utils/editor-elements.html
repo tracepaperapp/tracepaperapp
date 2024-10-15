@@ -165,6 +165,7 @@
         <h3 class="font-bold text-lg" x-text="$prop('modal-title')"></h3>
         <p class="py-4">
           <input type="text"
+                 @keyup.enter.debounce="$el.blur()"
                  @focusout.debounce="
                  let value = $el.value;
                  if($prop('pattern')){

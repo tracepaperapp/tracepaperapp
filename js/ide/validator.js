@@ -55,8 +55,6 @@ async function validate_and_repair_model(){
             }
         }
     }
-
-    window.ModelValidator.validateModel(files);
 }
 
 let initial_config = `<draftsman project-name="#name#" xmlns="https://tracepaper.draftsman.io">
