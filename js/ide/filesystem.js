@@ -46,7 +46,7 @@ async function connect_repository(){
     setTimeout(async () => {
         let files = await FileSystem.listFiles();
         await window.ModelValidator.validateModel(files);
-    }, 10000);
+    }, 200);
     setTimeout(async function(){
         console.log("Checkout branch", localStorage.project_drn + ":" + branch);
         try{
@@ -218,7 +218,11 @@ window.FileSystem = {
           });
 
           session.unsaved_files = true;
-          session.pending_commits = Object.keys(modifiedFiles).length; // Aantal unieke gewijzigde bestanden
+          let pending = Object.keys(modifiedFiles).length; // Aantal unieke gewijzigde bestanden
+          if (session.pending_commits != pending){
+            playAlert(JSON.parse(localStorage["_x_ready_sound"]));
+          }
+          session.pending_commits = pending;
           session.modified_files = modifiedFiles;
         } else {
           session.unsaved_files = false;
@@ -318,38 +322,51 @@ if (location.pathname != "/"){
 var pull_countdown = 60;
 var push_lock = false;
 async function commit_files_locally(){
-    if (!filesystemInitialized){return;};
-    await validate_and_repair_model();
-    if(await FileSystem.staged_files()){
-        if (push_lock){return};
-        push_lock = true;
-        try{
-            session.saving = true;
-            await FileSystem.auto_commit();
+    try{
+        if (!filesystemInitialized){return;};
+        if(await FileSystem.staged_files()){
+            if (push_lock){return};
+            push_lock = true;
+            try{
+                let prev = session.issues.length;
+                let errors = await validate_and_repair_model();
+                if (errors.length > prev){
+                    playAlert(JSON.parse(localStorage["_x_issue_sound"]));
+                }
+                if (session.pending_commits != 0 &&
+                    prev != 0 && errors.length == 0){
+                    playAlert(JSON.parse(localStorage["_x_ready_sound"]));
+                }
+                session.saving = true;
+                await FileSystem.auto_commit();
+                session.saving = false;
+                session.last_save = getCurrentTime();
+                await sleep(1000);
+                await FileSystem.pull();
+                Navigation.soft_reload();
+                SearchEngine.index(true);
+            }catch(err){
+                console.error(err)
+            }finally{
+                push_lock = false;
+            }
+        }
+        else {
             session.saving = false;
-            session.last_save = getCurrentTime();
-            await sleep(1000);
-            await FileSystem.pull();
-            Navigation.soft_reload();
-            SearchEngine.index(true);
-        }catch(err){
-            console.error(err)
-        }finally{
-            push_lock = false;
+            FileSystem.checkForUnpushedCommits();
+            pull_countdown -= 1;
+            if (pull_countdown == 0){
+                pull_countdown = 60;
+                await FileSystem.pull();
+                Navigation.soft_reload();
+            }
         }
-    } else {
-        session.saving = false;
-        FileSystem.checkForUnpushedCommits();
-        pull_countdown -= 1;
-        if (pull_countdown == 0){
-            pull_countdown = 60;
-            await FileSystem.pull();
-            Navigation.soft_reload();
-        }
+    } finally {
+        setTimeout(commit_files_locally,1000);
     }
 }
 if (location.pathname == "/"){
-    setInterval(commit_files_locally,5000);
+    setTimeout(commit_files_locally,1000);
 }
 
 function getCurrentTime() {

@@ -118,7 +118,7 @@ async function connect_repository(){
     setTimeout(async () => {
         let files = await FileSystem.listFiles();
         await window.ModelValidator.validateModel(files);
-    }, 10000);
+    }, 200);
     setTimeout(async function(){
         console.log("Checkout branch", localStorage.project_drn + ":" + branch);
         try{
@@ -290,7 +290,11 @@ window.FileSystem = {
           });
 
           session.unsaved_files = true;
-          session.pending_commits = Object.keys(modifiedFiles).length; // Aantal unieke gewijzigde bestanden
+          let pending = Object.keys(modifiedFiles).length; // Aantal unieke gewijzigde bestanden
+          if (session.pending_commits != pending){
+            playAlert(JSON.parse(localStorage["_x_ready_sound"]));
+          }
+          session.pending_commits = pending;
           session.modified_files = modifiedFiles;
         } else {
           session.unsaved_files = false;
@@ -390,38 +394,51 @@ if (location.pathname != "/"){
 var pull_countdown = 60;
 var push_lock = false;
 async function commit_files_locally(){
-    if (!filesystemInitialized){return;};
-    await validate_and_repair_model();
-    if(await FileSystem.staged_files()){
-        if (push_lock){return};
-        push_lock = true;
-        try{
-            session.saving = true;
-            await FileSystem.auto_commit();
+    try{
+        if (!filesystemInitialized){return;};
+        if(await FileSystem.staged_files()){
+            if (push_lock){return};
+            push_lock = true;
+            try{
+                let prev = session.issues.length;
+                let errors = await validate_and_repair_model();
+                if (errors.length > prev){
+                    playAlert(JSON.parse(localStorage["_x_issue_sound"]));
+                }
+                if (session.pending_commits != 0 &&
+                    prev != 0 && errors.length == 0){
+                    playAlert(JSON.parse(localStorage["_x_ready_sound"]));
+                }
+                session.saving = true;
+                await FileSystem.auto_commit();
+                session.saving = false;
+                session.last_save = getCurrentTime();
+                await sleep(1000);
+                await FileSystem.pull();
+                Navigation.soft_reload();
+                SearchEngine.index(true);
+            }catch(err){
+                console.error(err)
+            }finally{
+                push_lock = false;
+            }
+        }
+        else {
             session.saving = false;
-            session.last_save = getCurrentTime();
-            await sleep(1000);
-            await FileSystem.pull();
-            Navigation.soft_reload();
-            SearchEngine.index(true);
-        }catch(err){
-            console.error(err)
-        }finally{
-            push_lock = false;
+            FileSystem.checkForUnpushedCommits();
+            pull_countdown -= 1;
+            if (pull_countdown == 0){
+                pull_countdown = 60;
+                await FileSystem.pull();
+                Navigation.soft_reload();
+            }
         }
-    } else {
-        session.saving = false;
-        FileSystem.checkForUnpushedCommits();
-        pull_countdown -= 1;
-        if (pull_countdown == 0){
-            pull_countdown = 60;
-            await FileSystem.pull();
-            Navigation.soft_reload();
-        }
+    } finally {
+        setTimeout(commit_files_locally,1000);
     }
 }
 if (location.pathname == "/"){
-    setInterval(commit_files_locally,5000);
+    setTimeout(commit_files_locally,1000);
 }
 
 function getCurrentTime() {
@@ -1822,6 +1839,8 @@ async function validate_and_repair_model(){
             }
         }
     }
+
+    return await window.ModelValidator.validateModel(files);
 }
 
 let initial_config = `<draftsman project-name="#name#" xmlns="https://tracepaper.draftsman.io">
@@ -2966,6 +2985,294 @@ window.addEventListener("message", async function(event) {
     }
 });
 
+// Copied from https://github.com/azer/alert
+
+;(function(process){  require.m = { 0:[function(require,module,exports){ window.playAlert = require('./');
+ },{"./":1}],1:[function(require,module,exports){ var play    = require('play-audio'),
+    content = require('./content'),
+    playing = play().autoplay();
+
+module.exports = playAlert;
+module.exports.content = content;
+module.exports.volume = playing.volume;
+module.exports.player = playing;
+
+function playAlert(name){
+  name || ( name = 'bottle' );
+
+  if (!content[name]) return;
+
+  playing.src(content[name]);
+}
+ },{"./content":2,"play-audio":3}],2:[function(require,module,exports){ module.exports = {
+  bottle: ['http://i.cloudup.com/y29czRwU3R.m4a', 'http://i.cloudup.com/baNnhH1I7M.ogg'],
+  funk: ['http://i.cloudup.com/KkfWRzYC77.m4a', 'http://i.cloudup.com/7SSbOm5XZS.ogg'],
+  glass: ['http://i.cloudup.com/E021I9zUG3.m4a', 'http://i.cloudup.com/3gveeCqUD6.ogg'],
+  morse: ['http://i.cloudup.com/h7r7MsF4q3.m4a', 'http://i.cloudup.com/b0EXCVaceT.ogg'],
+  pop: ['http://i.cloudup.com/vTka9yOizT.m4a', 'http://i.cloudup.com/4TnDj0v9GE.ogg'],
+  purr: ['http://i.cloudup.com/5HJSHCtOzZ.m4a', 'http://i.cloudup.com/YdDNGA0sj5.ogg'],
+  submarine: ['http://i.cloudup.com/r4ZENSF0Hu.m4a', 'http://i.cloudup.com/2OPb5OYAI2.ogg'],
+  tink: ['http://i.cloudup.com/nCtoNq3kJN.m4a', 'http://i.cloudup.com/SNi1RX8iwb.ogg']
+};
+ },{}],3:[function(require,module,exports){ module.exports = require('./lib/player');
+ },{"./lib/player":4}],4:[function(require,module,exports){ var newChain  = require('new-chain'),
+    src = require('./src'),
+    render = require('./render');
+
+module.exports = play;
+
+function play(urls, dom){
+  var el, chain, url;
+
+  dom || ( dom = document.documentElement );
+  el = render();
+  dom.appendChild(el);
+
+  chain = newChain({
+    autoplay: bool('autoplay'),
+    controls: bool('controls'),
+    load: method('load'),
+    loop: bool('loop'),
+    muted: bool('muted'),
+    on: on,
+    pause: method('pause'),
+    play: method('play'),
+    preload: bool('preload')
+  });
+
+  chain.currentTime = attr('currentTime');
+  chain.element = element;
+  chain.src = src.attr(el);
+  chain.volume = attr('volume');
+  chain.remove = remove;
+
+  chain.src(urls);
+
+  return chain;
+
+  function attr(name){
+    return function(value){
+      if ( arguments.length ) {
+        el[name] = value;
+        return chain;
+      }
+
+      return el[name];
+    };
+  }
+
+  function bool(name){
+    return function(value){
+      if (value === false) {
+        return el[name] = false;
+      }
+
+      return el[name] = true;
+    };
+  }
+
+  function element(){
+    return el;
+  }
+
+  function on(event, callback){
+    el.addEventListener(event, callback, false);
+  }
+
+  function method(name){
+    return function(){
+      return el[name].apply(el, arguments);
+    };
+  }
+
+  function remove(){
+    return el.parentNode.removeChild(el);
+  }
+
+}
+ },{"./src":5,"./render":7,"new-chain":10}],5:[function(require,module,exports){ var mimeOf = require("./mime");
+
+module.exports = {
+  attr: attr,
+  pick: pick
+};
+
+function attr(el){
+  var value;
+
+  return function(urls){
+    if (arguments.length) {
+      value = urls;
+      el.setAttribute('src', pick(el, value));
+    }
+
+    return value;
+  };
+}
+
+function pick(el, urls){
+  if(!urls) return;
+
+  if(typeof urls == 'string'){
+    return urls;
+  }
+
+  return urls.filter(function(url){
+    return !!el.canPlayType(mimeOf(url));
+  })[0];
+}
+ },{"./mime":6}],7:[function(require,module,exports){ var domify = require('domify'),
+    templates = require("./templates");
+
+module.exports = render;
+
+function render(src){
+  return domify(templates['audio.html']);
+}
+ },{"./templates":8,"domify":9}],8:[function(require,module,exports){ exports["audio.html"] = "<audio preload=\"auto\" /></audio>" },{}],6:[function(require,module,exports){ var table = {
+  aif  : "audio/x-aiff",
+  aiff : "audio/x-aiff",
+  wav  : "audio/x-wav",
+  mp3  : 'audio/mpeg',
+  m3u  : "audio/x-mpegurl",
+  mid  : "audio/midi",
+  midi : "audio/midi",
+  m4a  : 'audio/m4a',
+  ogg  : 'audio/ogg'
+};
+
+module.exports = mimeOf;
+
+function mimeOf(url){
+  return table[ url.split('.').slice(-1)[0] ];
+}
+ },{}],10:[function(require,module,exports){ module.exports = newChain;
+module.exports.from = from;
+
+function from(chain){
+
+  return function(){
+    var m, i;
+
+    m = methods.apply(undefined, arguments);
+    i   = m.length;
+
+    while ( i -- ) {
+      chain[ m[i].name ] = m[i].fn;
+    }
+
+    m.forEach(function(method){
+      chain[ method.name ] = function(){
+        method.fn.apply(this, arguments);
+        return chain;
+      };
+    });
+
+    return chain;
+  };
+
+}
+
+function methods(){
+  var all, el, i, len, result, key;
+
+  all    = Array.prototype.slice.call(arguments);
+  result = [];
+  i      = all.length;
+
+  while ( i -- ) {
+    el = all[i];
+
+    if ( typeof el == 'function' ) {
+      result.push({ name: el.name, fn: el });
+      continue;
+    }
+
+    if ( typeof el != 'object' ) continue;
+
+    for ( key in el ) {
+      result.push({ name: key, fn: el[key] });
+    }
+  }
+
+  return result;
+}
+
+function newChain(){
+  return from({}).apply(undefined, arguments);
+}
+ },{}],9:[function(require,module,exports){
+/**
+ * Expose `parse`.
+ */
+
+module.exports = parse;
+
+/**
+ * Wrap map from jquery.
+ */
+
+var map = {
+  option: [1, '<select multiple="multiple">', '</select>'],
+  optgroup: [1, '<select multiple="multiple">', '</select>'],
+  legend: [1, '<fieldset>', '</fieldset>'],
+  thead: [1, '<table>', '</table>'],
+  tbody: [1, '<table>', '</table>'],
+  tfoot: [1, '<table>', '</table>'],
+  colgroup: [1, '<table>', '</table>'],
+  caption: [1, '<table>', '</table>'],
+  tr: [2, '<table><tbody>', '</tbody></table>'],
+  td: [3, '<table><tbody><tr>', '</tr></tbody></table>'],
+  th: [3, '<table><tbody><tr>', '</tr></tbody></table>'],
+  col: [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
+  _default: [0, '', '']
+};
+
+/**
+ * Parse `html` and return the children.
+ *
+ * @param {String} html
+ * @return {Array}
+ * @api private
+ */
+
+function parse(html) {
+  if ('string' != typeof html) throw new TypeError('String expected');
+
+  // tag name
+  var m = /<([\w:]+)/.exec(html);
+  if (!m) throw new Error('No elements were generated.');
+  var tag = m[1];
+
+  // body support
+  if (tag == 'body') {
+    var el = document.createElement('html');
+    el.innerHTML = html;
+    return el.removeChild(el.lastChild);
+  }
+
+  // wrap map
+  var wrap = map[tag] || map._default;
+  var depth = wrap[0];
+  var prefix = wrap[1];
+  var suffix = wrap[2];
+  var el = document.createElement('div');
+  el.innerHTML = prefix + html + suffix;
+  while (depth--) el = el.lastChild;
+
+  var els = el.children;
+  if (1 == els.length) {
+    return el.removeChild(els[0]);
+  }
+
+  var fragment = document.createDocumentFragment();
+  while (els.length) {
+    fragment.appendChild(el.removeChild(els[0]));
+  }
+
+  return fragment;
+}
+ },{}] }; function require(o){ if(o[2]) return o[2].exports; o[0](function(u){ if(!require.m[o[1][u]]) { throw new Error('Cannot find module "' + u + '"'); } return require(require.m[o[1][u]]); }, o[2] = { exports: {} }, o[2].exports); return o[2].exports; };  return require(require.m[0]); }({ env:{} }));
 
 var projects = {};
 var context = {};
@@ -3483,25 +3790,29 @@ window.ModelValidator = {
                     default:
                         console.log(`No specific validation for file type: ${type}`);
                 }
-                let keys = [];
-                session.issues = [];
+                let keys = session.issues.map(x => JSON.stringify(x));
+                let bck = session.issues.map(x => JSON.stringify(x));
+                let current = [];
                 this.errors.forEach(x => {
                     let k = JSON.stringify(x);
                     if (!keys.includes(k)) {
                         keys.push(k);
                         session.issues.push(x);
                     }
+                    current.push(k);
                 });
+                let remove = bck.filter(x => !current.includes(x));
+                session.issues = session.issues.filter(x => !remove.includes(JSON.stringify(x)));
             }
         } catch(error) {
             console.error(error);
         }
         console.log("Done");
         console.log(this.errors);
-        setTimeout(async () => {
-            let files = await FileSystem.listFiles();
-            await window.ModelValidator.validateModel(files);
-        }, 60000);
+//        setTimeout(async () => {
+//            let files = await FileSystem.listFiles();
+//            await window.ModelValidator.validateModel(files);
+//        }, 5000);
         return this.errors;
     },
 
@@ -3587,6 +3898,32 @@ window.ModelValidator = {
         }
         if (model.trigger.length === 0) {
             this.addError(filePath, "", 'Notifier must have at least one trigger configured.', 'No Trigger');
+        }
+        for (const trigger of model.trigger) {
+            let event = null;
+            if (trigger.att_source.startsWith("@")){
+                continue;
+            }
+            try{
+                event = await Modeler.get_by_name(trigger.att_source,true);
+            } catch {
+                this.addError(filePath, "", `Trigger is configured to an unknown event ${trigger.att_source}`, 'Trigger Source');
+                return;
+            }
+            if (trigger["att_key-field"] === "") {
+                this.addError(filePath, "", `Trigger ${trigger.att_source} has no business key mapping configured`, 'Trigger Business Key');
+            }
+            if (trigger.mapping.length === 0) {
+                this.addError(filePath, "", `Trigger ${trigger.att_source} has no mapping configured`, 'Trigger Mapping');
+            } else {
+                let fields = event.field.map(x => x.att_name);
+                fields = fields.concat(event["nested-object"].map(x => x.att_name));
+                for (const m of trigger.mapping) {
+                    if (!m.att_value.startsWith("#") && !fields.includes(m.att_value)) {
+                        this.addError(filePath, "", `Trigger ${trigger.att_source} maps an unknown event field [${m.att_value}] to flowvar [${m.att_target}].`, 'Trigger Mapping');
+                    }
+                }
+            }
         }
         if (model.activity.length === 0) {
             this.addError(filePath, "", 'Notifier must have at least one activity configured.', 'No Activity');

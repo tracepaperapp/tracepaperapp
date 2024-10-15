@@ -2,7 +2,7 @@
     <div x-data="{project:{},config: {}}"
          x-effect="if(session.frame =='/modeler#settings'){config = await Modeler.get('config.xml');project = Project.get();}">
         <div class="prose">
-            <h2>Project Settings</h2>
+            <h2>Modeler Settings</h2>
         </div>
         <table class="table">
             <tr>
@@ -17,6 +17,45 @@
                     </div>
                 </td>
             </tr>
+            <tr>
+                <th scope="row">Model issue alert:</th>
+                <td x-data="{issue_sound: $persist('funk')}">
+                    <select class="select select-bordered w-full max-w-xs"
+                            x-effect="playAlert(issue_sound);"
+                            x-model="issue_sound">
+                        <option>bottle</option>
+                        <option>glass</option>
+                        <option>funk</option>
+                        <option>morse</option>
+                        <option>purr</option>
+                        <option>tink</option>
+                        <option>submarine</option>
+                        <option>-none-</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Ready to upload alert:</th>
+                <td x-data="{ready_sound: $persist('purr')}">
+                    <select class="select select-bordered w-full max-w-xs"
+                            x-effect="playAlert(ready_sound);"
+                            x-model="ready_sound">
+                        <option>bottle</option>
+                        <option>glass</option>
+                        <option>funk</option>
+                        <option>morse</option>
+                        <option>purr</option>
+                        <option>tink</option>
+                        <option>submarine</option>
+                        <option>-none-</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <div class="prose">
+            <h2>Project Settings</h2>
+        </div>
+        <table class="table">
             <tr>
                 <th scope="row">Project name:</th>
                 <td x-text="project.name"></td>

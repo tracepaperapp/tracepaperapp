@@ -198,25 +198,29 @@ window.ModelValidator = {
                     default:
                         console.log(`No specific validation for file type: ${type}`);
                 }
-                let keys = [];
-                session.issues = [];
+                let keys = session.issues.map(x => JSON.stringify(x));
+                let bck = session.issues.map(x => JSON.stringify(x));
+                let current = [];
                 this.errors.forEach(x => {
                     let k = JSON.stringify(x);
                     if (!keys.includes(k)) {
                         keys.push(k);
                         session.issues.push(x);
                     }
+                    current.push(k);
                 });
+                let remove = bck.filter(x => !current.includes(x));
+                session.issues = session.issues.filter(x => !remove.includes(JSON.stringify(x)));
             }
         } catch(error) {
             console.error(error);
         }
         console.log("Done");
         console.log(this.errors);
-        setTimeout(async () => {
-            let files = await FileSystem.listFiles();
-            await window.ModelValidator.validateModel(files);
-        }, 60000);
+//        setTimeout(async () => {
+//            let files = await FileSystem.listFiles();
+//            await window.ModelValidator.validateModel(files);
+//        }, 5000);
         return this.errors;
     },
 
@@ -302,6 +306,32 @@ window.ModelValidator = {
         }
         if (model.trigger.length === 0) {
             this.addError(filePath, "", 'Notifier must have at least one trigger configured.', 'No Trigger');
+        }
+        for (const trigger of model.trigger) {
+            let event = null;
+            if (trigger.att_source.startsWith("@")){
+                continue;
+            }
+            try{
+                event = await Modeler.get_by_name(trigger.att_source,true);
+            } catch {
+                this.addError(filePath, "", `Trigger is configured to an unknown event ${trigger.att_source}`, 'Trigger Source');
+                return;
+            }
+            if (trigger["att_key-field"] === "") {
+                this.addError(filePath, "", `Trigger ${trigger.att_source} has no business key mapping configured`, 'Trigger Business Key');
+            }
+            if (trigger.mapping.length === 0) {
+                this.addError(filePath, "", `Trigger ${trigger.att_source} has no mapping configured`, 'Trigger Mapping');
+            } else {
+                let fields = event.field.map(x => x.att_name);
+                fields = fields.concat(event["nested-object"].map(x => x.att_name));
+                for (const m of trigger.mapping) {
+                    if (!m.att_value.startsWith("#") && !fields.includes(m.att_value)) {
+                        this.addError(filePath, "", `Trigger ${trigger.att_source} maps an unknown event field [${m.att_value}] to flowvar [${m.att_target}].`, 'Trigger Mapping');
+                    }
+                }
+            }
         }
         if (model.activity.length === 0) {
             this.addError(filePath, "", 'Notifier must have at least one activity configured.', 'No Activity');
