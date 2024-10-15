@@ -157,10 +157,10 @@ function start_save_session_interval(){
     if (session.tabs.length == 0){
         Navigation.open("README.md");
     }
-    },1000);
+    },2000);
 }
 
-if (localStorage.project_drn){
+if (localStorage.project_drn && location.pathname == "/"){
     Session.reload_from_disk(localStorage.project_drn);
 }
 

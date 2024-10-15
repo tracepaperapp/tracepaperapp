@@ -6,6 +6,18 @@
         </div>
         <table class="table">
             <tr>
+                <th scope="row">Model validation (beta feature):</th>
+                <td>
+                    <div class="form-control" x-data="{validation_enabled: $persist(true).using(sessionStorage)}">
+                        <label class="label cursor-pointer">
+                            <input type="checkbox" class="toggle"
+                                   @change="ModelValidator.resetValidation();"
+                                   x-model="validation_enabled" />
+                        </label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
                 <th scope="row">Project name:</th>
                 <td x-text="project.name"></td>
             </tr>

@@ -1302,8 +1302,9 @@ async function sync_to_disk(){
     setTimeout(function(){
         sessionStorage.removeItem("lock");
     },100);
+    setTimeout(sync_to_disk,1000);
 }
-setInterval(sync_to_disk,1000)
+setTimeout(sync_to_disk,1000);
 
 var search_engine = null;
 
@@ -1510,10 +1511,10 @@ function start_save_session_interval(){
     if (session.tabs.length == 0){
         Navigation.open("README.md");
     }
-    },1000);
+    },2000);
 }
 
-if (localStorage.project_drn){
+if (localStorage.project_drn && location.pathname == "/"){
     Session.reload_from_disk(localStorage.project_drn);
 }
 
@@ -3463,11 +3464,13 @@ window.ModelValidator = {
         }
     },
 
-    lock: false,
+    async resetValidation(){
+        session.issues = [];
+        let files = await FileSystem.listFiles();
+        ModelValidator.validateModel(files);
+    },
     async validateModel(files) {
-        // ChatGPT --> Als ik deze functie aanzet zie ik memoryleak achtig gedrag. Geheugengebruik gaat van 650MB naar 3.3GB
-        //return;//TODO finish validation
-        if (this.lock){return;}
+        if (sessionStorage["_x_validation_enabled"] != "true"){return;}
         console.log("Start validation");
         this.lock = true
         this.errors = [];
@@ -3539,8 +3542,6 @@ window.ModelValidator = {
             }
         } catch(error) {
             console.error(error);
-        } finally {
-            this.lock = false;
         }
         console.log("Done");
         console.log(this.errors);
@@ -3637,7 +3638,8 @@ window.ModelValidator = {
         if (model.activity.length === 0) {
             this.addError(filePath, "", 'Notifier must have at least one activity configured.', 'No Activity');
         }
-        //console.log(model);
+        //TODO: hier ben ik
+        console.log(model);
     },
 
     validateCode(filePath, model) {
