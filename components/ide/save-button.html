@@ -40,23 +40,35 @@
 <!--        </template>-->
 
         <template x-if="!session.editing_disabled && session.unsaved_files">
-            <div class="relative inline-block" x-data="{showModal: false}">
+            <div class="relative inline-block" x-data="{ showModal: false, adjustModalPosition() {
+        const modal = this.$refs.modal;
+        const rect = modal.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            modal.style.left = 'auto';
+            modal.style.right = '0px'; // Modal komt niet verder dan het scherm
+        } else {
+            modal.style.left = '0px';
+            modal.style.right = 'auto'; // Standaard linkse uitlijning
+        }
+    }}">
+
                 <!-- Button -->
                 <button
-                        @mouseover="showModal = true"
+                        @mouseover="showModal = true; adjustModalPosition()"
                         @mouseleave="showModal = false"
                         @click.debounce="
-                        if (confirm('Push changes to remote and start build?')){
-        disabled = true;
-        buildId = generateBuildId();
-        await FileSystem.push();
-        await sleep(1000);
-        Navigation.soft_reload();
-        $store.mutation.send('AutoBuildProject', {
-          drn: localStorage.project_drn,
-          buildId: buildId
-        });
-        setTimeout(function() { disabled = false }, 5000)}"
+            if (confirm('Push changes to remote and start build?')){
+                disabled = true;
+                buildId = generateBuildId();
+                await FileSystem.push();
+                await sleep(1000);
+                Navigation.soft_reload();
+                $store.mutation.send('AutoBuildProject', {
+                  drn: localStorage.project_drn,
+                  buildId: buildId
+                });
+                setTimeout(function() { disabled = false }, 5000)
+            }"
                         :disabled="disabled || !session.last_pull || session.issues.length != 0"
                         class="btn btn-circle btn-outline btn-success m-1">
                     <i class="fa-solid fa-cloud-arrow-up"></i>
@@ -70,14 +82,13 @@
 
                 <!-- Modal -->
                 <div x-show="showModal" x-transition
-                     class="absolute left-0 mt-9 w-300 p-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+                     class="absolute mt-9 w-150 p-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50"
+                     x-ref="modal">
                     <table class="table table-xs">
                         <template x-for="(status, file) in session.modified_files" :key="file">
                             <tr>
-                                <td>
-                                    <span x-text="file"></span><br>
-                                    <span x-text="status"></span>
-                                </td>
+                                <th scope="row" x-text="status"></th>
+                                <td x-text="file"></td>
                             </tr>
                         </template>
                     </table>

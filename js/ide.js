@@ -301,52 +301,6 @@ window.FileSystem = {
         console.error('Fout tijdens het controleren op niet-gepushte bestanden:', err);
       }
     },
-//    checkForUnpushedCommits: async function() {
-//      try {
-//        // Haal de lokale HEAD commit hash op
-//        const localCommit = await git.resolveRef({ fs, dir, ref: branch });
-//
-//        // Haal de remote HEAD commit hash op
-//        const remoteCommit = await git.resolveRef({
-//          fs,
-//          dir,
-//          ref: `origin/${branch}`,
-//        });
-//
-//        // Als de hashes niet overeenkomen, zoek naar niet-gepushte commits
-//        if (localCommit !== remoteCommit) {
-//          const localCommits = await git.log({
-//            fs,
-//            dir,
-//            ref: branch,
-//            depth: 1000, // Het maximum aantal commits dat je wilt controleren
-//          });
-//
-//          const remoteCommits = await git.log({
-//            fs,
-//            dir,
-//            ref: `origin/${branch}`,
-//            depth: 1000,
-//          });
-//
-//          // Filter de commits die in lokaal maar niet in remote voorkomen
-//          const unpushedCommits = localCommits.filter(
-//            (localCommit) =>
-//              !remoteCommits.some(
-//                (remoteCommit) => remoteCommit.oid === localCommit.oid
-//              )
-//          );
-//
-//          session.unsaved_files = true;
-//          session.pending_commits = unpushedCommits.length; // Hier wordt het aantal niet-gepushte commits geteld
-//        } else {
-//          session.unsaved_files = false;
-//          session.pending_commits = 0;
-//        }
-//      } catch (err) {
-//        console.error('Fout tijdens het controleren op niet-gepushte commits:', err);
-//      }
-//    },
     push: async function() {
             try {
               // Attempt to push changes
@@ -1302,9 +1256,8 @@ async function sync_to_disk(){
     setTimeout(function(){
         sessionStorage.removeItem("lock");
     },100);
-    setTimeout(sync_to_disk,1000);
 }
-setTimeout(sync_to_disk,1000);
+setInterval(sync_to_disk,1000);
 
 var search_engine = null;
 

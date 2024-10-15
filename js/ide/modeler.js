@@ -452,6 +452,5 @@ async function sync_to_disk(){
     setTimeout(function(){
         sessionStorage.removeItem("lock");
     },100);
-    setTimeout(sync_to_disk,1000);
 }
-setTimeout(sync_to_disk,1000);
+setInterval(sync_to_disk,1000);
