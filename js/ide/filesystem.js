@@ -224,6 +224,7 @@ window.FileSystem = {
           }
           session.pending_commits = pending;
           session.modified_files = modifiedFiles;
+          sessionStorage.modified_files = JSON.stringify(modifiedFiles);
         } else {
           session.unsaved_files = false;
           session.pending_commits = 0;
@@ -270,7 +271,7 @@ window.FileSystem = {
             }
           } finally {
             session.last_pull = getCurrentTime();
-            await sleep(1000);
+            await sleep(100);
             localStorage.pulling = false;
           }
     },

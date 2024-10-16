@@ -432,7 +432,16 @@ window.Modeler = {
     }
 }
 
+function check_if_active(){
+    let mf = sessionStorage.modified_files ? JSON.parse(sessionStorage.modified_files) : {};
+    let keys =  Object.keys(model_cache);
+    return Object.keys(mf).filter(x => keys.includes(x)).length != 0;
+}
+
 window.addEventListener('storage', (event) => {
+    if (check_if_active()){
+        return;
+    }
     if (event.key && event.newValue && event.key === "pulling" && event.newValue === "true") {
         model_cache = {};
     }
@@ -441,16 +450,30 @@ window.addEventListener('storage', (event) => {
     }
 });
 async function sync_to_disk(){
-    if (localStorage.project_drn &&
+    let force = check_if_active();
+    if (
+        force &&
+        localStorage.project_drn &&
         Modeler.auto_save &&
-        !sessionStorage.lock &&
+        sessionStorage.checkout == localStorage.project_drn){
+            console.log("force save");
+            sessionStorage.lock = "locked";
+            await Modeler.sync_to_disk();
+    } else if (localStorage.project_drn &&
+        Modeler.auto_save &&
         localStorage.pulling == "false" &&
         sessionStorage.checkout == localStorage.project_drn){
-        sessionStorage.lock = "locked";
-        await Modeler.sync_to_disk();
+            console.log("save")
+            sessionStorage.lock = "locked";
+            await Modeler.sync_to_disk();
+    } else {
+        console.log("Not saving!");
     }
     setTimeout(function(){
         sessionStorage.removeItem("lock");
     },100);
+    setTimeout(sync_to_disk,1000);
 }
-setInterval(sync_to_disk,1000);
+if (location.pathname != "/"){
+    setTimeout(sync_to_disk,1000);
+}

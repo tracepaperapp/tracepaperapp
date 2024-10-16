@@ -296,6 +296,7 @@ window.FileSystem = {
           }
           session.pending_commits = pending;
           session.modified_files = modifiedFiles;
+          sessionStorage.modified_files = JSON.stringify(modifiedFiles);
         } else {
           session.unsaved_files = false;
           session.pending_commits = 0;
@@ -342,7 +343,7 @@ window.FileSystem = {
             }
           } finally {
             session.last_pull = getCurrentTime();
-            await sleep(1000);
+            await sleep(100);
             localStorage.pulling = false;
           }
     },
@@ -1253,7 +1254,16 @@ window.Modeler = {
     }
 }
 
+function check_if_active(){
+    let mf = sessionStorage.modified_files ? JSON.parse(sessionStorage.modified_files) : {};
+    let keys =  Object.keys(model_cache);
+    return Object.keys(mf).filter(x => keys.includes(x)).length != 0;
+}
+
 window.addEventListener('storage', (event) => {
+    if (check_if_active()){
+        return;
+    }
     if (event.key && event.newValue && event.key === "pulling" && event.newValue === "true") {
         model_cache = {};
     }
@@ -1262,19 +1272,33 @@ window.addEventListener('storage', (event) => {
     }
 });
 async function sync_to_disk(){
-    if (localStorage.project_drn &&
+    let force = check_if_active();
+    if (
+        force &&
+        localStorage.project_drn &&
         Modeler.auto_save &&
-        !sessionStorage.lock &&
+        sessionStorage.checkout == localStorage.project_drn){
+            console.log("force save");
+            sessionStorage.lock = "locked";
+            await Modeler.sync_to_disk();
+    } else if (localStorage.project_drn &&
+        Modeler.auto_save &&
         localStorage.pulling == "false" &&
         sessionStorage.checkout == localStorage.project_drn){
-        sessionStorage.lock = "locked";
-        await Modeler.sync_to_disk();
+            console.log("save")
+            sessionStorage.lock = "locked";
+            await Modeler.sync_to_disk();
+    } else {
+        console.log("Not saving!");
     }
     setTimeout(function(){
         sessionStorage.removeItem("lock");
     },100);
+    setTimeout(sync_to_disk,1000);
 }
-setInterval(sync_to_disk,1000);
+if (location.pathname != "/"){
+    setTimeout(sync_to_disk,1000);
+}
 
 var search_engine = null;
 
@@ -3766,7 +3790,7 @@ window.ModelValidator = {
                         await this.validateEvent(file, model);
                         break;
                     case "view":
-                        this.validateView(file, model);
+                        await this.validateView(file, model);
                         break;
                     case "projection":
                         this.validateProjection(file, model);
@@ -3809,10 +3833,6 @@ window.ModelValidator = {
         }
         console.log("Done");
         console.log(this.errors);
-//        setTimeout(async () => {
-//            let files = await FileSystem.listFiles();
-//            await window.ModelValidator.validateModel(files);
-//        }, 5000);
         return this.errors;
     },
 
@@ -3835,6 +3855,7 @@ window.ModelValidator = {
         if (model.att_name) {
             this.validatePascalCase(filePath, 'att_name', model.att_name);
         }
+        console.log(model)
         if (model.handlers) {
             model.handlers.forEach(handler => {
                 if (handler.type === 'event') {
@@ -3851,6 +3872,9 @@ window.ModelValidator = {
         if (model.att_name) {
             this.validatePascalCase(filePath, 'att_name', model.att_name);
         }
+        if (!model.field || model.field.length == 0){
+            this.addError(filePath, 'domain-event', `Event [${model.att_name}] has no fields configured`, 'Missing fields');
+        }
         if (model.field) {
             model.field.forEach(field => {
                 this.validateCamelCase(filePath, `Field: ${field.att_name}`, field.att_name);
@@ -3863,7 +3887,6 @@ window.ModelValidator = {
             let documentFields = root.field.map(x => x.att_name);
             handler.mapping.filter(m => ["set","add","subtract"].includes(m.att_operand)).forEach(m => {
                 if (!documentFields.includes(m.att_target)){
-                    console.log(m.att_target,documentFields);
                     this.addError(filePath, 'domain-event', `Event [${model.att_name}] maps to an unknown aggregate field [${m.att_target}]`, 'Invalid Mapping');
                 }
                 if (!eventFields.includes(m.att_value)){
@@ -3875,15 +3898,34 @@ window.ModelValidator = {
         }
     },
 
-    validateView(filePath, model) {
+    async validateView(filePath, model) {
         if (model.att_name) {
             this.validatePascalCase(filePath, 'att_name', model.att_name);
         }
+        let has_key = false
+        if (!model.field || model.field.length == 0){
+            this.addError(filePath, 'view', `View [${model.att_name}] has no fields configured`, 'Missing fields');
+        }
         if (model.field) {
             model.field.forEach(field => {
+                has_key = has_key || (field.att_pk && field.att_pk == "true");
                 this.validateCamelCase(filePath, `Field: ${field.att_name}`, field.att_name);
             });
         }
+        let has_handler = model["snapshot-handler"].length !=0 || model["custom-handler"].length != 0;
+        if (has_key && !has_handler){
+            this.addError(filePath, 'view', `View [${model.att_name}] has a primary-key configured but no data-mapper`, 'Missing data-mapper');
+        }
+        if (!has_key && has_handler){
+            this.addError(filePath, 'view', `View [${model.att_name}] has a data-mapper configured but has no primary-key`, 'Missing primary-key');
+        }
+        let has_query = model.query.length != 0;
+        if (!has_key && has_query){
+            this.addError(filePath, 'view', `View [${model.att_name}] has a query configured but has no primary-key`, 'Missing primary-key');
+        }
+        model.query.forEach(q => {
+            console.log(q);
+        });
     },
 
     validateProjection(filePath, model) {
@@ -3928,8 +3970,7 @@ window.ModelValidator = {
         if (model.activity.length === 0) {
             this.addError(filePath, "", 'Notifier must have at least one activity configured.', 'No Activity');
         }
-        //TODO: hier ben ik
-        console.log(model);
+        //TODO: activity validators
     },
 
     validateCode(filePath, model) {

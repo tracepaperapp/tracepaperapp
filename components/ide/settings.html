@@ -21,7 +21,7 @@
                 <th scope="row">Model issue alert:</th>
                 <td x-data="{issue_sound: $persist('funk')}">
                     <select class="select select-bordered w-full max-w-xs"
-                            x-effect="playAlert(issue_sound);"
+                            @change="playAlert(issue_sound);"
                             x-model="issue_sound">
                         <option>bottle</option>
                         <option>glass</option>
@@ -38,7 +38,7 @@
                 <th scope="row">Ready to upload alert:</th>
                 <td x-data="{ready_sound: $persist('purr')}">
                     <select class="select select-bordered w-full max-w-xs"
-                            x-effect="playAlert(ready_sound);"
+                            @change="playAlert(ready_sound);"
                             x-model="ready_sound">
                         <option>bottle</option>
                         <option>glass</option>
