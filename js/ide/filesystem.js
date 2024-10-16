@@ -74,6 +74,7 @@ window.FileSystem = {
             await FileSystem.generate_zip();
             await sleep(1000);
             let repo = sessionStorage.checkout;
+            sessionStorage.removeItem("modified_files");
             sessionStorage.removeItem("checkout");
             indexedDB.deleteDatabase(repo);
             location.reload();
