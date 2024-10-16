@@ -3,7 +3,7 @@ let validation_enabled = false;
 //setTimeout(function(){validation_enabled = true},120000);
 setTimeout(function(){validation_enabled = true},10000);
 async function validate_and_repair_model(){
-    if (!validation_enabled){return}
+    if (!validation_enabled){return []}
     let files = await FileSystem.listFiles();
     // Initialize config
     if (!files.includes("config.xml")){
