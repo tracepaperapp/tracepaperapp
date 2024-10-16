@@ -291,7 +291,7 @@ window.FileSystem = {
 
           session.unsaved_files = true;
           let pending = Object.keys(modifiedFiles).length; // Aantal unieke gewijzigde bestanden
-          if (session.pending_commits != pending){
+          if (session.pending_commits != pending && pending != 0 && session.issues.length == 0){
             playAlert(JSON.parse(localStorage["_x_ready_sound"]));
           }
           session.pending_commits = pending;
