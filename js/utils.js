@@ -4,8 +4,6 @@ if (localStorage["staging-environment"] && localStorage["staging-environment"] !
     localStorage.removeItem("staging-environment");
 }
 
-console.trace = function(){};
-
 document.addEventListener('alpine:init', async () => {
     setTimeout(function(){
         Draftsman.contains_teleports = false;

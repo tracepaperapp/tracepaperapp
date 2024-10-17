@@ -3815,6 +3815,7 @@ window.ModelValidator = {
                     default:
                         console.log(`No specific validation for file type: ${type}`);
                 }
+
                 let keys = session.issues.map(x => JSON.stringify(x));
                 let bck = session.issues.map(x => JSON.stringify(x));
                 let current = [];
