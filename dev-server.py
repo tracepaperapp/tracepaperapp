@@ -30,7 +30,7 @@ def copy_source():
     files = glob.glob('./**/*.*', recursive = True)
     for src in files:
         src = src.replace(os.sep,"/")
-        if "./tmp/" in src:
+        if "./tmp/" in src or "/venv/" in src:
             continue
         dst = src.replace("./",f"./tmp/")
         if not dst.endswith("index.html") and not "/components/" in dst:
