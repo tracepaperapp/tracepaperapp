@@ -1,0 +1,72 @@
+<template x-component="api-example">
+    <div navigation="api-example-page"
+         x-data="apiModule"
+         x-show="navigationElementActive" x-cloak x-transition>
+
+        <div x-import="elements/trace-notifications">
+            <ui-trace-notifications></ui-trace-notifications>
+        </div>
+
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">API:</h1>
+
+        <button class="btn" @click="showModal = true">Add new feedback entry</button>
+        <dialog id="my_modal_2" class="modal" x-show="showModal" x-bind:open="showModal">
+                <div class="modal-box">
+                    <h3 class="text-lg font-bold">Add new feedback entry:</h3>
+                    <p class="py-4">
+                        <input type="range" min="1" max="5" class="range" step="1" x-model="feedBackCommand.score" />
+                    <div class="flex w-full justify-between px-2 text-xs">
+                        <span>saai</span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span>geweldig</span>
+                    </div>
+
+                    <label class="input input-bordered flex items-center gap-2">
+                        In 1 woord:
+                        <input type="text" class="grow" placeholder="Geweldig" x-model="feedBackCommand.oneWord" />
+                    </label>
+
+                    <label class="input input-bordered flex items-center gap-2">
+                        Screen name:
+                        <input type="text" class="grow" x-model="feedBackCommand.screenName" />
+                    </label>
+
+                    <textarea class="textarea textarea-bordered w-[100%]" x-model="feedBackCommand.comment" placeholder="Wil je nog commentaar geven?"></textarea>
+
+                    <label class="input input-bordered flex items-center gap-2">
+                        Unique ID:
+                        <input type="text" class="grow" x-model="feedBackCommand.userId" />
+                    </label>
+
+                    <button @click="save_item" class="btn btn-block">Save</button>
+                    </p>
+                </div>
+                <form method="dialog" class="modal-backdrop" @click="showModal = false">
+                    <button type="button">close</button>
+                </form>
+            </dialog>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">ScreenName</th>
+                <th scope="col">Score</th>
+                <th scope="col">One Word</th>
+                <th scope="col">Comment</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="item in feedbackItems" :key="item.key">
+                <tr>
+                    <th scope="row" x-text="item.screenName"></th>
+                    <td x-text="item.score"></td>
+                    <td x-text="item.oneWord"></td>
+                    <td x-text="item.comment"></td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+</template>

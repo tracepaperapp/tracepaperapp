@@ -1,4 +1,3 @@
-
-[x-cloak], draftsman-query, draftsman-notification, draftsman-mutation {
+[x-cloak] {
     display: none !important;
 }

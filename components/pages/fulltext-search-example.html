@@ -1,0 +1,48 @@
+<template x-component="fts-example">
+    <div navigation="fts-example-page"
+         x-data="notesModule"
+         x-show="navigationElementActive" x-cloak x-transition>
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Notes</h1>
+
+        <div class="grid grid-cols-12 gap-3">
+            <div class="col-span-4">
+                <textarea
+                          class="textarea textarea-primary textarea-bordered textarea-lg w-full"
+                          x-model="noteText"
+                          placeholder="New note"></textarea>
+                <div class="flex justify-end mt-2">
+                    <button @click="save_note" class="btn btn-xs btn-outline btn-success">Save note</button>
+                </div>
+            </div>
+            <div class="col-span-5">
+                <!-- spacer -->
+            </div>
+            <div class="col-span-3">
+                <label class="input input-bordered flex items-center gap-2">
+                    <input type="text" class="grow"
+                           x-model="noteQuery" @keyup.debounce="search_notes"
+                           placeholder="Search" />
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </label>
+            </div>
+        </div>
+
+        <table class="table">
+            <template x-for="note in notes" :key="note.id">
+                <tr>
+                    <td x-text="note.note"></td>
+                    <td>
+                        <div class="flex items-center space-x-2">
+                            <label class="btn btn-outline btn-error btn-xs cursor-pointer">
+                                <input type="checkbox" x-model="note.deleted"
+                                       @change="delete_note"
+                                       class="hidden">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+        </table>
+    </div>
+</template>

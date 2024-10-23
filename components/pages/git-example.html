@@ -1,0 +1,162 @@
+<template x-component="git-example">
+    <div navigation="git-example-page"
+         x-show="navigationElementActive"
+         x-cloak
+         x-transition.delay.100ms>
+        <template navigation="git-example-page" x-if="navigationElementActive">
+            <div x-data="gitModule">
+                <h1 class="text-3xl font-bold text-gray-900">GIT example</h1>
+                <h6 class="text-sm font-bold text-gray-400">Last pulled <span x-text="last_pull"></span></h6>
+                <h6 x-show="commit_diff.remoteAhead" x-cloak x-transition
+                    class="text-xs font-bold text-gray-400 mb-6"><span x-text="commit_diff.remoteAhead"></span> commits behind remote</h6>
+
+                <div x-show="changes.length != 0 || unpushedCommits != 0" x-cloak x-transition class="border border-primary rounded-lg overflow-hidden">
+                    <table class="table">
+                        <template x-for="change in changes" :key="change.filePath">
+                            <tr>
+                                <th scope="row" x-text="change.status"></th>
+                                <td x-text="change.filePath"></td>
+                                <td>
+                                    <button :file="change.filePath"
+                                            @click="revert_file"
+                                            class="btn btn-sm btn-outline btn-accent">
+                                        <i class="fa-solid fa-clock-rotate-left"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr>
+                            <td>
+                                <button x-show="changes.length != 0" x-cloak x-transition
+                                        class="btn btn-outline btn-primary" @click="execute_diff">Commit Files</button>
+                                <div x-show="commitModal" class="modal modal-open" x-cloak>
+                                    <div class="modal-box w-11/12 max-w-5xl">
+                                        <!-- Modal title -->
+                                        <h3 class="font-bold text-lg">Commit changes</h3>
+
+                                        <!-- Textarea for commit message -->
+                                        <textarea class="textarea textarea-bordered w-full mt-3"
+                                                  x-model="commitMessage" placeholder="Enter commit message"></textarea>
+                                        <div class="flex gap-4 mt-2" x-show="diff" x-cloak x-transition>
+                                            <!-- Local File Column -->
+                                            <div class="w-1/2">
+                                                <h3 class="text-lg font-bold">Local File</h3>
+                                                <div class="p-4 border border-primary rounded-lg">
+        <pre class="whitespace-pre-wrap bg-gray-100 p-4 rounded-md">
+            <span x-html="diff.local"></span>
+        </pre>
+                                                </div>
+                                            </div>
+
+                                            <!-- Remote File Column -->
+                                            <div class="w-1/2">
+                                                <h3 class="text-lg font-bold">Remote File</h3>
+                                                <div class="p-4 border border-primary rounded-lg">
+        <pre class="whitespace-pre-wrap bg-gray-100 p-4 rounded-md">
+            <span x-html="diff.remote"></span>
+        </pre>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div x-show="conflict" x-cloak x-transition class="mt-2">
+                                            <table class="table">
+                                                <template x-for="change in changes" :key="change.filePath">
+                                                    <tr x-show="change.hasConflict" x-cloak x-transition>
+                                                        <th scope="row">Conflict</th>
+                                                        <td x-text="change.filePath"></td>
+                                                        <td>
+                                                            <button :file="change.filePath"
+                                                                    class="btn btn-outline btn-primary"
+                                                                    @click="compare_diff">Compare</button>
+                                                        </td>
+                                                        <td>
+                                                            <button :file="change.filePath"
+                                                                    :class="force.includes(change.filePath) ? 'btn btn-primary' : 'btn btn-outline btn-primary'"
+                                                                    @click="accept_mine">Accept mine</button>
+                                                        </td>
+                                                        <td>
+                                                            <button :file="change.filePath"
+                                                                    class="btn btn-outline btn-primary"
+                                                                    @click="revert_file">Accept remote</button>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </table>
+                                        </div>
+                                        <!-- Modal actions -->
+                                        <div class="modal-action">
+                                            <!-- Commit button -->
+                                            <button class="btn btn-primary"
+                                                    :disabled="commitMessage == '' || !readyToCommit"
+                                                    @click="commit_changes">Commit</button>
+                                            <!-- Cancel button -->
+                                            <button class="btn" @click="commitModal = false">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td></td>
+                            <td class="flex justify-end">
+                                <button x-show="unpushedCommits != 0" x-cloak x-transition
+                                        class="btn btn-outline btn-primary " @click="push_commits">Push commits</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="join join-vertical w-full mt-5">
+                    <template x-for="file in documentation" :key="file">
+                        <div class="collapse collapse-arrow join-item border-base-300 border">
+                            <input type="radio" name="my-accordion-4" :checked="selected == file" x-model="selected" :value="file"/>
+                            <div class="collapse-title text-xl font-medium" x-text="file"></div>
+                            <div class="collapse-content">
+                                <div class="grid grid-cols-12 gap-3  mt-5">
+                                    <div class="col-span-11">
+                            <textarea class="textarea textarea-primary w-[100%]"
+                                      :file="file" x-init="load_content" rows="8"
+                                      @focusout.debounce="save_content"
+                                      placeholder="File content"></textarea>
+                                    </div>
+                                    <div class="col-span-1">
+                                        <div class="flex items-center space-x-2">
+                                            <label class="btn btn-outline btn-error btn-xs cursor-pointer">
+                                                <input type="checkbox"
+                                                       :file="file"
+                                                       @change="delete_file"
+                                                       class="hidden">
+                                                <i class="fa-regular fa-trash-can"></i>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <button class="btn mt-5" @click="showModal = true">Add new File</button>
+                <dialog id="my_modal_2" class="modal" x-show="showModal" x-bind:open="showModal">
+                    <div class="modal-box">
+                        <h3 class="text-lg font-bold">New file:</h3>
+                        <p class="py-4">
+
+                            <label class="input input-bordered flex items-center gap-2 mt-2">
+                                File path
+                                <input type="text" class="grow" x-model="newFile.path" />
+                            </label>
+
+                            <textarea class="textarea textarea-bordered w-[100%] mt-2"
+                                      rows="8"
+                                      x-model="newFile.content" placeholder="Content"></textarea>
+
+                            <button @click="save_new_item" class="btn btn-block mt-2">Save</button>
+                        </p>
+                    </div>
+                    <form method="dialog" class="modal-backdrop" @click="showModal = false">
+                        <button type="button">close</button>
+                    </form>
+                </dialog>
+            </div>
+        </template>
+    </div>
+</template>

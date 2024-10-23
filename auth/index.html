@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Signing in</title>
-    <script src="/js/cache.js"></script>
-    <script src="/js/configuration.js"></script>
-    <script src="/js/configuration-staging.js"></script>
+  <meta charset="UTF-8">
+  <title>Signing in</title>
+  <script src="/js/config/configuration.js"></script>
 </head>
 <body>
 
@@ -21,7 +19,7 @@
   }
   setTimeout(function(){
       if (location.hash.toLowerCase().indexOf("id_token=") === -1){
-        location = `${localStorage["aws-congnito-ui"]}/oauth2/authorize?client_id=${localStorage["aws-congnito-app-id"]}&response_type=token&scope=openid&redirect_uri=${window.location.origin}/auth`;
+        location = `${localStorage["aws-congnito-ui"]}/oauth2/authorize?client_id=${localStorage["aws-congnito-app-id"]}&response_type=token&scope=openid&redirect_uri=${window.location.href.slice(0,-1)}`;
       }
       const token = location.hash.split("#").at(-1)
                         .split("&").filter(x => x.startsWith("id_token=")).at(0)
@@ -29,17 +27,12 @@
       const expires_in = location.hash.split("#").at(-1)
                             .split("&").filter(x => x.startsWith("expires_in=")).at(0)
                             .replace("expires_in=","");
-      localStorage["token"] = token;
-      cacheJS.set("token",token,parseInt(expires_in));
-      var referer = "/";
-      if (sessionStorage["prevLoc"]){
-          referer = sessionStorage["prevLoc"];
-          sessionStorage.removeItem("prevLoc");
-      }
+      sessionStorage["token"] = token;
+      sessionStorage["token_expiration"] = Date.now() + parseInt(expires_in);
       let payload = parseJwt(token);
-      localStorage["username"] = payload["cognito:username"];
-      localStorage["email"] = payload["email"];
-      location = referer;
+      sessionStorage["username"] = payload["cognito:username"];
+      sessionStorage["email"] = payload["email"];
+      location.href = "../"
   },1);
 </script>
 </body>

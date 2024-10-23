@@ -1,0 +1,65 @@
+
+.editable {
+  text-decoration: underline;
+  text-decoration-color: var(--fallback-pc,oklch(var(--pc)/1));
+  text-decoration-thickness: 25%;
+  cursor: pointer;
+}
+
+[contenteditable] {
+  text-decoration: underline;
+  text-decoration-color: var(--fallback-pc,oklch(var(--pc)/1));
+  text-decoration-thickness: 25%;
+  cursor: pointer;
+}
+
+[contenteditable]:empty {
+    border-bottom: 0.25rem solid var(--fallback-pc,oklch(var(--pc)/1));
+}
+
+.scrollbar-h {
+    overflow-x:auto;
+    width: 100%;
+}
+
+.scrollbar-v {
+    height: 85vh;
+    overflow-y:auto;
+}
+
+.scrollbar-v::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollbar-h::-webkit-scrollbar {
+    height: 8px;
+}
+
+.scrollbar-v::-webkit-scrollbar-track {
+    border-radius: 8px;
+    background-color: rgb(219 234 254);
+    border: 1px solid rgb(219 234 254);
+}
+
+.scrollbar-h::-webkit-scrollbar-track {
+    border-radius: 8px;
+    background-color: rgb(219 234 254);
+    border: 1px solid rgb(219 234 254);
+}
+
+.scrollbar-v::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background-color: rgb(59 130 246 / 50%);
+}
+
+.scrollbar-h::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background-color: rgb(59 130 246 / 50%);
+}
+
+.scrollbar-v-left {
+    direction: rtl;
+}
+.scroll-v-inside {
+    direction: ltr;
+}

@@ -1,106 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <title>Tracepaper by Draftsman</title>
-        <script src="/js/configuration.js"></script>
-        <script src="/js/configuration-staging.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Tracepaper 4</title>
 
-        <script>var must_be_signed_in = true;</script>
+    <!-- AlpineJS & Vimesh -->
+    <script defer src="/js/tp/alpine-persist.js"></script>
+    <script src="/js/tp/vimeshui.js"></script>
+    <script src="/js/tp/alpine.js" defer></script>
 
-        <!-- IDE -->
-        <script src="/js/tp/lightning-fs.js"></script>
-        <script src="/js/tp/isomorphic-git.js"></script>
-        <link rel="stylesheet" href="/css/ide.css" />
-        <script src="/js/tp/fast-xml-parser.js"></script>
-        <script src="/js/xml-builder.js"></script>
-        <script src="/js/tracepaper-types.js"></script>
-        <script src="/js/ide.js" type="module"></script>
-        <script src="/js/tp/moment.js" async></script>
+    <!-- cofig -->
+    <script src="/js/config/setup.js"></script>
+    <script src="/js/config/configuration.js"></script>
+    <script src="/js/config/configuration-staging.js"></script>
 
-        <link rel="stylesheet" href="/css/draftsman.css" />
-        <script src="/js/framework.js"></script>
-        <script src="/js/cache.js"></script>
-        <script src="/js/tp/vimesh.js"></script>
-        <script src="/js/utils.js"></script>
-        <script src="/js/tp/alpine-persist.js"></script>
-        <script defer src="/js/tp/alpine-focus.js"></script>
-        <script src="/js/tp/alpine.js" defer></script>
-
-        <!-- full text search -->
-        <script src="/js/tp/minisearch.js"></script>
-
-        <!-- Zip -->
-        <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=" crossorigin="anonymous"></script>
-
-        <!-- daisyUI, replace with optimized build -->
-        <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
-        <script src="/js/tp/tailwind.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-        <script src="/js/tp/daisy-theme-change.js"></script>
-        <!-- -->
-    </head>
-    <body x-data="session"
-          x-import="ide/menu-bar;ide/file-browser;ide/tab-bar;utils/tables">
+    <!-- DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="/js/tp/tailwind.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/ide.css" />
+    <link rel="stylesheet" href="/css/draftsman.css" />
+</head>
+<body x-data="navigation">
+    <div x-import="menu-bar">
         <ui-menu-bar></ui-menu-bar>
-        <div class="grid grid-cols-12 gap-3 h-[91vh]">
-            <div class="col-span-2 bg-primary-content h-full">
-                <ui-file-browser></ui-file-browser>
-            </div>
-            <div class="col-span-10">
-                <ui-tab-bar></ui-tab-bar>
-                <br>
-                <div x-show="session.exception" x-cloak x-transition role="alert" class="alert alert-error w-[80vw]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span x-text="session.exception"></span>
-                </div>
+    </div>
 
-                <div x-show="!localStorage.project_repo && !sessionStorage.new_project" x-cloak x-transition>
-                    <div class="hero h-[80vh] w-[95%] bg-base-200">
-                        <div class="hero-content text-center">
-                            <div class="max-w-md">
-                                <h1 class="text-5xl font-bold">Welcome to Tracepaper by Draftsman</h1>
-                                <p class="py-6"></p>
-                                <button @click="project_modal.showModal()" class="btn btn-primary">Open project</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-import="ide/project-wizard">
-                    <ui-project-wizard></ui-project-wizard>
-                </div>
-
-                <div x-show="localStorage.project_repo" x-cloak x-transition>
-                    <div x-data="{loaded: false}" x-init="await sleep(1000);loaded=true">
-                        <template x-if="loaded && session.frame
-                            && session.frame !='/modeler#settings'
-                            && !session.frame.startsWith('/modeler#build/')">
-                            <iframe :src="session.frame"
-                                    title="modeler"
-                                    id="modeler-container"
-                                    width="99%"
-                                    :height="0.8 * window.innerHeight"></iframe>
-                        </template>
-                        <template x-if="loaded && session.frame && session.frame.startsWith('/modeler#build/')">
-                            <iframe :src="'/build?key=' + localStorage.project_drn + ':' + session.frame.split('/').at(-1)"
-                                    width="99%"
-                                    title="build"
-                                    :height="0.8 * window.innerHeight"></iframe>
-                        </template>
-
-                        <div x-show="loaded && session.frame && session.frame =='/modeler#settings'"
-                             x-import="ide/settings"
-                             x-cloak x-transition>
-                            <ui-settings></ui-settings>
-                        </div>
-
-                    </div>
-                </div>
+    <div class="grid grid-cols-12 gap-3  mt-5">
+        <div class="col-span-2">
+            <div x-import="navigation">
+                <ui-navigation></ui-navigation>
             </div>
         </div>
+        <div class="col-span-9">
+            <div x-import="pages/documentdb-example">
+                <ui-db-example></ui-db-example>
+            </div>
+            <div x-import="pages/fulltext-search-example">
+                <ui-fts-example></ui-fts-example>
+            </div>
+            <div x-import="pages/api-example">
+                <ui-api-example></ui-api-example>
+            </div>
+            <div x-import="pages/git-example">
+                <ui-git-example></ui-git-example>
+            </div>
+        </div>
+    </div>
 
-    </body>
+
+    <!-- tp -->
+    <script src="/js/tp/luxon.js"></script>
+    <script src="/js/tp/diff.js"></script>
+
+    <!-- utils -->
+    <script src="/js/utils/helper.js"></script>
+    <script src="/js/utils/api.js"></script>
+    <script src="/js/utils/database.js"></script>
+    <script src="/js/utils/searchindex.js"></script>
+    <script src="/js/utils/git.js"></script>
+
+    <!-- customs -->
+    <script src="/js/modules/navigation.js"></script>
+    <script src="/js/modules/documentdb-example.js"></script>
+    <script src="/js/modules/fulltext-search-storage-example.js"></script>
+    <script src="/js/modules/api-example.js"></script>
+    <script src="/js/modules/git-example.js"></script>
+</body>
 </html>

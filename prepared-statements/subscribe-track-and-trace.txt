@@ -1,0 +1,11 @@
+subscription MySubscription($correlationId: String = "") {
+  onTrace(correlationId: $correlationId) {
+    command
+    component
+    event
+    message
+    status
+    previous
+    timestamp
+  }
+}

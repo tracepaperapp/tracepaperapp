@@ -1,0 +1,52 @@
+<template x-component="db-example">
+    <div navigation="db-example-page"
+         x-data="taskModule"
+         x-show="navigationElementActive" x-cloak x-transition>
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Tasklist:</h1>
+
+        <label class="input input-bordered flex items-center gap-2">
+            New task
+            <input type="text" class="grow" placeholder="My Task" @keyup.enter="add_task" x-model="taskTitle" />
+        </label>
+        <br>
+        <table class="table">
+            <template x-for="task in openTasks" :key="task.id">
+                <tr>
+                    <th scope="row">
+                        <input type="text" placeholder="Type here"
+                               x-model="task.title"
+                               @keyup.enter.debounce="update_task"
+                               @focusout.debounce="update_task"
+                               class="input w-full max-w-xs border-0 border-b-2 border-indigo-500 focus:ring-0 focus:border-indigo-700 rounded-none" />
+
+                    </th>
+                    <td>
+                        <div class="form-control">
+                            <input type="checkbox" x-model="task.completed" @change="complete_task" class="checkbox checkbox-primary" />
+                        </div>
+                    </td>
+                </tr>
+            </template>
+            <template x-for="task in completedTasks" :key="task.id">
+                <tr>
+                    <th scope="row" x-text="task.title"></th>
+                    <td>
+                        <div class="form-control">
+                            <input type="checkbox" x-model="task.completed" @change="reactivate_task" class="checkbox checkbox-primary" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="flex items-center space-x-2">
+                            <label class="btn btn-outline btn-error btn-xs cursor-pointer">
+                                <input type="checkbox" x-model="task.deleted"
+                                       @change="delete_task"
+                                       class="hidden">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+        </table>
+    </div>
+</template>

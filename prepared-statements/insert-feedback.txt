@@ -1,0 +1,7 @@
+mutation MyMutation($comment: String = "", $oneWord: String = "", $score: Int = 10, $screenName: String = "", $userId: String = "") {
+  Feedback {
+    create(input: {userId: $userId, score: $score, oneWord: $oneWord, screenName: $screenName, comment: $comment}) {
+      correlationId
+    }
+  }
+}
