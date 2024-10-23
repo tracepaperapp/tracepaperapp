@@ -6,7 +6,8 @@ class GitRepository {
   static commit_diff = {};
 
   // Open de repository en initialiseer de worker
-  static async open(repoUrl) {
+  static async open() {
+    await Draftsman.waitFor(() => sessionStorage.proxyToken && localStorage.project_url);
     if (!GitRepository.worker) {
       GitRepository.worker = new Worker('/js/webworkers/gitWorker.js');
       GitRepository.worker.onmessage = (event) => {
@@ -14,14 +15,14 @@ class GitRepository {
         delete GitRepository.callbacks[event.data.request_id];
       };
     }
-    let repo = new GitRepository(repoUrl);
+    let repo = new GitRepository(localStorage.project_url);
     if (!GitRepository.url){
-        GitRepository.url = repoUrl;
+        GitRepository.url = localStorage.project_url;
         await repo._sendMessage({
           action: 'initialize',
           pullInterval: 60000, // Standaard pull-interval
         });
-    } else if (GitRepository.url != repoUrl){
+    } else if (GitRepository.url != localStorage.project_url){
         throw new Error(`The GIT worker is already initialized on repo [${GitRepository.url}] if you want to connect to [${repoUrl}] you have to execute the reset function first!`);
     }
     return repo;

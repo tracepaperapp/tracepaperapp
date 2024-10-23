@@ -1,0 +1,45 @@
+query MyQuery($username: ID = "") {
+  User {
+    get(key: $username) {
+      username
+      fullName
+      workspace {
+        name
+        drn
+        subscriptionType
+        iam {
+          username
+          businessRole
+          user {
+            fullName
+          }
+        }
+        projects {
+          drn
+          name
+          repositories {
+            name
+            status
+            url
+          }
+          pipelines {
+            pipelineName
+            stackId
+          }
+          deployments {
+              apiEndpoint
+              apiId
+              apiKey
+              domainName
+              drn
+              eventBus
+              propertyVault
+              key
+              stackId
+              userPoolId
+            }
+        }
+      }
+    }
+  }
+}

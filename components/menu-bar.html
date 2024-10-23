@@ -1,5 +1,5 @@
 <template x-component="menu-bar">
-    <div class="navbar bg-primary-content h-[9vh]">
+    <div class="navbar bg-primary-content h-[9vh]" x-data="contextManagement">
 
         <div class="navbar-start">
             <div class="dropdown">
@@ -13,23 +13,22 @@
                 <ul tabindex="0"
                     class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                     <li>
-                        <a @click="project_modal.showModal()">Open project</a>
-                        <a @click="Project.create()">Start new project</a>
-                        <a @click="FileSystem.force_pull()">Discard local changes</a>
-                        <a @click="Experimental.sign_out()">Sign out</a>
+                        <a @click="projectModal = true">Open project</a>
+                        <a @click="alert('TODO')">Start new project</a>
+                        <a @click="alert('TODO')">Sign out</a>
                     </li>
                 </ul>
-                <dialog id="project_modal" class="modal">
+                <dialog x-show="projectModal" x-cloak x-transition class="modal modal-open">
                     <div class="modal-box">
                         <form method="dialog">
-                            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                            <button @click="projectModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                         </form>
                         <h3 class="font-bold text-lg">Open project</h3>
                         <p class="py-4">
                         <ul class="menu bg-base-200 rounded-box">
-                            <template x-for="project in Project.list($store.context)" :key="project.drn">
+                            <template x-for="project in projects" :key="project.drn">
                                 <li>
-                                    <a @click="project_modal.close();Project.open(project.drn)">
+                                    <a :drn="project.drn" @click="open_project">
                                         <span x-text="project.name"></span>
                                         <div class="badge badge-ghost" x-text="project.workspace"></div>
                                     </a>
@@ -44,70 +43,20 @@
 
         <div class="navbar-center">
             <a class="btn btn-ghost text-xl" x-text="localStorage.project_name"></a>
-            <span class="loading loading-infinity loading-md" x-show="session.loading" x-transition x-cloak></span>
         </div>
 
-        <div class="navbar-end" x-import="ide/model-wizard;ide/search;ide/trigger-build;ide/save-button;ide/issues-view">
+        <div class="navbar-end" x-data="sourceManagement">
             <template x-if="!window.chrome">
                 <div class="link" style="color: red;">A <a href="https://en.wikipedia.org/wiki/Chromium_(web_browser)" target="_blank">chromium based browser is recommended!</div>
             </template>
-            <div x-show="session.saving" x-cloak x-transition>
-                <span class="loading loading-ring loading-xs"></span>&nbsp;
-                <span class="text-slate-400">Saving</span>&nbsp;
-            </div>
-
-            <template x-if="!session.editing_disabled">
-                <ui-model-wizard></ui-model-wizard>
-            </template>
-            <ui-search></ui-search>
-            <ui-save-button></ui-save-button>
-            <!--
-            <template x-if="!session.editing_disabled">
-              <ui-trigger-build></ui-trigger-build>
-            </template>
-            -->
-            <ui-build-history></ui-build-history>
-            <ui-issues></ui-issues>
-
             &nbsp;
             <div>
-                <small x-show="session.last_pull" x-cloak x-transition>Last&nbsp;pulled: <span x-text="session.last_pull"></span></small><br>
-                <small x-show="session.last_save" x-cloak x-transition>Last&nbsp;&nbsp;saved: <span x-text="session.last_save"></span></small>
+                <small x-show="last_pull" x-cloak x-transition>Last&nbsp;pulled: <span x-text="last_pull"></span></small><br>
+                <small x-show="commit_diff.remoteAhead" x-cloak x-transition><span x-text="commit_diff.remoteAhead"></span>
+                commits behind remote</small>
             </div>
         </div>
 
-        <draftsman-query alias="context" x-include="/prepared-statements/get-user-context.txt" authenticated>
-        </draftsman-query>
 
-        <div class="data-element" @refresh="if(!$store.context.get){new_user.showModal()}"></div>
-
-        <dialog id="new_user" class="modal">
-            <div class="modal-box">
-                <h3 class="text-lg font-bold">Looks like you are here for the first time...</h3>
-                <p class="py-4" x-data="{command: {fullName: ''}}">
-                    <ui-trace-table></ui-trace-table>
-
-                    <label x-show="$store.trace.length == 0" x-cloak x-transition
-                           class="input input-bordered flex items-center gap-2">
-                        Choose a screen name
-                        <input type="text" class="grow" placeholder="John Doe" x-model="command.fullName"/>
-                    </label>
-                    <small>After you tell us your name, we will create a personal workspace for you.
-                        You will need to sign-in again.</small>
-                    <draftsman-mutation command="CreateUser"
-                                        x-include="/prepared-statements/commands/CreateUser.txt"
-                                        authenticated>
-                    </draftsman-mutation>
-                    <draftsman-trace command="CreateUser"
-                                     status="success"
-                                     component="SetupWorkspace-Notifier"
-                                     @trace="sessionStorage.new_project = 'true';await sleep(1000);Experimental.sign_out()">
-                    </draftsman-trace>
-                    <button class="btn btn-outline btn-primary mt-5 btn-block"
-                            x-show="$store.trace.length == 0" x-cloak x-transition
-                            @click="$store.mutation.send('CreateUser',command);">Save</button>
-                </p>
-            </div>
-        </dialog>
     </div>
 </template>

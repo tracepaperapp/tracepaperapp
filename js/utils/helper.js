@@ -2,6 +2,12 @@ class Draftsman {
     static taskMap = new Map();
     static loopRunning = false;
 
+    static async waitFor(predicate, interval = 100) {
+        while (!predicate()) {
+            await Draftsman.sleep(interval);
+        }
+    }
+
     static registerTask(f, delayInSeconds = 1, taskKey) {
         const delayInMs = delayInSeconds * 1000;
 

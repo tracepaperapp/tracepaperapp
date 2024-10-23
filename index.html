@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="/css/draftsman.css" />
 </head>
 <body x-data="navigation">
+
     <div x-import="menu-bar">
         <ui-menu-bar></ui-menu-bar>
     </div>
@@ -33,18 +34,18 @@
             </div>
         </div>
         <div class="col-span-9">
-            <div x-import="pages/documentdb-example">
-                <ui-db-example></ui-db-example>
-            </div>
-            <div x-import="pages/fulltext-search-example">
-                <ui-fts-example></ui-fts-example>
-            </div>
-            <div x-import="pages/api-example">
-                <ui-api-example></ui-api-example>
-            </div>
-            <div x-import="pages/git-example">
-                <ui-git-example></ui-git-example>
-            </div>
+<!--            <div x-import="pages/documentdb-example">-->
+<!--                <ui-db-example></ui-db-example>-->
+<!--            </div>-->
+<!--            <div x-import="pages/fulltext-search-example">-->
+<!--                <ui-fts-example></ui-fts-example>-->
+<!--            </div>-->
+<!--            <div x-import="pages/api-example">-->
+<!--                <ui-api-example></ui-api-example>-->
+<!--            </div>-->
+<!--            <div x-import="pages/git-example">-->
+<!--                <ui-git-example></ui-git-example>-->
+<!--            </div>-->
         </div>
     </div>
 
@@ -62,9 +63,8 @@
 
     <!-- customs -->
     <script src="/js/modules/navigation.js"></script>
-    <script src="/js/modules/documentdb-example.js"></script>
-    <script src="/js/modules/fulltext-search-storage-example.js"></script>
-    <script src="/js/modules/api-example.js"></script>
-    <script src="/js/modules/git-example.js"></script>
+    <script src="/js/modules/source-management.js"></script>
+    <script src="/js/modules/context-management.js"></script>
+
 </body>
 </html>
