@@ -19,7 +19,16 @@ async function connect_repository(){
     fs = new LightningFS(localStorage.project_drn);
     if (await FileSystem.read("README.md") == "documentation"){
         console.log("clone project",localStorage.project_drn);
-        await git.clone({ fs, http, dir, url: localStorage.project_repo, corsProxy: proxy });
+        await git.clone({
+            fs,
+            http,
+            dir,
+            url: localStorage.project_repo,
+            corsProxy: proxy,
+            singleBranch: true,
+            depth: 1,
+            ref: 'main'
+             });
 
         console.log("set author");
         await git.setConfig({

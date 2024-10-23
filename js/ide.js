@@ -91,7 +91,16 @@ async function connect_repository(){
     fs = new LightningFS(localStorage.project_drn);
     if (await FileSystem.read("README.md") == "documentation"){
         console.log("clone project",localStorage.project_drn);
-        await git.clone({ fs, http, dir, url: localStorage.project_repo, corsProxy: proxy });
+        await git.clone({
+            fs,
+            http,
+            dir,
+            url: localStorage.project_repo,
+            corsProxy: proxy,
+            singleBranch: true,
+            depth: 1,
+            ref: 'main'
+             });
 
         console.log("set author");
         await git.setConfig({
@@ -4191,7 +4200,10 @@ window.View = {
             let entities = await Aggregate.get_entities(file);
             model = entities.filter(x => x.att_name == handler.att_dictionary).at(0);
         }
-        return model.field.map(x => x.att_name);
+        let fields = model.field.map(x => x.att_name);
+        fields.push("created_at");
+        fields.push("updated_at");
+        return fields;
     },
     get_aggregate_entity_fields: async function(handler,mapping){
         let file = "domain/" + handler["att_sub-domain"] + "/" + handler.att_aggregate + "/root.xml";
