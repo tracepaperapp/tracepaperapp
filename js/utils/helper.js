@@ -65,4 +65,10 @@ class Draftsman {
     static unregisterTask(f) {
         Draftsman.taskMap.delete(f);
     }
+
+    static signOut(){
+        let logout_uri = `${localStorage["aws-congnito-ui"]}/logout?client_id=${localStorage["aws-congnito-app-id"]}&logout_uri=${window.location.origin}`;
+        sessionStorage.clear();
+        location = logout_uri;
+    }
 }

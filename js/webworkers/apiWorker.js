@@ -106,7 +106,7 @@ async function loadGraphQLFile(filePath) {
 }
 
 self.onmessage = async function (event) {
-  const { action, queryFilePath, variables, endpoint, api_key, cache_ttl, ignore_cache, authenticated, websocket, token, subscriptionId } = event.data;
+  const { action, queryFilePath, variables, endpoint, api_key, cache_ttl, ignore_cache, authenticated, websocket, token, subscriptionId, correlationId } = event.data;
 
   try {
     let queryString = "";
@@ -124,9 +124,12 @@ self.onmessage = async function (event) {
           }
         }
 
-        const headers = authenticated
+        let headers = authenticated
           ? { 'Authorization': `Bearer ${token}` }
           : { 'x-api-key': api_key };
+        if (correlationId){
+            headers["correlation-id"] = correlationId;
+        }
 
         const response = await fetch(endpoint, {
           method: 'POST',

@@ -1,7 +1,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('navigation', function(){
         return {
-            navigation: this.$persist("db-example-page"),
+            navigation: this.$persist("db-example-page").using(sessionStorage),
             navigationElementActive: function(){
                 let navigation = this.$el.getAttribute("navigation");
                 return navigation == this.navigation ? 'active' : ''

@@ -28,7 +28,7 @@
                             .split("&").filter(x => x.startsWith("expires_in=")).at(0)
                             .replace("expires_in=","");
       sessionStorage["token"] = token;
-      sessionStorage["token_expiration"] = Date.now() + parseInt(expires_in);
+      sessionStorage["token_expiration"] = Date.now() + (parseInt(expires_in) * 1000);
       let payload = parseJwt(token);
       sessionStorage["username"] = payload["cognito:username"];
       sessionStorage["email"] = payload["email"];

@@ -1,5 +1,5 @@
 <template x-component="menu-bar">
-    <div class="navbar bg-primary-content h-[9vh]" x-data="contextManagement">
+    <div class="navbar bg-primary-content h-[9vh]">
 
         <div class="navbar-start">
             <div class="dropdown">
@@ -14,8 +14,8 @@
                     class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                     <li>
                         <a @click="projectModal = true">Open project</a>
-                        <a @click="alert('TODO')">Start new project</a>
-                        <a @click="alert('TODO')">Sign out</a>
+                        <a @click="newProjectModal = true">Start new project</a>
+                        <a @click="Draftsman.signOut">Sign out</a>
                     </li>
                 </ul>
                 <dialog x-show="projectModal" x-cloak x-transition class="modal modal-open">
@@ -38,11 +38,37 @@
                         </p>
                     </div>
                 </dialog>
+                <dialog x-show="newProjectModal" x-cloak x-transition
+                        class="modal modal-open">
+                    <div class="modal-box w-11/12 max-w-5xl">
+                        <form method="dialog">
+                            <button @click="newProjectModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        </form>
+                        <h3 class="font-bold text-lg">Start new project</h3>
+                        <p class="py-4">
+                            <table class="table">
+                                <tr>
+                                    <th scope="row">Workspace</th>
+                                    <td>
+                                        <select class="select select-bordered w-full max-w-xs" x-model="newProject.workspaceDrn">
+                                            <option></option>
+                                            <template x-for="workspace in raw_data.workspace" :key="workspace.drn">
+                                                <option :value="workspace.drn" x-text="workspace.name"
+                                                        :selected="newProject.workspaceDrn == workspace.drn"></option>
+                                            </template>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                            <pre x-text="JSON.stringify(newProject,null,2)"></pre>
+                        </p>
+                    </div>
+                </dialog>
             </div>
         </div>
 
         <div class="navbar-center">
-            <a class="btn btn-ghost text-xl" x-text="localStorage.project_name"></a>
+            <a class="btn btn-ghost text-xl" x-text="sessionStorage.project_name"></a>
         </div>
 
         <div class="navbar-end" x-data="sourceManagement">
@@ -57,6 +83,21 @@
             </div>
         </div>
 
+        <dialog x-show="profileModal" x-cloak x-transition class="modal modal-open">
+            <div class="modal-box">
+                <h3 class="text-lg font-bold">Looks like you are here for the first time...</h3>
+                <p class="py-4">
 
+                    <label class="input input-bordered flex items-center gap-2">
+                        Choose a screen name
+                        <input type="text" class="grow" placeholder="John Doe" x-model="fullName"/>
+                    </label>
+                    <small>After you tell us your name, we will create a personal workspace for you.
+                        You will need to sign-in again.</small>
+                    <button class="btn btn-outline btn-primary mt-5 btn-block"
+                            @click="create_user">Save</button>
+                </p>
+            </div>
+        </dialog>
     </div>
 </template>

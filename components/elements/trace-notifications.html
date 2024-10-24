@@ -1,8 +1,24 @@
 <template x-component="trace-notifications">
-    <template x-for="trace in traces" :key="trace.timestamp">
+    <template x-for="trace in traces">
         <div>
 
-            <div x-show="trace.status == 'success'" x-cloak x-transition role="alert" class="alert alert-success">
+            <div x-show="trace.status == 'info'" x-cloak x-transition role="alert" class="alert alert-info mt-2">
+                <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        class="h-6 w-6 shrink-0 stroke-current">
+                    <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span x-text="trace.name"></span>:&nbsp;
+                <span x-text="trace.message"></span>
+            </div>
+
+            <div x-show="trace.status == 'success'" x-cloak x-transition role="alert" class="alert alert-success mt-2">
                 <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="h-6 w-6 shrink-0 stroke-current"
@@ -18,7 +34,7 @@
                 <span x-text="trace.message"></span>
             </div>
 
-            <div x-show="trace.status == 'error'" x-cloak x-transition role="alert" class="alert alert-error">
+            <div x-show="trace.status == 'error'" x-cloak x-transition role="alert" class="alert alert-error mt-2">
                 <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="h-6 w-6 shrink-0 stroke-current"

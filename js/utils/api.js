@@ -69,8 +69,11 @@ class API {
   /**
    * Perform a GraphQL mutation.
    */
-  async mutation(queryFilePath, variables = {}, ignore_cache = true, authenticated=false) {
+  async mutation(queryFilePath, variables = {}, ignore_cache = true, authenticated=false,correlationId=null) {
     if ((this.authenticated || authenticated) && !this.checkAuthentication()) return;
+    if (!correlationId){
+        correlationId = Draftsman.uuidv4();
+    }
     variables = JSON.parse(JSON.stringify(variables));
     let data = await this._sendMessage({
       action: 'mutation',
@@ -80,6 +83,7 @@ class API {
       api_key: this.api_key,
       cache_ttl: this.cache_enabled ? this.cache_ttl : 0,
       ignore_cache,
+      correlationId,
       authenticated: this.authenticated || authenticated,
     });
     return findCorrelationId(data);

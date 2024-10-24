@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="/css/draftsman.css" />
 </head>
 <body x-data="navigation">
-
+    <div x-data="contextManagement">
     <div x-import="menu-bar">
         <ui-menu-bar></ui-menu-bar>
     </div>
@@ -34,6 +34,9 @@
             </div>
         </div>
         <div class="col-span-9">
+            <div x-import="elements/trace-notifications">
+                <ui-trace-notifications></ui-trace-notifications>
+            </div>
 <!--            <div x-import="pages/documentdb-example">-->
 <!--                <ui-db-example></ui-db-example>-->
 <!--            </div>-->
@@ -65,6 +68,6 @@
     <script src="/js/modules/navigation.js"></script>
     <script src="/js/modules/source-management.js"></script>
     <script src="/js/modules/context-management.js"></script>
-
+    </div>
 </body>
 </html>
