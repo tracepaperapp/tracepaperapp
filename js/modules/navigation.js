@@ -5,6 +5,30 @@ document.addEventListener('alpine:init', () => {
             navigation: this.$persist("").using(sessionStorage),
             tabs: this.$persist([]).using(sessionStorage),
             issuesView: false,
+            init(){
+                if (!sessionStorage.project_url && localStorage.session){
+                    let items = JSON.parse(localStorage.session);
+                    items.forEach(item => {
+                        sessionStorage.setItem(item.key,item.value);
+                    });
+                    location.reload();
+                }
+                Draftsman.registerTask(this._save_session.bind(this),10,"save-session");
+            },
+            _save_session(){
+                if (!sessionStorage.project_url){return}
+                if (document.visibilityState !== "visible"){return}
+                const items = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    const value = sessionStorage.getItem(key);
+                    if (value == 'false'){
+                        continue;
+                    }
+                    items.push({ key, value });
+                }
+                localStorage.session = JSON.stringify(items);
+            },
             navigationElementActive: function(){
                 let navigation = this.$el.getAttribute("navigation");
                 let type = this.$el.getAttribute("navigation-type");
