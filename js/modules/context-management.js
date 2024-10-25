@@ -6,6 +6,7 @@ document.addEventListener('alpine:init', () => {
             profileModal: false,
             projects: [],
             projectModal: false,
+            githubAccount: this.$persist(""),
             newProject: this.$persist({}).using(sessionStorage),
             newProjectModal: false,
             raw_data: {},
@@ -39,6 +40,9 @@ document.addEventListener('alpine:init', () => {
                 if (!this.newProject.workspaceDrn){
                     this.newProject.workspaceDrn = this.raw_data.workspace.at(0).drn;
                 }
+
+                // Initialize project if non is found
+                this.newProjectModal = this.projects.length == 0
             },
             async create_user(){
                 this.profileModal = false;
@@ -47,10 +51,10 @@ document.addEventListener('alpine:init', () => {
                     status: "info",
                     message: "Preparing your personal workspace, one moment please..."
                 });
-                setTimeout(this._remove_first_trace.bind(this),8000);
+                setTimeout(this._remove_first_trace.bind(this),5000);
                 let api = await API.initialize(true);
                 let correlationId = Draftsman.uuidv4();
-                this.subscriptionId = await api.subscription("/prepared-statements/subscribe-track-and-trace.txt",{correlationId},this._track_create_user.bind(this));
+                this.subscriptionId = await api.subscription("/prepared-statements/subscribe-track-and-trace.txt",{correlationId},this._track.bind(this));
                 console.log(this.subscriptionId);
                 await api.mutation("/prepared-statements/create-user.txt",{fullName: this.fullName},true,true,correlationId);
             },
@@ -62,8 +66,39 @@ document.addEventListener('alpine:init', () => {
                 await Draftsman.sleep(100);
                 location.reload();
             },
+            prepare_repos(){
+                let base = `https://github.com/${this.githubAccount}/${this.newProject.name.toLowerCase()}`;
+                this.newProject.modelRepo = base + "-model";
+                this.newProject.codeRepo = base + "-backend";
+                this.newProject.guiRepo = base + "-gui";
+            },
+            create_repo(){
+                let repo = this.$el.getAttribute("repo");
+                let url = `https://github.com/new?name=${repo.split('/').at(-1)}&owner=${this.githubAccount}&visibility=private`;
+                window.open(url, '_blank');
+            },
+            invite_draftsman(){
+                let repo = this.$el.getAttribute("repo");
+                let url = repo + "/settings/access";
+                window.open(url, '_blank');
+            },
             async start_new_project(){
-
+                this.newProjectModal = false;
+                this.traces.push({
+                    name: "Create project",
+                    status: "info",
+                    message: "Preparing project, one moment please..."
+                });
+                setTimeout(this._remove_first_trace.bind(this),5000);
+                let api = await API.initialize(true);
+                let correlationId = Draftsman.uuidv4();
+                this.subscriptionId = await api.subscription("/prepared-statements/subscribe-track-and-trace.txt",{correlationId},this._track.bind(this));
+                console.log(this.subscriptionId);
+                await api.mutation("/prepared-statements/initialize-project.txt",this.newProject,true,true,correlationId);
+                this.drn = this.newProject.workspaceDrn + ":" + this.newProject.name;
+                sessionStorage.removeItem('proxyToken');
+                sessionStorage.project_name = this.newProject.name;
+                sessionStorage.project_url = this.newProject.modelRepo;
             },
             async _fetch_token(){
                 if (this.drn){
@@ -76,7 +111,7 @@ document.addEventListener('alpine:init', () => {
             _remove_first_trace(){
                 this.traces.shift();
             },
-            async _track_create_user(data){
+            async _track(data){
                 data = data["data"]["onTrace"];
                 if (data.status != "success" && data.status != "error"){
                     return;
@@ -86,9 +121,13 @@ document.addEventListener('alpine:init', () => {
                     status: data.status,
                     message: data.message
                 });
-                setTimeout(this._remove_first_trace.bind(this),8000);
+                setTimeout(this._remove_first_trace.bind(this),5000);
                 if (data.command == "SetupWorkspace-Notifier" && data.status == "success"){
                     Draftsman.signOut();
+                }
+                if (data.command == "Project.Create" && data.status == "success"){
+                    await Draftsman.sleep(3000);
+                    location.reload();
                 }
             }
         }

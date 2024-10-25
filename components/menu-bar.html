@@ -59,8 +59,106 @@
                                         </select>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <th scope="row">Project name</th>
+                                    <td>
+                                        <input type="text"
+                                               x-model="newProject.name"
+                                               x-data="inputValidator"
+                                               @input="pascal_cased"
+                                               @focusout="prepare_repos"
+                                               placeholder="ProjectName"
+                                               class="input w-full max-w-xs" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Github account</th>
+                                    <td>
+                                        <input type="text"
+                                               x-model="githubAccount"
+                                               x-data="inputValidator"
+                                               @input="github_account"
+                                               @focusout="prepare_repos"
+                                               placeholder="dummyaccount"
+                                               class="input w-full max-w-xs" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Model Repository</th>
+                                    <td>
+                                        <input type="text"
+                                               x-model="newProject.modelRepo"
+                                               x-data="inputValidator"
+                                               @input="github_repo_url"
+                                               placeholder="https://github.com/username/repository"
+                                               class="input w-full" />
+                                        <button :repo="newProject.modelRepo"
+                                                @click="create_repo"
+                                                class="btn btn-outline btn-primary btn-xs ml-4">Create repository</button>
+                                        <button :repo="newProject.modelRepo"
+                                                @click="invite_draftsman"
+                                                class="btn btn-outline btn-primary btn-xs">
+                                            make sure the <i>draftsman-io</i> user is invited to have write access
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Code Repository</th>
+                                    <td>
+                                        <input type="text"
+                                               x-model="newProject.codeRepo"
+                                               x-data="inputValidator"
+                                               @input="github_repo_url"
+                                               placeholder="https://github.com/username/repository"
+                                               class="input w-full" />
+                                        <button :repo="newProject.codeRepo"
+                                                @click="create_repo"
+                                                class="btn btn-outline btn-primary btn-xs ml-4">Create repository</button>
+                                        <button :repo="newProject.codeRepo"
+                                                @click="invite_draftsman"
+                                                class="btn btn-outline btn-primary btn-xs">
+                                            make sure the <i>draftsman-io</i> user is invited to have write access
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">GUI Repository (beta)</th>
+                                    <td>
+                                        <input type="text"
+                                               x-model="newProject.guiRepo"
+                                               x-data="inputValidator"
+                                               @input="github_repo_url"
+                                               placeholder="https://github.com/username/repository"
+                                               class="input w-full" />
+                                        <button :repo="newProject.guiRepo"
+                                                @click="create_repo"
+                                                class="btn btn-outline btn-primary btn-xs ml-4">Create repository</button>
+                                        <button :repo="newProject.guiRepo"
+                                                @click="invite_draftsman"
+                                                class="btn btn-outline btn-primary btn-xs">
+                                            make sure the <i>draftsman-io</i> user is invited to have write access
+                                        </button>
+                                    </td>
+                                </tr>
                             </table>
-                            <pre x-text="JSON.stringify(newProject,null,2)"></pre>
+                        <button class="btn btn-outline btn-primary mt-5 btn-block"
+                                @click="start_new_project">Start project</button>
+                        </p>
+                    </div>
+                </dialog>
+                <dialog x-show="profileModal" x-cloak x-transition class="modal modal-open">
+                    <div class="modal-box">
+                        <h3 class="text-lg font-bold">Looks like you are here for the first time...</h3>
+                        <p class="py-4">
+
+                            <label class="input input-bordered flex items-center gap-2">
+                                Choose a screen name
+                                <input type="text" class="grow" placeholder="John Doe" x-model="fullName"/>
+                            </label>
+                            <small>After you tell us your name, we will create a personal workspace for you.
+                                You will need to sign-in again.</small>
+                            <button class="btn btn-outline btn-primary mt-5 btn-block"
+                                    @click="create_user">Save</button>
                         </p>
                     </div>
                 </dialog>
@@ -83,21 +181,5 @@
             </div>
         </div>
 
-        <dialog x-show="profileModal" x-cloak x-transition class="modal modal-open">
-            <div class="modal-box">
-                <h3 class="text-lg font-bold">Looks like you are here for the first time...</h3>
-                <p class="py-4">
-
-                    <label class="input input-bordered flex items-center gap-2">
-                        Choose a screen name
-                        <input type="text" class="grow" placeholder="John Doe" x-model="fullName"/>
-                    </label>
-                    <small>After you tell us your name, we will create a personal workspace for you.
-                        You will need to sign-in again.</small>
-                    <button class="btn btn-outline btn-primary mt-5 btn-block"
-                            @click="create_user">Save</button>
-                </p>
-            </div>
-        </dialog>
     </div>
 </template>

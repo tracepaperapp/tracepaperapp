@@ -1,22 +1,3 @@
-
-.editable {
-  text-decoration: underline;
-  text-decoration-color: var(--fallback-pc,oklch(var(--pc)/1));
-  text-decoration-thickness: 25%;
-  cursor: pointer;
-}
-
-[contenteditable] {
-  text-decoration: underline;
-  text-decoration-color: var(--fallback-pc,oklch(var(--pc)/1));
-  text-decoration-thickness: 25%;
-  cursor: pointer;
-}
-
-[contenteditable]:empty {
-    border-bottom: 0.25rem solid var(--fallback-pc,oklch(var(--pc)/1));
-}
-
 .scrollbar-h {
     overflow-x:auto;
     width: 100%;
@@ -62,4 +43,16 @@
 }
 .scroll-v-inside {
     direction: ltr;
+}
+
+* {
+  max-width: 100vw;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
 }

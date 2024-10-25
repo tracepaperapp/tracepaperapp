@@ -27,13 +27,13 @@
         <ui-menu-bar></ui-menu-bar>
     </div>
 
-    <div class="grid grid-cols-12 gap-3  mt-5">
+    <div class="grid grid-cols-12 gap-3 mt-5">
         <div class="col-span-2">
             <div x-import="navigation">
                 <ui-navigation></ui-navigation>
             </div>
         </div>
-        <div class="col-span-9">
+        <div class="col-span-9 w-full">
             <div x-import="elements/trace-notifications">
                 <ui-trace-notifications></ui-trace-notifications>
             </div>
@@ -65,9 +65,11 @@
     <script src="/js/utils/git.js"></script>
 
     <!-- customs -->
-    <script src="/js/modules/navigation.js"></script>
-    <script src="/js/modules/source-management.js"></script>
-    <script src="/js/modules/context-management.js"></script>
+        <script src="/js/modules/navigation.js"></script>
+        <script src="/js/modules/source-management.js"></script>
+        <script src="/js/modules/context-management.js"></script>
+        <script src="/js/modules/input-validator.js"></script>
+
     </div>
 </body>
 </html>
