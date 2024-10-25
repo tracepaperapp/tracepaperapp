@@ -1,0 +1,18 @@
+<template x-component="tab-bar">
+    <div class="w-[99%] my-1">
+        <div role="tablist" class="tabs tabs-lifted w-[99%]">
+            <template x-for="path in tabs" :key="path">
+                <a role="tab"
+                   :class="path == navigation ? 'tab tab-active' : 'tab'"
+                   @contextmenu.stop="close_tab"
+                   :navigation="path"
+                   @click.stop="navigate">
+                    <div class="tooltip tooltip-right" data-tip="right click to close tab">
+                        <span :navigation="path" x-text="get_name"></span>
+                    </div>
+                </a>
+            </template>
+        </div>
+    </div>
+    </div>
+</template>

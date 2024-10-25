@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', () => {
                 this.$el.dispatchEvent(new Event('input'));
                 this.$el.setAttribute('data-lpignore', 'true');
                 this.$el.setAttribute('autocomplete', 'off');
+                this.$el.setAttribute('id', Draftsman.uuidv4());
             },
             pascal_cased(){
                 const pascalCaseRegex = /^[A-Z][a-zA-Z0-9]*$/;

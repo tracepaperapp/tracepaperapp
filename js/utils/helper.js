@@ -1,9 +1,28 @@
 class Draftsman {
     static taskMap = new Map();
     static loopRunning = false;
+    static debounceTimers = new Map();
+    static listeners = new Map();
+
+    static debounce(taskKey, func, delayInMs=250) {
+        if (Draftsman.debounceTimers.has(taskKey)) {
+            clearTimeout(Draftsman.debounceTimers.get(taskKey));
+        }
+        const timer = setTimeout(async () => {
+            try {
+                await func();
+            } catch (error) {
+                console.error("Error in debounced task:", error);
+            } finally {
+                Draftsman.debounceTimers.delete(taskKey);
+            }
+        }, delayInMs);
+        Draftsman.debounceTimers.set(taskKey, timer); // Sla de nieuwe timer op met de taskKey
+    }
 
     static async waitFor(predicate, interval = 100) {
-        while (!predicate()) {
+        let check = await predicate();
+        while (!check) {
             await Draftsman.sleep(interval);
         }
     }
@@ -64,6 +83,36 @@ class Draftsman {
 
     static unregisterTask(f) {
         Draftsman.taskMap.delete(f);
+    }
+
+    static async publishMessage(type, message) {
+        await Draftsman.sleep(100);
+        const event = new CustomEvent(type, { detail: message });
+        window.dispatchEvent(event);
+    }
+
+    static registerListener(type, callback) {
+        const listenerId = Draftsman.uuidv4();
+        const listener = async (event) => {
+            try {
+                await callback(event.detail);
+            } catch (error) {
+                console.error("Error in listener callback:", error);
+            }
+        };
+        window.addEventListener(type, listener);
+        Draftsman.listeners.set(listenerId, { type, listener });
+        return listenerId;
+    }
+
+    static deregisterListener(listenerId) {
+        if (Draftsman.listeners.has(listenerId)) {
+            const { type, listener } = Draftsman.listeners.get(listenerId);
+            window.removeEventListener(type, listener);
+            Draftsman.listeners.delete(listenerId);
+        } else {
+            console.warn("Listener not found:", listenerId);
+        }
     }
 
     static signOut(){

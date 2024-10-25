@@ -194,7 +194,7 @@ async function stageLocalChanges() {
 
 // Bestandsbeheer functies
 async function listFiles() {
-  return await pfs.readdir(dir);
+  return await isogit.listFiles({ fs, dir: dir, ref: 'HEAD' });
 }
 
 async function readFile(filePath) {

@@ -173,7 +173,106 @@
             <template x-if="!window.chrome">
                 <div class="link" style="color: red;">A <a href="https://en.wikipedia.org/wiki/Chromium_(web_browser)" target="_blank">chromium based browser is recommended!</div>
             </template>
-            &nbsp;
+
+            <div x-show="changes.length" x-cloak x-transition class="relative inline-block">
+                <button @click="start_commit" class="btn btn-circle btn-outline btn-success m-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </button>
+                <span x-text="changes.length"
+                      class="absolute top-0 right-0 inline-block px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                </span>
+                <dialog x-show="commitModal" x-cloak x-transition class="modal modal-open">
+                    <div class="modal-box  w-11/12 max-w-5xl">
+                        <form method="dialog">
+                            <button @click="commitModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        </form>
+                        <h3 class="font-bold text-lg">Commit changes</h3>
+                        <div class="flex gap-4 mt-2" x-show="diff.file" x-cloak x-transition>
+                            <!-- Local File Column -->
+                            <div class="w-1/2">
+                                <h3 class="text-lg font-bold">Local File</h3>
+                                <div class="p-4 border border-primary rounded-lg">
+                                    <pre class="whitespace-pre-wrap bg-gray-100 p-4 rounded-md" x-html="diff.local"></pre>
+                                </div>
+                            </div>
+
+                            <!-- Remote File Column -->
+                            <div class="w-1/2">
+                                <h3 class="text-lg font-bold">Remote File</h3>
+                                <div class="p-4 border border-primary rounded-lg">
+                                    <pre class="whitespace-pre-wrap bg-gray-100 p-4 rounded-md" x-html="diff.remote"></pre>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-sm font-bold text-gray-400 mt-5">Changed files</h6>
+                        <table class="table">
+                            <template x-for="change in changes" :key="change.filePath">
+                                <tr class="border-t">
+                                    <th scope="row" x-text="change.status"></th>
+                                    <td x-text="change.filePath"></td>
+                                    <td x-show="change.hasConflict" x-cloak x-transition>
+                                        <button :file="change.filePath"
+                                                class="btn btn-sm btn-error"
+                                                :class="diff.file == change.filePath ? '' : 'btn-outline'"
+                                                @click="compare_diff">Conflicted</button>
+                                    </td>
+                                    <td x-show="change.hasConflict" x-cloak x-transition>
+                                        <button :file="change.filePath"
+                                                :class="force.includes(change.filePath) ? 'btn btn-success btn-sm' : 'btn btn-outline btn-success btn-sm'"
+                                                @click="accept_mine">Accept mine</button>
+                                    </td>
+                                    <td>
+                                        <div class="tooltip tooltip-bottom" data-tip="Revert local changes">
+                                            <button :file="change.filePath"
+                                                    @click="revert_file"
+                                                    class="btn btn-sm btn-outline btn-accent">
+                                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </table>
+                        <textarea class="textarea textarea-bordered w-full mt-3"
+                                  x-model="commitMessage" placeholder="Enter commit message"></textarea>
+                        <div class="modal-action">
+                            <button class="btn" @click="commitModal = false">Cancel</button>
+                            <button class="btn btn-primary"
+                                    :disabled="commitMessage == '' || !readyToCommit"
+                                    @click="commit_changes">Commit</button>
+                        </div>
+                    </div>
+                </dialog>
+            </div>
+
+            <div x-show="issues.length" x-cloak x-transition class="relative inline-block">
+                <button @click="issuesView = true" class="btn btn-circle btn-outline btn-error m-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </button>
+                <span x-text="issues.length"
+                      class="absolute top-0 right-0 inline-block px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                </span>
+                <dialog x-show="issuesView" x-cloak x-transition class="modal modal-open">
+                    <div class="modal-box  w-11/12 max-w-5xl">
+                        <form method="dialog">
+                            <button @click="issuesView = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        </form>
+                        <h3 class="font-bold text-lg">Model issues</h3>
+                        <p class="py-4">
+                        <table class="table">
+                            <template x-for="issue in issues">
+                                <tr class="cursor-pointer border-b" :navigation="issue.filePath" @click="navigate">
+                                    <th scope="row" :navigation="issue.filePath" x-text="get_name"></th>
+                                    <td x-text="issue.type"></td>
+                                    <td x-text="issue.message"></td>
+                                </tr>
+                            </template>
+                        </table>
+                        </p>
+                    </div>
+                </dialog>
+            </div>
+
             <div>
                 <small x-show="last_pull" x-cloak x-transition>Last&nbsp;pulled: <span x-text="last_pull"></span></small><br>
                 <small x-show="commit_diff.remoteAhead" x-cloak x-transition><span x-text="commit_diff.remoteAhead"></span>

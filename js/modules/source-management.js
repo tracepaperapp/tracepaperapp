@@ -2,7 +2,6 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('sourceManagement', function(){
         return {
             changes: [],
-            unpushedCommits: 0,
             conflict: false,
             commitMessage: this.$persist("").using(sessionStorage),
             force: [],
@@ -12,32 +11,37 @@ document.addEventListener('alpine:init', () => {
             commit_diff: {},
             diff: {},
             repo: null,
+            commitModal: false,
+            issues: [],
             async init(){
-                let repo = await GitRepository.open();
-                this.repo = repo;
+                this.repo = await GitRepository.open();
                 Draftsman.registerTask(this._list_changes.bind(this),0.2,"source-administration");
-                this.unpushedCommits = await this.repo.hasUnpushedChanges();
+                Draftsman.registerTask(this.validate_model.bind(this),10,"model-validation");
+            },
+            async validate_model(){
+                this.issues = await Modeler.validate();
             },
             async revert_file(){
                 let file = this.$el.getAttribute("file");
                 await this.repo.revert(file);
+                await this.execute_diff();
+                Draftsman.publishMessage("force-reload",file);
+            },
+            async start_commit(){
+                this.commitModal = true;
                 await this.execute_diff();
             },
             async commit_changes(){
                 this.commitModal = false;
                 this.repo.commit(this.commitMessage);
                 await Draftsman.sleep(1000);
-                this.unpushedCommits = await this.repo.hasUnpushedChanges();
-            },
-            async push_commits(){
-                console.log(await this.repo.push());
-                this.unpushedCommits = 0;
+                await this.repo.push();
                 this.force = [];
                 this.readyToCommit = false;
+                this.diff = {};
             },
             async execute_diff(){
                 this.readyToCommit = false;
-                this.commitModal = true;
                 let changes = await this.repo.status(true);
                 this.changes = changes.filter(x => x.status != "unmodified");
             },
@@ -75,7 +79,8 @@ document.addEventListener('alpine:init', () => {
                 }).join('');
                 this.diff = {
                     local: localFileHighlighted,
-                    remote: remoteFileHighlighted
+                    remote: remoteFileHighlighted,
+                    file: file
                 };
             },
             async _list_changes(){
@@ -84,7 +89,13 @@ document.addEventListener('alpine:init', () => {
                 this.conflict = changes.some(file => file.hasConflict);
                 this.readyToCommit = this.changes.every(x => !x.hasConflict || this.force.includes(x.filePath));
                 if (GitRepository.last_pull != 0){
+                    if (this.last_pull_raw < GitRepository.last_pull){
+                        Draftsman.publishMessage("force-reload","");
+                    }
                     this.last_pull_raw = GitRepository.last_pull;
+                }
+                if (this.changes.length == 0){
+                    this.commitModal = false;
                 }
                 this.commit_diff = GitRepository.commit_diff;
                 this.last_pull = luxon.DateTime.fromMillis(this.last_pull_raw).toRelative();

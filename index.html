@@ -29,13 +29,22 @@
 
     <div class="grid grid-cols-12 gap-3 mt-5">
         <div class="col-span-2">
-            <div x-import="navigation">
-                <ui-navigation></ui-navigation>
+            <div x-import="file-browser">
+                <ui-file-browser></ui-file-browser>
             </div>
         </div>
-        <div class="col-span-9 w-full">
+        <div class="col-span-10 w-full">
             <div x-import="elements/trace-notifications">
                 <ui-trace-notifications></ui-trace-notifications>
+            </div>
+            <div x-import="tab-bar">
+                <ui-tab-bar></ui-tab-bar>
+            </div>
+            <div x-import="modeler/readme">
+                <ui-readme></ui-readme>
+            </div>
+            <div x-import="modeler/dummy-page">
+                <ui-dummy></ui-dummy>
             </div>
 <!--            <div x-import="pages/documentdb-example">-->
 <!--                <ui-db-example></ui-db-example>-->
@@ -63,12 +72,15 @@
     <script src="/js/utils/database.js"></script>
     <script src="/js/utils/searchindex.js"></script>
     <script src="/js/utils/git.js"></script>
+    <script src="/js/utils/modeler.js"></script>
 
     <!-- customs -->
-        <script src="/js/modules/navigation.js"></script>
-        <script src="/js/modules/source-management.js"></script>
-        <script src="/js/modules/context-management.js"></script>
-        <script src="/js/modules/input-validator.js"></script>
+    <script src="/js/modules/navigation.js" module></script>
+    <script src="/js/modules/source-management.js" module></script>
+    <script src="/js/modules/context-management.js" module></script>
+    <script src="/js/modules/input-validator.js" module></script>
+    <script src="/js/modules/file-browser.js" module></script>
+    <script src="/js/modules/basic-file.js" module></script>
 
     </div>
 </body>

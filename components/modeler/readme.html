@@ -1,0 +1,19 @@
+<template x-component="readme">
+    <div navigation-type="readme"
+         x-show="navigationElementActive"
+         x-cloak
+         x-transition.delay.100ms>
+        <template navigation-type="readme" x-if="navigationElementActive">
+            <div :file="navigation" x-data="basicFile">
+                <h3 class="text-2xl font-semibold text-gray-800">
+                    Readme
+                </h3>
+                <textarea
+                        x-model="content"
+                        placeholder="Bio"
+                        rows="20"
+                        class="textarea textarea-bordered textarea-lg w-full"></textarea>
+            </div>
+        </template>
+    </div>
+</template>

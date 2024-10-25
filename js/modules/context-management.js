@@ -41,8 +41,11 @@ document.addEventListener('alpine:init', () => {
                     this.newProject.workspaceDrn = this.raw_data.workspace.at(0).drn;
                 }
 
-                // Initialize project if non is found
+                // Initialize project if non is found or ask to open a project
                 this.newProjectModal = this.projects.length == 0
+                if (!this.newProjectModal && !this.drn){
+                    this.projectModal = true;
+                }
             },
             async create_user(){
                 this.profileModal = false;
