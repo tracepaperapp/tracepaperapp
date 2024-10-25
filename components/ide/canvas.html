@@ -2,7 +2,7 @@
   <div class="scrollbar-v h-[99vh] p-1"
        x-data="{file: '', type: '', model: {}, documentation: {}}"
        x-import="utils/editor-elements;utils/markdown"
-       x-init="file = location.hash.replace('#','');type = Modeler.determine_type(file)" spellcheck="false">
+       x-init="file = location.hash.replace('#','');type = Modeler.determine_type(file);session.tab = file" spellcheck="false">
     <div x-init="document.title = Navigation.get_name(file)"></div>
     <template x-if="type != 'dependencies'">
       <div x-init="model = await Modeler.get(file)"></div>
