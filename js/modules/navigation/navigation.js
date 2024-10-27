@@ -19,7 +19,8 @@ document.addEventListener('alpine:init', () => {
                 console.log(this.tabs.length != 0,this.navigation == "")
                 if (this.tabs.length != 0){
                     let repo = await GitRepository.open();
-                    console.log(await repo.list());
+                    let files = await repo.list();
+                    this.tabs = this.tabs.filter(x => files.includes(x));
                 } else if (this.navigation == "") {
                     this.navigation = "README.md";
                     this.tabs = ["README.md"];
