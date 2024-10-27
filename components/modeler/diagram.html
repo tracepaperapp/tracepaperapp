@@ -1,0 +1,82 @@
+<template x-component="diagram">
+    <div navigation-type="diagram"
+         x-show="navigationElementActive"
+         x-cloak
+         x-transition.delay.100ms>
+        <template navigation-type="diagram" x-if="navigationElementActive">
+            <div :file="navigationFile" x-data="nodeDiagram" class="grid grid-cols-12 gap-3 mt-5">
+                <div class="col-span-10">
+                    <div id="node-diagram"></div>
+                </div>
+                <div class="col-span-2">
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Commands</span>
+                        <input type="checkbox"
+                               :checked="selection.command" 
+                               class="checkbox checkbox-primary"
+                               x-model="selection.command"/>
+                    </label>
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Behavior</span>
+                        <input type="checkbox"
+                               :checked="selection.behavior"
+                               class="checkbox checkbox-primary"
+                               x-model="selection.behavior"/>
+                    </label>
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Notifiers</span>
+                        <input type="checkbox"
+                               :checked="selection.notifier"
+                               class="checkbox checkbox-primary"
+                               x-model="selection.notifier"/>
+                    </label>
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Views</span>
+                        <input type="checkbox"
+                               :checked="selection.view"
+                               class="checkbox checkbox-primary"
+                               x-model="selection.view"/>
+                    </label>
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Queries</span>
+                        <input type="checkbox"
+                               :checked="selection.query"
+                               class="checkbox checkbox-primary"
+                               x-model="selection.query"/>
+                    </label>
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Projections</span>
+                        <input type="checkbox"
+                               :checked="selection.projection"
+                               class="checkbox checkbox-primary"
+                               x-model="selection.projection"/>
+                    </label>
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Dependencies</span>
+                        <input type="checkbox"
+                               :checked="selection.dependency"
+                               class="checkbox checkbox-primary"
+                               x-model="selection.dependency"/>
+                    </label>
+
+                    <div class="badge badge-primary"
+                         x-show="session.selected_node" x-cloak x-transition
+                         x-text="session.selected_node"></div>
+
+                    <button class="btn btn-outline btn-primary btn-block my-2"
+                            @click="focus"
+                            x-show="session.selected_node in session.all_links" x-cloak x-transition>Focus</button>
+
+                    <button class="btn btn-outline btn-primary btn-block mb-2"
+                            :navigation="session.all_links[session.selected_node]"
+                            @click.debounce="navigate"
+                            x-show="session.selected_node in session.all_links" x-cloak x-transition>Open</button>
+
+                    <button class="btn btn-outline btn-primary btn-block"
+                            @click="zoom_out"
+                            x-show="path.includes('/')" x-cloak x-transition>Zoom out</button>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

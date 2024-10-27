@@ -113,9 +113,6 @@
             <button class="btn btn-outline btn-primary btn-block"
                     @click="file = file.substring(0,file.lastIndexOf('/'));if(!file.includes('/')){file = ''};file = file.replace('/behavior-flows','');location.hash = file;location.reload()"
                     x-show="location.hash.includes('/')" x-cloak x-transition>Zoom out</button>
-<!--            <button class="btn btn-outline btn-primary btn-block"-->
-<!--                    @click.debounce.stop="downloadURI(session.diagram_img,'diagram.png')"-->
-<!--                    x-show="session.diagram_img" x-cloak x-transition>Get screenshot</button>-->
         </div>
     </div>
 

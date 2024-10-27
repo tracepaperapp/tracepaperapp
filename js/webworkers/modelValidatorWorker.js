@@ -1,7 +1,8 @@
 importScripts('/js/tp/isomorphic-git.js');
 importScripts('/js/tp/lightning-fs.js');
+importScripts('/js/utils/helper.js');
+importScripts('/js/tp/fast-xml-parser.js');
 importScripts('/js/utils/modeler.js');
-importScripts('/js/tp/fast-xml-parser.js')
 
 const options = {
     ignoreAttributes : false,
@@ -62,6 +63,20 @@ async function get_model(file){
 
 async function get_by_name(name){
     let targets = [...files];
+    if (name == "FileUploaded"){
+        return {
+            att_name: "FileUploaded",
+            att_type: "DomainEvent",
+            att_source: "appsync",
+            field: [
+                {att_name: "bucket", att_type: "String"},
+                {att_name: "uri", att_type: "String"},
+                {att_name: "location", att_type: "String"},
+                {att_name: "username", att_type: "String"}
+            ],
+            "nested-object": []
+        };
+    }
     targets = targets.filter(x => x.endsWith("/" + name + ".xml"));
     targets = targets.filter(x => !x.includes("/event-handlers/"))
     if (targets.lenght == 0){

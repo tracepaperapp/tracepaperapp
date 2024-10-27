@@ -4,15 +4,69 @@
          x-cloak
          x-transition.delay.100ms>
         <template navigation-type="readme" x-if="navigationElementActive">
-            <div :file="navigation" x-data="basicFile">
-                <h3 class="text-2xl font-semibold text-gray-800">
-                    Readme
-                </h3>
-                <textarea
-                        x-model="content"
-                        placeholder="Bio"
-                        rows="20"
-                        class="textarea textarea-bordered textarea-lg w-full"></textarea>
+            <div  class="grid grid-cols-12 gap-3 mt-5">
+                <div class="col-span-8 ml-2">
+                    <!-- Main content -->
+                    <div :file="navigation" x-data="markdownEditor"></div>
+                </div>
+                <div class="col-span-4">
+
+                    <!-- Info Card -->
+                    <div class="card bg-primary text-primary-content mb-5 card-compact">
+                        <div class="card-body">
+                            <div class="card-actions justify-end">
+                                <i @click="open_github"
+                                   :file="navigation" x-data="infoCard"
+                                   class="fa-solid fa-code cursor-pointer"></i>
+                            </div>
+                            <h2 class="card-title">Project Overview</h2>
+                            <p>README</p>
+                        </div>
+                    </div>
+
+                    <!-- Tree diagram -->
+                    <div x-data="treeMap" >
+                        <div x-show="can_navigate" x-cloak x-transition>
+                            <template x-if="can_navigate">
+                                <button class="btn btn-outline btn-primary mt-5"
+                                        :navigation="selectedFile"
+                                        @click="navigate">
+                                    Open
+                                    <span x-text="selection.selected.at(0)"></span>
+                                    <span x-show="selection.selected.at(1) == 'Write Domain'" x-cloak x-transition>subdomain</span>
+                                    <span x-show="selection.selected.at(1) != 'Write Domain' &&
+                        !selection.selected.at(0).includes('.')
+                        && !selection.selected.at(0).startsWith(':')
+                        && !selection.selected.at(0).endsWith(' view')
+                        && !selection.selected.at(0).endsWith(' projection')" x-cloak x-transition>aggregate</span>
+                                    <span x-show="selection.selected.at(1) != 'Write Domain' &&
+                        selection.selected.at(0).includes('.')" x-cloak x-transition>behavior</span>
+                                </button>
+                            </template>
+                        </div>
+                        <br>
+                        <div id="treemap" x-init="render_tree_map" style="width: 100%; height: 250px;"></div>
+                        <button class="btn btn-outline btn-primary btn-block mb-5 mt-5"
+                                navigation="README.md"
+                                @click="open_diagram">Open domain diagram</button>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="card bg-primary text-primary-content card-compact">
+                        <div class="card-body">
+                            <p x-data="infoCard" x-init="render_summary">
+                                Project contains <b><span x-text="summary.commands"></span> commands</b>
+                                and <b><span x-text="summary.aggregates"></span> aggregates</b> divided over
+                                <b><span x-text="summary.subdomains"></span> subdomains</b>.
+                                These aggregates will emit <b><span x-text="summary.domainEvents"></span> domain events</b>.
+                                And are integrated to the outside
+                                world with <b><span x-text="summary.notifiers"></span> notifiers</b>. Data is accessible via
+                                <b><span x-text="summary.views"></span> views</b> and <b><span x-text="summary.projections"></span> projections</b>.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </template>
     </div>

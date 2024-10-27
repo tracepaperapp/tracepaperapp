@@ -33,7 +33,7 @@ document.addEventListener('alpine:init', () => {
                     });
                 });
 
-                // Fetch git-proxy token
+                // Fetch git-proxy token (every 25 minutes)
                 Draftsman.registerTask(this._fetch_token.bind(this),1500,"repo-token-refresher");
 
                 // Prepare new project command
@@ -45,6 +45,12 @@ document.addEventListener('alpine:init', () => {
                 this.newProjectModal = this.projects.length == 0
                 if (!this.newProjectModal && !this.drn){
                     this.projectModal = true;
+                }
+                if (sessionStorage.force_reload){
+                    console.log("Force reload!");
+                    sessionStorage.removeItem("force_reload");
+                    await Draftsman.sleep(500);
+                    location.reload();
                 }
             },
             async create_user(){
@@ -66,6 +72,8 @@ document.addEventListener('alpine:init', () => {
                 sessionStorage.removeItem('proxyToken');
                 sessionStorage.project_name = this.projects.filter(x => x.drn == this.drn).at(0).name;
                 sessionStorage.project_url = this.projects.filter(x => x.drn == this.drn).at(0).repo;
+                sessionStorage.branch = "main";
+                sessionStorage.force_reload = "true";
                 await Draftsman.sleep(100);
                 location.reload();
             },
@@ -109,6 +117,7 @@ document.addEventListener('alpine:init', () => {
                     let api = await API.initialize(true);
                     let data = await api.query("/prepared-statements/fetch-repo-token.txt",{projectDrn:this.drn},true);
                     sessionStorage.proxyToken = data.data.RepositoryToken.get.token;
+                    sessionStorage.privelige = JSON.parse(atob(sessionStorage.proxyToken)).scope.privelige;
                 }
             },
             _remove_first_trace(){

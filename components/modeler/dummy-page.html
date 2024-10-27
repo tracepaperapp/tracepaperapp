@@ -4,8 +4,8 @@
          x-cloak
          x-transition.delay.100ms>
         <template navigation-type="dummy" x-if="navigationElementActive">
-            <div x-data="">
-                <div :file="navigation" x-data="basicFile">
+            <div :file="navigation" x-data="basicFile" class="grid grid-cols-12 gap-3 mt-5">
+                <div class="col-span-8">
                     <h3 class="text-2xl font-semibold text-gray-800">
                         Generic placeholder
                     </h3>
@@ -14,6 +14,9 @@
                             placeholder="Bio"
                             rows="20"
                             class="textarea textarea-bordered textarea-lg w-full"></textarea>
+                </div>
+                <div class="col-span-4">
+                    <div id="node-diagram"></div>
                 </div>
             </div>
         </template>

@@ -57,6 +57,15 @@ class GitRepository {
     });
   }
 
+  async rename(oldName, newName,force=false){
+    return this._sendMessage({
+      action: 'rename',
+      oldName,
+      newName,
+      force
+    });
+  }
+
   // Bestand verwijderen
   async delete(filePath) {
     return this._sendMessage({

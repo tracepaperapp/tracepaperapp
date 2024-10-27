@@ -40,24 +40,20 @@
             <div x-import="tab-bar">
                 <ui-tab-bar></ui-tab-bar>
             </div>
-            <div x-import="modeler/readme">
-                <ui-readme></ui-readme>
+            <div class="max-h-[80vh] scrollbar-v">
+                <div x-import="modeler/readme">
+                    <ui-readme></ui-readme>
+                </div>
+                <div x-import="modeler/dummy-page">
+                    <ui-dummy></ui-dummy>
+                </div>
+                <div x-import="modeler/diagram">
+                    <ui-diagram></ui-diagram>
+                </div>
+                <div x-import="modeler/command">
+                    <ui-command></ui-command>
+                </div>
             </div>
-            <div x-import="modeler/dummy-page">
-                <ui-dummy></ui-dummy>
-            </div>
-<!--            <div x-import="pages/documentdb-example">-->
-<!--                <ui-db-example></ui-db-example>-->
-<!--            </div>-->
-<!--            <div x-import="pages/fulltext-search-example">-->
-<!--                <ui-fts-example></ui-fts-example>-->
-<!--            </div>-->
-<!--            <div x-import="pages/api-example">-->
-<!--                <ui-api-example></ui-api-example>-->
-<!--            </div>-->
-<!--            <div x-import="pages/git-example">-->
-<!--                <ui-git-example></ui-git-example>-->
-<!--            </div>-->
         </div>
     </div>
 
@@ -65,6 +61,11 @@
     <!-- tp -->
     <script src="/js/tp/luxon.js"></script>
     <script src="/js/tp/diff.js"></script>
+    <script src="/js/tp/vis.js"></script>
+    <script src="/js/tp/showdown.js"></script>
+    <script src="/js/tp/fast-xml-parser.js"></script>
+    <script src="/js/tp/xml-builder.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
     <!-- utils -->
     <script src="/js/utils/helper.js"></script>
@@ -73,14 +74,20 @@
     <script src="/js/utils/searchindex.js"></script>
     <script src="/js/utils/git.js"></script>
     <script src="/js/utils/modeler.js"></script>
+    <script src="/js/utils/diagram.js"></script>
 
     <!-- customs -->
-    <script src="/js/modules/navigation.js" module></script>
-    <script src="/js/modules/source-management.js" module></script>
-    <script src="/js/modules/context-management.js" module></script>
-    <script src="/js/modules/input-validator.js" module></script>
-    <script src="/js/modules/file-browser.js" module></script>
-    <script src="/js/modules/basic-file.js" module></script>
+    <script src="/js/modules/navigation/navigation.js"></script>
+    <script src="/js/modules/navigation/source-management.js"></script>
+    <script src="/js/modules/navigation/context-management.js"></script>
+    <script src="/js/modules/utilities/input-validator.js"></script>
+    <script src="/js/modules/navigation/file-browser.js"></script>
+    <script src="/js/modules/modeler/basic-file.js"></script>
+    <script src="/js/modules/utilities/markdown-editor.js"></script>
+    <script src="/js/modules/utilities/info-card.js"></script>
+    <script src="/js/modules/visuals/treemap.js"></script>
+    <script src="/js/modules/visuals/diagram-only.js"></script>
+    <script src="/js/modules/modeler/command.js"></script>
 
     </div>
 </body>

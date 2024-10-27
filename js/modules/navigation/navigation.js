@@ -3,6 +3,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('navigation', function(){
         return {
             navigation: this.$persist("").using(sessionStorage),
+            navigationFile: this.$persist("").using(sessionStorage),
             tabs: this.$persist([]).using(sessionStorage),
             issuesView: false,
             init(){
@@ -35,9 +36,10 @@ document.addEventListener('alpine:init', () => {
                 let file_type = Modeler.determine_type(this.navigation);
 
                 // temp testcode
-                if (!["readme"].includes(file_type)){
+                if (!["readme","diagram","command"].includes(file_type) && navigation != this.navigation){
                     file_type = "dummy";
                 }
+
                 if (type && type == file_type){
                     return "active";
                 } else if (navigation == this.navigation){
@@ -50,6 +52,14 @@ document.addEventListener('alpine:init', () => {
                 this.issuesView = false;
                 this.navigation = this.$el.getAttribute("navigation");
                 Draftsman.publishMessage("force-reload",this.navigation);
+                this.update_tabs();
+            },
+            open_diagram: function(){
+                this.navigation = "/diagram";
+                this.navigationFile = this.$el.getAttribute("navigation");
+                this.update_tabs();
+            },
+            update_tabs: function(){
                 let tabs = [...this.tabs];
                 if (!tabs.includes(this.navigation)){
                     if (tabs.length > 5){

@@ -1,3 +1,10 @@
+const pascalCaseRegex = /^[A-Z][a-zA-Z0-9]*$/;
+const camelCaseRegex = /^[a-z][a-zA-Z0-9]*$/;
+const lowercaseRegex = /^[a-z]+$/;
+const apiPathRegex = /^([A-Z][a-z]*\.)+[a-z][a-zA-Z]*$/;
+const githubAccountRegex = /^[a-zA-Z0-9\-]{1,39}$/;
+const repoRegex = /^https:\/\/github.com\/[a-zA-Z0-9\-._]+\/[a-zA-Z0-9\-._]+$/;
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('inputValidator', function(){
         return {
@@ -11,27 +18,26 @@ document.addEventListener('alpine:init', () => {
                 this.$el.setAttribute('id', Draftsman.uuidv4());
             },
             pascal_cased(){
-                const pascalCaseRegex = /^[A-Z][a-zA-Z0-9]*$/;
                 const message = "Must be PascalCased!";
                 this.validate_regex(pascalCaseRegex,message);
             },
             camel_cased(){
-                const camelCaseRegex = /^[a-z][a-zA-Z0-9]*$/;
                 const message = "Must be camelCased!";
                 this.validate_regex(camelCaseRegex,message);
             },
             lower_cased(){
-                const lowercaseRegex = /^[a-z]+$/;
                 const message = "Must be lowerCased!";
                 this.validate_regex(lowercaseRegex,message);
             },
+            api_path(){
+                const message = "Invalid path format: Ensure each section is PascalCased, separated by dots, and ends with a camelCased word!";
+                this.validate_regex(apiPathRegex,message);
+            },
             github_account(){
-                const githubAccount = /^[a-zA-Z0-9\-]{1,39}$/;
                 const message = "Must be a valid GitHub username or organisation name!";
-                this.validate_regex(githubAccount,message);
+                this.validate_regex(githubAccountRegex,message);
             },
             github_repo_url(){
-                const repoRegex = /^https:\/\/github.com\/[a-zA-Z0-9\-._]+\/[a-zA-Z0-9\-._]+$/;
                 const message = "Must be a gitHub repo url!";
                 this.validate_regex(repoRegex,message);
             },

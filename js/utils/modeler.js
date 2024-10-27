@@ -29,13 +29,22 @@ make_sure_is_list = function(elements,deduplicate=true){
     }
 }
 
+const xml_options = {
+    ignoreAttributes : false,
+    format: true,
+    attributeNamePrefix : "att_"
+};
+
 class Modeler {
     static worker = null;
     static callbacks = {};
+    static _roots = {};
 
     static determine_type(file){
             if (file == "README.md"){
                 return "readme";
+            } else if (file == "/diagram"){
+                return "diagram";
             } else if (file == "config.xml"){
                 return "config";
             } else if (file.startsWith("commands/")){
@@ -103,6 +112,53 @@ class Modeler {
        }
    }
 
+    static async get_model(file){
+       let repo = await GitRepository.open();
+       let content = await repo.read(file);
+       if (file.endsWith(".xml")){
+           let parser = new XMLParser(xml_options);
+           content = parser.parse(content);
+           let root = Object.keys(content).at(0);
+           if (root == "?xml"){
+               root = Object.keys(content).at(1);
+           }
+           Modeler._roots[file] = root;
+           content = content[root];
+           let type = Modeler.determine_type(file);
+           content = Modeler.prepare_model(type,content);
+       } else if (file.endsWith(".json")){
+           content = JSON.parse(content);
+           if (file == "meta.json"){
+               content.roles = make_sure_is_list(content.roles);
+           }
+       } else {
+           content = {content:content};
+       }
+       return content;
+    }
+
+    static async save_model(file,content){
+        let repo = await GitRepository.open();
+        if (file.endsWith(".xml")){
+            let placeholder = "placeholder-6a3eacfc-85ff-4414-938d-511785c46536";
+            let raw_content = {};
+            raw_content[Modeler._roots[file]] = content;
+            let json = JSON.stringify(raw_content);
+            json = json.replaceAll('"true"','"' + placeholder + '"');
+            json = JSON.parse(json);
+            let builder = new XMLBuilder(xml_options);
+            let xml = builder.build(json);
+            xml = xml.replaceAll(placeholder,"true");
+            await repo.write(file,xml);
+        } else if (file.endsWith(".json")){
+            content = JSON.stringify(content,null,2);
+            await repo.write(file,content);
+        } else {
+            content = content["content"];
+            await repo.write(file,content);
+        }
+    }
+
     static async validate(){
         await Draftsman.waitFor(() => sessionStorage.project_url);
         if (!Modeler.worker) {
@@ -164,7 +220,7 @@ function prepare_notifier(notifier){
                  notifier.activity.forEach(activity=> {
                      activity.activity = make_sure_is_list(activity.activity);
                      if(!activity.att_id){
-                         activity.att_id = makeid(6);
+                         activity.att_id = Draftsman.makeid(6);
                      }
                  });
                  return notifier;
@@ -178,7 +234,7 @@ function prepare_behavior(flow){
         flow.processor.forEach(processor => {
             processor.mapping = make_sure_is_list(processor.mapping);
             if (!processor.att_id){
-                processor.att_id = makeid(5);
+                processor.att_id = Draftsman.makeid(5);
             }
         });
         flow[TEST] = make_sure_is_list(flow[TEST]);
@@ -199,17 +255,17 @@ function prepare_view(view){
         handler.delete = make_sure_is_list(handler.delete);
         handler.delete.forEach(d => {
             if (!d.att_id){
-                d.att_id = makeid(6);
+                d.att_id = Draftsman.makeid(6);
             }
         });
         if (!handler.att_id){
-            handler.att_id = makeid(6);
+            handler.att_id = Draftsman.makeid(6);
         }
     });
     view[CUSTOM_HANDLER] = make_sure_is_list(view[CUSTOM_HANDLER]);
     view[CUSTOM_HANDLER].forEach( handler => {
         if (!handler.att_id){
-            handler.att_id = makeid(6);
+            handler.att_id = Draftsman.makeid(6);
         }
     });
     view.query = make_sure_is_list(view.query);
@@ -217,7 +273,7 @@ function prepare_view(view){
         query[QUERY_FILTER] = make_sure_is_list(query[QUERY_FILTER]);
         query[QUERY_FILTER].forEach(x => {
             if (!x.att_id){
-                x.att_id = makeid(6);
+                x.att_id = Draftsman.makeid(6);
             }
         });
     });

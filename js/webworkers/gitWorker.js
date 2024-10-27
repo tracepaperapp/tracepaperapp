@@ -45,6 +45,11 @@ self.onmessage = async (event) => {
         postMessage({ result: `File ${filePath} written and staged`, request_id, last_pull, commit_diff });
         break;
 
+      case 'rename':
+        await renameFile(event.data.oldName, event.data.newName, event.data.force);
+        postMessage({ result: `File renamed from ${event.data.oldName} to ${event.data.newName}`, request_id, last_pull, commit_diff });
+        break;
+
       case 'delete':
         await deleteFile(filePath);
         postMessage({ result: `File ${filePath} deleted and staged`, request_id, last_pull, commit_diff });
@@ -438,6 +443,34 @@ async function getCommitsDifference() {
   };
 }
 
+async function renameFile(oldName, newName, force = false) {
+  try {
+    await pfs.stat(`${dir}/${oldName}`);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return;
+    } else {
+      throw error;
+    }
+  }
+
+  try {
+    await pfs.stat(`${dir}/${newName}`);
+    if (!force) {
+      throw new Error(`File ${newName} already exists. Use force to overwrite.`);
+    } else {
+      await deleteFile(newName);
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+
+  await pfs.rename(`${dir}/${oldName}`, `${dir}/${newName}`);
+  await isogit.remove({ fs, dir, filepath: oldName });
+  await isogit.add({ fs, dir, filepath: newName });
+}
 
 // Deep clone met behoud van methodes
 function deepCloneWithMethods(obj) {

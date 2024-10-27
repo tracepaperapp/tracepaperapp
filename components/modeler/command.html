@@ -1,0 +1,106 @@
+<template x-component="command">
+    <div navigation-type="command"
+         x-show="navigationElementActive"
+         x-cloak
+         x-transition.delay.100ms>
+        <template navigation-type="command" x-if="navigationElementActive">
+            <div :file="navigation" x-data="commandModel">
+                <template x-if="model">
+                    <div class="grid grid-cols-12 gap-3 mt-5">
+                        <div class="col-span-8">
+                            <h3 class="text-2xl font-semibold text-gray-800">
+                                API Configuration
+                            </h3>
+
+                            <!--                                <input type="text"-->
+                            <!--                                       x-model="model.att_name"-->
+                            <!--                                       x-data="inputValidator"-->
+                            <!--                                       @input="pascal_cased"-->
+                            <!--                                       placeholder="Dummy"-->
+                            <!--                                       class="input w-full max-w-xs" />-->
+
+                            <table class="table">
+                                <tr>
+                                    <th scope="row">API path</th>
+                                    <td>
+                                        <input type="text"
+                                               x-model="newPath"
+                                               x-data="inputValidator"
+                                               @input="api_path"
+                                               @focusout="prepare_change_name"
+                                               class="input input-sm w-full max-w-xs" />
+                                        <dialog x-show="Object.keys(preparedRename).length !== 0" x-cloak x-transition class="modal modal-open">
+                                            <template x-if="Object.keys(preparedRename).length !== 0">
+                                                <div class="modal-box">
+                                                    <form method="dialog">
+                                                        <button @click="cancel_rename" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                                                    </form>
+                                                    <h3 class="font-bold text-lg">Change command identifier</h3>
+                                                    <p class="py-4">
+                                                        Changing the API path will result in a change of identity. <br>
+                                                        The changes are:
+                                                    </p>
+                                                    <table class="table">
+                                                        <tr>
+                                                            <th scope="row">API path</th>
+                                                            <td x-text="newPath"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th scope="row">Command name</th>
+                                                            <td x-text="preparedRename.eventName.replace('Requested','')"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th scope="row">Event name</th>
+                                                            <td x-text="preparedRename.eventName"></td>
+                                                        </tr>
+                                                    </table>
+                                                    <button class="btn btn-outline btn-primary mt-5 btn-block"
+                                                            @click="rename">Rename</button>
+                                                </div>
+                                            </template>
+                                        </dialog>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Name</th>
+                                    <td>
+                                        <input type="text"
+                                               :value="model.att_name.replace('Requested','')"
+                                               x-data="inputValidator"
+                                               disabled
+                                               class="input input-sm w-full max-w-xs" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Event Name</th>
+                                    <td>
+                                        <input type="text"
+                                               :value="model.att_name"
+                                               x-data="inputValidator"
+                                               disabled
+                                               class="input input-sm w-full max-w-xs" />
+                                    </td>
+                                </tr>
+                                <!--                        <tr>-->
+                                <!--                            <td>Test</td>-->
+                                <!--                            <td>-->
+                                <!--                                <input type="text"-->
+                                <!--                                       x-model="model.att_name"-->
+                                <!--                                       x-data="inputValidator"-->
+                                <!--                                       @input="pascal_cased"-->
+                                <!--                                       placeholder="Dummy"-->
+                                <!--                                       class="input input-sm w-full max-w-xs" />-->
+                                <!--                            </td>-->
+                                <!--                        </tr>-->
+                            </table>
+                            <pre x-text="JSON.stringify(model,null,2)"></pre>
+                        </div>
+                        <div class="col-span-4">
+                            <div id="node-diagram"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>
