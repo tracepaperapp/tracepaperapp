@@ -159,6 +159,10 @@ class Modeler {
         }
     }
 
+    static async rename_model(oldName, newName){
+
+    }
+
     static async validate(){
         await Draftsman.waitFor(() => sessionStorage.project_url);
         if (!Modeler.worker) {

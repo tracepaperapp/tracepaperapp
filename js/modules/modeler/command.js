@@ -32,6 +32,7 @@ document.addEventListener('alpine:init', () => {
                 this.model['att_graphql-name'] = this.preparedRename.method;
                 this.model.att_name = this.preparedRename.eventName;
                 await this._execute_save();
+                console.log(await Modeler.rename_model 
                 this.preparedRename = {};
                 this.newPath = this.get_api_path();
             },
