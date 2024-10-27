@@ -6,7 +6,7 @@ document.addEventListener('alpine:init', () => {
             navigationFile: this.$persist("").using(sessionStorage),
             tabs: this.$persist([]).using(sessionStorage),
             issuesView: false,
-            init(){
+            async init(){
                 if (!sessionStorage.project_url && localStorage.session){
                     let items = JSON.parse(localStorage.session);
                     items.forEach(item => {
@@ -16,6 +16,14 @@ document.addEventListener('alpine:init', () => {
                 }
                 Draftsman.registerTask(this._save_session.bind(this),10,"save-session");
                 this.listnerId = Draftsman.registerListener("file-renamed",this._handle_rename.bind(this));
+                console.log(this.tabs.length != 0,this.navigation == "")
+                if (this.tabs.length != 0){
+                    let repo = await GitRepository.open();
+                    console.log(await repo.list());
+                } else if (this.navigation == "") {
+                    this.navigation = "README.md";
+                    this.tabs = ["README.md"];
+                }
             },
             _save_session(){
                 if (!sessionStorage.project_url){return}

@@ -89,7 +89,8 @@ self.onmessage = async (event) => {
         postMessage({ error: 'Unknown action', request_id, last_pull, commit_diff });
     }
   } catch (error) {
-    console.error(error);
+    console.log(event);
+    console.error(error.stack);
     postMessage({ error: error.message, request_id, last_pull });
   }
 };
@@ -199,7 +200,19 @@ async function stageLocalChanges() {
 
 // Bestandsbeheer functies
 async function listFiles() {
-  return await isogit.listFiles({ fs, dir: dir, ref: 'HEAD' });
+  //return await isogit.listFiles({ fs, dir: dir, ref: 'HEAD' });
+  // Haal de status van alle bestanden op en filter deze om alleen de bestaande bestanden te tonen
+    const statusMatrix = await isogit.statusMatrix({ fs, dir });
+
+    // Filter de bestanden die daadwerkelijk in de index staan en zijn bijgewerkt
+    const fileList = statusMatrix
+      .filter(([filepath, headStatus, workdirStatus, stageStatus]) => {
+        console.log(filepath, headStatus, workdirStatus, stageStatus);
+        return headStatus > 0 || workdirStatus > 0 || stageStatus > 0;
+      })
+      .map(([filepath]) => filepath);
+
+    return fileList;
 }
 
 async function readFile(filePath) {
