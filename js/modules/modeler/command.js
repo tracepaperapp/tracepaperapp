@@ -6,6 +6,7 @@ document.addEventListener('alpine:init', () => {
             listnerId: "",
             newPath: "",
             preparedRename: {},
+            lock: false,
             get_api_path(){
                 return this.model['att_graphql-namespace'] + "." + this.model['att_graphql-name'];
             },
@@ -28,13 +29,23 @@ document.addEventListener('alpine:init', () => {
                 this.newPath = this.get_api_path();
             },
             async rename(){
+                let oldName = `commands/${this.model['att_graphql-namespace'].replaceAll('.','/')}/${this.model.att_name}.xml`;
+                let newName = `commands/${this.preparedRename.namespace.replaceAll('.','/')}/${this.preparedRename.eventName}.xml`;
                 this.model['att_graphql-namespace'] = this.preparedRename.namespace;
                 this.model['att_graphql-name'] = this.preparedRename.method;
                 this.model.att_name = this.preparedRename.eventName;
                 await this._execute_save();
-                console.log(await Modeler.rename_model 
-                this.preparedRename = {};
-                this.newPath = this.get_api_path();
+                this.lock = true;
+                if (await Modeler.rename_model(oldName,newName)){
+                    // Navigate to new tab
+                } else {
+                    this.preparedRename = {};
+                    this.newPath = this.get_api_path();
+                    let repo = await GitRepository.open();
+                    await repo.revert(oldName);
+                    await this.read();
+                    this.lock = false;
+                }
             },
             capitalizeFirstLetter(str) {
                 if (!str) return str; // Controleer op een lege string
@@ -66,6 +77,7 @@ document.addEventListener('alpine:init', () => {
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
             },
             async _execute_save(){
+                if (this.lock){return}
                 await Modeler.save_model(this.path,this.model);
             },
             destroy(){
