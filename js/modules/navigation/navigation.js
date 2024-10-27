@@ -16,14 +16,25 @@ document.addEventListener('alpine:init', () => {
                 }
                 Draftsman.registerTask(this._save_session.bind(this),10,"save-session");
                 this.listnerId = Draftsman.registerListener("file-renamed",this._handle_rename.bind(this));
-                console.log(this.tabs.length != 0,this.navigation == "")
+                this.tabCleanupId = Draftsman.registerListener("file-reverted",this.cleanup_tabs.bind(this));
+                await this.cleanup_tabs(false);
+            },
+            async cleanup_tabs(cascade=true){
+                let repo = await GitRepository.open();
+                let files = await repo.list();
+                files.push("/diagram","/dummy")
                 if (this.tabs.length != 0){
-                    let repo = await GitRepository.open();
-                    let files = await repo.list();
                     this.tabs = this.tabs.filter(x => files.includes(x));
-                } else if (this.navigation == "") {
+                }
+                if (this.navigation == "" || this.tabs.length == 0) {
                     this.navigation = "README.md";
                     this.tabs = ["README.md"];
+                }
+                if (!files.includes(this.navigation)){
+                    this.navigation = this.tabs.at(-1);
+                }
+                if (cascade){
+                    Draftsman.publishMessage("force-reload",this.navigation);
                 }
             },
             _save_session(){
@@ -136,6 +147,16 @@ document.addEventListener('alpine:init', () => {
                 this.tabs = this.tabs.filter(x => x != message.oldPath);
                 this.navigation = message.newPath;
                 this.update_tabs();
+            },
+            destroy: function(){
+                Draftsman.deregisterListener(this.listnerId);
+                Draftsman.deregisterListener(this.tabCleanupId);
+            },
+            editing_enabled: function(){
+                return sessionStorage.privelige == "write";
+            },
+            editing_disabled: function(){
+                return sessionStorage.privelige != "write";
             }
         }
     });

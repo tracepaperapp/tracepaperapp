@@ -163,8 +163,22 @@ class Modeler {
         let repo = await GitRepository.open();
         console.log(await repo.rename(oldName,newName,true));
         console.log(await repo.rename(oldName.replace(".xml",".md"),newName.replace(".xml",".md"),true));
-        Draftsman.publishMessage("force-reload","");
+        Draftsman.publishMessage("file-renamed",{
+            oldPath: oldName,
+            newPath: newName
+        });
         return true;
+    }
+
+    static async delete_model(name){
+        let repo = await GitRepository.open();
+        try{
+            console.log(await repo.delete(name));
+            console.log(await repo.delete(name.replace(".xml",".md")));
+        } finally {
+            await Draftsman.sleep(100);
+            Draftsman.publishMessage("file-reverted",name);
+        }
     }
 
     static async validate(){

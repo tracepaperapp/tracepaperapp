@@ -6,6 +6,10 @@ document.addEventListener('alpine:init', () => {
                 let file = this.$el.getAttribute("file");
                 window.open(sessionStorage.project_url + '/blob/' + sessionStorage.branch + '/' + file, '_blank').focus();
             },
+            get_path(){
+                let file = this.$el.getAttribute("file");
+                return file.split('.').at(0).replaceAll('/',' / ');
+            },
             async render_summary(){
                 let summary = {};
                 let repo = await GitRepository.open();

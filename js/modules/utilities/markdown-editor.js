@@ -11,7 +11,6 @@ document.addEventListener('alpine:init', () => {
             async init(){
                 this.element = this.$el;
                 this.repo = await GitRepository.open();
-                this.path = this.$el.getAttribute("file");
                 this.converter = new showdown.Converter({
                     strikethrough: true,
                     tables: true,
@@ -25,8 +24,13 @@ document.addEventListener('alpine:init', () => {
                 this.listnerId = Draftsman.registerListener("force-reload",this.read.bind(this));
             },
             async read(){
-                this.path = this.$el.getAttribute("file");
-                this.content = await this.repo.read(this.path);
+                this.path = this.$el.getAttribute("file").replace(".xml",".md");
+                try{
+                    this.content = await this.repo.read(this.path);
+                } catch {
+                    this.content = "documentation";
+                }
+
                 this.view_mode();
             },
             edit_mode(){
@@ -59,6 +63,9 @@ document.addEventListener('alpine:init', () => {
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1000);
             },
             async _execute_save(){
+                if (this.content == "documentation" || this.content == ""){
+                    return;
+                }
                 await this.repo.write(this.path,this.content);
                 let html = this.converter.makeHtml(this.content);
                 this.html = this._applyCustomClasses(html);

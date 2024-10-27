@@ -109,7 +109,7 @@ class Draftsman {
             try {
                 await callback(event.detail);
             } catch (error) {
-                console.error("Error in listener callback:", error);
+                console.trace("Error in listener callback:", error);
             }
         };
         window.addEventListener(type, listener);

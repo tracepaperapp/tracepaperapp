@@ -3,7 +3,7 @@ class Diagram {
     static worker = null;
     static callbacks = {};
 
-    static async node_diagram(file,id,height="300px",selection={}, cache_only=false){
+    static async node_diagram(file,id,height="200px",selection={}, cache_only=false){
         await Diagram._initialize();
         if (localStorage.getItem("diagram_" + file)){
             let raw_data = JSON.parse(localStorage.getItem("diagram_" + file));
@@ -67,10 +67,6 @@ class Diagram {
         network.on("click", function (params) {
             session.selected_node = params.nodes.at(0);
         });
-        network.on("afterDrawing", function (ctx) {
-            var dataURL = ctx.canvas.toDataURL();
-            session.diagram_img = dataURL;
-          });
     }
 
     static async _initialize(){

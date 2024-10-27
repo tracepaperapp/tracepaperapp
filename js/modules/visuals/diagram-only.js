@@ -8,7 +8,6 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('nodeDiagram', function(){
         return {
             _taskId: "",
-            listnerId: "",
             session: session,
             path: "",
             selection: this.$persist({
@@ -25,7 +24,6 @@ document.addEventListener('alpine:init', () => {
                 this.path = this.$el.getAttribute("file");
                 this._execute_draw();
                 this._taskId = Draftsman.uuidv4();
-                this.listnerId = Draftsman.registerListener("force-reload",this.draw.bind(this));
                 this.$watch("selection",this.draw.bind(this));
             },
             focus(){
@@ -49,9 +47,6 @@ document.addEventListener('alpine:init', () => {
                 this.selection.schedule = this.selection.notifier
                 let height = (window.innerHeight * 77) / 100
                 this.session.all_links = await Diagram.node_diagram(this.path,"node-diagram",height + "px",this.selection);
-            },
-            destroy(){
-                Draftsman.deregisterListener(this.listnerId);
             }
         }
     });

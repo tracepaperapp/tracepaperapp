@@ -60,75 +60,89 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('fileBrowser', function(){
         return {
             async init(){
-                let repo = await GitRepository.open();
-                let files = await repo.list();
-                while (files.length < 2){
+                await this.prepare();
+                this.renameListner = Draftsman.registerListener("file-renamed",this.prepare.bind(this));
+                this.reloadListner = Draftsman.registerListener("force-reload",this.prepare.bind(this));
+            },
+            async prepare(){
+                if (this.lock){return}
+                this.lock = true;
+                try{
+                    directories = {};
+                    let repo = await GitRepository.open();
+                    let files = await repo.list();
+                    while (files.length < 2){
+                        await Draftsman.sleep(100);
+                        files = await repo.list();
+                    }
+
+                    if (!("" in directories)){
+                        directories[""] = [];
+                    }
+                    let items = directories[""];
+                    add_file("/README.md","About")
+
+                    // Prepare structure
+                    get_directory("/write","Write Domain");
+                    get_directory("/view","View Domain");
+                    get_directory("/view/views");
+                    get_directory("/view/projections");
+                    get_directory("/utils","Utils");
+                    add_file("/utils/Expressions")
+                    add_file("/utils/Dependencies")
+                    add_file("/utils/Patterns")
+                    add_file("/utils/Roles")
+                    files.forEach(file => {
+                        if (file.startsWith("commands/") && file.endsWith(".xml")){
+                            let name = file.split("/").at(-1).replace("Requested.xml","");
+                            add_file("/write/" + file,name);
+                        }
+
+                        if (file.startsWith("domain/") && file.endsWith(".xml")){
+                            if (file.endsWith("root.xml")){
+                                add_file("/write/" + file,"Root");
+                            }
+                            if (file.includes("behavior-flows") && file.endsWith(".xml")){
+                                add_file("/write/" + file);
+                            }
+                            if (file.includes("/events/") && file.endsWith(".xml")){
+                                add_file("/write/" + file);
+                            }
+                        }
+                        if (file.startsWith("notifiers/") && file.endsWith(".xml")){
+                            add_file("/write/" + file);
+                        }
+                        if (file.startsWith("views/") && file.endsWith(".xml")){
+                            add_file("/view/" + file);
+                        }
+                        if (file.startsWith("projections/") && file.endsWith(".xml")){
+                            add_file("/view/" + file);
+                        }
+                        if (file.startsWith("lib/") && file.endsWith(".py")){
+                            add_file("/utils/" + file);
+                        }
+                        if (file.startsWith("templates/")){
+                            add_file("/utils/" + file);
+                        }
+                        if (file.startsWith("scenarios/") && file.endsWith(".xml")){
+                            add_file("/" + file);
+                        }
+                    });
+                    this.$el.innerHTML = '';
+                    this.render_browser(items, this.$el);
+
+                    const li = document.createElement('li');
+                    const fileLink = document.createElement('a');
+                    fileLink.innerHTML = `<i class="fa-solid fa-gear"></i> Settings`;
+                    fileLink.setAttribute("navigation","settings");
+                    fileLink.setAttribute(":class","navigationElementActive");
+                    fileLink.setAttribute("x-on:click","navigate");
+                    li.appendChild(fileLink);
+                    this.$el.appendChild(li);
+                } finally {
                     await Draftsman.sleep(100);
-                    files = await repo.list();
+                    this.lock = false;
                 }
-
-                if (!("" in directories)){
-                    directories[""] = [];
-                }
-                let items = directories[""];
-                add_file("/README.md","About")
-
-                // Prepare structure
-                get_directory("/write","Write Domain");
-                get_directory("/view","View Domain");
-                get_directory("/view/views");
-                get_directory("/view/projections");
-                get_directory("/utils","Utils");
-                add_file("/utils/Expressions")
-                add_file("/utils/Dependencies")
-                add_file("/utils/Patterns")
-                add_file("/utils/Roles")
-                files.forEach(file => {
-                    if (file.startsWith("commands/") && file.endsWith(".xml")){
-                        let name = file.split("/").at(-1).replace("Requested.xml","");
-                        add_file("/write/" + file,name);
-                    }
-
-                    if (file.startsWith("domain/") && file.endsWith(".xml")){
-                        if (file.endsWith("root.xml")){
-                            add_file("/write/" + file,"Root");
-                        }
-                        if (file.includes("behavior-flows") && file.endsWith(".xml")){
-                            add_file("/write/" + file);
-                        }
-                        if (file.includes("/events/") && file.endsWith(".xml")){
-                            add_file("/write/" + file);
-                        }
-                    }
-                    if (file.startsWith("notifiers/") && file.endsWith(".xml")){
-                        add_file("/write/" + file);
-                    }
-                    if (file.startsWith("views/") && file.endsWith(".xml")){
-                        add_file("/view/" + file);
-                    }
-                    if (file.startsWith("projections/") && file.endsWith(".xml")){
-                        add_file("/view/" + file);
-                    }
-                    if (file.startsWith("lib/") && file.endsWith(".py")){
-                        add_file("/utils/" + file);
-                    }
-                    if (file.startsWith("templates/")){
-                        add_file("/utils/" + file);
-                    }
-                    if (file.startsWith("scenarios/") && file.endsWith(".xml")){
-                        add_file("/" + file);
-                    }
-                });
-                this.render_browser(items, this.$el);
-
-                const li = document.createElement('li');
-                const fileLink = document.createElement('a');
-                fileLink.innerHTML = `<i class="fa-solid fa-gear"></i> Settings`;
-                fileLink.setAttribute("navigation","settings");
-                fileLink.setAttribute(":class","navigationElementActive");
-                fileLink.setAttribute("x-on:click","navigate");
-                li.appendChild(fileLink);
-                this.$el.appendChild(li);
             },
             render_browser(items, parentElement){
                 items.forEach(file => {
@@ -165,6 +179,10 @@ document.addEventListener('alpine:init', () => {
                     }
                     parentElement.appendChild(li);
                 });
+            },
+            destroy: function(){
+                Draftsman.deregisterListener(this.renameListner);
+                Draftsman.deregisterListener(this.reloadListner);
             }
         }
     });

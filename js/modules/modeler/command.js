@@ -14,6 +14,7 @@ document.addEventListener('alpine:init', () => {
                 if (this.newPath == "" || !apiPathRegex.test(this.newPath)){
                     return;
                 }
+                this.lock = false;
                 let elements = this.splitOnLastDot(this.newPath);
                 if (elements[0] == this.model['att_graphql-namespace'] && elements[1] == this.model['att_graphql-name']){
                     return;
@@ -36,6 +37,7 @@ document.addEventListener('alpine:init', () => {
                 this.newPath = this.get_api_path();
             },
             async rename(){
+                console.log(this.lock);
                 this.preparedRename.init = false;
                 if(this.lock){return}
                 this.model['att_graphql-namespace'] = this.preparedRename.namespace;
@@ -44,10 +46,10 @@ document.addEventListener('alpine:init', () => {
                 await this._execute_save();
                 this.lock = true;
                 await Modeler.force_rename_model(this.preparedRename.oldName,this.preparedRename.newName);
-                Draftsman.publishMessage("file-renamed",{
-                    oldPath: this.preparedRename.oldName,
-                    newPath: this.preparedRename.newName
-                });
+            },
+            async delete_model(){
+                let file = `commands/${this.model['att_graphql-namespace'].replaceAll('.','/')}/${this.model.att_name}.xml`;
+                await Modeler.delete_model(file);
             },
             capitalizeFirstLetter(str) {
                 if (!str) return str; // Controleer op een lege string
@@ -73,7 +75,6 @@ document.addEventListener('alpine:init', () => {
                 this.path = this.$el.getAttribute("file");
                 this.model = await Modeler.get_model(this.path);
                 this.newPath = this.get_api_path();
-                await Diagram.node_diagram(this.path,"node-diagram");
             },
             async save(){
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);

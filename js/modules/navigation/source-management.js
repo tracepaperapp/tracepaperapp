@@ -26,6 +26,7 @@ document.addEventListener('alpine:init', () => {
                 await this.repo.revert(file);
                 await this.execute_diff();
                 Draftsman.publishMessage("force-reload",file);
+                Draftsman.publishMessage("file-reverted",file);
             },
             async start_commit(){
                 this.commitModal = true;

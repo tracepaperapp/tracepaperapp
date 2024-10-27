@@ -28,6 +28,7 @@
                                                x-data="inputValidator"
                                                @input="api_path"
                                                @focusout="prepare_change_name"
+                                               :disabled="editing_disabled"
                                                class="input input-sm w-full max-w-xs" />
                                         <dialog x-show="preparedRename.init" x-cloak x-transition class="modal modal-open">
                                             <template x-if="Object.keys(preparedRename).length !== 0">
@@ -111,7 +112,49 @@
                             <pre x-text="JSON.stringify(model,null,2)"></pre>
                         </div>
                         <div class="col-span-4">
-                            <div id="node-diagram"></div>
+
+                            <!-- Info Card -->
+                            <div class="card bg-primary text-primary-content mb-5 card-compact" x-data="infoCard">
+                                <div class="card-body">
+                                    <div class="card-actions justify-end">
+                                        <i @click="open_github"
+                                           :file="navigation"
+                                           class="fa-solid fa-code cursor-pointer"></i>
+                                    </div>
+                                    <h2 class="card-title">Command Definition</h2>
+                                    <p class="text-xs" :file="navigation" x-text="get_path"></p>
+                                    <div class="card-actions justify-end"
+                                         x-show="editing_enabled" x-cloak x-transition>
+                                        <i class="fa-regular fa-trash-can cursor-pointer" @click="delete_model"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diagram -->
+                            <div :file="navigation" x-data="smallNodeDiagram"
+                                    class="card bg-base-100 card-bordered border-primary mb-5 card-compact">
+                                <div class="relative p-2" x-data="{loaded:false}">
+                                    <div x-show="session.all_links[session.selected_node]
+                                        && session.all_links[session.selected_node] != navigation" x-cloak x-transition>
+                                        <div class="tooltip" data-tip="click to open component">
+                                            <div class="badge badge-primary cursor-pointer"
+                                                 @click.debounce="navigate"
+                                                 :navigation="session.all_links[session.selected_node]"
+                                                 x-text="session.selected_node"></div>
+                                        </div>
+                                    </div>
+
+                                    <div id="node-diagram"></div>
+                                    <a x-show="loaded" x-cloak x-transition
+                                       @click="parent.postMessage({type:'diagram',file:file});" class="bottom-2 right-2 absolute z-50">
+                                        <i class="fa-solid fa-up-right-from-square"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- documentation -->
+                            <div :file="navigation" x-data="markdownEditor"></div>
+
                         </div>
                     </div>
                 </template>
