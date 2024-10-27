@@ -145,8 +145,9 @@
                                     </div>
 
                                     <div id="node-diagram"></div>
-                                    <a x-show="loaded" x-cloak x-transition
-                                       @click="parent.postMessage({type:'diagram',file:file});" class="bottom-2 right-2 absolute z-50">
+                                    <a x-show="session.all_links && session.all_links.length != 0" x-cloak x-transition
+                                       :navigation="navigation"
+                                       @click="open_diagram" class="bottom-2 right-2 absolute z-50">
                                         <i class="fa-solid fa-up-right-from-square"></i>
                                     </a>
                                 </div>
