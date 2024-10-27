@@ -10,7 +10,7 @@ document.addEventListener('alpine:init', () => {
             get_api_path(){
                 return this.model['att_graphql-namespace'] + "." + this.model['att_graphql-name'];
             },
-            prepare_change_name(){
+            async prepare_change_name(){
                 if (this.newPath == "" || !apiPathRegex.test(this.newPath)){
                     return;
                 }
@@ -21,31 +21,33 @@ document.addEventListener('alpine:init', () => {
                 this.preparedRename = {
                     namespace: elements[0],
                     method: elements[1],
-                    eventName: this.capitalizeFirstLetter(elements[1]) + elements[0].replaceAll(".","") + "Requested"
+                    eventName: this.capitalizeFirstLetter(elements[1]) + elements[0].replaceAll(".","") + "Requested",
+                    oldName: `commands/${this.model['att_graphql-namespace'].replaceAll('.','/')}/${this.model.att_name}.xml`
                 };
+                let newName = `commands/${this.preparedRename.namespace.replaceAll('.','/')}/${this.preparedRename.eventName}.xml`;
+                this.preparedRename.newName = newName;
+                let repo = await GitRepository.open();
+                let files = await repo.list();
+                this.preparedRename.force = files.includes(newName);
+                this.preparedRename.init = true;
             },
             cancel_rename(){
                 this.preparedRename = {};
                 this.newPath = this.get_api_path();
             },
             async rename(){
-                let oldName = `commands/${this.model['att_graphql-namespace'].replaceAll('.','/')}/${this.model.att_name}.xml`;
-                let newName = `commands/${this.preparedRename.namespace.replaceAll('.','/')}/${this.preparedRename.eventName}.xml`;
+                this.preparedRename.init = false;
+                if(this.lock){return}
                 this.model['att_graphql-namespace'] = this.preparedRename.namespace;
                 this.model['att_graphql-name'] = this.preparedRename.method;
                 this.model.att_name = this.preparedRename.eventName;
                 await this._execute_save();
                 this.lock = true;
-                if (await Modeler.rename_model(oldName,newName)){
-                    // Navigate to new tab
-                } else {
-                    this.preparedRename = {};
-                    this.newPath = this.get_api_path();
-                    let repo = await GitRepository.open();
-                    await repo.revert(oldName);
-                    await this.read();
-                    this.lock = false;
-                }
+                await Modeler.force_rename_model(this.preparedRename.oldName,this.preparedRename.newName);
+                Draftsman.publishMessage("file-renamed",{
+                    oldPath: this.preparedRename.oldName,
+                    newPath: this.preparedRename.newName
+                });
             },
             capitalizeFirstLetter(str) {
                 if (!str) return str; // Controleer op een lege string

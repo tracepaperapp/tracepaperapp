@@ -159,16 +159,12 @@ class Modeler {
         }
     }
 
-    static async rename_model(oldName, newName){
+    static async force_rename_model(oldName, newName){
         let repo = await GitRepository.open();
-        try{
-            console.log(await repo.rename(oldName,newName));
-            console.log(await repo.rename(oldName.replace(".xml",".md"),newName.replace(".xml",".md"),true));
-            Draftsman.publishMessage("force-reload","");
-            return true;
-        } catch {
-            return false;
-        }
+        console.log(await repo.rename(oldName,newName,true));
+        console.log(await repo.rename(oldName.replace(".xml",".md"),newName.replace(".xml",".md"),true));
+        Draftsman.publishMessage("force-reload","");
+        return true;
     }
 
     static async validate(){

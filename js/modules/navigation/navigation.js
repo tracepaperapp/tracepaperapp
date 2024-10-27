@@ -15,6 +15,7 @@ document.addEventListener('alpine:init', () => {
                     location.reload();
                 }
                 Draftsman.registerTask(this._save_session.bind(this),10,"save-session");
+                this.listnerId = Draftsman.registerListener("file-renamed",this._handle_rename.bind(this));
             },
             _save_session(){
                 if (!sessionStorage.project_url){return}
@@ -120,6 +121,12 @@ document.addEventListener('alpine:init', () => {
                       console.log("All storage cleared.");
                       location.reload();
                 }
+            },
+            _handle_rename: function(message){
+                console.log(message);
+                this.tabs = this.tabs.filter(x => x != message.oldPath);
+                this.navigation = message.newPath;
+                this.update_tabs();
             }
         }
     });

@@ -29,13 +29,28 @@
                                                @input="api_path"
                                                @focusout="prepare_change_name"
                                                class="input input-sm w-full max-w-xs" />
-                                        <dialog x-show="Object.keys(preparedRename).length !== 0" x-cloak x-transition class="modal modal-open">
+                                        <dialog x-show="preparedRename.init" x-cloak x-transition class="modal modal-open">
                                             <template x-if="Object.keys(preparedRename).length !== 0">
                                                 <div class="modal-box">
                                                     <form method="dialog">
                                                         <button @click="cancel_rename" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                                                     </form>
                                                     <h3 class="font-bold text-lg">Change command identifier</h3>
+                                                    <div x-show="preparedRename.force" x-cloak x-transition
+                                                         role="alert" class="alert alert-warning py-2">
+                                                        <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                class="h-6 w-6 shrink-0 stroke-current"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24">
+                                                            <path
+                                                                    stroke-linecap="round"
+                                                                    stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                        </svg>
+                                                        <span>Warning: There is already a model <i x-text="preparedRename.newName"></i>. This model will be overwritten when you proceed.</span>
+                                                    </div>
                                                     <p class="py-4">
                                                         Changing the API path will result in a change of identity. <br>
                                                         The changes are:
@@ -55,7 +70,7 @@
                                                         </tr>
                                                     </table>
                                                     <button class="btn btn-outline btn-primary mt-5 btn-block"
-                                                            @click="rename">Rename</button>
+                                                            @click.debounce="rename">Rename</button>
                                                 </div>
                                             </template>
                                         </dialog>
