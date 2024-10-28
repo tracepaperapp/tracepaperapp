@@ -48,7 +48,7 @@ class Diagram {
           edges: new vis.DataSet(edges)
         };
         var container = document.getElementById(id);
-        let directed_diagram = false;//nodes.length < 20;
+        let directed_diagram = nodes.length < 20;
         var options = {
             width: "100%",
             height: height,

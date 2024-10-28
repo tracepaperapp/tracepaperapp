@@ -71,7 +71,11 @@ document.addEventListener('alpine:init', () => {
             },
             navigate: function(){
                 this.issuesView = false;
-                this.navigation = this.$el.getAttribute("navigation");
+                let navigation = this.$el.getAttribute("navigation");
+                if (!navigation.endsWith(".xml")){
+                    navigation += "/root.xml";
+                }
+                this.navigation = navigation;
                 Draftsman.publishMessage("force-reload",this.navigation);
                 this.update_tabs();
             },

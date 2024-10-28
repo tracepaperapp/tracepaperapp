@@ -16,7 +16,7 @@ document.addEventListener('alpine:init', () => {
             async init(){
                 this.repo = await GitRepository.open();
                 Draftsman.registerTask(this._list_changes.bind(this),0.2,"source-administration");
-                Draftsman.registerTask(this.validate_model.bind(this),10,"model-validation");
+                Draftsman.registerTask(this.validate_model.bind(this),61,"model-validation");
             },
             async validate_model(){
                 this.issues = await Modeler.validate();
