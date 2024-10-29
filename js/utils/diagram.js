@@ -53,7 +53,7 @@ class Diagram {
             width: "100%",
             height: height,
             layout: {
-                improvedLayout: true,
+                improvedLayout: nodes.length < 50,
                 hierarchical : {
                     enabled: directed_diagram,
                     direction: "LR",

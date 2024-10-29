@@ -11,14 +11,9 @@ document.addEventListener('alpine:init', () => {
                 this.listnerId = Draftsman.registerListener("force-reload",this.draw.bind(this));
             },
             async draw(){
-                if (this.lock){return}
-                this.lock = true;
-                try{
-                    this.session.all_links = await Diagram.node_diagram(this.path,"node-diagram","250px");
-                    await Draftsman.sleep(60000);
-                } finally {
-                    this.lock = false;
-                }
+                console.log("draw");
+                this.session.all_links = await Diagram.node_diagram(this.path,"node-diagram","250px");
+                console.log("draw finished");
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

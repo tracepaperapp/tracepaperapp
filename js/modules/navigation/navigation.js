@@ -72,7 +72,7 @@ document.addEventListener('alpine:init', () => {
             navigate: function(){
                 this.issuesView = false;
                 let navigation = this.$el.getAttribute("navigation");
-                if (!navigation.endsWith(".xml")){
+                if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram"].includes(navigation)){
                     navigation += "/root.xml";
                 }
                 this.navigation = navigation;
