@@ -11,6 +11,7 @@ class Diagram {
             //if (cache_only){return raw_data.all_links;}
         }
         let raw_data = await Diagram._sendMessage({action: "node-diagram", file});
+        console.log(raw_data);
         Diagram._execute_draw(file,id,height,selection,raw_data);
         localStorage.setItem("diagram_" + file,JSON.stringify(raw_data));
         return raw_data.all_links;
@@ -77,6 +78,7 @@ class Diagram {
             Diagram.callbacks[event.data.request_id](event);
             delete Diagram.callbacks[event.data.request_id];
           };
+          await Diagram._sendMessage({action: "initialize"});
         }
     }
     
