@@ -21,6 +21,14 @@ class Diagram {
             file = [file];
         }
         let raw_data = await Diagram._sendMessage({action: "node-diagram", file, radius});
+        let nodes = Object.values(raw_data.nodes);
+        session.commands = nodes.filter(x => x.type == "command").length;
+        session.behaviors = nodes.filter(x => x.type == mode).length;
+        session.notifiers = nodes.filter(x => x.type == "notifier").length;
+        session.views = nodes.filter(x => x.type == "view").length;
+        session.queries = nodes.filter(x => x.type == "query").length;
+        session.projections = nodes.filter(x => x.type == "projection").length;
+        session.dependencies = nodes.filter(x => x.type == "dependency").length;
         Diagram._execute_draw(file,id,height,selection,raw_data,mode);
         return raw_data.all_links;
     }
@@ -70,7 +78,6 @@ class Diagram {
           Diagram.worker = new Worker('/js/webworkers/modelVisualizerWorker.js');
           Diagram.worker.onmessage = (event) => {
             try {
-                console.log(event);
                 Diagram.callbacks[event.data.request_id](event);
                 delete Diagram.callbacks[event.data.request_id];
             } catch {

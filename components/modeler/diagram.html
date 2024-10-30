@@ -9,6 +9,36 @@
                     <div id="node-diagram"></div>
                 </div>
                 <div class="col-span-2">
+
+                    <table x-show="focused.length != 0" x-cloak x-transition class="table table-xs my-5">
+                        <tr>
+                            <th scope="col" colspan="2">Focused elements</th>
+                        </tr>
+                        <template x-for="f in focused" :key="f">
+                            <tr>
+                                <th scope="row" x-text="f"></th>
+                                <td>
+                                    <i @click="unfocus"
+                                       :element="f"
+                                       class="fa-regular fa-trash-can cursor-pointer"></i>
+                                </td>
+                            </tr>
+                        </template>
+                    </table>
+
+                    <div class="badge badge-primary"
+                         x-show="session.selected_node" x-cloak x-transition
+                         x-text="session.selected_node"></div>
+
+                    <button class="btn btn-outline btn-primary btn-xs btn-block my-2"
+                            @click="focus"
+                            x-show="session.selected_node in session.all_links" x-cloak x-transition>Focus</button>
+
+                    <button class="btn btn-outline btn-primary btn-xs btn-block mb-2"
+                            :navigation="session.all_links[session.selected_node]"
+                            @click.debounce="navigate"
+                            x-show="session.selected_node in session.all_links" x-cloak x-transition>Open</button>
+
                     <span class="label-text">Connection Radius <span class="badge badge-outline badge-primary" x-text="radius"></span></span>
                     <input type="range" min="1" max="5" x-model="radius" class="range range-xs" step="1" />
                     <div class="flex w-full justify-between px-2 text-xs">
@@ -28,88 +58,55 @@
 
                     <br>
                     <label class="label cursor-pointer">
-                        <span class="label-text">Commands</span>
+                        <span class="label-text"><span class="badge" x-text="session.commands"></span> Commands</span>
                         <input type="checkbox"
-                               :checked="selection.command" 
+                               :checked="selection.command"
                                class="checkbox checkbox-primary"
                                x-model="selection.command"/>
                     </label>
                     <label class="label cursor-pointer">
-                        <span class="label-text">Behavior</span>
+                        <span class="label-text"><span class="badge" x-text="session.behaviors"></span> Behaviors</span>
                         <input type="checkbox"
                                :checked="selection.behavior"
                                class="checkbox checkbox-primary"
                                x-model="selection.behavior"/>
                     </label>
                     <label class="label cursor-pointer">
-                        <span class="label-text">Notifiers</span>
+                        <span class="label-text"><span class="badge" x-text="session.notifiers"></span> Notifiers</span>
                         <input type="checkbox"
                                :checked="selection.notifier"
                                class="checkbox checkbox-primary"
                                x-model="selection.notifier"/>
                     </label>
                     <label class="label cursor-pointer">
-                        <span class="label-text">Views</span>
+                        <span class="label-text"><span class="badge" x-text="session.views"></span> Views</span>
                         <input type="checkbox"
                                :checked="selection.view"
                                class="checkbox checkbox-primary"
                                x-model="selection.view"/>
                     </label>
                     <label class="label cursor-pointer">
-                        <span class="label-text">Queries</span>
+                        <span class="label-text"><span class="badge" x-text="session.queries"></span> Queries</span>
                         <input type="checkbox"
                                :checked="selection.query"
                                class="checkbox checkbox-primary"
                                x-model="selection.query"/>
                     </label>
                     <label class="label cursor-pointer">
-                        <span class="label-text">Projections</span>
+                        <span class="label-text"><span class="badge" x-text="session.projections"></span> Projections</span>
                         <input type="checkbox"
                                :checked="selection.projection"
                                class="checkbox checkbox-primary"
                                x-model="selection.projection"/>
                     </label>
                     <label class="label cursor-pointer">
-                        <span class="label-text">Dependencies</span>
+                        <span class="label-text"><span class="badge" x-text="session.dependencies"></span> Dependencies</span>
                         <input type="checkbox"
                                :checked="selection.dependency"
                                class="checkbox checkbox-primary"
                                x-model="selection.dependency"/>
                     </label>
 
-                    <table x-show="focused.length != 0" x-cloak x-transition class="table table-xs mt-5">
-                        <tr>
-                            <th scope="col" colspan="2">Focused elements</th>
-                        </tr>
-                        <template x-for="f in focused" :key="f">
-                            <tr>
-                                <th scope="row" x-text="f"></th>
-                                <td>
-                                    <i @click="unfocus"
-                                       :element="f"
-                                       class="fa-regular fa-trash-can cursor-pointer"></i>
-                                </td>
-                            </tr>
-                        </template>
-                    </table>
-                    <br>
-
-                    <div class="badge badge-primary"
-                         x-show="session.selected_node" x-cloak x-transition
-                         x-text="session.selected_node"></div>
-
-                    <button class="btn btn-outline btn-primary btn-block my-2"
-                            @click="focus"
-                            x-show="session.selected_node in session.all_links" x-cloak x-transition>Focus</button>
-
-                    <button class="btn btn-outline btn-primary btn-block mb-2"
-                            :navigation="session.all_links[session.selected_node]"
-                            @click.debounce="navigate"
-                            x-show="session.selected_node in session.all_links" x-cloak x-transition>Open</button>
-
-<!--                    <button class="btn btn-outline btn-primary btn-block"-->
-<!--                            @click="zoom_out"-->
-<!--                            x-show="path.includes('/')" x-cloak x-transition>Zoom out</button>-->
                 </div>
             </div>
         </template>

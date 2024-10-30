@@ -1,0 +1,33 @@
+<template x-component="model-wizard">
+  <div class="relative inline-block"
+       @keydown.window="handle_keydown"
+       x-data="modelWizard">
+    <button @click="start" class="btn btn-circle btn-outline btn-primary m-2">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <dialog x-show="active" x-cloak x-transition class="modal modal-open">
+      <div class="modal-box  w-11/12 max-w-xl">
+        <form method="dialog">
+          <button @click="close" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 class="font-bold text-lg mb-5">Add new model to project</h3>
+
+        <div x-show="state == 1">
+          <ul class="menu bg-base-200 rounded-box w-full">
+            <li><a>Item 1</a></li>
+            <li><a>Item 2</a></li>
+            <li><a>Item 3</a></li>
+          </ul>
+        </div>
+
+        <div class="modal-action">
+          <button class="btn" @click="close">Cancel</button>
+<!--          <button class="btn btn-primary"-->
+<!--                  @click="">Add</button>-->
+        </div>
+      </div>
+    </dialog>
+
+  </div>
+</template>

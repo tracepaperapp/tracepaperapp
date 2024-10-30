@@ -40,6 +40,9 @@ document.addEventListener('alpine:init', () => {
                      }
                 }
                 await this._execute_draw();
+                if (this.focused.length != 0){
+                    await this._execute_draw();
+                }
                 this._taskId = Draftsman.uuidv4();
                 this.$watch("selection",this.draw.bind(this));
                 this.$watch("radius",this.draw.bind(this));
