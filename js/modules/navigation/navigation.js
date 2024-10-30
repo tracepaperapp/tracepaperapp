@@ -18,6 +18,7 @@ document.addEventListener('alpine:init', () => {
                 this.listnerId = Draftsman.registerListener("file-renamed",this._handle_rename.bind(this));
                 this.tabCleanupId = Draftsman.registerListener("file-reverted",this.cleanup_tabs.bind(this));
                 await this.cleanup_tabs(false);
+                Draftsman.registerTask(Diagram.prepare_data,30,"prepare-diagram-data");
             },
             async cleanup_tabs(cascade=true){
                 let repo = await GitRepository.open();

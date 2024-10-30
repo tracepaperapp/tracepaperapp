@@ -2,32 +2,47 @@
 class Diagram {
     static worker = null;
     static callbacks = {};
-    static prepared = false;
 
     static async node_diagram(file,id,height="200px",selection={}, cache_only=false){
-        while(!Diagram.prepared){
-            await Draftsman.sleep(10);
+        await Diagram._initialize();
+        if (localStorage.getItem("diagram_" + file)){
+            let raw_data = JSON.parse(localStorage.getItem("diagram_" + file));
+            Diagram._execute_draw(file,id,height,selection, raw_data);
+            //if (cache_only){return raw_data.all_links;}
         }
         let raw_data = await Diagram._sendMessage({action: "node-diagram", file});
+        console.log(raw_data);
         Diagram._execute_draw(file,id,height,selection,raw_data);
+        localStorage.setItem("diagram_" + file,JSON.stringify(raw_data));
         return raw_data.all_links;
     }
 
     static _execute_draw(file,id,height,selection,raw_data){
         let nodes = Object.values(raw_data.nodes).filter(x => x.id != '');
         let edges = Object.values(raw_data.edges);
+        let roots = raw_data.roots;
         if (Object.keys(selection).length != 0){
             nodes = nodes.filter(x => selection[x.type]);
         }
+        if (roots.length != 0){
+            let eligible_nodes = [];
+            edges.filter(x => roots.includes(x.from) || roots.includes(x.to)).forEach(x => {
+                eligible_nodes.push(x.from);
+                eligible_nodes.push(x.to);
+            });
+            nodes = nodes.filter(x => eligible_nodes.includes(x.id));
+        }
 
-//        let type = Modeler.determine_type(file);
-//        if (["readme","command"].includes(type)){
-//            nodes = nodes.filter(x => x.type != "behavior");
-//        } else if (
-//            nodes.filter(x => x.type == "aggregate").length != 0 &&
-//            nodes.filter(x => x.type == "behavior").length != 0){
-//            nodes = nodes.filter(x => x.type != "aggregate");
-//        }
+        let type = Modeler.determine_type(file);
+        if (["readme","command"].includes(type)){
+            // Filter out behaviors
+            nodes = nodes.filter(x => x.type != "behavior");
+        } else if (
+            nodes.filter(x => x.type == "aggregate").length != 0 &&
+            nodes.filter(x => x.type == "behavior").length != 0){
+            // Filter out aggregate
+            nodes = nodes.filter(x => x.type != "aggregate");
+        }
 
         var data = {
           nodes: new vis.DataSet(nodes),
@@ -55,25 +70,16 @@ class Diagram {
         });
     }
 
-    static async initialize(){
+    static async _initialize(){
         await Draftsman.waitFor(() => sessionStorage.project_url);
         if (!Diagram.worker) {
           Diagram.worker = new Worker('/js/webworkers/modelVisualizerWorker.js');
           Diagram.worker.onmessage = (event) => {
-            try {
-                console.log(event);
-                Diagram.callbacks[event.data.request_id](event);
-                delete Diagram.callbacks[event.data.request_id];
-            } catch {
-            }
+            Diagram.callbacks[event.data.request_id](event);
+            delete Diagram.callbacks[event.data.request_id];
           };
+          await Diagram._sendMessage({action: "initialize"});
         }
-    }
-
-    static async prepare_data(){
-        await Diagram.initialize();
-        await Diagram._sendMessage({action: "initialize"});
-        Diagram.prepared = true;
     }
     
     static _sendMessage(message) {

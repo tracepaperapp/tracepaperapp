@@ -22,7 +22,7 @@ document.addEventListener('alpine:init', () => {
             async init(){
                 await Draftsman.sleep(10);
                 this.path = this.$el.getAttribute("file");
-                this._execute_draw();
+                await this._execute_draw();
                 this._taskId = Draftsman.uuidv4();
                 this.$watch("selection",this.draw.bind(this));
             },
