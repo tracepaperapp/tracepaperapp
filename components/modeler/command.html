@@ -131,26 +131,8 @@
                             </div>
 
                             <!-- Diagram -->
-                            <div :file="navigation" x-data="smallNodeDiagram"
-                                    class="card bg-base-100 card-bordered border-primary mb-5 card-compact">
-                                <div class="relative p-2" x-data="{loaded:false}">
-                                    <div x-show="session.all_links[session.selected_node]
-                                        && session.all_links[session.selected_node] != navigation" x-cloak x-transition>
-                                        <div class="tooltip" data-tip="click to open component">
-                                            <div class="badge badge-primary cursor-pointer"
-                                                 @click.debounce="navigate"
-                                                 :navigation="session.all_links[session.selected_node]"
-                                                 x-text="session.selected_node"></div>
-                                        </div>
-                                    </div>
-
-                                    <div id="node-diagram"></div>
-                                    <a x-show="session.all_links && session.all_links.length != 0" x-cloak x-transition
-                                       :navigation="navigation"
-                                       @click="open_diagram" class="bottom-2 right-2 absolute z-50">
-                                        <i class="fa-solid fa-up-right-from-square"></i>
-                                    </a>
-                                </div>
+                            <div x-import="elements/embedded-diagram">
+                                <ui-embedded-diagram></ui-embedded-diagram>
                             </div>
 
                             <!-- documentation -->

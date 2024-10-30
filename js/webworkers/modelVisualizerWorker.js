@@ -20,9 +20,10 @@ var repo = "";
 const dir = '/';
 let files = [];
 let raw_data = {};
+let reverse_index = {};
 
 self.onmessage = async function (event) {
-    const { action, repoUrl, request_id, file} = event.data;
+    const { action, repoUrl, request_id, file, radius=1 } = event.data;
     try {
         switch (action) {
           case "initialize":
@@ -31,9 +32,11 @@ self.onmessage = async function (event) {
                 repo = repoUrl;
             }
             raw_data = await refresh_data();
+            reverse_index = invert(raw_data.all_links);
             postMessage({ result: raw_data, request_id,action });
+            break;
           case 'node-diagram':
-            postMessage({ result: raw_data, request_id,action });
+            postMessage({ result: filter_data(file,radius), request_id,action });
             break;
           default:
             postMessage({ error: 'Unknown action', request_id,action });
@@ -42,6 +45,55 @@ self.onmessage = async function (event) {
         console.error(error);
         postMessage({ error: error.message, request_id,action });
       }
+}
+
+function filter_data(roots,connectionRadius=1){
+    let eligible_nodes = [];
+    let focus = [];
+    roots.forEach(root => {
+        if (root in reverse_index){
+                eligible_nodes.push(reverse_index[root]);
+                let focus_node = reverse_index[root];
+                focus.push(focus_node);
+                if (root.endsWith("/root.xml")){
+                   let flows = Object.keys(raw_data.nodes).filter(x => x.startsWith(focus_node) && focus_node != x);
+                   eligible_nodes.push(...flows);
+                   focus.push(...flows);
+                }
+            }
+    });
+
+    let nodes = {};
+    if (eligible_nodes.length != 0){
+        for (let i=0; i < connectionRadius; i++){
+            let intermediate = [];
+            Object.values(raw_data.edges).forEach(edge => {
+                if (eligible_nodes.includes(edge.from) && !eligible_nodes.includes(edge.to)){
+                    intermediate.push(edge.to);
+                } else if (!eligible_nodes.includes(edge.from) && eligible_nodes.includes(edge.to)){
+                    intermediate.push(edge.from);
+                }
+            });
+            eligible_nodes.push(...intermediate)
+        }
+        const selected_nodes = eligible_nodes.map(k => [k, raw_data.nodes[k]]);
+        nodes = Object.fromEntries(selected_nodes);
+    } else {
+        nodes = raw_data.nodes;
+    }
+    focus.forEach(center => {
+        nodes[center] = {...nodes[center]};
+        nodes[center].size *= 2;
+        console.log(nodes[center].color);
+        nodes[center].color = { background: nodes[center].color, border: darkenColor(nodes[center].color) };
+        nodes[center].borderWidth = 8;
+        nodes[center].font.size = 20;
+    });
+    return {
+        nodes: nodes,
+        edges: raw_data.edges,
+        all_links: raw_data.all_links
+    };
 }
 
 async function refresh_data(){
@@ -106,7 +158,6 @@ const shapes = {
 };
 
 const domain_colors = [
-  "#634C8E",
   "#B1A2D7",
   "#7DA7C4",
   "#A6D9B3",
@@ -117,7 +168,8 @@ const domain_colors = [
   "#8B6699",
   "#FFF17A",
   "#6FCAC4",
-  "#B6B6B6"
+  "#B6B6B6",
+  "#634C8E"
 ];
 
 var subdomains = [];
@@ -214,7 +266,7 @@ Diagram = {
             let label = name + " (expression)"
             let node = this.add_node(label,"dependency");
             this.translations[name] = label;
-            this.all_links[name] = p;
+            this.all_links[label] = p;
         });
 
         // prepare pattern nodes
@@ -224,7 +276,7 @@ Diagram = {
             let label = name + " (pattern)"
             let node = this.add_node(label,"dependency");
             this.translations[name] = label;
-            this.all_links[name] = p;
+            this.all_links[label] = p;
         });
 
         // prepare code nodes
@@ -234,7 +286,7 @@ Diagram = {
             let label = name + " (Python module)"
             let node = this.add_node(label,"dependency");
             this.translations[name] = label;
-            this.all_links[name] = p;
+            this.all_links[label] = p;
         });
 
         ///// Edges + (embedded nodes e.g. queries or cron triggers)
@@ -246,13 +298,13 @@ Diagram = {
             if (model.att_role && model.att_role.startsWith("#global")){
                 let target = model.att_role.split(".").at(1).split("(").at(0);
                 target = this.translations[target];
-                this.add_edge(name,target,"",true);
+                this.add_edge(target,name,"",true);
             }
             model.field.forEach(f => {
                 if (f.att_pattern){
                     let target = f.att_pattern.replaceAll("{","").replaceAll("}","");
                     target = this.translations[target];
-                    this.add_edge(name,target,"",true);
+                    this.add_edge(target,name,"",true);
                 }
             });
         });
@@ -263,6 +315,7 @@ Diagram = {
             let aggregate = p.split("/").at(2);
             let behavior = p.split("/").at(-1).replace(".xml","");
             let name = sub + "." + aggregate + "." + behavior;
+            // TODO trigger key field expressie
             model.trigger.forEach(t => {
                 this.translations[t.att_source].forEach(source => {
                     this.add_edge(source,name);
@@ -272,13 +325,15 @@ Diagram = {
             model.processor.filter(p => p.att_type == "code" && p.att_file).forEach(p => {
                 let target = p.att_file.split("/").at(-1).replace(".py","");
                 target = this.translations[target];
-                this.add_edge(name,target,"",true);
+                this.add_edge(target,name,"",true);
+                this.add_edge(target,sub + "." + aggregate,"",true);
             });
         });
 
         // Notifier edges
         await Diagram.process_files(notifiers, (p,model) => {
             let name = p.split("/").at(-1).replace(".xml","");
+            // TODO trigger key field expressie?
             model.trigger.forEach(t => {
                 if (t.att_source.startsWith("@")){
                     this.add_node(t.att_source,"schedule");
@@ -292,7 +347,7 @@ Diagram = {
             model.activity.filter(a => a.att_type == "code" && a["att_python-file"]).forEach(a => {
                 let target = a["att_python-file"].split("/").at(-1).replace(".py","");
                 target = this.translations[target];
-                this.add_edge(name,target);
+                this.add_edge(target,name,"",true);
             });
         });
 
@@ -340,7 +395,7 @@ Diagram = {
             if (model.att_role && model.att_role.startsWith("#global")){
                 let target = model.att_role.split(".").at(1).split("(").at(0);
                 target = this.translations[target];
-                this.add_edge(model.att_name, target,"",true);
+                this.add_edge(target,model.att_name,"",true);
             }
 
             // Graphql method
@@ -429,7 +484,7 @@ Diagram = {
             }
         };
         if (dashes == true){
-            Diagram.edges[key]["color"] = {"inherit":"to"};
+            //Diagram.edges[key]["color"] = {"inherit":"to"};
         } else {
             Diagram.edges[key]["arrows"] = "to";
         }
@@ -454,4 +509,45 @@ function extractPlaceholders(str) {
         matches.push(match[1]); // Voeg de inhoud tussen {{ en }} toe aan de array
     }
     return matches;
+}
+
+function invert(obj) {
+    return Object.entries(obj).reduce((acc, [key, value]) => {
+        acc[value] = key;
+        return acc;
+    }, {});
+}
+
+function darkenColor(color, amount = 0.2) {
+    // Haal de RGB-waarden uit de rgba-string
+    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!match) return color; // Retourneer originele kleur als parsing faalt
+
+    // RGB-waarden extraheren en omzetten naar integers
+    let [r, g, b] = match.slice(1).map(Number);
+
+    // Bereken de donkere tint
+    r = Math.max(0, r - r * amount);
+    g = Math.max(0, g - g * amount);
+    b = Math.max(0, b - b * amount);
+
+    // Retourneer in het rgba-formaat met een opacity van 1
+    return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`;
+}
+
+function lightenColor(color, amount = 0.2) {
+    // Haal de RGB-waarden uit de rgba-string
+    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!match) return color; // Retourneer originele kleur als parsing faalt
+
+    // RGB-waarden extraheren en omzetten naar integers
+    let [r, g, b] = match.slice(1).map(Number);
+
+    // Bereken de lichte tint
+    r = Math.min(255, r + (255 - r) * amount);
+    g = Math.min(255, g + (255 - g) * amount);
+    b = Math.min(255, b + (255 - b) * amount);
+
+    // Retourneer in het rgba-formaat met een opacity van 1
+    return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`;
 }

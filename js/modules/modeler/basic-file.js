@@ -17,8 +17,6 @@ document.addEventListener('alpine:init', () => {
             async read(){
                 this.path = this.$el.getAttribute("file");
                 this.content = await this.repo.read(this.path);
-                await Draftsman.sleep(10);
-                await Diagram.node_diagram(this.path,"node-diagram");
             },
             async save(){
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);

@@ -16,7 +16,9 @@
                             class="textarea textarea-bordered textarea-lg w-full"></textarea>
                 </div>
                 <div class="col-span-4">
-                    <div id="node-diagram"></div>
+                    <div x-import="elements/embedded-diagram">
+                        <ui-embedded-diagram></ui-embedded-diagram>
+                    </div>
                 </div>
             </div>
         </template>

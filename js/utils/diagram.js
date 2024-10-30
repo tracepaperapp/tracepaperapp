@@ -4,37 +4,46 @@ class Diagram {
     static callbacks = {};
     static prepared = false;
 
-    static async node_diagram(file,id,height="200px",selection={}, cache_only=false){
+    static generate_key(file,radius) {
+       const jsonString = JSON.stringify({file,radius});
+       return btoa(jsonString);
+   }
+
+    static async node_diagram(file,id,height="200px",selection={}, mode="aggregate",radius=1){
+        let key = Diagram.generate_key(file,radius);
+
         while(!Diagram.prepared){
             await Draftsman.sleep(10);
         }
-        let raw_data = await Diagram._sendMessage({action: "node-diagram", file});
-        Diagram._execute_draw(file,id,height,selection,raw_data);
+        if (Array.isArray(file)){
+            file = [...file];
+        } else {
+            file = [file];
+        }
+        let raw_data = await Diagram._sendMessage({action: "node-diagram", file, radius});
+        Diagram._execute_draw(file,id,height,selection,raw_data,mode);
         return raw_data.all_links;
     }
 
-    static _execute_draw(file,id,height,selection,raw_data){
+    static _execute_draw(file,id,height,selection,raw_data,mode){
         let nodes = Object.values(raw_data.nodes).filter(x => x.id != '');
         let edges = Object.values(raw_data.edges);
         if (Object.keys(selection).length != 0){
             nodes = nodes.filter(x => selection[x.type]);
         }
 
-//        let type = Modeler.determine_type(file);
-//        if (["readme","command"].includes(type)){
-//            nodes = nodes.filter(x => x.type != "behavior");
-//        } else if (
-//            nodes.filter(x => x.type == "aggregate").length != 0 &&
-//            nodes.filter(x => x.type == "behavior").length != 0){
-//            nodes = nodes.filter(x => x.type != "aggregate");
-//        }
+        if (mode == "aggregate"){
+            nodes = nodes.filter(x => x.type != "behavior");
+        } else if (nodes.filter(x => x.type == "behavior").length != 0){
+            nodes = nodes.filter(x => x.type != "aggregate");
+        }
 
         var data = {
           nodes: new vis.DataSet(nodes),
           edges: new vis.DataSet(edges)
         };
         var container = document.getElementById(id);
-        let directed_diagram = nodes.length < 20;
+        let directed_diagram = nodes.length < 11;
         var options = {
             width: "100%",
             height: height,

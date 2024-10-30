@@ -1,0 +1,37 @@
+<template x-component="embedded-diagram">
+    <div :file="navigation" x-data="smallNodeDiagram"
+         class="card bg-base-100 card-bordered border-primary mb-5 card-compact">
+        <div class="relative p-2" x-data="{loaded:false}">
+            <div x-show="session.all_links[session.selected_node]
+                                        && session.all_links[session.selected_node] != navigation" x-cloak x-transition>
+                <div class="tooltip" data-tip="click to open component">
+                    <div class="badge badge-primary cursor-pointer"
+                         @click.debounce="navigate"
+                         :navigation="session.all_links[session.selected_node]"
+                         x-text="session.selected_node"></div>
+                </div>
+            </div>
+
+            <div id="node-diagram"></div>
+            <a x-show="session.all_links && session.all_links.length != 0" x-cloak x-transition>
+                <div @click="change_radius" class="badge badge-primary badge-outline cursor-pointer" x-text="radius"></div>
+            </a>
+            <a x-show="session.all_links && session.all_links.length != 0 && mode == 'aggregate'" x-cloak x-transition
+               @click="toggle_mode"
+               class="bottom-2 right-8 absolute z-50 cursor-pointer">
+                <i class="fa-solid fa-circle-nodes"></i>
+            </a>
+            <a x-show="session.all_links && session.all_links.length != 0 && mode == 'behavior'" x-cloak x-transition
+               @click="toggle_mode"
+               class="bottom-2 right-8 absolute z-50 cursor-pointer">
+                <i class="fa-regular fa-circle"></i>
+            </a>
+            <a x-show="session.all_links && session.all_links.length != 0" x-cloak x-transition
+               :navigation="navigation"
+               :radius="radius"
+               @click="open_diagram" class="bottom-2 right-2 absolute z-50 cursor-pointer">
+                <i class="fa-solid fa-up-right-from-square"></i>
+            </a>
+        </div>
+    </div>
+</template>

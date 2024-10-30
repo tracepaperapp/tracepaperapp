@@ -81,8 +81,12 @@ document.addEventListener('alpine:init', () => {
                 this.update_tabs();
             },
             open_diagram: function(){
+
+                console.log(this.$el);
+                let request = this.$el.getAttribute("navigation") + ";";
+                request += this.$el.getAttribute("radius");
+                sessionStorage.diagramRequest = request;
                 this.navigation = "/diagram";
-                this.navigationFile = this.$el.getAttribute("navigation");
                 this.update_tabs();
             },
             update_tabs: function(){
