@@ -59,7 +59,7 @@ document.addEventListener('alpine:init', () => {
                 this.draw();
             },
             async draw(){
-                Draftsman.debounce(this._taskId,this._execute_draw.bind(this),500);
+                Draftsman.debounce(this._taskId,this._execute_draw.bind(this),1500);
             },
             async _execute_draw(){
                 this.selection.aggregate = this.selection.behavior;

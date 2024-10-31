@@ -15,14 +15,14 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
                 this.lock = false;
-                let elements = this.splitOnLastDot(this.newPath);
+                let elements = Draftsman.splitOnLastDot(this.newPath);
                 if (elements[0] == this.model['att_graphql-namespace'] && elements[1] == this.model['att_graphql-name']){
                     return;
                 }
                 this.preparedRename = {
                     namespace: elements[0],
                     method: elements[1],
-                    eventName: this.capitalizeFirstLetter(elements[1]) + elements[0].replaceAll(".","") + "Requested",
+                    eventName: Draftsman.capitalizeFirstLetter(elements[1]) + elements[0].replaceAll(".","") + "Requested",
                     oldName: `commands/${this.model['att_graphql-namespace'].replaceAll('.','/')}/${this.model.att_name}.xml`
                 };
                 let newName = `commands/${this.preparedRename.namespace.replaceAll('.','/')}/${this.preparedRename.eventName}.xml`;
@@ -50,19 +50,6 @@ document.addEventListener('alpine:init', () => {
             async delete_model(){
                 let file = `commands/${this.model['att_graphql-namespace'].replaceAll('.','/')}/${this.model.att_name}.xml`;
                 await Modeler.delete_model(file);
-            },
-            capitalizeFirstLetter(str) {
-                if (!str) return str; // Controleer op een lege string
-                return str.charAt(0).toUpperCase() + str.slice(1);
-            },
-            splitOnLastDot(str) {
-                const lastDotIndex = str.lastIndexOf('.');
-                if (lastDotIndex === -1) return [str]; // Geen punt gevonden
-
-                const beforeDot = str.slice(0, lastDotIndex);
-                const afterDot = str.slice(lastDotIndex + 1);
-
-                return [beforeDot, afterDot];
             },
             async init(){
                 await this.read();

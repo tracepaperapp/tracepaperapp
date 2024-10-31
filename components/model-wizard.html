@@ -2,10 +2,12 @@
   <div class="relative inline-block"
        @keydown.window="handle_keydown"
        x-data="modelWizard">
-    <button @click="start" class="btn btn-circle btn-outline btn-primary m-2">
+    <button @click="start" class="btn btn-circle btn-outline btn-primary m-2" :disabled="editing_disabled">
       <i class="fa-solid fa-plus"></i>
     </button>
-
+    <template x-if="active">
+      <div :file="navigation" x-init="set_context"></div>
+    </template>
     <dialog x-show="active" x-cloak x-transition class="modal modal-open">
       <div class="modal-box  w-11/12 max-w-xl">
         <form method="dialog">
@@ -15,16 +17,43 @@
 
         <div x-show="state == 1">
           <ul class="menu bg-base-200 rounded-box w-full">
-            <li><a>Item 1</a></li>
-            <li><a>Item 2</a></li>
-            <li><a>Item 3</a></li>
+            <li @click="start_command"><a>Command</a></li>
           </ul>
         </div>
 
+        <div x-show="state == 2" x-cloak x-transition>
+          <input type="text"
+                 x-model="path"
+                 x-data="inputValidator"
+                 @input="api_path"
+                 @keyup.debounce.1000ms="check_command_name_uniqueness"
+                 :disabled="editing_disabled"
+                 class="input input-sm w-full max-w-xs" />
+
+          <div x-show="dialog_id == 1" x-cloak x-transition role="alert" class="alert alert-error mt-5">
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 shrink-0 stroke-current"
+                    fill="none"
+                    viewBox="0 0 24 24">
+              <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>This API path already exists!</span>
+          </div>
+
+        </div>
+
         <div class="modal-action">
-          <button class="btn" @click="close">Cancel</button>
-<!--          <button class="btn btn-primary"-->
-<!--                  @click="">Add</button>-->
+
+
+          <button class="btn btn-primary"
+                  x-show="state == 2" x-cloak x-transition
+                  :disabled="conflicted"
+                  @click="">Next</button>
         </div>
       </div>
     </dialog>

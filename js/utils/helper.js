@@ -27,6 +27,21 @@ class Draftsman {
         }
     }
 
+    static splitOnLastDot(str) {
+        const lastDotIndex = str.lastIndexOf('.');
+        if (lastDotIndex === -1) return [str]; // Geen punt gevonden
+
+        const beforeDot = str.slice(0, lastDotIndex);
+        const afterDot = str.slice(lastDotIndex + 1);
+
+        return [beforeDot, afterDot];
+    }
+
+    static capitalizeFirstLetter(str) {
+        if (!str) return str; // Controleer op een lege string
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
     static registerTask(f, delayInSeconds = 1, taskKey) {
         const delayInMs = delayInSeconds * 1000;
 
