@@ -23,13 +23,22 @@
 
         <div x-show="state == 2" x-cloak x-transition>
           <input type="text"
-                 x-model="path"
+                 x-model="parameters.path"
                  x-data="inputValidator"
                  @input="api_path"
                  @keyup.debounce.1000ms="check_command_name_uniqueness"
                  :disabled="editing_disabled"
                  class="input input-sm w-full max-w-xs" />
-
+          <table class="table">
+            <tr>
+              <th scope="row">Command name</th>
+              <td x-text="parameters.commandName"></td>
+            </tr>
+            <tr>
+              <th scope="row">Event name</th>
+              <td x-text="parameters.eventName"></td>
+            </tr>
+          </table>
           <div x-show="dialog_id == 1" x-cloak x-transition role="alert" class="alert alert-error mt-5">
             <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -47,13 +56,16 @@
 
         </div>
 
+        <div x-show="state == 3" x-cloak x-transition>
+          <table class=""
+        </div>
         <div class="modal-action">
 
 
           <button class="btn btn-primary"
-                  x-show="state == 2" x-cloak x-transition
+                  x-show="state > 1" x-cloak x-transition
                   :disabled="conflicted"
-                  @click="">Next</button>
+                  @click="state += 1">Next</button>
         </div>
       </div>
     </dialog>

@@ -97,6 +97,20 @@
                                                class="input input-sm w-full max-w-xs" />
                                     </td>
                                 </tr>
+                                <tr>
+                                    <th scope="row">Authorization mode</th>
+                                    <td x-import="elements/input">
+                                        <ui-command-auth-mode></ui-command-auth-mode>
+                                    </td>
+                                </tr>
+                                <tr x-show="model.att_authorization == 'role'" x-cloak x-transition>
+                                    <th scope="row">Required role</th>
+                                    <template x-if="model.att_authorization == 'role'">
+                                        <td x-import="elements/input">
+                                            <ui-role-selector></ui-role-selector>
+                                        </td>
+                                    </template>
+                                </tr>
                                 <!--                        <tr>-->
                                 <!--                            <td>Test</td>-->
                                 <!--                            <td>-->

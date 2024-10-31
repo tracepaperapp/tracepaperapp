@@ -6,10 +6,11 @@ const githubAccountRegex = /^[a-zA-Z0-9\-]{1,39}$/;
 const repoRegex = /^https:\/\/github.com\/[a-zA-Z0-9\-._]+\/[a-zA-Z0-9\-._]+$/;
 
 document.addEventListener('alpine:init', () => {
-    Alpine.data('inputValidator', function(){
+    Alpine.data('inputValidator', (pattern=null) => {
         return {
             isValid: true,
             message: null,
+            pattern: pattern,
             async init(){
                 await Draftsman.sleep(100);
                 this.$el.dispatchEvent(new Event('input'));
@@ -41,6 +42,12 @@ document.addEventListener('alpine:init', () => {
                 const message = "Must be a gitHub repo url!";
                 this.validate_regex(repoRegex,message);
             },
+            custom_pattern(){
+                console.log(this.pattern);
+                const regex = new RegExp(this.pattern);
+                const message = this.$el.getAttribute("message");
+                this.validate_regex(regex,message);
+            },
             validate_regex(regex,message){
                 let value = this.$el.value;
                 this.isValid = value == "" || regex.test(value);
@@ -60,6 +67,28 @@ document.addEventListener('alpine:init', () => {
                     this.$el.classList.add('input-error');
                     this.$el.classList.remove('input-ghost');
                 }
+            }
+        }
+    });
+    Alpine.data("roleSelector",function(){
+        return {
+            roles: [],
+            pattern: "",
+            async init(){
+                let meta = await Modeler.get_model("meta.json");
+                this.roles = meta.roles;
+                this.roles.unshift("");
+                let repo = await GitRepository.open();
+                let files = await repo.list(x => x.startsWith("expressions/") && x.endsWith(".xml"));
+                let methods = [];
+                for (let i=0; i < files.length; i++){
+                    let model = await Modeler.get_model(files[i]);
+                    if (model.att_type == "ActorEventRole"){
+                        this.roles.push(`#global.${model.att_name}(${model.att_input.replaceAll(';',', ')})`);
+                        methods.push(model.att_name);
+                    }
+                }
+                this.pattern = `^#global\\.(${methods.join("|")})\\((.*)\\)$`;
             }
         }
     });

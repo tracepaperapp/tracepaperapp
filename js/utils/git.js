@@ -39,8 +39,13 @@ class GitRepository {
   }
 
   // Bestandslijst
-  async list() {
-    return this._sendMessage({ action: 'list' });
+  async list(predicate=null) {
+    if (predicate){
+        let files = await this._sendMessage({ action: 'list' });
+        return files.filter(predicate);
+    } else {
+        return this._sendMessage({ action: 'list' });
+    }
   }
 
   // Bestandsinhoud lezen

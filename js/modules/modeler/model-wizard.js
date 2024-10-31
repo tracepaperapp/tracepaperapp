@@ -5,12 +5,12 @@ ctrl + m --> open wizard
 document.addEventListener('alpine:init', () => {
     Alpine.data('modelWizard', function(){
         return {
-            active: false,
-            state: 0,
-            path: "",
+            active: this.$persist(false).using(sessionStorage).as("wizardActive"),
+            state: this.$persist(0).using(sessionStorage).as("wizardState"),
+            parameters: this.$persist({}).using(sessionStorage).as("wizardParameters"),
             files: [],
-            conflicted: false,
-            dialog_id: 0,
+            conflicted: this.$persist(false).using(sessionStorage).as("wizardConflicted"),
+            dialog_id: this.$persist(0).using(sessionStorage).as("wizardDialog"),
             init(){
                 //this.$watch("path",this.save.bind(this));
             },
@@ -28,19 +28,20 @@ document.addEventListener('alpine:init', () => {
             },
             async start_command(){
                 if (this.type == "command"){
-                    this.path = this.model["att_graphql-namespace"] + ".methodName";
+                    this.parameters.path = this.model["att_graphql-namespace"] + ".methodName";
                 }
                 this.state = 2;
             },
             check_command_name_uniqueness(){
-                console.log(!apiPathRegex.test(this.path),this.path);
-                this.conflicted = !apiPathRegex.test(this.path);
+                this.conflicted = !apiPathRegex.test(this.parameters.path);
                 if (this.conflicted){
                     this.dialog_id = 0;
                     return;
                 }
-                let elements = Draftsman.splitOnLastDot(this.path);
+                let elements = Draftsman.splitOnLastDot(this.parameters.path);
                 let eventName = Draftsman.capitalizeFirstLetter(elements[1]) + elements[0].replaceAll(".","") + "Requested";
+                this.parameters.eventName = eventName;
+                this.parameters.commandName = eventName.replace('Requested','')
                 let newFile = `commands/${elements[0].replaceAll('.','/')}/${eventName}.xml`;
                 this.conflicted = this.files.includes(newFile);
                 console.log(this.conflicted);
@@ -55,6 +56,7 @@ document.addEventListener('alpine:init', () => {
                 this.state = 0;
                 this.conflicted = false;
                 this.dialog_id = 0;
+                this.parameters = {};
             },
             handle_keydown(event) {
                 // Check voor Windows (Ctrl + M) of Mac (Cmd + M)

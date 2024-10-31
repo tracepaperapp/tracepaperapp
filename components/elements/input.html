@@ -1,0 +1,30 @@
+<template x-component="command-auth-mode">
+  <select :disabled="editing_disabled"
+          x-model="model.att_authorization"
+          class="select select-ghost w-full max-w-xs">
+    <option>anonymous</option>
+    <option>authenticated</option>
+    <option>role</option>
+  </select>
+</template>
+<template x-component="role-selector">
+  <div x-data="roleSelector">
+    <select :disabled="editing_disabled"
+            x-model="model.att_role"
+            x-show="!model.att_role.startsWith('#')" x-cloak x-transition
+            class="select select-ghost w-full max-w-xs">
+      <template x-for="role in roles" :key="role">
+        <option :value="role" :selected="role == model.att_role" x-text="role"></option>
+      </template>
+    </select>
+    <template x-if="pattern && model.att_role.startsWith('#')">
+      <input type="text"
+             x-model="model.att_role"
+             x-data="inputValidator(pattern)"
+             message="Must be a valid global expression"
+             @input="custom_pattern"
+             x-show="model.att_role.startsWith('#')" x-cloak x-transition
+             class="input input-sm w-full max-w-xs" />
+    </template>
+  </div>
+</template>
