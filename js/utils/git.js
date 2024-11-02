@@ -80,6 +80,13 @@ class GitRepository {
     });
   }
 
+  async deleteDirectory(dirPath) {
+      return this._sendMessage({
+        action: 'deleteDirectory',
+        filePath: dirPath,
+      });
+  }
+
   // Geef de status van gestagede wijzigingen
   async status(diff=false) {
     return this._sendMessage({ action: 'status', diff });

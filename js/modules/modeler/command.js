@@ -83,8 +83,7 @@ document.addEventListener('alpine:init', () => {
             },
             async read(){
                 await Draftsman.sleep(10);
-                this.path = this.$el.getAttribute("file");
-                this.model = await Modeler.get_model(this.path);
+                this.model = await Modeler.get_model(this.navigation);
                 this.newPath = this.get_api_path();
             },
             async save(){

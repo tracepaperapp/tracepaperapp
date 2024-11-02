@@ -213,14 +213,16 @@
                                 <tr class="border-t">
                                     <th scope="row" x-text="change.status"></th>
                                     <td x-text="change.filePath"></td>
-                                    <td x-show="change.hasConflict" x-cloak x-transition>
+                                    <td>
                                         <button :file="change.filePath"
+                                                x-show="change.hasConflict" x-cloak x-transition
                                                 class="btn btn-sm btn-error"
                                                 :class="diff.file == change.filePath ? '' : 'btn-outline'"
                                                 @click="compare_diff">Conflicted</button>
                                     </td>
-                                    <td x-show="change.hasConflict" x-cloak x-transition>
+                                    <td>
                                         <button :file="change.filePath"
+                                                x-show="change.hasConflict" x-cloak x-transition
                                                 :class="force.includes(change.filePath) ? 'btn btn-success btn-sm' : 'btn btn-outline btn-success btn-sm'"
                                                 @click="accept_mine">Accept mine</button>
                                     </td>
@@ -235,6 +237,18 @@
                                     </td>
                                 </tr>
                             </template>
+                            <tr class="border-t">
+                                <td colspan="4"></td>
+                                <td>
+                                    <div class="tooltip tooltip-bottom" data-tip="Revert local changes">
+                                        <button :file="change.filePath"
+                                                @click="revert_all"
+                                                class="btn btn-sm btn-outline btn-error">
+                                            <i class="fa-solid fa-clock-rotate-left"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         </table>
                         <textarea class="textarea textarea-bordered w-full mt-3"
                                   x-model="commitMessage" placeholder="Enter commit message"></textarea>

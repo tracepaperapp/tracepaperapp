@@ -55,6 +55,11 @@ self.onmessage = async (event) => {
         postMessage({ result: `File ${filePath} deleted and staged`, request_id, last_pull, commit_diff });
         break;
 
+      case 'deleteDirectory':
+        await deleteDirectoryRecursively(filePath);
+        postMessage({ result: `Directory ${filePath} deleted and staged`, request_id, last_pull, commit_diff });
+        break;
+
       case 'status':
         const statusList = await status(diff);
         postMessage({ result: statusList, request_id, last_pull, commit_diff });
@@ -231,6 +236,31 @@ async function createDirectory(filePath){
 async function deleteFile(filePath) {
   await pfs.unlink(`${dir}/${filePath}`);
   await isogit.remove({ fs, dir, filepath: filePath });
+}
+
+async function deleteDirectoryRecursively(path) {
+  try {
+    const entries = await pfs.readdir(dir + path);
+    for (const entry of entries) {
+      const fullPath = `${dir}${path}/${entry}`;
+      const stats = await pfs.stat(fullPath);
+      if (stats.isDirectory()) {
+        // Recursief de submap verwijderen en stage-en
+        await deleteDirectoryRecursively(fullPath);
+      } else {
+        // Bestand verwijderen en stage-en
+        await pfs.unlink(fullPath);
+        await isogit.remove({ fs, dir, filepath: fullPath.replace(`${dir}/`, '') });
+      }
+    }
+
+    // Map verwijderen en stage-en
+    await pfs.rmdir(path);
+    await isogit.remove({ fs, dir, filepath: path.replace(`${dir}/`, '') });
+  } catch (error) {
+    console.error(`Error while deleting directory ${path}:`, error);
+    throw error;
+  }
 }
 
 // https://isomorphic-git.org/docs/en/statusMatrix

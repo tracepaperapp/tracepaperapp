@@ -58,7 +58,7 @@ document.addEventListener('alpine:init', () => {
                 let file_type = Modeler.determine_type(this.navigation);
 
                 // temp testcode
-                if (!["readme","diagram","command"].includes(file_type) && navigation != this.navigation){
+                if (!["readme","diagram","command","aggregate"].includes(file_type) && navigation != this.navigation){
                     file_type = "dummy";
                 }
 

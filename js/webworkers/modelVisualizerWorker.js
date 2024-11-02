@@ -84,7 +84,6 @@ function filter_data(roots,connectionRadius=1){
     focus.forEach(center => {
         nodes[center] = {...nodes[center]};
         nodes[center].size *= 2;
-        console.log(nodes[center].color);
         nodes[center].color = { background: nodes[center].color, border: darkenColor(nodes[center].color) };
         nodes[center].borderWidth = 8;
         nodes[center].font.size = 20;

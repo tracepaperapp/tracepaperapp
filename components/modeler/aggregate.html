@@ -1,0 +1,45 @@
+<template x-component="aggregate">
+    <div navigation-type="aggregate"
+         x-show="navigationElementActive"
+         x-cloak
+         x-transition.delay.100ms>
+        <template navigation-type="aggregate" x-if="navigationElementActive">
+            <div x-data="aggregateRoot">
+                <template x-if="model">
+                    <div class="grid grid-cols-12 gap-3 mt-5">
+                        <div class="col-span-8">
+                        </div>
+                        <div class="col-span-4">
+
+                            <!-- Info Card -->
+                            <div class="card bg-primary text-primary-content mb-5 card-compact" x-data="infoCard">
+                                <div class="card-body">
+                                    <div class="card-actions justify-end">
+                                        <i @click="open_github"
+                                           :file="navigation"
+                                           class="fa-solid fa-code cursor-pointer"></i>
+                                    </div>
+                                    <h2 class="card-title">Aggregate Document</h2>
+                                    <p class="text-xs" :file="navigation" x-text="get_path"></p>
+                                    <div class="card-actions justify-end"
+                                         x-show="editing_enabled" x-cloak x-transition>
+                                        <i class="fa-regular fa-trash-can cursor-pointer" @click="delete_model"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diagram -->
+                            <div x-import="elements/embedded-diagram">
+                                <ui-embedded-diagram></ui-embedded-diagram>
+                            </div>
+
+                            <!-- documentation -->
+                            <div :file="navigation" x-data="markdownEditor"></div>
+
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

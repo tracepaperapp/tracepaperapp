@@ -1,5 +1,5 @@
 document.addEventListener('alpine:init', () => {
-    Alpine.data('modelFile', function(){
+    Alpine.data('aggregateRoot', function(){
         return {
             model: {},
             _taskId: "",
@@ -19,8 +19,14 @@ document.addEventListener('alpine:init', () => {
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
             },
             async delete_model(){
-                let file = ``;
-                await Modeler.delete_model(file);
+                try{
+                    let dir = this.navigation.replace("root.xml","");
+                    let repo = await GitRepository.open();
+                    await repo.deleteDirectory(dir);
+                } finally {
+                    await Draftsman.sleep(100);
+                    Draftsman.publishMessage("file-reverted",this.navigation);
+                }
             },
             async prepare_change_name(){
                 this.preparedRename = {

@@ -28,6 +28,15 @@ document.addEventListener('alpine:init', () => {
                 Draftsman.publishMessage("force-reload",file);
                 Draftsman.publishMessage("file-reverted",file);
             },
+            async revert_all(){
+                if(!confirm("Remove all local changes, are you sure?")){return}
+                for (let i = 0; i < this.changes.length; i++){
+                    await this.repo.revert(this.changes[i].filePath);
+                }
+                await this.execute_diff();
+                Draftsman.publishMessage("force-reload","");
+                Draftsman.publishMessage("file-reverted","");
+            },
             async start_commit(){
                 this.commitModal = true;
                 await this.execute_diff();
