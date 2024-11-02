@@ -55,6 +55,8 @@ class Modeler {
                 return "behavior";
             } else if (file.startsWith("domain/") && file.includes("/events/")){
                 return "event";
+            } else if (file.startsWith("domain/") && file.includes("/entities/")){
+                return "entity";
             } else if (file.startsWith("views/")){
                 return "view";
             } else if (file.startsWith("projections/")){

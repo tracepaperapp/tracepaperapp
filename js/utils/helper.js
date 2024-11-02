@@ -42,6 +42,39 @@ class Draftsman {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
+    static filterKeys(arrayOfObjects, keys) {
+      return arrayOfObjects.map(obj => {
+        let filteredObj = {};
+        keys.forEach(key => {
+          if (obj.hasOwnProperty(key)) {
+            filteredObj[key] = obj[key];
+          }
+        });
+        return filteredObj;
+      });
+    }
+
+    static generateRandomCamelCaseString() {
+      const words = [
+        "alpha", "beta", "gamma", "delta", "epsilon",
+        "zeta", "eta", "theta", "iota", "kappa",
+        "lambda", "mu", "nu", "xi", "omicron",
+        "pi", "rho", "sigma", "tau", "upsilon",
+        "phi", "chi", "psi", "omega"
+      ];
+
+      // Genereer 2 tot 4 willekeurige woorden
+      const numberOfWords = Math.floor(Math.random() * 3) + 2;
+      let camelCaseString = words[Math.floor(Math.random() * words.length)];
+
+      for (let i = 1; i < numberOfWords; i++) {
+        const word = words[Math.floor(Math.random() * words.length)];
+        camelCaseString += word.charAt(0).toUpperCase() + word.slice(1);
+      }
+
+      return camelCaseString;
+    }
+
     static registerTask(f, delayInSeconds = 1, taskKey) {
         const delayInMs = delayInSeconds * 1000;
 

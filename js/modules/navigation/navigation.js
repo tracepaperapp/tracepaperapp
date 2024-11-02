@@ -18,6 +18,7 @@ document.addEventListener('alpine:init', () => {
                 this.tabCleanupId = Draftsman.registerListener("file-reverted",this.cleanup_tabs.bind(this));
                 await this.cleanup_tabs(false);
                 Draftsman.registerTask(Diagram.prepare_data,30,"prepare-diagram-data");
+                await this.set_scroll();
             },
             async cleanup_tabs(cascade=true){
                 let repo = await GitRepository.open();
@@ -69,15 +70,20 @@ document.addEventListener('alpine:init', () => {
                     return "";
                 }
             },
-            navigate: function(){
+            navigate: async function(file=null){
                 this.issuesView = false;
-                let navigation = this.$el.getAttribute("navigation");
-                if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram"].includes(navigation)){
-                    navigation += "/root.xml";
+                if (typeof file === 'string'){
+                    this.navigation = file;
+                }else{
+                    let navigation = this.$el.getAttribute("navigation");
+                    if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram"].includes(navigation)){
+                        navigation += "/root.xml";
+                    }
+                    this.navigation = navigation;
                 }
-                this.navigation = navigation;
                 Draftsman.publishMessage("force-reload",this.navigation);
                 this.update_tabs();
+                await this.set_scroll();
             },
             open_diagram: function(){
                 let request = this.$el.getAttribute("navigation") + ";";
@@ -95,6 +101,15 @@ document.addEventListener('alpine:init', () => {
                     tabs.push(this.navigation);
                 }
                 this.tabs = tabs;
+            },
+            set_scroll: async function(){
+                await Draftsman.sleep(100);
+                let position = sessionStorage.getItem('scrollPosition:' + this.navigation);
+                if (position){
+                    position = parseInt(position, 10);
+                    console.log("do",position);
+                    document.getElementById("main").scrollTop = position;
+                }
             },
             close_tab: function(){
                 this.$event.preventDefault();
@@ -117,6 +132,8 @@ document.addEventListener('alpine:init', () => {
                 let type = Modeler.determine_type(path);
                 if (type == "aggregate"){
                     return path.split("/").at(2);
+                } else if (type == "entity"){
+                    return path.split("/").at(2) + "." + path.split("/").at(-1).replace(".xml","");
                 } else if (type == "readme"){
                     return "About";
                 } else {
@@ -163,7 +180,10 @@ document.addEventListener('alpine:init', () => {
             },
             editing_disabled: function(){
                 return sessionStorage.privelige != "write";
-            }
+            },
+            saveScrollPosition: function() {
+                sessionStorage.setItem('scrollPosition:' + this.navigation, this.$el.scrollTop);
+              }
         }
     });
 })

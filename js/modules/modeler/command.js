@@ -7,8 +7,29 @@ document.addEventListener('alpine:init', () => {
             newPath: "",
             preparedRename: {},
             lock: false,
+            patterns: [],
             get_api_path(){
                 return this.model['att_graphql-namespace'] + "." + this.model['att_graphql-name'];
+            },
+            add_field(){
+                this.model.field.push({
+                    att_name: Draftsman.generateRandomCamelCaseString(),
+                    att_type: "String"
+                });
+            },
+            add_collection(){
+                this.model["nested-object"].push({
+                    att_name: Draftsman.generateRandomCamelCaseString(),
+                    field: []
+                });
+            },
+            add_collection_field(){
+                let collectionName = this.$el.getAttribute("collection");
+                let collection = this.model["nested-object"].filter(x => x.att_name == collectionName).at(0);
+                collection.field.push({
+                  att_name: Draftsman.generateRandomCamelCaseString(),
+                  att_type: "String"
+              });
             },
             async prepare_change_name(){
                 if (this.newPath == "" || !apiPathRegex.test(this.newPath)){
@@ -56,6 +77,9 @@ document.addEventListener('alpine:init', () => {
                 this._taskId = Draftsman.uuidv4();
                 this.$watch("model",this.save.bind(this));
                 this.listnerId = Draftsman.registerListener("force-reload",this.read.bind(this));
+                let repo = await GitRepository.open();
+                let files = await repo.list(x => x.startsWith("patterns/") && x.endsWith(".xml"));
+                this.patterns = files.map(x => x.split("/").at(-1).replace(".xml",""));
             },
             async read(){
                 await Draftsman.sleep(10);
@@ -68,7 +92,15 @@ document.addEventListener('alpine:init', () => {
             },
             async _execute_save(){
                 if (this.lock){return}
-                await Modeler.save_model(this.path,this.model);
+                console.log("save");
+                let model = JSON.parse(JSON.stringify(this.model));
+                model.field = model.field.filter(x => !x.deleted);
+                model["nested-object"] = model["nested-object"].filter(x => !x.deleted);
+                model["nested-object"].forEach(y => {
+                    y.field = y.field.filter(x => !x.deleted);
+                });
+                await Draftsman.sleep(10);
+                await Modeler.save_model(this.path,model);
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

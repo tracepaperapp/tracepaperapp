@@ -11,14 +11,6 @@
                             <h3 class="text-2xl font-semibold text-gray-800">
                                 API Configuration
                             </h3>
-
-                            <!--                                <input type="text"-->
-                            <!--                                       x-model="model.att_name"-->
-                            <!--                                       x-data="inputValidator"-->
-                            <!--                                       @input="pascal_cased"-->
-                            <!--                                       placeholder="Dummy"-->
-                            <!--                                       class="input w-full max-w-xs" />-->
-
                             <table class="table">
                                 <tr>
                                     <th scope="row">API path</th>
@@ -123,7 +115,225 @@
                                 <!--                            </td>-->
                                 <!--                        </tr>-->
                             </table>
-                            <pre x-text="JSON.stringify(model,null,2)"></pre>
+
+                            <hr class="mt-10">
+                            <h3 class="text-2xl font-semibold mt-5 text-gray-800">
+                                Message Definition
+                            </h3>
+                            <h5 class="text-xl font-semibold mt-2 text-gray-800">
+                                Message Root
+                            </h5>
+
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Default</th>
+                                    <th scope="col">Pattern</th>
+                                    <th scope="col">Autofill</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="field in model.field">
+                                        <tr>
+                                            <td>
+                                                <input type="text"
+                                                       :disabled="editing_disabled"
+                                                       x-model="field.att_name"
+                                                       x-data="inputValidator"
+                                                       @input="camel_cased"
+                                                       placeholder="fieldName"
+                                                       class="input w-full" />
+                                            </td>
+                                            <td>
+                                                <select :disabled="editing_disabled"
+                                                        x-model="field.att_type"
+                                                        class="select select-ghost w-full max-w-xs modeler-input">
+                                                    <option>String</option>
+                                                    <option>Int</option>
+                                                    <option>Float</option>
+                                                    <option>Boolean</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="checkbox" :checked="'att_default' in field"
+                                                       @change="if($el.checked){field.att_default = 'default value'}else{delete field.att_default}" class="checkbox checkbox-xs" />
+
+                                                <template x-if="'att_default' in field">
+                                                    <input type="text"
+                                                           x-model="field.att_default"
+                                                           :disabled="editing_disabled"
+                                                           placeholder="fieldName"
+                                                           class="input input-ghost modeler-input" />
+                                                </template>
+                                            </td>
+                                            <td>
+                                                <select :disabled="editing_disabled"
+                                                        x-model="field.att_pattern"
+                                                        class="select select-ghost w-full modeler-input">
+                                                    <option></option>
+                                                    <template x-for="pattern in patterns" :key="pattern">
+                                                        <option :value="'{{'+pattern+'}}'"
+                                                                :selected="$el.value == field.att_pattern"
+                                                                x-text="pattern"></option>
+                                                    </template>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select :disabled="editing_disabled"
+                                                        x-effect="if(field['att_auto-fill'] == ''){delete field['att_auto-fill']}"
+                                                        x-model="field['att_auto-fill']"
+                                                        class="select select-ghost w-full max-w-xs modeler-input">
+                                                    <option></option>
+                                                    <option>username</option>
+                                                    <option>uuid</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <button @click="field.deleted = true"
+                                                        :disabled="editing_disabled || field.deleted == true"
+                                                        class="btn btn-xs btn-outline btn-error">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <tr>
+                                        <td colspan="5"></td>
+                                        <td>
+                                            <button @click="add_field"
+                                                    :disabled="editing_disabled"
+                                                    class="btn btn-xs btn-outline btn-success">
+                                                <i class="fa-regular fa-plus"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <template x-for="collection in model['nested-object']">
+                                <div>
+                                    <hr class="mt-10">
+                                    <table class="table mt-2">
+                                        <thead>
+                                        <tr>
+                                            <td class="text-xl font-semibold text-gray-800" colspan="1">
+                                                Collection
+                                            </td>
+                                            <td colspan="3">
+                                                <input type="text"
+                                                       :disabled="editing_disabled"
+                                                       x-model="collection.att_name"
+                                                       x-data="inputValidator"
+                                                       @input="camel_cased"
+                                                       placeholder="collectionName"
+                                                       class="input w-full" />
+                                            </td>
+                                            <td>
+                                            <td>
+                                                <button @click="collection.deleted = true"
+                                                        :disabled="collection.deleted == true"
+                                                        class="btn btn-xs btn-outline btn-error">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </td>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="col">Name</th>
+                                            <th scope="col">Type</th>
+                                            <th scope="col">Default</th>
+                                            <th scope="col">Pattern</th>
+                                            <th scope="col">Autofill</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <template x-for="field in collection.field">
+                                            <tr>
+                                                <td>
+                                                    <input type="text"
+                                                           :disabled="editing_disabled"
+                                                           x-model="field.att_name"
+                                                           x-data="inputValidator"
+                                                           @input="camel_cased"
+                                                           placeholder="fieldName"
+                                                           class="input w-full" />
+                                                </td>
+                                                <td>
+                                                    <select :disabled="editing_disabled"
+                                                            x-model="field.att_type"
+                                                            class="select select-ghost w-full max-w-xs modeler-input">
+                                                        <option>String</option>
+                                                        <option>Int</option>
+                                                        <option>Float</option>
+                                                        <option>Boolean</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="checkbox" :checked="'att_default' in field"
+                                                           @change="if($el.checked){field.att_default = 'default value'}else{delete field.att_default}" class="checkbox checkbox-xs" />
+
+                                                    <template x-if="'att_default' in field">
+                                                        <input type="text"
+                                                               x-model="field.att_default"
+                                                               :disabled="editing_disabled"
+                                                               placeholder="fieldName"
+                                                               class="input input-ghost modeler-input" />
+                                                    </template>
+                                                </td>
+                                                <td>
+                                                    <select :disabled="editing_disabled"
+                                                            x-model="field.att_pattern"
+                                                            class="select select-ghost w-full modeler-input">
+                                                        <option></option>
+                                                        <template x-for="pattern in patterns" :key="pattern">
+                                                            <option :value="'{{'+pattern+'}}'"
+                                                                    :selected="$el.value == field.att_pattern"
+                                                                    x-text="pattern"></option>
+                                                        </template>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select :disabled="editing_disabled"
+                                                            x-effect="if(field['att_auto-fill'] == ''){delete field['att_auto-fill']}"
+                                                            x-model="field['att_auto-fill']"
+                                                            class="select select-ghost w-full max-w-xs modeler-input">
+                                                        <option></option>
+                                                        <option>username</option>
+                                                        <option>uuid</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <button @click="field.deleted = true"
+                                                            :disabled="editing_disabled || field.deleted == true"
+                                                            class="btn btn-xs btn-outline btn-error">
+                                                        <i class="fa-regular fa-trash-can"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        <tr>
+                                            <td colspan="5"></td>
+                                            <td>
+                                                <button @click="add_collection_field"
+                                                        :collection="collection.att_name"
+                                                        :disabled="editing_disabled"
+                                                        class="btn btn-xs btn-outline btn-success">
+                                                    <i class="fa-regular fa-plus"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                            <button @click="add_collection"
+                                    :disabled="editing_disabled"
+                                    class="btn btn-xs btn-outline btn-success mt-5">
+                                <i class="fa-regular fa-plus"></i> collection
+                            </button>
+
                         </div>
                         <div class="col-span-4">
 

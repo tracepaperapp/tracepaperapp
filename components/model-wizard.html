@@ -2,14 +2,20 @@
   <div class="relative inline-block"
        @keydown.window="handle_keydown"
        x-data="modelWizard">
-    <button @click="start" class="btn btn-circle btn-outline btn-primary m-2" :disabled="editing_disabled">
+
+    <button @click="start" class="btn btn-circle btn-outline btn-primary mr-2" :disabled="editing_disabled">
       <i class="fa-solid fa-plus"></i>
     </button>
+
+    <button @click="copy_fields" x-show="copyEnabled" x-cloak x-transition class="btn btn-circle btn-outline btn-primary mr-2" :disabled="editing_disabled">
+      <i class="fa-solid fa-copy"></i>
+    </button>
+
     <template x-if="active">
-      <div :file="navigation" x-init="set_context"></div>
+      <div :file="navigation"></div>
     </template>
     <dialog x-show="active" x-cloak x-transition class="modal modal-open">
-      <div class="modal-box  w-11/12 max-w-xl">
+      <div class="modal-box  w-11/12 max-w-3xl">
         <form method="dialog">
           <button @click="close" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
@@ -21,7 +27,8 @@
           </ul>
         </div>
 
-        <div x-show="state == 2" x-cloak x-transition>
+        <!-- Command -->
+        <div x-show="state == 10" x-cloak x-transition>
           <input type="text"
                  x-model="parameters.path"
                  x-data="inputValidator"
@@ -55,20 +62,192 @@
           </div>
 
         </div>
-
-        <div x-show="state == 3" x-cloak x-transition>
-          <table class=""
+        <div x-show="state == 11" x-cloak x-transition>
+          <template x-if="state == 11">
+            <table class="table">
+              <tr>
+                <th scope="row">Command name</th>
+                <td x-text="parameters.commandName"></td>
+              </tr>
+              <tr x-effect="
+                if(model.att_authorization){parameters.att_authorization = model.att_authorization}
+                else if(parameters.att_authorization){model.att_authorization = parameters.att_authorization}">
+                <th scope="row">Authorization mode</th>
+                <td x-import="elements/input">
+                  <ui-command-auth-mode></ui-command-auth-mode>
+                </td>
+              </tr>
+              <tr x-effect="
+                    if(model.att_role){parameters.att_role = model.att_role}
+                    else if(parameters.att_role){model.att_role = parameters.att_role}"
+                  x-show="model.att_authorization == 'role'" x-cloak x-transition>
+                <th scope="row">Required role</th>
+                <template x-if="model.att_authorization == 'role'">
+                  <td x-import="elements/input">
+                    <ui-role-selector></ui-role-selector>
+                  </td>
+                </template>
+              </tr>
+            </table>
+          </template>
         </div>
+        <div x-show="state == 12" x-cloak x-transition>
+
+          <table class="table">
+            <tr>
+              <th scope="row">Command name</th>
+              <td x-text="parameters.commandName"></td>
+            </tr>
+            <tr>
+              <th scope="row">Authorization mode</th>
+              <td x-text="parameters.att_authorization"></td>
+            </tr>
+            <tr x-show="model.att_authorization == 'role'" x-cloak x-transition>
+              <th scope="row">Required role</th>
+              <td x-text="parameters.att_role"></td>
+            </tr>
+            <tr x-show="!parameters.copyFrom" x-cloak x-transition>
+              <th scope="row">Copy fields from model:</th>
+              <td>
+                none selected
+              </td>
+            </tr>
+            <tr x-show="parameters.copyFrom" x-cloak x-transition>
+              <th scope="row">Copy fields from model:</th>
+              <template x-if="parameters.copyFrom">
+                <td x-data="{type: Modeler.determine_type(parameters.copyFrom)}">
+                  <div x-show="type == 'command'" x-cloak x-transition class="badge badge-neutral">Command</div>
+                  <div x-show="type == 'aggregate'" x-cloak x-transition class="badge badge-primary">Aggregate</div>
+                  <div x-show="type == 'entity'" x-cloak x-transition class="badge badge-accent">Collection</div>
+                </td>
+              </template>
+              <td :navigation="parameters.copyFrom" x-text="get_name"></td>
+              <td>
+                <button @click="parameters.copyFrom = ''" class="btn btn-outline btn-xs btn-error">remove</button>
+              </td>
+            </tr>
+          </table>
+
+          <div x-show="!parameters.copyFrom" x-cloak x-transition>
+            <template x-if="!parameters.copyFrom">
+              <div>
+                <label class="input input-bordered flex items-center gap-2 mt-5">
+                  <input type="text" class="grow" x-model="search" placeholder="Search" />
+                  <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          class="h-4 w-4 opacity-70">
+                    <path
+                            fill-rule="evenodd"
+                            d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                            clip-rule="evenodd" />
+                  </svg>
+                </label>
+                <table class="table">
+                  <template x-for="source in sources.filter(x => x.toLowerCase().includes(search.toLowerCase()))" :key="source">
+                    <tr>
+                      <td x-data="{type: Modeler.determine_type(source)}">
+                        <div x-show="type == 'command'" x-cloak x-transition class="badge badge-neutral">Command</div>
+                        <div x-show="type == 'aggregate'" x-cloak x-transition class="badge badge-primary">Aggregate</div>
+                        <div x-show="type == 'entity'" x-cloak x-transition class="badge badge-accent">Collection</div>
+                      </td>
+                      <td :navigation="source" x-text="get_name"></td>
+                      <td>
+                        <button @click="parameters.copyFrom = source" class="btn btn-outline btn-xs btn-primary">copy fields</button>
+                      </td>
+                    </tr>
+                  </template>
+                </table>
+              </div>
+            </template>
+          </div>
+
+        </div>
+
+        <br>
+        <pre x-text="JSON.stringify(parameters,null,2)"></pre>
         <div class="modal-action">
 
-
           <button class="btn btn-primary"
-                  x-show="state > 1" x-cloak x-transition
+                  x-show="previous" x-cloak x-transition
+                  @click="state -= 1">Previous</button>
+          <button class="btn btn-primary"
+                  x-show="next" x-cloak x-transition
                   :disabled="conflicted"
                   @click="state += 1">Next</button>
+          <button class="btn btn-primary"
+                  x-show="ready" x-cloak x-transition
+                  :disabled="conflicted"
+                  @click="insert_model">Save</button>
         </div>
       </div>
     </dialog>
 
+    <dialog x-show="copy_modal" x-cloak x-transition class="modal modal-open">
+      <div class="modal-box  w-11/12 max-w-3xl">
+        <form method="dialog">
+          <button @click="copy_modal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 class="font-bold text-lg mb-5">Copy attributes from:</h3>
+
+        <table class="table" x-show="parameters.copyFrom" x-cloak x-transition>
+          <template x-if="parameters.copyFrom">
+            <tr>
+              <td x-data="{type: Modeler.determine_type(parameters.copyFrom)}">
+                <div x-show="type == 'command'" x-cloak x-transition class="badge badge-neutral">Command</div>
+                <div x-show="type == 'aggregate'" x-cloak x-transition class="badge badge-primary">Aggregate</div>
+                <div x-show="type == 'entity'" x-cloak x-transition class="badge badge-accent">Collection</div>
+              </td>
+              <td :navigation="parameters.copyFrom" x-text="get_name"></td>
+              <td>
+                <button @click="parameters.copyFrom = ''" class="btn btn-outline btn-xs btn-error">deselect</button>
+              </td>
+            </tr>
+          </template>
+        </table>
+
+        <div x-show="!parameters.copyFrom" x-cloak x-transition>
+          <template x-if="!parameters.copyFrom">
+            <div>
+              <label class="input input-bordered flex items-center gap-2 mt-5">
+                <input type="text" class="grow" x-model="search" placeholder="Search" />
+                <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                        class="h-4 w-4 opacity-70">
+                  <path
+                          fill-rule="evenodd"
+                          d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                          clip-rule="evenodd" />
+                </svg>
+              </label>
+              <table class="table">
+                <template x-for="source in sources.filter(x => x.toLowerCase().includes(search.toLowerCase()))" :key="source">
+                  <tr>
+                    <td x-data="{type: Modeler.determine_type(source)}">
+                      <div x-show="type == 'command'" x-cloak x-transition class="badge badge-neutral">Command</div>
+                      <div x-show="type == 'aggregate'" x-cloak x-transition class="badge badge-primary">Aggregate</div>
+                      <div x-show="type == 'entity'" x-cloak x-transition class="badge badge-accent">Collection</div>
+                    </td>
+                    <td :navigation="source" x-text="get_name"></td>
+                    <td>
+                      <button @click="parameters.copyFrom = source" class="btn btn-outline btn-xs btn-primary">copy fields</button>
+                    </td>
+                  </tr>
+                </template>
+              </table>
+            </div>
+          </template>
+        </div>
+
+        <div class="modal-action">
+
+          <button class="btn btn-primary"
+                  @click="copy_attributes">Copy</button>
+        </div>
+      </div>
+    </dialog>
   </div>
 </template>

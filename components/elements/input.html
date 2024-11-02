@@ -1,18 +1,18 @@
 <template x-component="command-auth-mode">
   <select :disabled="editing_disabled"
           x-model="model.att_authorization"
-          class="select select-ghost w-full max-w-xs">
+          class="select select-ghost w-full max-w-xs modeler-input">
     <option>anonymous</option>
     <option>authenticated</option>
     <option>role</option>
   </select>
 </template>
 <template x-component="role-selector">
-  <div x-data="roleSelector">
+  <div x-data="roleSelector" x-init="if(!model.att_role){model.att_role = ''}">
     <select :disabled="editing_disabled"
             x-model="model.att_role"
             x-show="!model.att_role.startsWith('#')" x-cloak x-transition
-            class="select select-ghost w-full max-w-xs">
+            class="select select-ghost w-full max-w-xs modeler-input">
       <template x-for="role in roles" :key="role">
         <option :value="role" :selected="role == model.att_role" x-text="role"></option>
       </template>

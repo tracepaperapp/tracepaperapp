@@ -210,8 +210,22 @@ async function readFile(filePath) {
 }
 
 async function writeFile(filePath, content) {
+  await createDirectory(filePath);
   await pfs.writeFile(`${dir}/${filePath}`, content, 'utf8');
   await isogit.add({ fs, dir, filepath: filePath });
+}
+
+async function createDirectory(filePath){
+    var subdir = dir;
+    for (const sub of filePath.split('/')){
+        if (!sub || sub.includes(".")){
+            continue;
+        }
+        subdir += '/' + sub;
+        try{
+            await pfs.mkdir(subdir);
+        } catch{}
+    }
 }
 
 async function deleteFile(filePath) {

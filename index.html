@@ -40,7 +40,7 @@
             <div x-import="tab-bar">
                 <ui-tab-bar></ui-tab-bar>
             </div>
-            <div class="max-h-[80vh] scrollbar-v">
+            <div class="max-h-[80vh] scrollbar-v" @scroll="saveScrollPosition" id="main">
                 <div x-import="modeler/readme">
                     <ui-readme></ui-readme>
                 </div>

@@ -1,3 +1,9 @@
+.modeler-input {
+  text-decoration: underline;
+  text-decoration-color: var(--fallback-pc,oklch(var(--pc)/1));
+  text-decoration-thickness: 25%;
+}
+
 .scrollbar-h {
     overflow-x:auto;
     width: 100%;

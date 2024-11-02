@@ -17,6 +17,8 @@ document.addEventListener('alpine:init', () => {
                 this.$el.setAttribute('data-lpignore', 'true');
                 this.$el.setAttribute('autocomplete', 'off');
                 this.$el.setAttribute('id', Draftsman.uuidv4());
+                this.$el.classList.add('input-ghost');
+                this.$el.classList.add('modeler-input');
             },
             pascal_cased(){
                 const message = "Must be PascalCased!";
