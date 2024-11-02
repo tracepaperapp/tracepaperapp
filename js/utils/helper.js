@@ -27,52 +27,26 @@ class Draftsman {
         }
     }
 
-    static splitOnLastDot(str) {
-        const lastDotIndex = str.lastIndexOf('.');
-        if (lastDotIndex === -1) return [str]; // Geen punt gevonden
+    static retryWithBackoff(callback, retries, delay) {
+     return new Promise((resolve, reject) => {
+       function attempt(triesLeft) {
+         callback()
+           .then(resolve) // Als het lukt, los de belofte op
+           .catch((error) => {
+             if (triesLeft === 0) {
+               reject(error); // Als er geen pogingen meer over zijn, de belofte afwijzen
+             } else {
+               // Wacht met een exponentiële backoff
+               setTimeout(() => {
+                 attempt(triesLeft - 1);
+               }, delay);
+               delay *= 2; // Verdubbel de vertraging voor backoff
+             }
+           });
+       }
 
-        const beforeDot = str.slice(0, lastDotIndex);
-        const afterDot = str.slice(lastDotIndex + 1);
-
-        return [beforeDot, afterDot];
-    }
-
-    static capitalizeFirstLetter(str) {
-        if (!str) return str; // Controleer op een lege string
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    static filterKeys(arrayOfObjects, keys) {
-      return arrayOfObjects.map(obj => {
-        let filteredObj = {};
-        keys.forEach(key => {
-          if (obj.hasOwnProperty(key)) {
-            filteredObj[key] = obj[key];
-          }
-        });
-        return filteredObj;
-      });
-    }
-
-    static generateRandomCamelCaseString() {
-      const words = [
-        "alpha", "beta", "gamma", "delta", "epsilon",
-        "zeta", "eta", "theta", "iota", "kappa",
-        "lambda", "mu", "nu", "xi", "omicron",
-        "pi", "rho", "sigma", "tau", "upsilon",
-        "phi", "chi", "psi", "omega"
-      ];
-
-      // Genereer 2 tot 4 willekeurige woorden
-      const numberOfWords = Math.floor(Math.random() * 3) + 2;
-      let camelCaseString = words[Math.floor(Math.random() * words.length)];
-
-      for (let i = 1; i < numberOfWords; i++) {
-        const word = words[Math.floor(Math.random() * words.length)];
-        camelCaseString += word.charAt(0).toUpperCase() + word.slice(1);
-      }
-
-      return camelCaseString;
+       attempt(retries);
+     });
     }
 
     static registerTask(f, delayInSeconds = 1, taskKey) {
@@ -127,6 +101,54 @@ class Draftsman {
             var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
+    }
+
+    static splitOnLastDot(str) {
+            const lastDotIndex = str.lastIndexOf('.');
+            if (lastDotIndex === -1) return [str]; // Geen punt gevonden
+
+            const beforeDot = str.slice(0, lastDotIndex);
+            const afterDot = str.slice(lastDotIndex + 1);
+
+            return [beforeDot, afterDot];
+        }
+
+    static capitalizeFirstLetter(str) {
+        if (!str) return str; // Controleer op een lege string
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    static filterKeys(arrayOfObjects, keys) {
+      return arrayOfObjects.map(obj => {
+        let filteredObj = {};
+        keys.forEach(key => {
+          if (obj.hasOwnProperty(key)) {
+            filteredObj[key] = obj[key];
+          }
+        });
+        return filteredObj;
+      });
+    }
+
+    static generateRandomCamelCaseString() {
+      const words = [
+        "alpha", "beta", "gamma", "delta", "epsilon",
+        "zeta", "eta", "theta", "iota", "kappa",
+        "lambda", "mu", "nu", "xi", "omicron",
+        "pi", "rho", "sigma", "tau", "upsilon",
+        "phi", "chi", "psi", "omega"
+      ];
+
+      // Genereer 2 tot 4 willekeurige woorden
+      const numberOfWords = Math.floor(Math.random() * 3) + 2;
+      let camelCaseString = words[Math.floor(Math.random() * words.length)];
+
+      for (let i = 1; i < numberOfWords; i++) {
+        const word = words[Math.floor(Math.random() * words.length)];
+        camelCaseString += word.charAt(0).toUpperCase() + word.slice(1);
+      }
+
+      return camelCaseString;
     }
 
     static makeid(length) {

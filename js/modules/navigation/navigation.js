@@ -107,7 +107,6 @@ document.addEventListener('alpine:init', () => {
                 let position = sessionStorage.getItem('scrollPosition:' + this.navigation);
                 if (position){
                     position = parseInt(position, 10);
-                    console.log("do",position);
                     document.getElementById("main").scrollTop = position;
                 }
             },

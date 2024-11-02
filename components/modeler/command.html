@@ -190,9 +190,9 @@
                                                     <option>uuid</option>
                                                 </select>
                                             </td>
-                                            <td>
+                                            <td x-show="editing_enabled" x-cloak x-transition>
                                                 <button @click="field.deleted = true"
-                                                        :disabled="editing_disabled || field.deleted == true"
+                                                        :disabled="field.deleted == true"
                                                         class="btn btn-xs btn-outline btn-error">
                                                     <i class="fa-regular fa-trash-can"></i>
                                                 </button>
@@ -231,7 +231,7 @@
                                                        class="input w-full" />
                                             </td>
                                             <td>
-                                            <td>
+                                            <td x-show="editing_enabled" x-cloak x-transition>
                                                 <button @click="collection.deleted = true"
                                                         :disabled="collection.deleted == true"
                                                         class="btn btn-xs btn-outline btn-error">
@@ -304,9 +304,9 @@
                                                         <option>uuid</option>
                                                     </select>
                                                 </td>
-                                                <td>
+                                                <td x-show="editing_enabled" x-cloak x-transition>
                                                     <button @click="field.deleted = true"
-                                                            :disabled="editing_disabled || field.deleted == true"
+                                                            :disabled="field.deleted == true"
                                                             class="btn btn-xs btn-outline btn-error">
                                                         <i class="fa-regular fa-trash-can"></i>
                                                     </button>

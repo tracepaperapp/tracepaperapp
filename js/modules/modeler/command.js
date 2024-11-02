@@ -101,6 +101,8 @@ document.addEventListener('alpine:init', () => {
                 });
                 await Draftsman.sleep(10);
                 await Modeler.save_model(this.path,model);
+                await Draftsman.sleep(10);
+                this.model = model;
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);
