@@ -71,19 +71,25 @@ document.addEventListener('alpine:init', () => {
                 }
             },
             navigate: async function(file=null){
-                this.issuesView = false;
-                if (typeof file === 'string'){
-                    this.navigation = file;
-                }else{
-                    let navigation = this.$el.getAttribute("navigation");
-                    if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram"].includes(navigation)){
-                        navigation += "/root.xml";
+                sessionStorage.globalWriteLock = "true";
+                try{
+                    this.issuesView = false;
+                    if (typeof file === 'string'){
+                        this.navigation = file;
+                    }else{
+                        let navigation = this.$el.getAttribute("navigation");
+                        if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram"].includes(navigation)){
+                            navigation += "/root.xml";
+                        }
+                        this.navigation = navigation;
                     }
-                    this.navigation = navigation;
+                    await Draftsman.sleep(10);
+                    Draftsman.publishMessage("force-reload",this.navigation);
+                    this.update_tabs();
+                    await this.set_scroll();
+                }finally{
+                    sessionStorage.globalWriteLock = "false";
                 }
-                Draftsman.publishMessage("force-reload",this.navigation);
-                this.update_tabs();
-                await this.set_scroll();
             },
             open_diagram: function(){
                 let request = this.$el.getAttribute("navigation") + ";";
