@@ -69,6 +69,7 @@ document.addEventListener('alpine:init', () => {
                 await Modeler.force_rename_model(this.preparedRename.oldName,this.preparedRename.newName);
             },
             async delete_model(){
+                this.lock = true;
                 let file = `commands/${this.model['att_graphql-namespace'].replaceAll('.','/')}/${this.model.att_name}.xml`;
                 await Modeler.delete_model(file);
             },

@@ -1,0 +1,101 @@
+<template x-component="aggregate-entity">
+    <div :file="entity" x-data="aggregateEntity">
+        <div x-show="model" x-cloak x-transition>
+            <template x-if="model">
+                <div>
+                    <hr>
+                    <table class="table mt-5">
+                        <thead>
+                        <tr class="text-xl">
+                            <th scope="row">Nested collection</th>
+                            <td>
+                                <input type="text"
+                                       :disabled="editing_disabled"
+                                       x-model="newName"
+                                       x-data="inputValidator"
+                                       @input="camel_cased"
+                                       @keyup.debounce.500ms="check_name"
+                                       placeholder="nestedCollectionName"
+                                       class="input w-[70%]" />
+                                <button x-show="newName != model.att_name" x-cloak x-transition
+                                        @click="rename"
+                                        class="btn btn-outline"
+                                        :class="duplicateName ? 'btn-error' : 'btn-success'">
+                                    save
+                                </button>
+                            </td>
+                            <td>
+                                <button @click="delete_model"
+                                        :disabled="editing_disabled"
+                                        class="btn btn-xs btn-outline btn-error">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Functional key</th>
+                            <td>
+                                <select :disabled="editing_disabled"
+                                        x-model="model['att_business-key']"
+                                        class="select select-ghost w-full max-w-xs modeler-input">
+                                    <option></option>
+                                    <template x-for="field in model.field">
+                                        <option :value="field.att_name" :selected="model['att_business-key'] == field.att_name" x-text="field.att_name"></option>
+                                    </template>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Type</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <template x-for="field in model.field">
+                            <tr>
+                                <td>
+                                    <input type="text"
+                                           :disabled="editing_disabled"
+                                           x-model="field.att_name"
+                                           x-data="inputValidator"
+                                           @input="camel_cased"
+                                           placeholder="fieldName"
+                                           class="input w-full" />
+                                </td>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="field.att_type"
+                                            class="select select-ghost w-full max-w-xs modeler-input">
+                                        <option>String</option>
+                                        <option>Int</option>
+                                        <option>Float</option>
+                                        <option>Boolean</option>
+                                        <option>StringList</option>
+                                    </select>
+                                </td>
+                                <td x-show="editing_enabled" x-cloak x-transition>
+                                    <button @click="field.deleted = true"
+                                            :disabled="field.deleted == true"
+                                            class="btn btn-xs btn-outline btn-error">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr>
+                            <td colspan="2"></td>
+                            <td>
+                                <button @click="add_field"
+                                        :disabled="editing_disabled"
+                                        class="btn btn-xs btn-outline btn-success">
+                                    <i class="fa-regular fa-plus"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

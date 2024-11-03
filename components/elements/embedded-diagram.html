@@ -1,7 +1,8 @@
 <template x-component="embedded-diagram">
     <div :file="navigation" x-data="smallNodeDiagram"
+         x-show="Object.keys(session).length > 2" x-cloak x-transition
          class="card bg-base-100 card-bordered border-primary mb-5 card-compact">
-        <div class="relative p-2" x-data="{loaded:false}">
+        <div class="relative p-2">
             <div x-show="session.all_links[session.selected_node]
                                         && session.all_links[session.selected_node] != navigation" x-cloak x-transition>
                 <div class="tooltip" data-tip="click to open component">
@@ -11,7 +12,6 @@
                          x-text="session.selected_node"></div>
                 </div>
             </div>
-
             <div id="node-diagram"></div>
             <a x-show="session.all_links && session.all_links.length != 0" x-cloak x-transition>
                 <div @click="change_radius" class="badge badge-primary badge-outline cursor-pointer" x-text="radius"></div>

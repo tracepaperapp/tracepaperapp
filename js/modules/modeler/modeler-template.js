@@ -1,7 +1,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('modelFile', function(){
         return {
-            model: {},
+            model: null,
             _taskId: "",
             listnerId: "",
             preparedRename: {},
@@ -22,23 +22,7 @@ document.addEventListener('alpine:init', () => {
                 let file = ``;
                 await Modeler.delete_model(file);
             },
-            async prepare_change_name(){
-                this.preparedRename = {
-                    dummydata: "",
-                    oldPath: `dummy/dummy/dummy.xml`,
-                    newPath: `dummy/dummy/dummy2.xml`,
-                };
-                let repo = await GitRepository.open();
-                let files = await repo.list();
-                this.preparedRename.force = files.includes(this.preparedRename.newPath);
-                this.preparedRename.init = true;
-            },
-            cancel_rename(){
-                this.preparedRename = {};
-                // revert model name
-            },
             async rename(){
-                this.preparedRename.init = false;
                 if(this.lock){return}
                 // alter name in model
                 await this._execute_save();
@@ -48,7 +32,10 @@ document.addEventListener('alpine:init', () => {
             },
             async _execute_save(){
                 if(this.lock){return}
-                await Modeler.save_model(this.navigation,this.model);
+                let model = JSON.parse(JSON.stringify(this.model));
+                // e.g. model.field = model.field.filter(x => !x.deleted);
+                await Modeler.save_model(this.navigation,model);
+                this.model = model;
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

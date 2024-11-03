@@ -2,7 +2,6 @@
 ctrl + m --> open wizard
     c --> add command
 ctrl + shift + c --> copy wizard
-ctrl + i --> insert wizard (contextual)
 */
 
 document.addEventListener('alpine:init', () => {

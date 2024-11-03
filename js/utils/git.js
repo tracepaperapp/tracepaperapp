@@ -87,6 +87,14 @@ class GitRepository {
       });
   }
 
+  async moveDirectory(sourcePath,targetPath){
+    return this._sendMessage({
+        action: 'moveDirectory',
+        sourcePath,
+        targetPath
+      });
+  }
+
   // Geef de status van gestagede wijzigingen
   async status(diff=false) {
     return this._sendMessage({ action: 'status', diff });

@@ -60,6 +60,11 @@ self.onmessage = async (event) => {
         postMessage({ result: `Directory ${filePath} deleted and staged`, request_id, last_pull, commit_diff });
         break;
 
+      case 'moveDirectory':
+        await moveDirectoryRecursively(event.data.sourcePath, event.data.targetPath);
+        postMessage({ result: `Directory moved from ${event.data.sourcePath} to ${event.data.targetPath}`, request_id });
+        break;
+
       case 'status':
         const statusList = await status(diff);
         postMessage({ result: statusList, request_id, last_pull, commit_diff });
@@ -259,6 +264,29 @@ async function deleteDirectoryRecursively(path) {
     await isogit.remove({ fs, dir, filepath: path.replace(`${dir}/`, '') });
   } catch (error) {
     console.error(`Error while deleting directory ${path}:`, error);
+    throw error;
+  }
+}
+
+async function moveDirectoryRecursively(sourcePath, targetPath) {
+  try {
+    const entries = await pfs.readdir(dir + sourcePath);
+    for (const entry of entries) {
+      const stats = await pfs.stat(`${dir}${sourcePath}/${entry}`);
+      let source = sourcePath + '/' + entry;
+      let target = targetPath + '/' + entry;
+
+      source = source.replaceAll("//","/");
+      target = target.replaceAll("//","/");
+
+      if (stats.isDirectory()) {
+        await moveDirectoryRecursively(source, target);
+      } else {
+        await renameFile(source, target, force = true)
+      }
+    }
+  } catch (error) {
+    console.error(`Error while moving from ${sourcePath} to ${targetPath}:`, error);
     throw error;
   }
 }
@@ -500,7 +528,6 @@ async function renameFile(oldName, newName, force = false) {
       throw error;
     }
   }
-
   try {
     await pfs.stat(`${dir}/${newName}`);
     if (!force) {
@@ -514,6 +541,7 @@ async function renameFile(oldName, newName, force = false) {
     }
   }
 
+  await createDirectory(newName);
   await pfs.rename(`${dir}/${oldName}`, `${dir}/${newName}`);
   await isogit.remove({ fs, dir, filepath: oldName });
   await isogit.add({ fs, dir, filepath: newName });

@@ -86,9 +86,10 @@ document.addEventListener('alpine:init', () => {
                     await Draftsman.sleep(10);
                     Draftsman.publishMessage("force-reload",this.navigation);
                     this.update_tabs();
-                    await this.set_scroll();
                 }finally{
                     sessionStorage.globalWriteLock = "false";
+                    await Draftsman.sleep(500);
+                    await this.set_scroll();
                 }
             },
             open_diagram: function(){

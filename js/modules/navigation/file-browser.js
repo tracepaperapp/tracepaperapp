@@ -63,6 +63,22 @@ document.addEventListener('alpine:init', () => {
                 await this.prepare();
                 this.renameListner = Draftsman.registerListener("file-renamed",this.prepare.bind(this));
                 this.reloadListner = Draftsman.registerListener("force-reload",this.prepare.bind(this));
+                this.focusListner = Draftsman.registerListener("focus",this.focus.bind(this));
+            },
+            async focus(){
+                let type = Modeler.determine_type(this.navigation);
+                switch(type){
+                    case "aggregate":
+                    let key = "/write/" + this.navigation.replace("root.xml","");
+                    Object.keys(directories).forEach(p => {
+                        sessionStorage.setItem(p,key.startsWith(p) || p.startsWith(key));
+                    });
+                    case "render":
+                    await this.prepare();
+                    break;
+                    default:
+                    //pass
+                }
             },
             async prepare(){
                 if (this.lock){return}
@@ -183,6 +199,7 @@ document.addEventListener('alpine:init', () => {
             destroy: function(){
                 Draftsman.deregisterListener(this.renameListner);
                 Draftsman.deregisterListener(this.reloadListner);
+                Draftsman.deregisterListener(this.focusListner);
             }
         }
     });
