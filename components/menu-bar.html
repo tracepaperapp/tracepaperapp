@@ -12,11 +12,9 @@
                 </div>
                 <ul tabindex="0"
                     class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                    <li>
-                        <a @click="projectModal = true">Open project</a>
-                        <a @click="newProjectModal = true">Start new project</a>
-                        <a @click="Draftsman.signOut">Sign out</a>
-                    </li>
+                    <li><a @click="projectModal = true">Open project</a></li>
+                    <li :class="offline ? 'disabled' : ''"><a @click="newProjectModal = true">Start new project</a></li>
+                    <li><a @click="Draftsman.signOut">Sign out</a></li>
                 </ul>
                 <dialog x-show="projectModal" x-cloak x-transition class="modal modal-open">
                     <div class="modal-box">
@@ -27,11 +25,22 @@
                         <p class="py-4">
                         <ul class="menu bg-base-200 rounded-box">
                             <template x-for="project in projects" :key="project.drn">
-                                <li>
-                                    <a :drn="project.drn" @click="open_project">
-                                        <span x-text="project.name"></span>
-                                        <div class="badge badge-ghost" x-text="project.workspace"></div>
-                                    </a>
+                                <li :class="offline && !project.available ? 'disabled' : ''">
+                                    <template x-if="!offline || project.available">
+                                        <a :drn="project.drn" @click="open_project">
+                                            <span x-text="project.name"></span>
+                                            <div x-show="!offline" x-cloak x-transition
+                                                 class="badge badge-ghost" x-text="project.workspace"></div>
+                                            <div x-show="offline" x-cloak x-transition
+                                                 class="badge badge-warning">Model may be outdated; you are offline.</div>
+                                        </a>
+                                    </template>
+                                    <template x-if="offline && !project.available">
+                                        <a>
+                                            <span x-text="project.name"></span>
+                                            <div class="badge badge-error">no local copy</div>
+                                        </a>
+                                    </template>
                                 </li>
                             </template>
                         </ul>
@@ -163,6 +172,9 @@
                     </div>
                 </dialog>
             </div>
+            <button x-show="deferredInstallPrompt" x-cloak x-transition
+                    @click="install"
+                    class="btn btn-outline btn-primary">Install app</button>
         </div>
 
         <div class="navbar-center">
@@ -289,8 +301,9 @@
                 </dialog>
             </div>
 
-            <div>
-                <small x-show="last_pull" x-cloak x-transition>Last&nbsp;pulled: <span x-text="last_pull"></span></small><br>
+            <div class="ml-1">
+                <small x-show="offline" x-cloak x-transition><div class="badge badge-error badge-outline">No internet connection!</div><br></small>
+                <small x-show="last_pull && !offline" x-cloak x-transition>Last&nbsp;pulled: <span x-text="last_pull"></span></small><br>
                 <small x-show="commit_diff.remoteAhead" x-cloak x-transition><span x-text="commit_diff.remoteAhead"></span>
                 commits behind remote</small>
             </div>

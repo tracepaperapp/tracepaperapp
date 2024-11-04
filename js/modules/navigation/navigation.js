@@ -13,12 +13,12 @@ document.addEventListener('alpine:init', () => {
                     });
                     location.reload();
                 }
-                Draftsman.registerTask(this._save_session.bind(this),10,"save-session");
+                Draftsman.registerTask(this._save_session.bind(this),10,"save-session")
                 this.listnerId = Draftsman.registerListener("file-renamed",this._handle_rename.bind(this));
                 this.tabCleanupId = Draftsman.registerListener("file-reverted",this.cleanup_tabs.bind(this));
-                await this.cleanup_tabs(false);
                 Draftsman.registerTask(Diagram.prepare_data,30,"prepare-diagram-data");
                 await this.set_scroll();
+                await this.cleanup_tabs(false); // This one last, because it will stall in offline-mode
             },
             async cleanup_tabs(cascade=true){
                 let repo = await GitRepository.open();
@@ -175,7 +175,6 @@ document.addEventListener('alpine:init', () => {
                 }
             },
             _handle_rename: function(message){
-                console.log(message);
                 this.tabs = this.tabs.filter(x => x != message.oldPath);
                 this.navigation = message.newPath;
                 this.update_tabs();

@@ -1,0 +1,17 @@
+{
+  "name": "Tracepaper by Draftsman",
+  "short_name": "Tracepaper",
+  "description": "Een geweldige low-code tool",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "sizes": "352x352",
+      "type": "image/png"
+    }
+  ]
+}

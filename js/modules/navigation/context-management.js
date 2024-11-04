@@ -4,47 +4,63 @@ document.addEventListener('alpine:init', () => {
             drn: this.$persist("").using(sessionStorage),
             fullName: "",
             profileModal: false,
-            projects: [],
+            projects: this.$persist([]).as("projectList"),
             projectModal: false,
             githubAccount: this.$persist(""),
             newProject: this.$persist({}).using(sessionStorage),
             newProjectModal: false,
+            deferredInstallPrompt: false,
             raw_data: {},
             traces: [],
+            offline: false,
             async init(){
-                let api = await API.initialize(true);
-
-                // Fetch user context
-                let data = await api.query("/prepared-statements/get-user-context.txt",{username:sessionStorage.username},true);
-                this.projects = [];
-                this.raw_data = data.data.User.get;
-                if(!this.raw_data){
-                    this.profileModal = true;
-                    return;
-                }
-                this.raw_data.workspace.forEach(w => {
-                    w.projects.forEach(p => {
-                        this.projects.push({
-                            name: p.name,
-                            drn: p.drn,
-                            workspace: w.name,
-                            repo: p.repositories.filter(x => x.name == "model").at(0).url
-                        });
-                    });
+                window.addEventListener('beforeinstallprompt', (e) => {
+                  e.preventDefault();
+                  this.deferredInstallPrompt = e;
+                  console.log(this.deferredInstallPrompt);
                 });
 
-                // Fetch git-proxy token (every 25 minutes)
-                Draftsman.registerTask(this._fetch_token.bind(this),1500,"repo-token-refresher");
+                let api = await API.initialize(true);
+                try{
+                    // Fetch user context
+                    let data = await api.query("/prepared-statements/get-user-context.txt",{username:sessionStorage.username},true);
+                    this.projects = [];
+                    this.raw_data = data.data.User.get;
+                    if(!this.raw_data){
+                        this.profileModal = true;
+                        return;
+                    }
+                    this.raw_data.workspace.forEach(w => {
+                        w.projects.forEach(p => {
+                            this.projects.push({
+                                name: p.name,
+                                drn: p.drn,
+                                workspace: w.name,
+                                repo: p.repositories.filter(x => x.name == "model").at(0).url
+                            });
+                        });
+                    });
 
-                // Prepare new project command
-                if (!this.newProject.workspaceDrn){
-                    this.newProject.workspaceDrn = this.raw_data.workspace.at(0).drn;
-                }
+                    // Fetch git-proxy token (every 25 minutes)
+                    Draftsman.registerTask(this._fetch_token.bind(this),1500,"repo-token-refresher");
 
-                // Initialize project if non is found or ask to open a project
-                this.newProjectModal = this.projects.length == 0
-                if (!this.newProjectModal && !this.drn){
-                    this.projectModal = true;
+                    // Prepare new project command
+                    if (!this.newProject.workspaceDrn){
+                        this.newProject.workspaceDrn = this.raw_data.workspace.at(0).drn;
+                    }
+
+                    // Initialize project if non is found or ask to open a project
+                    this.newProjectModal = this.projects.length == 0
+                    if (!this.newProjectModal && !this.drn){
+                        this.projectModal = true;
+                    }
+                } catch(err) {
+                    this.offline = true;
+                    this.projects.forEach(p => {
+                        checkIfDatabaseExists(p.repo.replace('https://github.com/','')).then(exists => {
+                            p.available = exists;
+                        });
+                    });
                 }
                 if (sessionStorage.force_reload){
                     console.log("Force reload!");
@@ -52,6 +68,13 @@ document.addEventListener('alpine:init', () => {
                     await Draftsman.sleep(500);
                     location.reload();
                 }
+            },
+            async install(){
+                this.deferredInstallPrompt.prompt();
+                const {outcome} = await this.deferredInstallPrompt.userChoice;
+                // Optionally, send analytics event with outcome of user choice
+                console.log(`User response to the install prompt: ${outcome}`);
+                this.deferredInstallPrompt = !("accepted" == outcome);
             },
             async create_user(){
                 this.profileModal = false;
@@ -74,6 +97,9 @@ document.addEventListener('alpine:init', () => {
                 sessionStorage.project_url = this.projects.filter(x => x.drn == this.drn).at(0).repo;
                 sessionStorage.branch = "main";
                 sessionStorage.force_reload = "true";
+                if (this.offline){
+                    sessionStorage.proxyToken = "dummy";
+                }
                 await Draftsman.sleep(100);
                 location.reload();
             },
@@ -145,3 +171,27 @@ document.addEventListener('alpine:init', () => {
         }
     });
 });
+
+function checkIfDatabaseExists(dbName) {
+  return new Promise((resolve, reject) => {
+    // Probeer de database te openen zonder deze te creëren
+    const request = indexedDB.open(dbName);
+
+    request.onsuccess = function () {
+      // Database bestaat, dus sluit deze
+      request.result.close();
+      resolve(true);
+    };
+
+    request.onerror = function () {
+      // Database bestaat niet of er is een andere fout opgetreden
+      resolve(false);
+    };
+
+    request.onupgradeneeded = function () {
+      // Deze event wordt alleen getriggerd als de database niet bestond of een upgrade nodig is
+      request.transaction.abort(); // Annuleer de transactie
+      resolve(false);
+    };
+  });
+}

@@ -20,3 +20,4 @@ if (!localStorage["staging-environment"] || localStorage["staging-environment"] 
 	api_ws = "wss://gff2zn67jfa3xeb45ndbt6arvi.appsync-realtime-api.eu-west-1.amazonaws.com/graphql";
 	api_key = "da2-3dyeyddz6vhltdg7hpm3u2jxne";
 }
+
