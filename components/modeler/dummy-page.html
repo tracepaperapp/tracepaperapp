@@ -2,25 +2,8 @@
     <div navigation-type="dummy"
          x-show="navigationElementActive"
          x-cloak
-         x-transition.delay.100ms>
-        <template navigation-type="dummy" x-if="navigationElementActive">
-            <div :file="navigation" x-data="basicFile" class="grid grid-cols-12 gap-3 mt-5">
-                <div class="col-span-8">
-                    <h3 class="text-2xl font-semibold text-gray-800">
-                        Generic placeholder
-                    </h3>
-                    <textarea
-                            x-model="content"
-                            placeholder="Bio"
-                            rows="20"
-                            class="textarea textarea-bordered textarea-lg w-full"></textarea>
-                </div>
-                <div class="col-span-4">
-                    <div x-import="elements/embedded-diagram">
-                        <ui-embedded-diagram></ui-embedded-diagram>
-                    </div>
-                </div>
-            </div>
-        </template>
+         x-transition>
+        <br>
+        Fetching model <span class="loading loading-dots loading-lg"></span>
     </div>
 </template>

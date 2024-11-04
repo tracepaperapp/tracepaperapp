@@ -92,7 +92,8 @@ document.addEventListener('alpine:init', () => {
             },
             async _execute_save(){
                 if (this.lock){return}
-                console.log("save");
+                let hash = Draftsman.generateFingerprint(this.model);
+                if (hash == this.hash){return}
                 let model = JSON.parse(JSON.stringify(this.model));
                 model.field = model.field.filter(x => !x.deleted);
                 model["nested-object"] = model["nested-object"].filter(x => !x.deleted);
@@ -103,6 +104,7 @@ document.addEventListener('alpine:init', () => {
                 await Modeler.save_model(this.path,model);
                 await Draftsman.sleep(10);
                 this.model = model;
+                this.hash = Draftsman.generateFingerprint(this.model);
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

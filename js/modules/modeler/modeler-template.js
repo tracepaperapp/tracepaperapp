@@ -32,10 +32,13 @@ document.addEventListener('alpine:init', () => {
             },
             async _execute_save(){
                 if(this.lock){return}
-                let model = JSON.parse(JSON.stringify(this.model));
+                let hash = Draftsman.generateFingerprint(this.model);
+                if (hash == this.hash){return}
+                //let model = JSON.parse(JSON.stringify(this.model));
                 // e.g. model.field = model.field.filter(x => !x.deleted);
-                await Modeler.save_model(this.navigation,model);
-                this.model = model;
+                //await Modeler.save_model(this.navigation,model);
+                //this.model = model;
+                this.hash = Draftsman.generateFingerprint(this.model);
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

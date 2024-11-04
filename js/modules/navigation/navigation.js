@@ -58,7 +58,7 @@ document.addEventListener('alpine:init', () => {
                 let file_type = Modeler.determine_type(this.navigation);
 
                 // temp testcode
-                if (!["readme","diagram","command","aggregate"].includes(file_type) && navigation != this.navigation){
+                if (!["readme","diagram","command","aggregate","event"].includes(file_type) && navigation != this.navigation){
                     file_type = "dummy";
                 }
 
@@ -72,6 +72,8 @@ document.addEventListener('alpine:init', () => {
             },
             navigate: async function(file=null){
                 sessionStorage.globalWriteLock = "true";
+                this.navigation = "";
+                await Draftsman.sleep(10);
                 try{
                     this.issuesView = false;
                     if (typeof file === 'string'){
@@ -87,9 +89,10 @@ document.addEventListener('alpine:init', () => {
                     Draftsman.publishMessage("force-reload",this.navigation);
                     this.update_tabs();
                 }finally{
-                    sessionStorage.globalWriteLock = "false";
                     await Draftsman.sleep(500);
                     await this.set_scroll();
+                    await Draftsman.sleep(1500);
+                    sessionStorage.globalWriteLock = "false";
                 }
             },
             open_diagram: function(){

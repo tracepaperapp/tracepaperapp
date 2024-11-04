@@ -52,14 +52,13 @@ document.addEventListener('alpine:init', () => {
                 if(this.lock){return}
                 let hash = Draftsman.generateFingerprint(this.model);
                 if (hash == this.hash){return}
-                this.hash = hash;
-                console.log("save",this.path);
                 try{
                     this.lock = true;
                     let model = JSON.parse(JSON.stringify(this.model));
                     model.field = model.field.filter(x => !x.deleted);
                     await Modeler.save_model(this.path,model);
                     this.model = model;
+                    this.hash = Draftsman.generateFingerprint(this.model);
                 } finally {
                     await Draftsman.sleep(10);
                     this.lock = false;

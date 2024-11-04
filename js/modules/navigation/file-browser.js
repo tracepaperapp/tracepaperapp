@@ -68,6 +68,8 @@ document.addEventListener('alpine:init', () => {
             async focus(){
                 let type = Modeler.determine_type(this.navigation);
                 switch(type){
+                    case "command":
+                    case "event":
                     case "aggregate":
                     let key = "/write/" + this.navigation.replace("root.xml","");
                     Object.keys(directories).forEach(p => {
