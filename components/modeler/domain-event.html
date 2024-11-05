@@ -187,126 +187,140 @@
                                        aria-label="Data mapping" />
                                 <div role="tabpanel" x-data="domainEventMapper"
                                      class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-
-                                    <div class="form-control w-40">
-                                        <label class="label cursor-pointer">
+                                    <template x-if="mapping">
+                                        <div>
+                                            <div class="form-control w-40">
+                                                <label class="label cursor-pointer">
                                             <span class="label-text">Type
                                                 <span x-text="mapping.att_code ? 'code' : 'mapping'"></span>
                                             </span>
-                                            <input type="checkbox" @change="toggle_mapping" class="toggle" :checked="mapping.att_code" />
-                                        </label>
-                                    </div>
+                                                    <input type="checkbox" @change="toggle_mapping" class="toggle" :checked="mapping.att_code" />
+                                                </label>
+                                            </div>
 
-                                    <!-- Mapper -->
-                                    <div x-show="type == 'mapper'" x-cloak x-transition>
-                                        <table class="table">
-                                            <tr>
-                                                <td>
-                                                    <button class="btn btn-xs" @click="autofill">prefill</button>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th scope="col">Document field</th>
-                                                <th scope="col">Mapping</th>
-                                                <th scope="col">Event field</th>
-                                            </tr>
-                                            <template x-for="map in mapping.mapping" :key="map.att_target">
-                                                <tr>
-                                                    <td x-text="map.att_target"></td>
-                                                    <td>
-                                                        <select class="modeler-input" :disabled="editing_disabled" x-model="map.att_operand">
-                                                            <option value="unmapped">Unmapped</option>
-                                                            <option value="set">Set</option>
-                                                            <option value="add">Add</option>
-                                                            <option value="subtract">Subtract</option>
-                                                        </select>
-                                                    </td>
-                                                    <td x-show="map.att_operand != 'unmapped'" x-cloak x-transition>
-                                                        <select class="modeler-input" :disabled="editing_disabled" x-model="map.att_value">
-                                                            <option value="">-</option>
-                                                            <template x-for="target in event.field">
-                                                                <option :value="target.att_name"
-                                                                        :selected="map.att_value == target.att_name"
-                                                                        x-text="target.att_name"></option>
-                                                            </template>
-                                                        </select>
-                                                    </td>
-                                                </tr>
-                                            </template>
-                                            <template x-for="nested in mapping['nested-mapping']">
-                                                <tr>
-                                                    <td x-text="nested.att_target"></td>
-                                                    <td>
-                                                        <select class="modeler-input" :disabled="editing_disabled" x-model="nested.att_strategy">
-                                                            <option value="unmapped">Unmapped</option>
-                                                            <option value="extend">Extend</option>
-                                                            <option value="replace">Replace</option>
-                                                        </select>
-                                                    </td>
-                                                    <td x-show="nested.att_strategy != 'unmapped'" x-cloak x-transition>
-                                                        <table class="table table-xs" x-data="{fields: []}" x-effect="fields = event['nested-object'].filter(x => x.att_name == nested.att_source).at(0).field">
-                                                            <tr>
-                                                                <th scope="row">Source collection</th>
-                                                                <td>
-                                                                    <select class="modeler-input" :disabled="editing_disabled" x-model="nested.att_source">
-                                                                        <option value="">-</option>
-                                                                        <template x-for="target in event['nested-object']">
-                                                                            <option :value="target.att_name"
-                                                                                    :selected="nested.att_source == target.att_name"
-                                                                                    x-text="target.att_name"></option>
-                                                                        </template>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <th scope="row">Functional key</th>
-                                                                <td>
-                                                                    <select class="modeler-input" :disabled="editing_disabled" x-model="nested['att_business-key']">
-                                                                        <option value="">-</option>
-                                                                        <template x-for="field in fields">
-                                                                            <option :value="field.att_name"
-                                                                                    :selected="nested['att_business-key'] == field.att_name"
-                                                                                    x-text="field.att_name"></option>
-                                                                        </template>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <th scope="col">Document field</th>
-                                                                <th scope="col">Mapping</th>
-                                                                <th scope="col">Event field</th>
-                                                            </tr>
-                                                            <template x-for="field_mapping in nested.mapping">
-                                                                <tr>
-                                                                    <td x-text="field_mapping.att_target"></td>
-                                                                    <td>
-                                                                        <select class="modeler-input" :disabled="editing_disabled" x-model="field_mapping.att_operand">
-                                                                            <option value="unmapped">Unmapped</option>
-                                                                            <option value="set">Set</option>
-                                                                            <option value="add">Add</option>
-                                                                            <option value="subtract">Subtract</option>
-                                                                        </select>
-                                                                    </td>
-                                                                    <td x-show="field_mapping.att_operand != 'unmapped'" x-cloak x-transition>
-                                                                        <select class="modeler-input" :disabled="editing_disabled" x-model="field_mapping.att_value">
-                                                                            <option value="">-</option>
-                                                                            <template x-for="field in fields">
-                                                                                <option :value="field.att_name"
-                                                                                        :selected="field_mapping.att_value == field.att_name"
-                                                                                        x-text="field.att_name"></option>
-                                                                            </template>
-                                                                        </select>
-                                                                    </td>
-                                                                </tr>
-                                                            </template>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            </template>
-                                        </table>
-                                    </div>
+                                            <!-- Mapper -->
+                                            <div x-show="type == 'mapper'" x-cloak x-transition>
+                                                <table class="table">
+                                                    <tr>
+                                                        <td>
+                                                            <button class="btn btn-xs" @click="autofill">prefill</button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th scope="col">Document field</th>
+                                                        <th scope="col">Mapping</th>
+                                                        <th scope="col">Event field</th>
+                                                    </tr>
+                                                    <template x-for="map in mapping.mapping" :key="map.att_target">
+                                                        <tr>
+                                                            <td x-text="map.att_target"></td>
+                                                            <td>
+                                                                <select class="modeler-input" :disabled="editing_disabled" x-model="map.att_operand">
+                                                                    <option value="unmapped">Unmapped</option>
+                                                                    <option value="set">Set</option>
+                                                                    <option value="add">Add</option>
+                                                                    <option value="subtract">Subtract</option>
+                                                                </select>
+                                                            </td>
+                                                            <td x-show="map.att_operand != 'unmapped'" x-cloak x-transition>
+                                                                <select class="modeler-input" :disabled="editing_disabled" x-model="map.att_value">
+                                                                    <option value="">-</option>
+                                                                    <template x-for="target in event.field">
+                                                                        <option :value="target.att_name"
+                                                                                :selected="map.att_value == target.att_name"
+                                                                                x-text="target.att_name"></option>
+                                                                    </template>
+                                                                </select>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                    <template x-for="nested in mapping['nested-mapping']">
+                                                        <tr>
+                                                            <td x-text="nested.att_target"></td>
+                                                            <td>
+                                                                <select class="modeler-input" :disabled="editing_disabled" x-model="nested.att_strategy">
+                                                                    <option value="unmapped">Unmapped</option>
+                                                                    <option value="extend">Extend</option>
+                                                                    <option value="replace">Replace</option>
+                                                                </select>
+                                                            </td>
+                                                            <td x-show="nested.att_strategy != 'unmapped'" x-cloak x-transition>
+                                                                <table class="table table-xs" x-data="{fields: []}" x-effect="fields = event['nested-object'].filter(x => x.att_name == nested.att_source).at(0).field">
+                                                                    <tr>
+                                                                        <th scope="row">Source collection</th>
+                                                                        <td>
+                                                                            <select class="modeler-input" :disabled="editing_disabled" x-model="nested.att_source">
+                                                                                <option value="">-</option>
+                                                                                <template x-for="target in event['nested-object']">
+                                                                                    <option :value="target.att_name"
+                                                                                            :selected="nested.att_source == target.att_name"
+                                                                                            x-text="target.att_name"></option>
+                                                                                </template>
+                                                                            </select>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th scope="row">Functional key</th>
+                                                                        <td>
+                                                                            <select class="modeler-input" :disabled="editing_disabled" x-model="nested['att_business-key']">
+                                                                                <option value="">-</option>
+                                                                                <template x-for="field in fields">
+                                                                                    <option :value="field.att_name"
+                                                                                            :selected="nested['att_business-key'] == field.att_name"
+                                                                                            x-text="field.att_name"></option>
+                                                                                </template>
+                                                                            </select>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th scope="col">Document field</th>
+                                                                        <th scope="col">Mapping</th>
+                                                                        <th scope="col">Event field</th>
+                                                                    </tr>
+                                                                    <template x-for="field_mapping in nested.mapping">
+                                                                        <tr>
+                                                                            <td x-text="field_mapping.att_target"></td>
+                                                                            <td>
+                                                                                <select class="modeler-input" :disabled="editing_disabled" x-model="field_mapping.att_operand">
+                                                                                    <option value="unmapped">Unmapped</option>
+                                                                                    <option value="set">Set</option>
+                                                                                    <option value="add">Add</option>
+                                                                                    <option value="subtract">Subtract</option>
+                                                                                </select>
+                                                                            </td>
+                                                                            <td x-show="field_mapping.att_operand != 'unmapped'" x-cloak x-transition>
+                                                                                <select class="modeler-input" :disabled="editing_disabled" x-model="field_mapping.att_value">
+                                                                                    <option value="">-</option>
+                                                                                    <template x-for="field in fields">
+                                                                                        <option :value="field.att_name"
+                                                                                                :selected="field_mapping.att_value == field.att_name"
+                                                                                                x-text="field.att_name"></option>
+                                                                                    </template>
+                                                                                </select>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </template>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </table>
+                                            </div>
 
-                                    <pre x-text="JSON.stringify(mapping,null,2)"></pre>
+                                            <!-- Code -->
+                                            <div x-show="type == 'code'" x-cloak x-transition>
+                                                <template x-if="type == 'code'">
+                                                    <iframe    id="domain-event-editor"
+                                                            style="width: 100%;height:50vh;"
+                                                            x-init="render_editor">
+                                                    </iframe>
+                                                </template>
+                                            </div>
+
+                                            <pre x-text="JSON.stringify(mapping,null,2)"></pre>
+                                        </div>
+                                    </template>
+
                                 </div>
 
                             </div>

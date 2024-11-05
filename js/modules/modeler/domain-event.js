@@ -98,6 +98,12 @@ document.addEventListener('alpine:init', () => {
                 }
                 await this.reload_mapper();
             },
+            async render_editor(){
+                Draftsman.codeEditor("domain-event-editor",this.mapping.att_code,this._update_code.bind(this));
+            },
+            _update_code(code){
+                this.mapping.att_code = code;
+            },
             async read(){
                 await Draftsman.sleep(10);
                 this.file = this.navigation.replace("/events/","/event-handlers/");
@@ -118,49 +124,47 @@ document.addEventListener('alpine:init', () => {
                 await this.reload_mapper();
             },
             async reload_mapper(){
-                if (!this.mapping.att_code){
-                    if (!this.mapping){
-                        this.type = "none";
-                    } else if ("att_code" in this.mapping){
-                        this.type = "code";
-                    } else {
-                        this.type = "mapper";
-                        this.root.field.forEach(field => {
-                            let field_mapping = this.mapping.mapping.filter(x => x.att_target == field.att_name);
-                            if (field_mapping.length == 0){
-                                field.mapping = {
-                                    att_target: field.att_name,
-                                    att_value: "",
-                                    att_operand: "unmapped"
-                                };
-                                this.mapping.mapping.push(field.mapping);
-                            } else {
-                                field.mapping = field_mapping.at(0);
-                            }
-                        });
+                if (!this.mapping){
+                    this.type = "none";
+                } else if ("att_code" in this.mapping){
+                    this.type = "code";
+                } else {
+                    this.type = "mapper";
+                    this.root.field.forEach(field => {
+                        let field_mapping = this.mapping.mapping.filter(x => x.att_target == field.att_name);
+                        if (field_mapping.length == 0){
+                            field.mapping = {
+                                att_target: field.att_name,
+                                att_value: "",
+                                att_operand: "unmapped"
+                            };
+                            this.mapping.mapping.push(field.mapping);
+                        } else {
+                            field.mapping = field_mapping.at(0);
+                        }
+                    });
 
-                        this.entities.forEach(entity => {
-                            let mapping = this.mapping["nested-mapping"].filter(x => x.att_target == entity.att_name);
-                            if (mapping.length == 0){
-                                mapping = {
-                                      att_target: entity.att_name,
-                                      att_strategy: "unmapped",
-                                      mapping: []
-                                  };
-                                this.mapping["nested-mapping"].push(mapping);
-                            } else {
-                                mapping = mapping.at(0);
-                            }
-                            let mapped_fields = mapping.mapping.map(x => x.att_target);
-                            entity.field.filter(f => !mapped_fields.includes(f.att_name)).forEach(field => {
-                                mapping.mapping.push({
-                                    att_target: field.att_name,
-                                    att_operand: "unmapped",
-                                    att_value: "",
-                                });
+                    this.entities.forEach(entity => {
+                        let mapping = this.mapping["nested-mapping"].filter(x => x.att_target == entity.att_name);
+                        if (mapping.length == 0){
+                            mapping = {
+                                  att_target: entity.att_name,
+                                  att_strategy: "unmapped",
+                                  mapping: []
+                              };
+                            this.mapping["nested-mapping"].push(mapping);
+                        } else {
+                            mapping = mapping.at(0);
+                        }
+                        let mapped_fields = mapping.mapping.map(x => x.att_target);
+                        entity.field.filter(f => !mapped_fields.includes(f.att_name)).forEach(field => {
+                            mapping.mapping.push({
+                                att_target: field.att_name,
+                                att_operand: "unmapped",
+                                att_value: "",
                             });
                         });
-                    }
+                    });
                 }
             },
             autofill(){
@@ -191,7 +195,6 @@ document.addEventListener('alpine:init', () => {
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
             },
             async _execute_save(){
-                console.log(this.mapping,this.lock);
                 if(this.lock){return}
                 this.lock = true;
                 try{

@@ -184,6 +184,61 @@ class Draftsman {
          return hash >>> 0; // Zorg voor een unsigned 32-bit integer
        }
 
+    static codeEditor(id,code,callback){
+        var iframe = document.getElementById(id);
+        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
+        // Add Ace Editor script to the iframe
+        var editorscript = iframeDocument.createElement("script");
+        editorscript.src = "/js/tp/ace-editor.js";
+        iframeDocument.head.appendChild(editorscript);
+
+        // Initialize the editor once the script is loaded
+        editorscript.onload = function() {
+            var languagescript = iframeDocument.createElement("script");
+            languagescript.src = "/js/tp/ace-language.js";
+            iframeDocument.head.appendChild(languagescript);
+
+            languagescript.onload = function() {
+                var pythonscript = iframeDocument.createElement("script");
+                pythonscript.src = "/js/tp/ace-python.js";
+                iframeDocument.head.appendChild(pythonscript);
+
+                pythonscript.onload = function() {
+                    var completer = iframeDocument.createElement("script");
+                    completer.src = "/js/utils/custom-completer.js";
+                    iframeDocument.head.appendChild(completer);
+
+                    var editorDiv = iframeDocument.createElement("div");
+                    editorDiv.style.height = "100%";
+                    editorDiv.style.width = "100%";
+                    iframeDocument.body.appendChild(editorDiv);
+
+                    var editor = iframe.contentWindow.ace.edit(editorDiv);
+                    let theme = localStorage.theme == "dark" ? "ace/theme/github_dark" : "ace/theme/github";
+                    editor.session.setMode('ace/mode/python');
+                    code = code.replaceAll('|LB|','\n');
+                    code += "\n\n";
+                    editor.setValue(code,1);
+                    editor.setTheme(theme);
+                    editor.setOptions({
+                        enableBasicAutocompletion: true,
+                        enableSnippets: true,
+                        enableLiveAutocompletion: true
+                    });
+                    editor.setReadOnly(sessionStorage.privelige != "write");
+                    // Add a callback to listen for changes
+                    editor.session.on('change', function(delta) {
+                        callback(editor.getValue());
+                    });
+
+                    //editor.resize(); // Ensure the editor is resized correctly
+                    //editor.renderer.updateFull(); // Force a full update of the editor
+                }
+            }
+        };
+    }
+
     static unregisterTask(f) {
         Draftsman.taskMap.delete(f);
     }

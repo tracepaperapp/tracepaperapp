@@ -20,3 +20,9 @@ if ('serviceWorker' in navigator) {
       console.error('Service Worker registratie mislukt:', error);
     });
 }
+
+console.trace = function(){};
+//console.log = function(){};
+//console.warning = function(){};
+//console.error = function(){};
+

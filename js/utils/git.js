@@ -55,7 +55,6 @@ class GitRepository {
 
   // Schrijven naar een bestand
   async write(filePath, content) {
-    console.log("write",sessionStorage.globalWriteLock,filePath);
     if (sessionStorage.globalWriteLock == "true"){return}
     return this._sendMessage({
       action: 'write',

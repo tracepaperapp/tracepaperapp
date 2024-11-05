@@ -1,3 +1,8 @@
+console.trace = function(){};
+console.log = function(){};
+console.warning = function(){};
+console.error = function(){};
+
 importScripts('/js/tp/isomorphic-git.js');
 importScripts('/js/tp/lightning-fs.js');
 importScripts('/js/tp/http.js');
@@ -279,6 +284,7 @@ async function moveDirectoryRecursively(sourcePath, targetPath) {
       source = source.replaceAll("//","/");
       target = target.replaceAll("//","/");
 
+      console.log(source, "-->", target, stats.isDirectory());
       if (stats.isDirectory()) {
         await moveDirectoryRecursively(source, target);
       } else {

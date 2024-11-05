@@ -4,11 +4,6 @@ var api_key = "";
 var bucket = "";
 var stage = ""
 
-console.trace = function(){};
-//console.log = function(){};
-//console.warning = function(){};
-//console.error = function(){};
-
 if (!localStorage["staging-environment"] || localStorage["staging-environment"] == "false"){
 	console.log("Connected to production");
 	stage = "production";
