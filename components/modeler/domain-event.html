@@ -310,14 +310,13 @@
                                             <!-- Code -->
                                             <div x-show="type == 'code'" x-cloak x-transition>
                                                 <template x-if="type == 'code'">
-                                                    <iframe    id="domain-event-editor"
+                                                    <iframe id="domain-event-editor"
                                                             style="width: 100%;height:50vh;"
                                                             x-init="render_editor">
                                                     </iframe>
                                                 </template>
+                                                <button class="btn btn-xs" @click="generateCode">suggest code</button>
                                             </div>
-
-                                            <pre x-text="JSON.stringify(mapping,null,2)"></pre>
                                         </div>
                                     </template>
 

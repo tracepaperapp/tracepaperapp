@@ -184,59 +184,85 @@ class Draftsman {
          return hash >>> 0; // Zorg voor een unsigned 32-bit integer
        }
 
-    static codeEditor(id,code,callback){
+    static clearAllChildren(element) {
+       while (element.firstChild) {
+           element.removeChild(element.firstChild);
+       }
+   }
+
+    static editors = {};
+    static editors_listners = {};
+
+    static codeEditor(id,code,callback,completions=null){
+        code = code.replaceAll('|LB|','\n');
         var iframe = document.getElementById(id);
         var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+        if (iframeDocument.body.children.length == 0){
+            var editorscript = iframeDocument.createElement("script");
+            editorscript.src = "/js/tp/ace-editor.js";
+            iframeDocument.head.appendChild(editorscript);
 
-        // Add Ace Editor script to the iframe
-        var editorscript = iframeDocument.createElement("script");
-        editorscript.src = "/js/tp/ace-editor.js";
-        iframeDocument.head.appendChild(editorscript);
+            // Initialize the editor once the script is loaded
+            editorscript.onload = function() {
+                var languagescript = iframeDocument.createElement("script");
+                languagescript.src = "/js/tp/ace-language.js";
+                iframeDocument.head.appendChild(languagescript);
 
-        // Initialize the editor once the script is loaded
-        editorscript.onload = function() {
-            var languagescript = iframeDocument.createElement("script");
-            languagescript.src = "/js/tp/ace-language.js";
-            iframeDocument.head.appendChild(languagescript);
+                languagescript.onload = function() {
+                    var pythonscript = iframeDocument.createElement("script");
+                    pythonscript.src = "/js/tp/ace-python.js";
+                    iframeDocument.head.appendChild(pythonscript);
 
-            languagescript.onload = function() {
-                var pythonscript = iframeDocument.createElement("script");
-                pythonscript.src = "/js/tp/ace-python.js";
-                iframeDocument.head.appendChild(pythonscript);
+                    pythonscript.onload = function() {
+                        if (completions){
+                            var completer = iframeDocument.createElement("script");
+                            completer.src = "/js/utils/custom-completer.js";
+                            iframeDocument.head.appendChild(completer);
 
-                pythonscript.onload = function() {
-                    var completer = iframeDocument.createElement("script");
-                    completer.src = "/js/utils/custom-completer.js";
-                    iframeDocument.head.appendChild(completer);
+                            var allCompletions = iframeDocument.createElement("script");
+                            allCompletions.textContent = "allCompletions = " + JSON.stringify(completions);
+                            iframeDocument.head.appendChild(allCompletions);
+                        }
 
-                    var editorDiv = iframeDocument.createElement("div");
-                    editorDiv.style.height = "100%";
-                    editorDiv.style.width = "100%";
-                    iframeDocument.body.appendChild(editorDiv);
+                        var editorDiv = iframeDocument.createElement("div");
+                        editorDiv.style.height = "100%";
+                        editorDiv.style.width = "100%";
+                        iframeDocument.body.appendChild(editorDiv);
 
-                    var editor = iframe.contentWindow.ace.edit(editorDiv);
-                    let theme = localStorage.theme == "dark" ? "ace/theme/github_dark" : "ace/theme/github";
-                    editor.session.setMode('ace/mode/python');
-                    code = code.replaceAll('|LB|','\n');
-                    code += "\n\n";
-                    editor.setValue(code,1);
-                    editor.setTheme(theme);
-                    editor.setOptions({
-                        enableBasicAutocompletion: true,
-                        enableSnippets: true,
-                        enableLiveAutocompletion: true
-                    });
-                    editor.setReadOnly(sessionStorage.privelige != "write");
-                    // Add a callback to listen for changes
-                    editor.session.on('change', function(delta) {
-                        callback(editor.getValue());
-                    });
-
-                    //editor.resize(); // Ensure the editor is resized correctly
-                    //editor.renderer.updateFull(); // Force a full update of the editor
+                        var editor = iframe.contentWindow.ace.edit(editorDiv);
+                        let theme = localStorage.theme == "dark" ? "ace/theme/github_dark" : "ace/theme/github";
+                        editor.session.setMode('ace/mode/python');
+                        editor.setValue(code,1);
+                        editor.setTheme(theme);
+                        editor.setOptions({
+                            enableBasicAutocompletion: true,
+                            enableSnippets: true,
+                            enableLiveAutocompletion: true
+                        });
+                        editor.setReadOnly(sessionStorage.privelige != "write");
+                        // Add a callback to listen for changes
+                        Draftsman.editors_listners[id] = function(delta) {
+                            callback(editor.getValue());
+                        }
+                        editor.session.on('change', Draftsman.editors_listners[id]);
+                        Draftsman.editors[id] = editor;
+                        //editor.resize(); // Ensure the editor is resized correctly
+                        //editor.renderer.updateFull(); // Force a full update of the editor
+                    }
                 }
+            };
+        } else {
+            var allCompletions = iframeDocument.createElement("script");
+            allCompletions.textContent = "allCompletions = " + JSON.stringify(completions);
+            iframeDocument.head.appendChild(allCompletions);
+            Draftsman.editors[id].setValue(code,1);
+            Draftsman.editors[id].session.off('change', Draftsman.editors_listners[id]);
+            Draftsman.editors_listners[id] = function(delta) {
+                callback(Draftsman.editors[id].getValue());
             }
-        };
+            Draftsman.editors[id].session.on('change', Draftsman.editors_listners[id]);
+        }
+
     }
 
     static unregisterTask(f) {
@@ -277,5 +303,29 @@ class Draftsman {
         let logout_uri = `${localStorage["aws-congnito-ui"]}/logout?client_id=${localStorage["aws-congnito-app-id"]}&logout_uri=${window.location.origin}`;
         sessionStorage.clear();
         location = logout_uri;
+    }
+}
+
+class CodeCompletions {
+    completions = [];
+
+    constructor(values=[],meta="local",prio=1){
+        this.add_items(values,meta,prio);
+    }
+
+    add_items(values,meta="local",prio=1){
+        let items = values.map(x => {
+            return {
+                name: x,
+                value: x,
+                score: prio,
+                meta: meta
+            };
+        });
+        this.completions.push(...items);
+    }
+
+    toJSON() {
+        return this.completions;
     }
 }

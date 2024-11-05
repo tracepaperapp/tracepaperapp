@@ -98,11 +98,17 @@ document.addEventListener('alpine:init', () => {
                 }
                 await this.reload_mapper();
             },
-            async render_editor(){
-                Draftsman.codeEditor("domain-event-editor",this.mapping.att_code,this._update_code.bind(this));
+            render_editor(){
+
+                // TODO: code completion verder vullen
+                let completions = new CodeCompletions();
+                completions.add_items(this.event.field.map(x => "event." + x.att_name));
+                completions.add_items(this.root.field.map(x => "self." + x.att_name));
+
+                Draftsman.codeEditor("domain-event-editor",this.mapping.att_code,this._update_code.bind(this),completions);
             },
             _update_code(code){
-                this.mapping.att_code = code;
+                this.mapping.att_code = code.replaceAll("\n","|LB|");
             },
             async read(){
                 await Draftsman.sleep(10);
@@ -128,6 +134,7 @@ document.addEventListener('alpine:init', () => {
                     this.type = "none";
                 } else if ("att_code" in this.mapping){
                     this.type = "code";
+                    await this.render_editor();
                 } else {
                     this.type = "mapper";
                     this.root.field.forEach(field => {
@@ -190,6 +197,56 @@ document.addEventListener('alpine:init', () => {
                         m.att_value = m.att_target;
                     });
                 });
+            },
+            generateCode(){
+                let code = '';
+                let fields = this.event.field.map(x => x.att_name);
+                let score = this.root.field.filter(x => fields.includes(x.att_name)).length;
+                let target = "root";
+                this.entities.forEach(entity => {
+                    let count = entity.field.filter(x => fields.includes(x.att_name)).length;
+                    if (count > score){
+                        score = count;
+                        target = entity.att_name;
+                    }
+                });
+
+                if (target == "root"){
+                    let collections = this.event["nested-object"].map(x => x.att_name);
+                    this.root.field.filter(x => fields.includes(x.att_name)).forEach(x => {
+                        code += `self.${x.att_name} = event.${x.att_name}\n`;
+                    });
+                    this.entities.filter(x => collections.includes(x.att_name)).forEach(entity => {
+                        let fields = this.event["nested-object"].filter(x => x.att_name == entity.att_name).at(0).field.map(x => x.att_name);
+                        if (fields.includes(entity["att_business-key"])){
+                            code += `for item in event.${entity.att_name}:\n`;
+                            code += `\ttarget = retrieve_nested_target(item["${entity['att_business-key']}"], self.${entity.att_name}, {})\n`;
+                            entity.field.filter(x => fields.includes(x.att_name)).forEach(field => {
+                                code += `\ttarget["${field.att_name}"] = item["${field.att_name}"]\n`;
+                            });
+                            code += `\tself.${entity.att_name}[item["${entity['att_business-key']}"]] = target\n`
+                        }
+                    });
+                } else {
+                    let entity = this.entities.filter(x => target == x.att_name).at(0);
+                    if (fields.includes(entity["att_business-key"])){
+                        code += `target = retrieve_nested_target(event.${entity['att_business-key']}, self.${entity.att_name}, {})\n`;
+                    } else {
+                        code += `target = retrieve_nested_target(event.{{key}}, self.${entity.att_name}, {})\n`;
+                    }
+                    entity.field.filter(x => fields.includes(x.att_name)).forEach(field => {
+                        code += `target["${field.att_name}"] = event.${field.att_name}\n`;
+                    });
+                    if (fields.includes(entity["att_business-key"])){
+                        code += `self.${entity.att_name}[event.${entity['att_business-key']}] = target\n`
+                    } else {
+                        code += `self.${entity.att_name}[event.{{key}}] = target\n`
+                    }
+                }
+
+                code += '#self.isDeleted = "soft/hard/delayed"'
+                this.mapping.att_code = code;
+                this.render_editor();
             },
             async save(){
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
