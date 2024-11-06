@@ -61,9 +61,12 @@ document.addEventListener('alpine:init', () => {
         return {
             async init(){
                 await this.prepare();
-                this.renameListner = Draftsman.registerListener("file-renamed",this.prepare.bind(this));
-                this.reloadListner = Draftsman.registerListener("force-reload",this.prepare.bind(this));
+                this.renameListner = Draftsman.registerListener("file-renamed",this.reload.bind(this));
+                this.reloadListner = Draftsman.registerListener("force-reload",this.reload.bind(this));
                 this.focusListner = Draftsman.registerListener("focus",this.focus.bind(this));
+            },
+            async reload(){
+                Draftsman.debounce("file-browser-reload",this.prepare.bind(this),10000);
             },
             async focus(){
                 let type = Modeler.determine_type(this.navigation);
@@ -71,6 +74,7 @@ document.addEventListener('alpine:init', () => {
                     case "command":
                     case "event":
                     case "aggregate":
+                    case "behavior":
                     let key = "/write/" + this.navigation.replace("root.xml","");
                     Object.keys(directories).forEach(p => {
                         sessionStorage.setItem(p,key.startsWith(p) || p.startsWith(key));

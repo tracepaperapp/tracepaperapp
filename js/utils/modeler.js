@@ -28,7 +28,9 @@ make_sure_is_list = function(elements,deduplicate=true){
         return [];
     }
 }
-
+make_sure_is_not_nill = function(value){
+    return value ? value : "";
+}
 const xml_options = {
     ignoreAttributes : false,
     format: true,
@@ -137,6 +139,15 @@ class Modeler {
            content = {content:content};
        }
        return content;
+    }
+
+    static async get_model_by_name(name,subfolder=""){
+        let repo = await GitRepository.open();
+        let files = await repo.list(x => x.startsWith(subfolder) && x.endsWith(name + ".xml") && !x.includes("/event-handlers/"));
+        if (files.length > 1){
+            throw new Error("Found more then 1 model with name: " + JSON.stringify(files));
+        }
+        return await this.get_model(files.at(0));
     }
 
     static async save_model(file,content){
@@ -253,6 +264,7 @@ function prepare_behavior(flow){
         flow.trigger = make_sure_is_list(flow.trigger);
         flow.trigger.forEach(trigger => {
             trigger.mapping = make_sure_is_list(trigger.mapping);
+            trigger["att_idempotency-key"] = make_sure_is_not_nill(trigger["att_idempotency-key"]);
         });
         flow.processor = make_sure_is_list(flow.processor);
         flow.processor.forEach(processor => {

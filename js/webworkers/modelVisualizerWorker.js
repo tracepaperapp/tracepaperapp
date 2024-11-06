@@ -7,6 +7,9 @@ importScripts('/js/tp/fast-xml-parser.js')
 const field_types = ['String', 'Int', 'Float', 'Boolean'];
 const view_field_types = field_types.concat(["StringList"]);
 
+console.error = function(msg){}
+console.log = function(msg){}
+
 const options = {
     ignoreAttributes : false,
     format: true,

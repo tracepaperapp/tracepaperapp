@@ -53,24 +53,31 @@ document.addEventListener('alpine:init', () => {
                 localStorage.session = JSON.stringify(items);
             },
             navigationElementActive: function(){
-                let navigation = this.$el.getAttribute("navigation");
-                let type = this.$el.getAttribute("navigation-type");
-                let file_type = Modeler.determine_type(this.navigation);
+                try{
+                    let navigation = this.$el.getAttribute("navigation");
+                    let type = this.$el.getAttribute("navigation-type");
+                    let file_type = Modeler.determine_type(this.navigation);
 
-                // temp testcode
-                if (!["readme","diagram","command","aggregate","event"].includes(file_type) && navigation != this.navigation){
-                    file_type = "dummy";
-                }
+                    // temp testcode
+                    if (!["readme","diagram","command","aggregate","event","behavior"].includes(file_type) && navigation != this.navigation){
+                        file_type = "dummy";
+                    }
 
-                if (type && type == file_type){
-                    return "active";
-                } else if (navigation == this.navigation){
-                    return "active";
-                } else {
+                    if (type && type == file_type){
+                        return "active";
+                    } else if (navigation == this.navigation){
+                        return "active";
+                    } else {
+                        return "";
+                    }
+                } catch(err){
+                    console.error(err);
                     return "";
                 }
+
             },
             navigate: async function(file=null){
+                console.log("navigate!");
                 sessionStorage.globalWriteLock = "true";
                 this.navigation = "";
                 await Draftsman.sleep(10);
@@ -88,6 +95,8 @@ document.addEventListener('alpine:init', () => {
                     await Draftsman.sleep(10);
                     Draftsman.publishMessage("force-reload",this.navigation);
                     this.update_tabs();
+                } catch(err){
+                    console.error(err);
                 }finally{
                     await Draftsman.sleep(500);
                     await this.set_scroll();

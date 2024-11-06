@@ -124,6 +124,7 @@ document.addEventListener('alpine:init', () => {
                         });
                         break;
                     default:
+                        alert("Not implemented");
                        console.error("Create for type not implemented: ",this.type);
                 }
                 await Modeler.save_model(this.file,this.model);
@@ -141,7 +142,7 @@ document.addEventListener('alpine:init', () => {
                 this.file = this.navigation;
                 this.model = await Modeler.get_model(this.file);
                 this.type = Modeler.determine_type(this.file);
-                this.copyEnabled = ["command"].includes(this.type);
+                this.copyEnabled = ["command","aggregate"].includes(this.type);
             },
             async start_command(){
                 if (this.type == "command"){

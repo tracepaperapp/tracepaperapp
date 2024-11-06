@@ -105,7 +105,7 @@ document.addEventListener('alpine:init', () => {
                 completions.add_items(this.event.field.map(x => "event." + x.att_name));
                 completions.add_items(this.root.field.map(x => "self." + x.att_name));
 
-                Draftsman.codeEditor("domain-event-editor",this.mapping.att_code,this._update_code.bind(this),completions);
+                Draftsman.codeEditor(this.$el,this.mapping.att_code,this._update_code.bind(this),completions);
             },
             _update_code(code){
                 this.mapping.att_code = code.replaceAll("\n","|LB|");

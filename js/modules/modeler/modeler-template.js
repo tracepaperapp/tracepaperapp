@@ -4,7 +4,6 @@ document.addEventListener('alpine:init', () => {
             model: null,
             _taskId: "",
             listnerId: "",
-            preparedRename: {},
             async init(){
                 this.read();
                 this._taskId = Draftsman.uuidv4();

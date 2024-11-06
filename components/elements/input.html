@@ -28,3 +28,56 @@
     </template>
   </div>
 </template>
+<template x-component="trigger-keyfield-selector">
+  <div x-init="if(!trigger['att_key-field']){trigger['att_key-field'] = ''}">
+    <select :disabled="editing_disabled"
+            x-model="trigger['att_key-field']"
+            x-show="!trigger['att_key-field'].startsWith('#')" x-cloak x-transition
+            class="select select-sm select-ghost w-full max-w-xs modeler-input">
+      <template x-for="option in keyOptions" :key="option">
+        <option :value="option" :selected="option == trigger['att_key-field']" x-text="option"></option>
+      </template>
+    </select>
+    <input type="text"
+           :disabled="editing_disabled"
+           x-model="trigger['att_key-field']"
+           x-show="trigger['att_key-field'].startsWith('#')" x-cloak x-transition
+           class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+  </div>
+</template>
+<template x-component="trigger-field-selector">
+  <div>
+    <select :disabled="editing_disabled"
+            x-model="map.att_value"
+            x-show="!map.att_value.startsWith('#')" x-cloak x-transition
+            class="select select-sm select-ghost w-full max-w-xs modeler-input">
+      <template x-for="option in options" :key="option">
+        <option :value="option" :selected="option == map.att_value" x-text="option"></option>
+      </template>
+    </select>
+    <input type="text"
+           :disabled="editing_disabled"
+           x-model="map.att_value"
+           x-show="map.att_value.startsWith('#')" x-cloak x-transition
+           class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+  </div>
+</template>
+<template x-component="flow-variable-selector">
+  <div>
+    <select :disabled="editing_disabled"
+            x-model="map.att_value"
+            x-show="!map.att_value || map.att_value == '' || flowVariables.includes(map.att_value.replace('#flow.',''))" x-cloak x-transition
+            class="select select-sm select-ghost w-full max-w-xs modeler-input">
+      <option></option>
+      <template x-for="option in flowVariables" :key="option">
+        <option :value="'#flow.' + option" :selected="'#flow.' + option == map.att_value" x-text="option"></option>
+      </template>
+      <option value="#''">#'expression'</option>
+    </select>
+    <input type="text"
+           :disabled="editing_disabled"
+           x-model="map.att_value"
+           x-show="map.att_value != '' && !flowVariables.includes(map.att_value.replace('#flow.',''))" x-cloak x-transition
+           class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+  </div>
+</template>

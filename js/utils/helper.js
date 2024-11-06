@@ -193,9 +193,9 @@ class Draftsman {
     static editors = {};
     static editors_listners = {};
 
-    static codeEditor(id,code,callback,completions=null){
+    static codeEditor(iframe,code,callback,completions=null){
+        let id = iframe.id;
         code = code.replaceAll('|LB|','\n');
-        var iframe = document.getElementById(id);
         var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
         if (iframeDocument.body.children.length == 0){
             var editorscript = iframeDocument.createElement("script");
@@ -242,7 +242,7 @@ class Draftsman {
                         editor.setReadOnly(sessionStorage.privelige != "write");
                         // Add a callback to listen for changes
                         Draftsman.editors_listners[id] = function(delta) {
-                            callback(editor.getValue());
+                            callback(editor.getValue(),id);
                         }
                         editor.session.on('change', Draftsman.editors_listners[id]);
                         Draftsman.editors[id] = editor;
@@ -258,7 +258,7 @@ class Draftsman {
             Draftsman.editors[id].setValue(code,1);
             Draftsman.editors[id].session.off('change', Draftsman.editors_listners[id]);
             Draftsman.editors_listners[id] = function(delta) {
-                callback(Draftsman.editors[id].getValue());
+                callback(Draftsman.editors[id].getValue(),id);
             }
             Draftsman.editors[id].session.on('change', Draftsman.editors_listners[id]);
         }

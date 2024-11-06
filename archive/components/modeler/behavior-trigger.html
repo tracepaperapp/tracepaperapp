@@ -106,15 +106,9 @@
         </td>
         <td>
           <input type="checkbox"
-                 @change="if($el.checked){
-                      if (!('att_idempotency-key' in trigger)){
-                        trigger['att_idempotency-key'] = '';
-                      }
-                      trigger['att_idempotency-key'] += ' ' + mapping.att_value;
-                     }else{
-                      trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace(mapping.att_value,'');
-                     }
-                     trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace('  ',' ').trim()"
+                 :trigger="trigger"
+                 :key="mapping.att_value"
+                 @change="update_idempotency"
                  :checked="trigger['att_idempotency-key'].includes(mapping.att_value)"
                  class="checkbox" />
         </td>

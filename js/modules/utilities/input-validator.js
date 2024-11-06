@@ -94,4 +94,27 @@ document.addEventListener('alpine:init', () => {
             }
         }
     });
+    Alpine.data("triggerFieldSelector", function(){
+            return {
+                options: [],
+                keyOptions: [],
+                async init(){
+                    let trigger = await Modeler.get_model_by_name(this.trigger.att_source);
+                    this.options = trigger.field.map(x => x.att_name);
+                    this.options.unshift("");
+                    this.options.push("#''");
+
+                    this.keyOptions = trigger.field.map(x => x.att_name);
+                    this.keyOptions.unshift("");
+                    let repo = await GitRepository.open();
+                    let files = await repo.list(x => x.startsWith("expressions/") && x.endsWith(".xml"));
+                    for (let i=0; i < files.length; i++){
+                        let model = await Modeler.get_model(files[i]);
+                        if (model.att_type == "TriggerKeyField"){
+                            this.keyOptions.push(`#global.${model.att_name}(${model.att_input.replaceAll(';',', ')})`);
+                        }
+                    }
+                },
+            }
+        });
 });

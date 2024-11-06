@@ -26,21 +26,15 @@
                         <ul class="menu bg-base-200 rounded-box">
                             <template x-for="project in projects" :key="project.drn">
                                 <li :class="offline && !project.available ? 'disabled' : ''">
-                                    <template x-if="!offline || project.available">
-                                        <a :drn="project.drn" @click="open_project">
-                                            <span x-text="project.name"></span>
-                                            <div x-show="!offline" x-cloak x-transition
-                                                 class="badge badge-ghost" x-text="project.workspace"></div>
-                                            <div x-show="offline" x-cloak x-transition
-                                                 class="badge badge-warning">Model may be outdated; you are offline.</div>
-                                        </a>
-                                    </template>
-                                    <template x-if="offline && !project.available">
-                                        <a>
-                                            <span x-text="project.name"></span>
-                                            <div class="badge badge-error">no local copy</div>
-                                        </a>
-                                    </template>
+                                    <a :drn="project.drn" @click="open_project" x-show="!offline || project.available">
+                                        <span x-text="project.name"></span>
+                                        <div x-show="!offline" x-cloak x-transition class="badge badge-ghost" x-text="project.workspace"></div>
+                                        <div x-show="offline && project.available" x-cloak x-transition class="badge badge-warning">Model may be outdated; you are offline.</div>
+                                    </a>
+                                    <a x-show="offline && !project.available">
+                                        <span x-text="project.name"></span>
+                                        <div class="badge badge-error">no local copy</div>
+                                    </a>
                                 </li>
                             </template>
                         </ul>
