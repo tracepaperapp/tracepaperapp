@@ -1,9 +1,9 @@
 <template x-component="diagram">
     <div navigation-type="diagram"
+         id="active-tab"
          x-show="navigationElementActive"
          x-cloak
          x-transition.delay.100ms>
-        <template navigation-type="diagram" x-if="navigationElementActive">
             <div x-data="nodeDiagram" class="grid grid-cols-12 gap-3 mt-5">
                 <div class="col-span-9">
                     <div id="node-diagram"></div>
@@ -109,6 +109,5 @@
 
                 </div>
             </div>
-        </template>
     </div>
 </template>

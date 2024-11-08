@@ -1,7 +1,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('commandModel', function(){
         return {
-            model: null,
+            model: Modeler.prepare_model("command",{}),
             _taskId: "",
             listnerId: "",
             newPath: "",
@@ -84,8 +84,12 @@ document.addEventListener('alpine:init', () => {
             },
             async read(){
                 await Draftsman.sleep(10);
-                this.model = await Modeler.get_model(this.navigation);
-                this.newPath = this.get_api_path();
+                if (Modeler.determine_type(this.navigation) == "command"){
+                    this.path = this.navigation;
+                    this.model = await Modeler.get_model(this.path);
+                    this.newPath = this.get_api_path();
+                }
+
             },
             async save(){
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);

@@ -1,7 +1,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('aggregateRoot', function(){
         return {
-            model: null,
+            model: Modeler.prepare_model("aggregate",{}),
             _taskId: "",
             listnerId: "",
             newName: "",
@@ -17,12 +17,15 @@ document.addEventListener('alpine:init', () => {
             },
             async read(){
                 await Draftsman.sleep(10);
-                this.model = await Modeler.get_model(this.navigation);
-                this.newName = this.model.att_name;
-                this.subdomain = this.navigation.split("/").at(1);
-                this.newSubdomain = this.subdomain;
-                let repo = await GitRepository.open();
-                this.entities = await repo.list(x => x.startsWith(this.navigation.replace("root.xml","entities/")) && x.endsWith(".xml"));
+                if (Modeler.determine_type(this.navigation) == "aggregate"){
+                    this.path = this.navigation;
+                    this.model = await Modeler.get_model(this.path);
+                    this.newName = this.model.att_name;
+                    this.subdomain = this.path.split("/").at(1);
+                    this.newSubdomain = this.subdomain;
+                    let repo = await GitRepository.open();
+                    this.entities = await repo.list(x => x.startsWith(this.path.replace("root.xml","entities/")) && x.endsWith(".xml"));
+                }
             },
             async save(){
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
@@ -35,22 +38,22 @@ document.addEventListener('alpine:init', () => {
             },
             async add_entity(){
                 let name = Draftsman.generateRandomCamelCaseString();
-                let path = this.navigation.replace("root.xml","entities/" + name + ".xml");
+                let path = this.path.replace("root.xml","entities/" + name + ".xml");
                 Modeler._roots[path] = "nested-object";
                 await Modeler.save_model(path,{
                     att_name: name,
                     "att_business-key": ""
                 });
-                this.navigate(this.navigation);
+                this.navigate(this.path);
             },
             async delete_model(){
                 try{
-                    let dir = this.navigation.replace("root.xml","");
+                    let dir = this.path.replace("root.xml","");
                     let repo = await GitRepository.open();
                     await repo.deleteDirectory(dir);
                 } finally {
                     await Draftsman.sleep(100);
-                    Draftsman.publishMessage("file-reverted",this.navigation);
+                    Draftsman.publishMessage("file-reverted",this.path);
                 }
             },
             async check_name(){
@@ -65,7 +68,7 @@ document.addEventListener('alpine:init', () => {
                 this.lock = true;
                 await Draftsman.sleep(10);
                 let force_reload = this.subdomain != this.newSubdomain;
-                let sourcePath = this.navigation.replace("root.xml","");
+                let sourcePath = this.path.replace("root.xml","");
                 let targetPath = sourcePath.replace(`/${this.subdomain}/${oldName}/`,`/${this.newSubdomain}/${this.newName}/`);
                 let repo = await GitRepository.open();
                 await repo.moveDirectory(sourcePath,targetPath);
@@ -85,7 +88,7 @@ document.addEventListener('alpine:init', () => {
                 if (hash == this.hash){return}
                 let model = JSON.parse(JSON.stringify(this.model));
                 model.field = model.field.filter(x => !x.deleted);
-                await Modeler.save_model(this.navigation,this.model);
+                await Modeler.save_model(this.path,this.model);
                 this.model = model;
                 this.hash = Draftsman.generateFingerprint(this.model);
             },

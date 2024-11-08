@@ -235,6 +235,9 @@ function prepare_scenario(scenario){
     return scenario;
 }
 function prepare_command(command){
+    command.att_name = make_sure_is_not_nill(command.att_name);
+    command.att_authorization = make_sure_is_not_nill(command.att_authorization);
+    command.att_role = make_sure_is_not_nill(command.att_role);
     command['field'] = make_sure_is_list(command['field']);
     command['nested-object'] = make_sure_is_list(command['nested-object']);
     command['nested-object'].forEach(entity => {

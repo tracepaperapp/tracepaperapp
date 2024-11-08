@@ -8,8 +8,7 @@ document.addEventListener('alpine:init', () => {
             radius: 1,
             async init(){
                 await Draftsman.sleep(10);
-                this.path = this.$el.getAttribute("file");
-                let type = Modeler.determine_type(this.path);
+                let type = Modeler.determine_type(this.navigation);
                 this.mode = ["readme","command"].includes(type) ? "aggregate" : "behavior";
                 this.draw();
                 this.listnerId = Draftsman.registerListener("force-reload",this.draw.bind(this));
@@ -27,7 +26,7 @@ document.addEventListener('alpine:init', () => {
                 await this.draw();
             },
             async draw(){
-                this.session.all_links = await Diagram.node_diagram(this.path,"node-diagram","250px",{},this.mode,this.radius);
+                this.session.all_links = await Diagram.node_diagram(this.navigation,"node-diagram","250px",{},this.mode,this.radius);
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

@@ -1,0 +1,215 @@
+<template x-component="behavior-flow">
+    <div>
+        <template x-for="(processor, index) in model.processor" :key="Draftsman.generateFingerprint(processor)">
+            <table class="table border mb-2">
+                <!-- header -->
+                <tr class="bg-base-200">
+                    <th scope="row"
+                        colspan="3"
+                        x-text="get_processor_name"
+                        :type="processor.att_type"
+                        :id="processor.att_id">
+                    </th>
+                    <td class="text-right">
+                        <button @click="move_processor_up"
+                                :index="index"
+                                :disabled="editing_disabled"
+                                x-show="index != 0" x-cloak x-transition
+                                class="btn btn-xs btn-outline">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </button>
+                        <button @click="move_processor_down"
+                                :index="index"
+                                :disabled="editing_disabled"
+                                x-show="(model.processor.length - 1) > index" x-cloak x-transition
+                                class="btn btn-xs btn-outline">
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </button>
+                        <button @click="remove_processor"
+                                :id="processor.att_id"
+                                :disabled="editing_disabled"
+                                class="btn btn-xs btn-outline btn-error">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- validator -->
+                <tr x-show="processor.att_type == 'validator'" x-cloak x-transition>
+                    <th scope="row">Rule</th>
+                    <td colspan="3">
+                        <input type="text"
+                               x-model="processor.att_condition"
+                               :disabled="editing_disabled"
+                               placeholder="flow.variable == true"
+                               class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+                    </td>
+                </tr>
+                <tr x-show="processor.att_type == 'validator'" x-cloak x-transition>
+                    <th scope="row">Message</th>
+                    <td colspan="3">
+                        <input type="text"
+                               x-model="processor.att_exception"
+                               :disabled="editing_disabled"
+                               placeholder="Exception with {flow.variable}"
+                               class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+                    </td>
+                </tr>
+                <tr x-show="processor.att_type == 'validator'" x-cloak x-transition>
+                    <td colspan="4">
+                        <small>When the rule fails a functional exception is thrown</small>
+                    </td>
+                </tr>
+
+                <!-- emit event -->
+                <tr x-show="processor.att_type == 'emit-event'" x-cloak x-transition>
+                    <th scope="col">Field name</th>
+                    <th scope="col" colspan="2">Value</th>
+                </tr>
+                <template x-if="processor.att_type == 'emit-event'">
+                    <template x-for="map in processor.mapping" :key="Draftsman.generateFingerprint(map)">
+                        <tr>
+                            <td x-text="map.att_target"></td>
+                            <td x-import="elements/input" colspan="3">
+                                <ui-flow-variable-selector></ui-flow-variable-selector>
+                            </td>
+                        </tr>
+                    </template>
+                </template>
+
+                <!-- set variable -->
+                <tr x-show="processor.att_type == 'set-variable'" x-cloak x-transition>
+                    <th scope="row">Variable name</th>
+                    <td colspan="3">
+                        <input type="text"
+                               x-model="processor.att_name"
+                               :disabled="editing_disabled"
+                               placeholder="variableName"
+                               x-data="inputValidator"
+                               @input="camel_cased"
+                               class="input input-sm w-full max-w-xs" />
+                    </td>
+                </tr>
+                <tr x-show="processor.att_type == 'set-variable'" x-cloak x-transition>
+                    <th scope="row">Expression</th>
+                    <td colspan="3">
+                                                        <textarea type="text"
+                                                                  x-model="processor.att_expression"
+                                                                  :disabled="editing_disabled"
+                                                                  placeholder="#'expression'" class="textarea textarea-ghost w-full">
+                                                        </textarea>
+                    </td>
+                </tr>
+
+                <!-- code -->
+                <tr x-show="processor.att_type == 'code' && !processor.att_code" x-cloak x-transition>
+                    <th scope="row">Module</th>
+                    <td colspan="3">
+                        <select :disabled="editing_disabled"
+                                x-model="processor.att_file"
+                                class="select select-sm select-ghost w-full max-w-xs modeler-input">
+                            <option></option>
+                            <template x-for="option in modules" :key="option">
+                                <option :value="option" :selected="option == processor.att_file" x-text="option.split('/').at(1).replace('.py','')"></option>
+                            </template>
+                        </select>
+                    </td>
+                </tr>
+                <tr x-show="processor.att_type == 'code' && !processor.att_code" x-cloak x-transition>
+                    <th scope="row">Method</th>
+                    <template x-if="processor.att_type == 'code' && !processor.att_code">
+                        <td colspan="3" x-data="{options: []}" x-effect="options = await get_methods(processor.att_file)">
+                            <select :disabled="editing_disabled"
+                                    x-model="processor.att_handler"
+                                    class="select select-sm select-ghost w-full max-w-xs modeler-input">
+                                <option></option>
+                                <template x-for="option in options" :key="option">
+                                    <option :value="option" :selected="option == processor.att_handler" x-text="option"></option>
+                                </template>
+                            </select>
+                        </td>
+                    </template>
+                </tr>
+                <tr x-show="processor.att_type == 'code' && processor.att_code" x-cloak x-transition>
+                    <th scope="row">Inline</th>
+                    <td colspan="3">
+                        <template x-if="processor.att_type == 'code' && processor.att_code">
+                            <iframe :id="processor.att_id"
+                                    style="width: 100%;height:35vh;"
+                                    x-init="render_editor">
+                            </iframe>
+                        </template>
+                    </td>
+                </tr>
+
+                <!-- update key -->
+                <tr x-show="processor.att_type == 'update-key'" x-cloak x-transition>
+                    <th scope="row">New functional key</th>
+                    <td colspan="3">
+                        <select :disabled="editing_disabled"
+                                x-model="processor.att_key"
+                                x-show="!processor.att_key || flowVariables.includes(processor.att_key.replace('#flow.',''))" x-cloak x-transition
+                                class="select select-sm select-ghost w-full max-w-xs modeler-input">
+                            <option></option>
+                            <template x-for="option in flowVariables" :key="option">
+                                <option :value="'#flow.' + option" :selected="'#flow.' + option == processor.att_key" x-text="option"></option>
+                            </template>
+                            <option value="#''">#'expression'</option>
+                        </select>
+
+                        <input type="text"
+                               :disabled="editing_disabled"
+                               x-model="processor.att_key"
+                               x-show="processor.att_key && !flowVariables.includes(processor.att_key.replace('#flow.',''))" x-cloak x-transition
+                               class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+                    </td>
+                </tr>
+            </table>
+        </template>
+
+        <ul class="menu menu-horizontal bg-base-200 rounded-box w-full">
+            <li><a @click="add_validator"><i class="fa-solid fa-plus"></i> Validator</a></li>
+            <li><a @click="add_variable"><i class="fa-solid fa-plus"></i> Variable</a></li>
+            <li><a @click="add_code"><i class="fa-solid fa-plus"></i> Code</a></li>
+            <li><a @click="add_inline_code"><i class="fa-solid fa-plus"></i> Inline code</a></li>
+            <li><a @click="add_update_key"><i class="fa-solid fa-plus"></i> Update key</a></li>
+            <li><a @click="eventModal = true"><i class="fa-solid fa-plus"></i> Emit event</a></li>
+        </ul>
+        <dialog x-show="eventModal" x-cloak x-transition
+                class="modal modal-open">
+            <div class="modal-box">
+                <form method="dialog">
+                    <button @click="eventModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="font-bold text-lg">Add emit event</h3>
+
+                <label class="input input-bordered flex items-center gap-2 mt-5">
+                    <input type="text" class="grow" x-model="search" placeholder="Search" />
+                    <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            class="h-4 w-4 opacity-70">
+                        <path
+                                fill-rule="evenodd"
+                                d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                                clip-rule="evenodd" />
+                    </svg>
+                </label>
+
+                <table class="table mt-2">
+                    <template x-for="e in availableEvents" :key="e">
+                        <tr x-show="e.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
+                            <td x-text="e.split('/').at(-1).replace('.xml','')"></td>
+                            <td class="text-right">
+                                <button @click="add_emit_event" :file="e" class="btn btn-sm btn-outline btn-success">
+                                    <i class="fa-regular fa-plus"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </table>
+            </div>
+        </dialog>
+    </div>
+</template>

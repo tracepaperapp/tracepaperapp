@@ -22,51 +22,68 @@
     <link rel="stylesheet" href="/css/ide.css" />
     <link rel="stylesheet" href="/css/draftsman.css" />
 </head>
-<body x-data="navigation">
-    <div x-data="contextManagement">
-    <div x-import="menu-bar">
-        <ui-menu-bar></ui-menu-bar>
-    </div>
+<body>
+    <div x-data="navigation">
+        <div x-data="contextManagement">
+            <div x-import="menu-bar">
+                <ui-menu-bar></ui-menu-bar>
+            </div>
 
-    <div class="grid grid-cols-12 gap-3 mt-5">
-        <div class="col-span-2">
-            <div x-import="file-browser">
-                <ui-file-browser></ui-file-browser>
+            <div class="grid grid-cols-12 gap-3 mt-5">
+                <div class="col-span-2">
+                    <div x-import="file-browser">
+                        <ui-file-browser></ui-file-browser>
+                    </div>
+                </div>
+                <div class="col-span-10 w-full">
+                    <div x-import="elements/trace-notifications">
+                        <ui-trace-notifications></ui-trace-notifications>
+                    </div>
+                    <div x-import="tab-bar">
+                        <ui-tab-bar></ui-tab-bar>
+                    </div>
+                    <div class="max-h-[80vh] scrollbar-v" @scroll="saveScrollPosition" id="main">
+                        <div x-import="modeler/readme">
+                            <template x-if="tab_type == 'readme'" :key="navigation">
+                                <ui-readme></ui-readme>
+                            </template>
+                        </div>
+                        <div x-import="modeler/dummy-page">
+                            <template x-if="tab_type == ''" :key="navigation">
+                                <ui-dummy></ui-dummy>
+                            </template>
+                        </div>
+                        <div x-import="modeler/diagram">
+                            <template x-if="tab_type == 'diagram'" :key="navigation">
+                                <ui-diagram></ui-diagram>
+                            </template>
+                        </div>
+                        <div x-import="modeler/command">
+                            <template x-if="tab_type == 'command'" :key="navigation">
+                                <ui-command></ui-command>
+                            </template>
+                        </div>
+                        <div x-import="modeler/aggregate">
+                            <template x-if="tab_type == 'aggregate'" :key="navigation">
+                                <ui-aggregate></ui-aggregate>
+                            </template>
+                        </div>
+                        <div x-import="modeler/domain-event">
+                            <template x-if="tab_type == 'event'" :key="navigation">
+                                <ui-domain-event></ui-domain-event>
+                            </template>
+                        </div>
+                        <div x-import="modeler/behavior">
+                            <template x-if="tab_type == 'behavior'">
+                                <ui-behavior></ui-behavior>
+                            </template>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="col-span-10 w-full">
-            <div x-import="elements/trace-notifications">
-                <ui-trace-notifications></ui-trace-notifications>
-            </div>
-            <div x-import="tab-bar">
-                <ui-tab-bar></ui-tab-bar>
-            </div>
-            <div class="max-h-[80vh] scrollbar-v" @scroll="saveScrollPosition" id="main">
-                <div x-import="modeler/readme">
-                    <ui-readme></ui-readme>
-                </div>
-                <div x-import="modeler/dummy-page">
-                    <ui-dummy></ui-dummy>
-                </div>
-                <div x-import="modeler/diagram">
-                    <ui-diagram></ui-diagram>
-                </div>
-                <div x-import="modeler/command">
-                    <ui-command></ui-command>
-                </div>
-                <div x-import="modeler/aggregate">
-                    <ui-aggregate></ui-aggregate>
-                </div>
-                <div x-import="modeler/domain-event">
-                    <ui-domain-event></ui-domain-event>
-                </div>
-                <div x-import="modeler/behavior">
-                    <ui-behavior></ui-behavior>
-                </div>
-            </div>
+
         </div>
     </div>
-
 
     <!-- tp -->
     <script src="/js/tp/luxon.js"></script>
@@ -109,6 +126,5 @@
     <script src="/js/modules/modeler/domain-event.js"></script>
     <script src="/js/modules/modeler/behavior.js"></script>
 
-    </div>
 </body>
 </html>

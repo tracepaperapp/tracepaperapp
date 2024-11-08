@@ -1,12 +1,11 @@
 <template x-component="aggregate">
     <div navigation-type="aggregate"
+         id="active-tab"
          x-show="navigationElementActive"
          x-cloak
          x-transition.delay.100ms>
-        <template navigation-type="aggregate" x-if="navigationElementActive">
             <div x-data="aggregateRoot">
-                <template x-if="model">
-                    <div class="grid grid-cols-12 gap-3 mt-5">
+                <div class="grid grid-cols-12 gap-3 mt-5">
                         <div class="col-span-8">
 
                             <h3 class="text-2xl font-semibold text-gray-800">
@@ -196,8 +195,6 @@
 
                         </div>
                     </div>
-                </template>
             </div>
-        </template>
     </div>
 </template>

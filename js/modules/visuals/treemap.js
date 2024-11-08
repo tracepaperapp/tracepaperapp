@@ -1,3 +1,4 @@
+var tree_lock = false;
 document.addEventListener('alpine:init', () => {
     Alpine.data('treeMap', function(){
         return {
@@ -29,6 +30,10 @@ document.addEventListener('alpine:init', () => {
                 }
             },
             async render_tree_map(){
+                if(tree_lock){return}
+                tree_lock = true;
+                try{
+                this.data = {};
                 let repo = await GitRepository.open();
                 let cb = [];
                 data = [['Concept', 'Parent'],["Domain",null],["Write Domain","Domain"],["Automations","Write Domain"],["Query Domain","Domain"]];
@@ -94,7 +99,6 @@ document.addEventListener('alpine:init', () => {
                         }
                     });
                  });
-        
                 google.charts.load('current', {'packages':['treemap']});
                 google.charts.setOnLoadCallback(function(){
                     let dataset = google.visualization.arrayToDataTable(data);
@@ -118,6 +122,11 @@ document.addEventListener('alpine:init', () => {
                     });
                 });
                 this.data = data;
+                } finally{
+                    setTimeout(function(){
+                        tree_lock = false;
+                    },1000);
+                }
             },
             can_navigate(){
                 return this.selection.selected &&

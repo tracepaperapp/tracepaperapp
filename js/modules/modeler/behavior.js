@@ -1,16 +1,18 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('behaviorFlow', function(){
         return {
-            model: null,
+            model: Modeler.prepare_model("behavior",{}),
             _taskId: "",
             listnerId: "",
             triggerModal: false,
             availableTriggers: [],
             flowVariables: [],
+            entities: {},
             search: "",
             eventModal: false,
             availableEvents: [],
-            selectedTab: this.$persist({}).using(sessionStorage).as("domainEventTab"),
+            selectedTab: this.$persist({}).using(sessionStorage).as("behaviorTab"),
+            selectedTest: this.$persist({}).using(sessionStorage).as("testTab"),
             update_idempotency(){
                 let trigger = this.model.trigger.filter(x => x.att_source == this.$el.getAttribute("trigger")).at(0);
                 let key = this.$el.getAttribute("name");
@@ -39,7 +41,7 @@ document.addEventListener('alpine:init', () => {
             },
             async add_trigger(){
                 this.triggerModal = false;
-                let root = await Modeler.get_model(this.navigation.split("behavior-flows/").at(0) + "root.xml");
+                let root = await Modeler.get_model(this.path.split("behavior-flows/").at(0) + "root.xml");
                 let event = await Modeler.get_model(this.$el.getAttribute("file"));
                 let fields = event.field.map(x => x.att_name);
                 let trigger = {att_source: event.att_name, mapping: [], "att_idempotency-key": ""};
@@ -63,7 +65,7 @@ document.addEventListener('alpine:init', () => {
                 this.balance_triggers();
                 await this._execute_save();
                 await Draftsman.sleep(100);
-                this.navigate(this.navigation);
+                this.navigate(this.path);
             },
             balance_triggers(){
                 let variables = [];
@@ -242,30 +244,62 @@ document.addEventListener('alpine:init', () => {
 
                 this.flowVariables = variables;
             },
+            prepare_state_variable_type: function(oldValue, newValue){
+                    if (typeof(oldValue) === "number") {
+                        return Number(newValue)
+                    } else if (typeof(oldValue) === "boolean") {
+                        return JSON.parse(newValue.toLowerCase());
+                    } else {
+                        return newValue;
+                    }
+                },
             async init(){
+                await Draftsman.sleep(10);
                 await this.read();
                 this._taskId = Draftsman.uuidv4();
                 this.$watch("model",this.save.bind(this));
-                this.listnerId = Draftsman.registerListener("force-reload",this.read.bind(this));
-                if (!(this.navigation in this.selectedTab)){
-                    this.selectedTab[this.navigation] = 2;
+                this.listnerId = Draftsman.registerListener("force-reload",this.force_load.bind(this));
+                if (!(this.path in this.selectedTab)){
+                    this.selectedTab[this.path] = 2;
                 }
+                if (!(this.path in this.selectedTest)){
+                    this.selectedTest[this.path] = this.model["test-case"].at(0).att_name;
+                }
+            },
+            async force_load(){
+                this.readlock = false;
+                await this.read();
             },
             async read(){
                 await Draftsman.sleep(10);
-                this.model = await Modeler.get_model(this.navigation);
-                console.log(this.model);
-                this.fetch_flow_vars();
-                let repo = await GitRepository.open();
-                this.modules = await repo.list(x => x.startsWith("lib/") && x.endsWith(".py"));
-                this.availableEvents = await repo.list(x => x.startsWith(this.navigation.split("behavior-flows/").at(0) + "events/") && x.endsWith(".xml"));
-                console.log(this.availableEvents);
+                if (Modeler.determine_type(this.navigation) == "behavior" && !this.readlock){
+                    console.log(this.model);
+                    this.readlock = true;
+                    try{
+                    this.path = this.navigation;
+                    let model = await Modeler.get_model(this.path);
+                    await Draftsman.updateIfChanged(this, 'model', model);
+                    await this.fetch_flow_vars();
+                    let repo = await GitRepository.open();
+                    this.modules = await repo.list(x => x.startsWith("lib/") && x.endsWith(".py"));
+                    let availableEvents = await repo.list(x => x.startsWith(this.path.split("behavior-flows/").at(0) + "events/") && x.endsWith(".xml"));
+                    await Draftsman.updateIfChanged(this, 'availableEvents', availableEvents);
+                    let files = await repo.list(x=> x.startsWith(this.path.split("behavior-flows/").at(0) + "entities/") && x.endsWith(".xml"));
+                    let entities = {};
+                    for (let file of files){
+                        let entity = await Modeler.get_model(file);
+                        entities[entity.att_name] = entity;
+                    }
+                    } finally {
+                        this.readlock = false;
+                    }
+                }
             },
             async save(){
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
             },
             async delete_model(){
-                await Modeler.delete_model(this.navigation);
+                await Modeler.delete_model(this.path);
             },
             async rename(){
                 if(this.lock){return}
@@ -279,9 +313,9 @@ document.addEventListener('alpine:init', () => {
                 if(this.lock){return}
                 let hash = Draftsman.generateFingerprint(this.model);
                 if (hash == this.hash){return}
-                await Modeler.save_model(this.navigation,this.model);
+                await Modeler.save_model(this.path,this.model);
                 this.hash = Draftsman.generateFingerprint(this.model);
-                this.fetch_flow_vars();
+                await this.fetch_flow_vars();
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

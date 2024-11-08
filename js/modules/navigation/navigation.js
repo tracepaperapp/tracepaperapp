@@ -5,6 +5,7 @@ document.addEventListener('alpine:init', () => {
             navigationFile: this.$persist("").using(sessionStorage),
             tabs: this.$persist([]).using(sessionStorage),
             issuesView: false,
+            tab_type: this.$persist("").using(sessionStorage),
             async init(){
                 if (!sessionStorage.project_url && localStorage.session){
                     let items = JSON.parse(localStorage.session);
@@ -33,6 +34,7 @@ document.addEventListener('alpine:init', () => {
                 }
                 if (!files.includes(this.navigation)){
                     this.navigation = this.tabs.at(-1);
+                    this.tab_type = Modeler.determine_type(this.navigation);
                 }
                 if (cascade){
                     Draftsman.publishMessage("force-reload",this.navigation);
@@ -74,14 +76,22 @@ document.addEventListener('alpine:init', () => {
                     console.error(err);
                     return "";
                 }
-
             },
             navigate: async function(file=null){
-                console.log("navigate!");
+                let active_tab = document.getElementById("active-tab");
+                if (active_tab) {
+                    active_tab.remove();
+                }
+                this.tab_type = "";
+
                 sessionStorage.globalWriteLock = "true";
+                let hist = this.navigation;
                 this.navigation = "";
                 await Draftsman.sleep(10);
+
+
                 try{
+
                     this.issuesView = false;
                     if (typeof file === 'string'){
                         this.navigation = file;
@@ -92,6 +102,9 @@ document.addEventListener('alpine:init', () => {
                         }
                         this.navigation = navigation;
                     }
+
+                    await Draftsman.sleep(100);
+                    this.tab_type = Modeler.determine_type(this.navigation);
                     await Draftsman.sleep(10);
                     Draftsman.publishMessage("force-reload",this.navigation);
                     this.update_tabs();
@@ -105,10 +118,12 @@ document.addEventListener('alpine:init', () => {
                 }
             },
             open_diagram: function(){
+                this.tab_type = "";
                 let request = this.$el.getAttribute("navigation") + ";";
                 request += this.$el.getAttribute("radius");
                 sessionStorage.diagramRequest = request;
                 this.navigation = "/diagram";
+                this.tab_type = "diagram";
                 this.update_tabs();
             },
             update_tabs: function(){
@@ -200,7 +215,10 @@ document.addEventListener('alpine:init', () => {
             },
             saveScrollPosition: function() {
                 sessionStorage.setItem('scrollPosition:' + this.navigation, this.$el.scrollTop);
-              }
+            },
+            destroy(){
+                console.log("WHY!!!!")
+            }
         }
     });
 })

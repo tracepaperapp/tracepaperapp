@@ -1,0 +1,121 @@
+<template x-component="behavior-tests">
+    <div class="grid grid-cols-12 gap-3 mt-5">
+        <div class="col-span-3 border-r pr-2">
+            <template x-if="model">
+                <ul class="menu menu-xs rounded-lg">
+                    <template x-for="test in model['test-case']" :key="test.att_name">
+                        <li>
+                            <a @click="selectedTest[navigation] = test.att_name"
+                               :class="test.att_name == selectedTest[navigation] ? 'active' : ''">
+                                <i class="fa-regular fa-file-code"></i>
+                                <span x-text="test.att_name"></span>
+                            </a>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+        </div>
+        <div class="col-span-9">
+            <template x-for="test in model['test-case']" :key="test.att_name">
+                <div x-show="test.att_name == selectedTest[navigation]" x-cloak x-transition>
+
+                    <div x-state="{state: {}}" x-init="state = JSON.parse(test.state)">
+
+                        <table class="table table-xs">
+                            <template x-for="(value,fkey) in state" :key="fkey">
+                                <tr class="border-b">
+                                    <td x-text="fkey"></td>
+                                    <template x-if="typeof value !== 'object' && !Array.isArray(value) && value !== null">
+                                        <td>
+                                            <input type="text"
+                                                   @focusout="state[fkey] = prepare_state_variable_type(state[fkey],$el.value)"
+                                                   :value="value"
+                                                   placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
+                                        </td>
+                                    </template>
+                                    <template x-if="typeof value === 'object' && !Array.isArray(value) && value !== null">
+                                        <td colspan="2" x-data="{entity: {}}" x-effect="entity = entities[fkey]">
+                                            <template x-for="(entity,bkey) in value" :key="bkey">
+                                                <table class="table">
+                                                    <tr class="border-b">
+                                                        <th scope="col">Attribute Name</th>
+                                                        <th scope="col">Value</th>
+                                                        <td class="text-end">
+                                                            <button @click="delete state[fkey][bkey]"
+                                                                    :disabled="editing_disabled"
+                                                                    class="btn btn-xs btn-outline btn-error">
+                                                                <i class="fa-regular fa-trash-can"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                    <template x-for="(value,key) in entity" :key="key">
+                                                        <tr class="border-b">
+                                                            <td x-text="key"></td>
+                                                            <template x-if="value == bkey">
+                                                                <td colspan="2" x-text="value"></td>
+                                                            </template>
+                                                            <template x-if="value != bkey">
+                                                                <td colspan="2">
+                                                                    <input type="text"
+                                                                           @focusout="entity[key] = prepare_state_variable_type(entity[key],$el.value)"
+                                                                           :value="value"
+                                                                           placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
+                                                                </td>
+                                                            </template>
+                                                        </tr>
+                                                    </template>
+                                                </table>
+                                            </template>
+
+                                            <!-- todo
+                                            <ui-add-button modal-title="Business key"
+                                                           :pattern="/.*/g"
+                                                           message=""
+                                                           @updated.debounce.stop="value[$event.detail.value] = {};
+                                                               value[$event.detail.value][entity['att_business-key']] =  $event.detail.value;
+                                                               entity.field.filter(x => x.att_name != entity['att_business-key']).forEach(x => {
+                                                                value[$event.detail.value][x.att_name] = x.att_type == 'String' ? 'text' : x.att_type == 'Boolean' ? false : 0
+                                                               })"></ui-add-button>-->
+                                        </td>
+                                    </template>
+                                    <template x-if="Array.isArray(value)">
+                                        <td>
+                                            <table class="table table-xs">
+                                                <template x-for="item in value" :key="item">
+                                                    <tr>
+                                                        <td x-text="item"></td>
+                                                        <td>
+                                                            <ui-delete-button
+                                                                    @delete.once.stop="state[fkey] = state[fkey].filter(x => x != item);$dispatch('updated')"></ui-delete-button>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                                <tr>
+                                                    <td></td>
+                                                    <td>
+                                                        <ui-add-button modal-title="Value"
+                                                                       @updated.debounce.stop="if($event.detail.value && !value.includes($event.detail.value)){value.push($event.detail.value);state[fkey] = value;$dispatch('updated')}"></ui-add-button>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </template>
+<!--                                    <template x-if="$prop('business-key') != fkey && typeof value !== 'object' && !Array.isArray(value) && value !== null">-->
+<!--                                        <td class="text-end">-->
+<!--                                            <ui-delete-button-->
+<!--                                                    @delete.once.stop="delete state[fkey];$dispatch('updated')"></ui-delete-button>-->
+<!--                                        </td>-->
+<!--                                    </template>-->
+                                </tr>
+                            </template>
+                        </table>
+                        <pre x-text="JSON.stringify(state,null,2)"></pre>
+                    </div>
+
+                    <pre x-text="JSON.stringify(test,null,2)"></pre>
+
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

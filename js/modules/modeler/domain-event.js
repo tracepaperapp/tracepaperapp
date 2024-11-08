@@ -1,7 +1,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('domainEvent', function(){
         return {
-            model: null,
+            model: Modeler.prepare_model("event",{}),
             _taskId: "",
             listnerId: "",
             hash: "",
@@ -17,7 +17,10 @@ document.addEventListener('alpine:init', () => {
             },
             async read(){
                 await Draftsman.sleep(10);
-                this.model = await Modeler.get_model(this.navigation);
+                if (Modeler.determine_type(this.navigation) == "event"){
+                    this.path = this.navigation;
+                    this.model = await Modeler.get_model(this.path);
+                }
             },
             add_field(){
                 this.model.field.push({
@@ -57,7 +60,7 @@ document.addEventListener('alpine:init', () => {
                     model["nested-object"].forEach(y => {
                         y.field = y.field.filter(x => !x.deleted);
                     });
-                    await Modeler.save_model(this.navigation,model);
+                    await Modeler.save_model(this.path,model);
                     this.model = model;
                     this.hash = Draftsman.generateFingerprint(this.model);
                 }finally{
@@ -72,10 +75,10 @@ document.addEventListener('alpine:init', () => {
     });
     Alpine.data("domainEventMapper", function(){
         return {
-            root: null,
-            mapping: null,
+            root: Modeler.prepare_model("aggregate",{}),
+            mapping: Modeler.prepare_model("event-mapper",{}),
             file: null,
-            event: null,
+            event: Modeler.prepare_model("event",{}),
             entities: [],
             _taskId: "",
             listnerId: "",
@@ -98,36 +101,39 @@ document.addEventListener('alpine:init', () => {
                 }
                 await this.reload_mapper();
             },
-            render_editor(){
+            async render_editor(){
 
                 // TODO: code completion verder vullen
                 let completions = new CodeCompletions();
                 completions.add_items(this.event.field.map(x => "event." + x.att_name));
                 completions.add_items(this.root.field.map(x => "self." + x.att_name));
 
-                Draftsman.codeEditor(this.$el,this.mapping.att_code,this._update_code.bind(this),completions);
+                let element = document.getElementById("domain-event-editor");
+                Draftsman.codeEditor(element,this.mapping.att_code,this._update_code.bind(this),completions);
             },
             _update_code(code){
                 this.mapping.att_code = code.replaceAll("\n","|LB|");
             },
             async read(){
                 await Draftsman.sleep(10);
-                this.file = this.navigation.replace("/events/","/event-handlers/");
-                this.event = await Modeler.get_model(this.navigation);
-                this.root = await Modeler.get_model(this.navigation.split("events/").at(0) + "root.xml");
+                if (Modeler.determine_type(this.navigation) == "event"){
+                    this.file = this.navigation.replace("/events/","/event-handlers/");
+                    this.event = await Modeler.get_model(this.navigation);
+                    this.root = await Modeler.get_model(this.navigation.split("events/").at(0) + "root.xml");
 
-                try{
-                    this.mapping = await Modeler.get_model(this.file);
-                }catch{}
+                    try{
+                        this.mapping = await Modeler.get_model(this.file);
+                    }catch{}
 
-                let repo = await GitRepository.open();
-                let entity_files = await repo.list(x => x.startsWith(this.navigation.split("events/").at(0) + "entities/") && x.endsWith(".xml"));
-                this.entities = [];
-                for (let i = 0; i < entity_files.length; i++){
-                    this.entities.push(await Modeler.get_model(entity_files[i]));
+                    let repo = await GitRepository.open();
+                    let entity_files = await repo.list(x => x.startsWith(this.navigation.split("events/").at(0) + "entities/") && x.endsWith(".xml"));
+                    this.entities = [];
+                    for (let i = 0; i < entity_files.length; i++){
+                        this.entities.push(await Modeler.get_model(entity_files[i]));
+                    }
+
+                    await this.reload_mapper();
                 }
-
-                await this.reload_mapper();
             },
             async reload_mapper(){
                 if (!this.mapping){
@@ -198,7 +204,7 @@ document.addEventListener('alpine:init', () => {
                     });
                 });
             },
-            generateCode(){
+            async generateCode(){
                 let code = '';
                 let fields = this.event.field.map(x => x.att_name);
                 let score = this.root.field.filter(x => fields.includes(x.att_name)).length;
@@ -246,7 +252,7 @@ document.addEventListener('alpine:init', () => {
 
                 code += '#self.isDeleted = "soft/hard/delayed"'
                 this.mapping.att_code = code;
-                this.render_editor();
+                await this.render_editor();
             },
             async save(){
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);

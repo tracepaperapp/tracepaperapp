@@ -9,7 +9,7 @@ files_to_cache = ["/","/index.html","/favicon.ico"]
 def fetch_files(folder):
     for root, dirs, files in os.walk(folder):
         for file in files:
-            if file.endswith(".html") or file.endswith(".js") or file.endswith(".png") or file.endswith(".css"):
+            if "/venv/" not in root and file.endswith((".html", ".js", ".png", ".css")):
                 # Voeg het bestandspad toe in het gewenste format: /components/...
                 relative_path = os.path.join(root, file).replace("\\", "/")
                 files_to_cache.append(f"/{relative_path}")

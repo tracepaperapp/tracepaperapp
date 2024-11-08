@@ -164,25 +164,22 @@ class Draftsman {
    }
 
     static generateFingerprint(obj) {
-         // Standaardiseer het object door de eigenschappen te sorteren
-         const standardizedObject = Object.keys(obj).sort().reduce((result, key) => {
-           result[key] = obj[key];
-           return result;
-         }, {});
-
-         // Converteer het gestandaardiseerde object naar een JSON-string
-         const jsonString = JSON.stringify(standardizedObject);
-
-         // Eenvoudige hash-functie om de fingerprint te genereren
-         let hash = 0;
-         for (let i = 0; i < jsonString.length; i++) {
-           const char = jsonString.charCodeAt(i);
-           hash = (hash << 5) - hash + char;
-           hash |= 0; // Converteer naar een 32-bit integer
-         }
-
-         return hash >>> 0; // Zorg voor een unsigned 32-bit integer
+        const sortedObj = Object.keys(obj)
+            .sort()
+            .reduce((acc, key) => {
+                acc[key] = obj[key];
+                return acc;
+            }, {});
+         let fp = btoa(JSON.stringify(sortedObj));
+         return fp;
        }
+
+    static async updateIfChanged(context, property, newValue) {
+        await Draftsman.sleep(1);
+        if (context[property] !== newValue) {
+            context[property] = newValue;
+        }
+    }
 
     static clearAllChildren(element) {
        while (element.firstChild) {
@@ -194,6 +191,7 @@ class Draftsman {
     static editors_listners = {};
 
     static codeEditor(iframe,code,callback,completions=null){
+        if (!iframe){return}
         let id = iframe.id;
         code = code.replaceAll('|LB|','\n');
         var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
