@@ -444,4 +444,235 @@ document.addEventListener('alpine:init', () => {
             }
         }
     });
+    Alpine.data("behaviorTestCaseTrigger",function(){
+        return {
+            availableTriggers: [],
+            inputCache: {},
+            init(){
+                this.availableTriggers = this.model.trigger.map(x => x.att_source);
+            },
+            async update_trigger(){
+                this.test.input.forEach(input => {
+                    this.inputCache[input.att_name] = input.att_value;
+                });
+                let input = [];
+                if (this.test["att_trigger-event"]){
+                    let event = await Modeler.get_model_by_name(this.test["att_trigger-event"]);
+                    input = event.field.map(field =>{
+                        return {
+                            att_name: field.att_name,
+                            att_type: field.att_type,
+                            att_value: this.inputCache[field.att_name] ? this.inputCache[field.att_name] : ""
+                        }
+                    });
+                    event["nested-object"].forEach(no => {
+                        let item = {};
+                        no.field.forEach(field => {
+                            switch(field.att_type){
+                                case "String":
+                                    item[field.att_name] = "text";
+                                    break;
+                                case "Int":
+                                case "Float":
+                                    item[field.att_name] = 0;
+                                    break;
+                                case "Boolean":
+                                    item[field.att_name] = false;
+                                    break;
+                            }
+                        });
+                        input.push({
+                            att_name: no.att_name,
+                            att_type: "NestedObject",
+                            "#text": JSON.stringify([item],null,2)
+                        });
+                    });
+                }
+                this.test.input = input;
+            }
+        }
+    });
+    Alpine.data("behaviorTestCaseTriggerNestedInput", function(){
+        return {
+            collection: [],
+            init(){
+                this.collection = JSON.parse(this.input["#text"]);
+                this.$watch("collection",this.update.bind(this));
+            },
+            update(){
+                this.input["#text"] = JSON.stringify(this.collection,null,2);
+            },
+            async add_object(){
+                let event = await Modeler.get_model_by_name(this.test["att_trigger-event"]);
+                let source_col = event["nested-object"].filter(x => x.att_name == this.input.att_name).at(0);
+                let item = {};
+                source_col.field.forEach(field => {
+                    switch(field.att_type){
+                        case "String":
+                            item[field.att_name] = "text";
+                            break;
+                        case "Int":
+                        case "Float":
+                            item[field.att_name] = 0;
+                            break;
+                        case "Boolean":
+                            item[field.att_name] = false;
+                            break;
+                    }
+                });
+                this.collection.push(item);
+            }
+        }
+    });
+    Alpine.data("behaviorTestCaseEvent", function(){
+        return {
+            availableEvents: [],
+            init(){
+                this.availableEvents = this.model.processor.filter(x => x.att_type == "emit-event").map(x => x.att_ref);
+                this.$watch("test",this.determine_expected_processing_status.bind(this));
+            },
+            determine_expected_processing_status(){
+                this.test["att_expected-processing-status"] = this.test.expected.length != 0 ? "success" : "error";
+            },
+            async update_expected_event(){
+                let fields = []
+                if (this.event['att_domain-event']){
+                    let event = await Modeler.get_model_by_name(this.event['att_domain-event']);
+                    fields = event.field.map(field => {
+                        return {
+                            att_name: field.att_name,
+                            att_type: field.att_type,
+                            att_value: ""
+                        }
+                    });
+                }
+                this.event.field = fields;
+            },
+            add_expected_event(){
+                this.test.expected.push({
+                    "att_domain-event": "",
+                    att_id: Draftsman.makeid(6),
+                    field: []
+                });
+            }
+        }
+    });
+    Alpine.data("behaviorTestCaseExpectedState", function(){
+            return {
+                state: {},
+                listnerId: "",
+                candidates: [],
+                pk: "",
+                async init(){
+                    this.state = JSON.parse(this.test["expected-state"]["#text"]);
+                    this.$watch("state",this.update_expected_state.bind(this));
+                    this.listnerId = Draftsman.registerListener("force-reload",this.reload.bind(this));
+                    await Draftsman.sleep(2000);
+                    this.filter_candidates();
+                },
+                reload(){
+                    this.state = JSON.parse(this.test["expected-state"]["#text"]);
+                    this.filter_candidates();
+                },
+                async update_expected_state(){
+                    Object.keys(this.state).filter(x => {
+                        let value = this.state[x];
+                        return typeof value === 'object' && !Array.isArray(value) && value !== null && Object.keys(value).length == 0;
+                    }).forEach(k => {
+                        delete this.state[k];
+                    });
+                    this.test["expected-state"]["#text"] = JSON.stringify(Draftsman.sortObjectByKey(this.state), null, 2);
+                    this.test["expected-state"].att_pk = this.state[this.pk];
+                    this.force_save();
+                    this.filter_candidates();
+                },
+                add_item(fkey,key){
+                    let entity = this.entities[fkey];
+                    let item = {};
+                    entity.field.forEach(field => {
+                        let value = null;
+                        switch (field.att_type){
+                            case "String":
+                            value = "text";
+                            break;
+                            case "Int":
+                            case "Float":
+                            value = 0;
+                            break;
+                            case "Boolean":
+                            value = false;
+                            break;
+                            case "StringList":
+                            value = ["text"];
+                            break;
+                            default:
+                            //pass
+                        }
+                        item[field.att_name] = value;
+                    });
+                    item[entity["att_business-key"]] = key;
+                    if (!this.state[fkey]){
+                        this.state[fkey] = {};
+                    }
+                    this.state[fkey][key] = item;
+                    console.log(item);
+                },
+                filter_candidates(){
+                    let candidates = [];
+                    let keys = Object.keys(this.state);
+                    this.pk = this.root["att_business-key"];
+                    this.root.field.filter(f => !keys.includes(f.att_name)).forEach(field => {
+                        candidates.push({
+                            name: field.att_name,
+                            type: field.att_type
+                        });
+                    });
+                    Object.keys(this.entities).filter(k => !keys.includes(k)).forEach(k => {
+                         candidates.push({
+                             name: k,
+                             type: "Nested"
+                         });
+                     });
+                    if (!keys.includes("isDeleted")){
+                        candidates.push({
+                             name: "isDeleted",
+                             type: "String"
+                         });
+                    }
+                    if (!keys.includes("version")){
+                        candidates.push({
+                             name: "version",
+                             type: "Int"
+                         });
+                    }
+                    this.candidates = candidates;
+                },
+                add_variable(target, value){
+                    if (!value){return}
+                    switch(target.type){
+                        case "Nested":
+                            this.add_item(target.name,value);
+                            break;
+                        case "Boolean":
+                            this.state[target.name] =  value.toLowerCase() === "true";
+                            break;
+                        case "Int":
+                            this.state[target.name] = parseInt(value,10);
+                            break;
+                        case "Float":
+                            this.state[target.name] = Number(value);
+                            break;
+                        case "StringList":
+                            this.state[target.name] = [String(value)];
+                            break;
+                        case "String":
+                        default:
+                            this.state[target.name] = String(value);
+                    }
+                },
+                destroy(){
+                    Draftsman.deregisterListener(this.listnerId);
+                }
+            }
+        });
 });

@@ -19,155 +19,441 @@
             <template x-for="test in model['test-case']" :key="test.att_name">
                 <div x-show="test.att_name == selectedTest[navigation]" x-cloak x-transition>
 
-                    <div x-data="behaviorTestCaseInitialState">
-                            <table class="table table-xs border mb-2">
-                                <tr class="bg-base-200">
-                                    <th scope="col" colspan="3">Initial state</th>
-                                </tr>
-                                <template x-for="(value,fkey) in state" :key="fkey">
-                                    <tr class="border-b">
-                                        <td x-text="fkey"></td>
-                                        <template x-if="typeof value !== 'object' && !Array.isArray(value) && value !== null">
-                                            <td>
-                                                <input type="text"
-                                                       @focusout="state[fkey] = prepare_state_variable_type(state[fkey],$el.value);"
-                                                       :value="value"
-                                                       placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
-                                            </td>
-                                        </template>
-                                        <template x-if="typeof value === 'object' && !Array.isArray(value) && value !== null">
-                                            <td colspan="2" class="text-end">
-                                                <template x-for="(entity,bkey) in value" :key="bkey">
-                                                    <table class="table">
-                                                        <tr class="border-b">
-                                                            <th scope="col">Attribute Name</th>
-                                                            <th scope="col">Value</th>
-                                                            <td class="text-end">
-                                                                <button @click="delete state[fkey][bkey]"
-                                                                        :disabled="editing_disabled"
-                                                                        class="btn btn-xs btn-outline btn-error">
-                                                                    <i class="fa-regular fa-trash-can"></i>
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                        <template x-for="(value,key) in entity" :key="key">
-                                                            <tr class="border-b">
-                                                                <td x-text="key"></td>
-                                                                <template x-if="value == bkey">
-                                                                    <td colspan="2">
-                                                                        <span x-text="value"></span>
-                                                                        <span class="badge badge-neutral badge-xs">key</span>
-                                                                    </td>
-                                                                </template>
-                                                                <template x-if="value != bkey">
-                                                                    <td colspan="2">
-                                                                        <input type="text"
-                                                                               @focusout="state[fkey][bkey][key] = prepare_state_variable_type(state[fkey][bkey][key],$el.value);"
-                                                                               :value="value"
-                                                                               placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
-                                                                    </td>
-                                                                </template>
-                                                            </tr>
-                                                        </template>
-                                                    </table>
-                                                </template>
+                    <!-- Initial State -->
+                    <table x-data="behaviorTestCaseInitialState" class="table table-xs border mb-5">
+                        <thead>
+                            <tr class="bg-base-200">
+                                <th scope="col" colspan="3">Initial state</th>
+                            </tr>
+                        </thead>
 
-                                                <table class="table table-xs" x-data="{addItemDialog: false}">
-                                                    <tr x-show="!addItemDialog" x-cloak x-transition class="text-end">
-                                                        <td colspan="3">
-                                                            <button @click="addItemDialog = true"
-                                                                    :disabled="editing_disabled"
-                                                                    class="btn btn-xs btn-outline btn-success">
-                                                                <i class="fa-regular fa-plus"></i><span x-text="fkey"></span> item
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr x-show="addItemDialog" x-cloak x-transition>
-                                                        <td>New <span x-text="fkey"></span> item</td>
-                                                        <td colspan="2">
-                                                            <input type="text"
-                                                                   @focusout="add_item(fkey,$el.value);addItemDialog=false;"
-                                                                   placeholder="Functional key" class="input input-ghost input-xs w-full modeler-input" />
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </td>
-                                        </template>
-                                        <template x-if="Array.isArray(value)">
-                                            <td>
-                                                <table class="table table-xs">
-                                                    <template x-for="item in value" :key="item">
-                                                        <tr>
-                                                            <td x-text="item"></td>
-                                                            <td>
-                                                                <ui-delete-button
-                                                                        @delete.once.stop="state[fkey] = state[fkey].filter(x => x != item);$dispatch('updated')"></ui-delete-button>
-                                                            </td>
-                                                        </tr>
-                                                    </template>
-                                                    <tr>
-                                                        <td></td>
-                                                        <td>
-                                                            <ui-add-button modal-title="Value"
-                                                                           @updated.debounce.stop="if($event.detail.value && !value.includes($event.detail.value)){value.push($event.detail.value);state[fkey] = value;$dispatch('updated')}"></ui-add-button>
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </td>
-                                        </template>
-                                        <template x-if="$prop('business-key') != fkey && typeof value !== 'object' && !Array.isArray(value) && value !== null">
-                                            <td class="text-end">
-                                                <button @click="delete state[fkey]"
-                                                        :disabled="editing_disabled"
-                                                        class="btn btn-xs btn-outline btn-error">
-                                                    <i class="fa-regular fa-trash-can"></i>
-                                                </button>
-                                            </td>
-                                        </template>
-                                    </tr>
-                                </template>
-
-                                <tr x-data="{addDialog: false}" x-show="candidates.length != 0" x-cloak x-transition>
-                                    <td colspan="3" class="text-end" x-show="!addDialog" x-cloak x-transition>
-                                        <button @click="addDialog = true"
-                                                :disabled="editing_disabled"
-                                                class="btn btn-xs btn-outline btn-success">
-                                            <i class="fa-regular fa-plus"></i>
-                                        </button>
+                        <tbody>
+                            <template x-for="(value,fkey) in state" :key="fkey">
+                            <tr class="border-b">
+                                <td x-text="fkey"></td>
+                                <template x-if="typeof value !== 'object' && !Array.isArray(value) && value !== null">
+                                    <td>
+                                        <input type="text"
+                                               @focusout="state[fkey] = prepare_state_variable_type(state[fkey],$el.value);"
+                                               :value="value"
+                                               placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
                                     </td>
-                                    <td colspan="3" x-show="addDialog" x-cloak x-transition>
-                                        <table class="table table-xs">
-                                            <tr>
-                                                <th scope="row" colspan="2">Set initial attributes</th>
-                                                <td class="text-end">
-                                                    <button @click="addDialog = false" class="btn btn-xs btn-circle btn-ghost">✕</button>
+                                </template>
+                                <template x-if="typeof value === 'object' && !Array.isArray(value) && value !== null">
+                                    <td colspan="2" class="text-end">
+                                        <template x-for="(entity,bkey) in value" :key="bkey">
+                                            <table class="table table-xs border mb-2">
+                                                <tr class="border-b bg-base-200">
+                                                    <th scope="col">Attribute Name</th>
+                                                    <th scope="col">Value</th>
+                                                    <td class="text-end">
+                                                        <button @click="delete state[fkey][bkey]"
+                                                                :disabled="editing_disabled"
+                                                                class="btn btn-xs btn-outline btn-error">
+                                                            <i class="fa-regular fa-trash-can"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <template x-for="(value,key) in entity" :key="key">
+                                                    <tr class="border-b">
+                                                        <td x-text="key"></td>
+                                                        <template x-if="value == bkey">
+                                                            <td colspan="2">
+                                                                <span x-text="value"></span>
+                                                                <span class="badge badge-neutral badge-xs">key</span>
+                                                            </td>
+                                                        </template>
+                                                        <template x-if="value != bkey">
+                                                            <td colspan="2">
+                                                                <input type="text"
+                                                                       @focusout="state[fkey][bkey][key] = prepare_state_variable_type(state[fkey][bkey][key],$el.value);"
+                                                                       :value="value"
+                                                                       placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
+                                                            </td>
+                                                        </template>
+                                                    </tr>
+                                                </template>
+                                            </table>
+                                        </template>
+
+                                        <table class="table table-xs" x-data="{addItemDialog: false}">
+                                            <tr x-show="!addItemDialog" x-cloak x-transition class="text-end">
+                                                <td colspan="3">
+                                                    <button @click="addItemDialog = true"
+                                                            :disabled="editing_disabled"
+                                                            class="btn btn-xs btn-outline btn-success">
+                                                        <i class="fa-regular fa-plus"></i><span x-text="fkey"></span> item
+                                                    </button>
                                                 </td>
                                             </tr>
-                                            <tr>
-                                                <th scope="col">Name</th>
-                                                <th scope="col">Type</th>
-                                                <th scope="col">Value</th>
+                                            <tr x-show="addItemDialog" x-cloak x-transition>
+                                                <td>New <span x-text="fkey"></span> item</td>
+                                                <td colspan="2">
+                                                    <input type="text"
+                                                           @focusout="add_item(fkey,$el.value);addItemDialog=false;"
+                                                           placeholder="Functional key" class="input input-ghost input-xs w-full modeler-input" />
+                                                </td>
                                             </tr>
-                                            <template x-for="target in candidates" :key="target.name">
+                                        </table>
+                                    </td>
+                                </template>
+                                <template x-if="Array.isArray(value)">
+                                    <td>
+                                        <table class="table table-xs">
+                                            <template x-for="item in value" :key="item">
                                                 <tr>
-                                                    <td x-text="target.name"></td>
-                                                    <td x-text="target.type"></td>
+                                                    <td x-text="item"></td>
                                                     <td>
-                                                        <input type="text"
-                                                               @focusout="add_variable(target,$el.value);"
-                                                               placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
+                                                        <ui-delete-button
+                                                                @delete.once.stop="state[fkey] = state[fkey].filter(x => x != item);$dispatch('updated')"></ui-delete-button>
                                                     </td>
                                                 </tr>
                                             </template>
+                                            <tr>
+                                                <td></td>
+                                                <td>
+                                                    <ui-add-button modal-title="Value"
+                                                                   @updated.debounce.stop="if($event.detail.value && !value.includes($event.detail.value)){value.push($event.detail.value);state[fkey] = value;$dispatch('updated')}"></ui-add-button>
+                                                </td>
+                                            </tr>
                                         </table>
                                     </td>
-                                </tr>
-                            </table>
+                                </template>
+                                <template x-if="$prop('business-key') != fkey && typeof value !== 'object' && !Array.isArray(value) && value !== null">
+                                    <td class="text-end">
+                                        <button @click="delete state[fkey]"
+                                                :disabled="editing_disabled"
+                                                class="btn btn-xs btn-outline btn-error">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
 
-                        <pre x-text="test.state"></pre>
+                            <tr x-data="{addDialog: false}" x-show="candidates.length != 0" x-cloak x-transition>
+                            <td colspan="3" class="text-end" x-show="!addDialog" x-cloak x-transition>
+                                <button @click="addDialog = true"
+                                        :disabled="editing_disabled"
+                                        class="btn btn-xs btn-outline btn-success">
+                                    <i class="fa-regular fa-plus"></i>
+                                </button>
+                            </td>
+                            <td colspan="3" x-show="addDialog" x-cloak x-transition>
+                                <table class="table table-xs">
+                                    <tr>
+                                        <th scope="row" colspan="2">Set initial attributes</th>
+                                        <td class="text-end">
+                                            <button @click="addDialog = false" class="btn btn-xs btn-circle btn-ghost">✕</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Type</th>
+                                        <th scope="col">Value</th>
+                                    </tr>
+                                    <template x-for="target in candidates" :key="target.name">
+                                        <tr>
+                                            <td x-text="target.name"></td>
+                                            <td x-text="target.type"></td>
+                                            <td>
+                                                <input type="text"
+                                                       @focusout="add_variable(target,$el.value);"
+                                                       placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </table>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Trigger -->
+                    <table x-data="behaviorTestCaseTrigger" class="table table-xs border mb-5">
+                        <tr class="bg-base-200">
+                            <th scope="col" colspan="1">Trigger</th>
+                            <td colspan="2">
+                                <select :disabled="editing_disabled"
+                                        @change="update_trigger"
+                                        x-model="test['att_trigger-event']"
+                                        class="select select-xs select-ghost w-full max-w-xs modeler-input">
+                                    <option></option>
+                                    <template x-for="option in availableTriggers" :key="option">
+                                        <option :value="option" :selected="option == test['att_trigger-event']" x-text="option"></option>
+                                    </template>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr x-show="test.input.length != 0" x-cloak x-transition>
+                            <th scope="col">Name</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Value</th>
+                        </tr>
+                        <template x-for="input in test.input" :key="input.att_name">
+                            <tr>
+                                <td x-text="input.att_name"></td>
+                                <td x-text="input.att_type"></td>
+                                <td x-show="input.att_type != 'NestedObject'" x-cloak x-transition>
+                                    <input type="text"
+                                           x-model="input.att_value"
+                                           placeholder="value"
+                                           class="input input-ghost input-xs w-full modeler-input" />
+                                </td>
+                                <td x-show="input.att_type == 'NestedObject'" x-cloak x-transition>
+                                    <template x-if="input.att_type == 'NestedObject'">
+                                        <div x-data="behaviorTestCaseTriggerNestedInput">
+                                            <template x-for="(item, index) in collection">
+                                                <table class="table table-xs border mb-2">
+                                                    <tr class="bg-base-200">
+                                                        <th scope="row">Object <span x-text="index + 1"></span></th>
+                                                        <td class="text-end">
+                                                            <button @click="collection.splice(index,1)"
+                                                                    :disabled="editing_disabled"
+                                                                    class="btn btn-xs btn-outline btn-error">
+                                                                <i class="fa-regular fa-trash-can"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                    <template x-for="(value,key) in item">
+                                                        <tr>
+                                                            <td x-text="key"></td>
+                                                            <td>
+                                                                <input type="text"
+                                                                       :value="value"
+                                                                       @focusout="collection[index][key] = prepare_state_variable_type(value,$el.value)"
+                                                                       placeholder="value"
+                                                                       class="input input-ghost input-xs w-full modeler-input" />
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </table>
+                                            </template>
+                                            <button @click="add_object"
+                                                    :disabled="editing_disabled"
+                                                    class="btn btn-xs btn-outline btn-success">
+                                                <i class="fa-regular fa-plus"></i><span x-text="fkey"></span> item
+                                            </button>
+                                        </div>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </table>
+
+                    <!-- Expected Events -->
+                    <div x-data="behaviorTestCaseEvent">
+                        <template x-for="event in test.expected" :key="event.att_id">
+                            <table class="table table-xs border mb-5">
+                                <tr class="bg-base-200">
+                                    <th scope="row">Expected Event</th>
+                                    <td>
+                                        <select :disabled="editing_disabled"
+                                                @change="update_expected_event"
+                                                x-model="event['att_domain-event']"
+                                                class="select select-xs select-ghost w-full max-w-xs modeler-input">
+                                            <option></option>
+                                            <template x-for="option in availableEvents" :key="option">
+                                                <option :value="option" :selected="option == event['att_domain-event']" x-text="option"></option>
+                                            </template>
+                                        </select>
+                                    </td>
+                                    <td class="text-end">
+                                        <button @click="test.expected = test.expected.filter(x => x.att_id != event.att_id)"
+                                                :disabled="editing_disabled"
+                                                class="btn btn-xs btn-outline btn-error">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <template x-for="field in event.field" :key="field.att_name">
+                                    <tr>
+                                        <th scope="row" x-text="field.att_name"></th>
+                                        <td x-text="field.att_type"></td>
+                                        <td>
+                                            <input type="text"
+                                                   x-model="field.att_value"
+                                                   placeholder="expected value"
+                                                   class="input input-ghost input-xs w-full modeler-input" />
+                                        </td>
+                                    </tr>
+                                </template>
+                            </table>
+                        </template>
+                        <button @click="add_expected_event"
+                                :disabled="editing_disabled"
+                                class="btn btn-xs btn-outline btn-success mb-5">
+                            <i class="fa-regular fa-plus"></i><span x-text="fkey"></span> expected event
+                        </button>
                     </div>
 
-                    <pre x-text="JSON.stringify(test,null,2)"></pre>
+                    <div role="alert"
+                         x-show="test.expected.length == 0" x-cloak x-transition
+                         class="alert alert-error mt-5">
+                        <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-6 w-6 shrink-0 stroke-current"
+                                fill="none"
+                                viewBox="0 0 24 24">
+                            <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Zero expected events configured, test will expect a functional exception</span>
+                    </div>
+
+                    <table x-data="behaviorTestCaseExpectedState"
+                           x-show="test.expected.length != 0" x-cloak x-transition
+                           class="table table-xs border mb-5">
+                        <thead>
+                        <tr class="bg-base-200">
+                            <th scope="col" colspan="3">Expected state</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <template x-for="(value,fkey) in state" :key="fkey">
+                            <tr class="border-b">
+                                <td x-text="fkey"></td>
+                                <template x-if="typeof value !== 'object' && !Array.isArray(value) && value !== null">
+                                    <td>
+                                        <input type="text"
+                                               @focusout="state[fkey] = prepare_state_variable_type(state[fkey],$el.value);"
+                                               :value="value"
+                                               placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
+                                    </td>
+                                </template>
+                                <template x-if="typeof value === 'object' && !Array.isArray(value) && value !== null">
+                                    <td colspan="2" class="text-end">
+                                        <template x-for="(entity,bkey) in value" :key="bkey">
+                                            <table class="table table-xs border mb-2">
+                                                <tr class="border-b bg-base-200">
+                                                    <th scope="col">Attribute Name</th>
+                                                    <th scope="col">Value</th>
+                                                    <td class="text-end">
+                                                        <button @click="delete state[fkey][bkey]"
+                                                                :disabled="editing_disabled"
+                                                                class="btn btn-xs btn-outline btn-error">
+                                                            <i class="fa-regular fa-trash-can"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <template x-for="(value,key) in entity" :key="key">
+                                                    <tr class="border-b">
+                                                        <td x-text="key"></td>
+                                                        <template x-if="value == bkey">
+                                                            <td colspan="2">
+                                                                <span x-text="value"></span>
+                                                                <span class="badge badge-neutral badge-xs">key</span>
+                                                            </td>
+                                                        </template>
+                                                        <template x-if="value != bkey">
+                                                            <td colspan="2">
+                                                                <input type="text"
+                                                                       @focusout="state[fkey][bkey][key] = prepare_state_variable_type(state[fkey][bkey][key],$el.value);"
+                                                                       :value="value"
+                                                                       placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
+                                                            </td>
+                                                        </template>
+                                                    </tr>
+                                                </template>
+                                            </table>
+                                        </template>
+
+                                        <table class="table table-xs" x-data="{addItemDialog: false}">
+                                            <tr x-show="!addItemDialog" x-cloak x-transition class="text-end">
+                                                <td colspan="3">
+                                                    <button @click="addItemDialog = true"
+                                                            :disabled="editing_disabled"
+                                                            class="btn btn-xs btn-outline btn-success">
+                                                        <i class="fa-regular fa-plus"></i><span x-text="fkey"></span> item
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr x-show="addItemDialog" x-cloak x-transition>
+                                                <td>New <span x-text="fkey"></span> item</td>
+                                                <td colspan="2">
+                                                    <input type="text"
+                                                           @focusout="add_item(fkey,$el.value);addItemDialog=false;"
+                                                           placeholder="Functional key" class="input input-ghost input-xs w-full modeler-input" />
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </template>
+                                <template x-if="Array.isArray(value)">
+                                    <td>
+                                        <table class="table table-xs">
+                                            <template x-for="item in value" :key="item">
+                                                <tr>
+                                                    <td x-text="item"></td>
+                                                    <td>
+                                                        <ui-delete-button
+                                                                @delete.once.stop="state[fkey] = state[fkey].filter(x => x != item);$dispatch('updated')"></ui-delete-button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                            <tr>
+                                                <td></td>
+                                                <td>
+                                                    <ui-add-button modal-title="Value"
+                                                                   @updated.debounce.stop="if($event.detail.value && !value.includes($event.detail.value)){value.push($event.detail.value);state[fkey] = value;$dispatch('updated')}"></ui-add-button>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </template>
+                                <template x-if="pk != fkey && typeof value !== 'object' && !Array.isArray(value) && value !== null">
+                                    <td class="text-end">
+                                        <button @click="delete state[fkey]"
+                                                :disabled="editing_disabled"
+                                                class="btn btn-xs btn-outline btn-error">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+
+                        <tr x-data="{addDialog: false}" x-show="candidates.length != 0" x-cloak x-transition>
+                            <td colspan="3" class="text-end" x-show="!addDialog" x-cloak x-transition>
+                                <button @click="addDialog = true"
+                                        :disabled="editing_disabled"
+                                        class="btn btn-xs btn-outline btn-success">
+                                    <i class="fa-regular fa-plus"></i>
+                                </button>
+                            </td>
+                            <td colspan="3" x-show="addDialog" x-cloak x-transition>
+                                <table class="table table-xs">
+                                    <tr>
+                                        <th scope="row" colspan="2">Set initial attributes</th>
+                                        <td class="text-end">
+                                            <button @click="addDialog = false" class="btn btn-xs btn-circle btn-ghost">✕</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Type</th>
+                                        <th scope="col">Value</th>
+                                    </tr>
+                                    <template x-for="target in candidates" :key="target.name">
+                                        <tr>
+                                            <td x-text="target.name"></td>
+                                            <td x-text="target.type"></td>
+                                            <td>
+                                                <input type="text"
+                                                       @focusout="add_variable(target,$el.value);"
+                                                       placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </table>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
 
                 </div>
             </template>

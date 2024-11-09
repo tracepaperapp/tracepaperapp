@@ -98,6 +98,7 @@ document.addEventListener('alpine:init', () => {
                 if (this.lock){return}
                 let hash = Draftsman.generateFingerprint(this.model);
                 if (hash == this.hash){return}
+                console.log(this.model);
                 let model = JSON.parse(JSON.stringify(this.model));
                 model.field = model.field.filter(x => !x.deleted);
                 model["nested-object"] = model["nested-object"].filter(x => !x.deleted);
