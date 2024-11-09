@@ -163,14 +163,22 @@ class Draftsman {
        return result;
    }
 
+    static sortObjectByKey(obj) {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+
+        // Sorteer de keys van het object en map over ze heen om een nieuw object te maken
+        const sortedObj = {};
+        Object.keys(obj).sort().forEach(key => {
+            sortedObj[key] = Draftsman.sortObjectByKey(obj[key]); // Rekursief sorteren voor nested objects
+        });
+
+        return sortedObj;
+    }
+
     static generateFingerprint(obj) {
-        const sortedObj = Object.keys(obj)
-            .sort()
-            .reduce((acc, key) => {
-                acc[key] = obj[key];
-                return acc;
-            }, {});
-         let fp = btoa(JSON.stringify(sortedObj));
+         let fp = btoa(JSON.stringify(Draftsman.sortObjectByKey(obj)));
          return fp;
        }
 

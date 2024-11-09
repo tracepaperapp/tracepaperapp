@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', () => {
             availableTriggers: [],
             flowVariables: [],
             entities: {},
+            root: {},
             search: "",
             eventModal: false,
             availableEvents: [],
@@ -284,12 +285,15 @@ document.addEventListener('alpine:init', () => {
                     this.modules = await repo.list(x => x.startsWith("lib/") && x.endsWith(".py"));
                     let availableEvents = await repo.list(x => x.startsWith(this.path.split("behavior-flows/").at(0) + "events/") && x.endsWith(".xml"));
                     await Draftsman.updateIfChanged(this, 'availableEvents', availableEvents);
+
                     let files = await repo.list(x=> x.startsWith(this.path.split("behavior-flows/").at(0) + "entities/") && x.endsWith(".xml"));
                     let entities = {};
                     for (let file of files){
                         let entity = await Modeler.get_model(file);
-                        entities[entity.att_name] = entity;
+                        this.entities[entity.att_name] = entity;
                     }
+
+                    this.root = await Modeler.get_model(this.path.split("behavior-flows/").at(0) + "root.xml");
                     } finally {
                         this.readlock = false;
                     }
@@ -297,6 +301,9 @@ document.addEventListener('alpine:init', () => {
             },
             async save(){
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
+            },
+            async force_save(){
+                await this._execute_save();
             },
             async delete_model(){
                 await Modeler.delete_model(this.path);
@@ -316,6 +323,121 @@ document.addEventListener('alpine:init', () => {
                 await Modeler.save_model(this.path,this.model);
                 this.hash = Draftsman.generateFingerprint(this.model);
                 await this.fetch_flow_vars();
+            },
+            destroy(){
+                Draftsman.deregisterListener(this.listnerId);
+            }
+        }
+    });
+    Alpine.data("behaviorTestCaseInitialState", function(){
+        return {
+            state: {},
+            listnerId: "",
+            candidates: [],
+            async init(){
+                this.state = JSON.parse(this.test.state);
+                this.$watch("state",this.update_initial_state.bind(this));
+                this.listnerId = Draftsman.registerListener("force-reload",this.reload.bind(this));
+                await Draftsman.sleep(2000);
+                this.filter_candidates();
+            },
+            reload(){
+                this.state = JSON.parse(this.test.state);
+                this.filter_candidates();
+            },
+            async update_initial_state(){
+                Object.keys(this.state).filter(x => {
+                    let value = this.state[x];
+                    return typeof value === 'object' && !Array.isArray(value) && value !== null && Object.keys(value).length == 0;
+                }).forEach(k => {
+                    delete this.state[k];
+                });
+                this.test.state = JSON.stringify(Draftsman.sortObjectByKey(this.state), null, 2);
+                this.force_save();
+                this.filter_candidates();
+            },
+            add_item(fkey,key){
+                let entity = this.entities[fkey];
+                let item = {};
+                entity.field.forEach(field => {
+                    let value = null;
+                    switch (field.att_type){
+                        case "String":
+                        value = "text";
+                        break;
+                        case "Int":
+                        case "Float":
+                        value = 0;
+                        break;
+                        case "Boolean":
+                        value = false;
+                        break;
+                        case "StringList":
+                        value = ["text"];
+                        break;
+                        default:
+                        //pass
+                    }
+                    item[field.att_name] = value;
+                });
+                item[entity["att_business-key"]] = key;
+                if (!this.state[fkey]){
+                    this.state[fkey] = {};
+                }
+                this.state[fkey][key] = item;
+                console.log(item);
+            },
+            filter_candidates(){
+                let candidates = [];
+                let keys = Object.keys(this.state);
+                this.root.field.filter(f => !keys.includes(f.att_name)).forEach(field => {
+                    candidates.push({
+                        name: field.att_name,
+                        type: field.att_type
+                    });
+                });
+                Object.keys(this.entities).filter(k => !keys.includes(k)).forEach(k => {
+                     candidates.push({
+                         name: k,
+                         type: "Nested"
+                     });
+                 });
+                if (!keys.includes("isDeleted")){
+                    candidates.push({
+                         name: "isDeleted",
+                         type: "String"
+                     });
+                }
+                if (!keys.includes("version")){
+                    candidates.push({
+                         name: "version",
+                         type: "Int"
+                     });
+                }
+                this.candidates = candidates;
+            },
+            add_variable(target, value){
+                if (!value){return}
+                switch(target.type){
+                    case "Nested":
+                        this.add_item(target.name,value);
+                        break;
+                    case "Boolean":
+                        this.state[target.name] =  value.toLowerCase() === "true";
+                        break;
+                    case "Int":
+                        this.state[target.name] = parseInt(value,10);
+                        break;
+                    case "Float":
+                        this.state[target.name] = Number(value);
+                        break;
+                    case "StringList":
+                        this.state[target.name] = [String(value)];
+                        break;
+                    case "String":
+                    default:
+                        this.state[target.name] = String(value);
+                }
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);
