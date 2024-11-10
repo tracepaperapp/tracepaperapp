@@ -477,6 +477,11 @@
                         </tbody>
                     </table>
 
+                    <button @click="model['test-case'] = model['test-case'].filter(x => x.att_name != test.att_name)"
+                            :disabled="editing_disabled"
+                            class="btn btn-xs btn-outline btn-error">
+                        <i class="fa-regular fa-trash-can"></i> remove test case
+                    </button>
                 </div>
             </template>
         </div>

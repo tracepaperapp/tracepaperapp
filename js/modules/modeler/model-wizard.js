@@ -100,6 +100,7 @@ document.addEventListener('alpine:init', () => {
                     e.field = Draftsman.filterKeys(e.field,keysWhitelist);
                 });
                 prepared_model["nested-object"] = Draftsman.filterKeys(attributes.entities,["att_name","field"]);
+                prepared_model = Modeler.prepare_model("command",prepared_model);
                 return prepared_model;
             },
 
@@ -121,10 +122,12 @@ document.addEventListener('alpine:init', () => {
                     Modeler._roots[path] = "nested-object";
                     await Modeler.save_model(path, e);
                 }
+                prepared_model = Modeler.prepare_model("aggregate",prepared_model);
                 return prepared_model;
             },
 
             async prepare_domain_event(prepared_model){
+                Modeler._roots[this.parameters.file] = "event";
                 prepared_model.att_type = "DomainEvent";
                 prepared_model.att_name = this.parameters.name;
                 prepared_model.att_source = this.parameters.aggregate;
@@ -146,11 +149,15 @@ document.addEventListener('alpine:init', () => {
                     entity = await Modeler.get_model(entity);
                     prepared_model.field = Draftsman.filterKeys(entity.field,["att_name","att_type"]);
                 }
+                prepared_model = Modeler.prepare_model("event",prepared_model);
                 return prepared_model;
             },
 
             async prepare_behavior_flow(prepared_model){
+                Modeler._roots[this.parameters.file] = "command";
                 prepared_model.att_name = this.parameters.name;
+                prepared_model = Modeler.prepare_model("behavior",prepared_model);
+                return prepared_model;
             },
 
             async insert_model(){

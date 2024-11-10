@@ -576,6 +576,9 @@ document.addEventListener('alpine:init', () => {
                     this.listnerId = Draftsman.registerListener("force-reload",this.reload.bind(this));
                     await Draftsman.sleep(2000);
                     this.filter_candidates();
+                    if (this.root["att_business-key"] && !Object.keys(this.state).includes(this.root["att_business-key"])){
+                        this.state[this.root["att_business-key"]] = "";
+                    }
                 },
                 reload(){
                     this.state = JSON.parse(this.test["expected-state"]["#text"]);

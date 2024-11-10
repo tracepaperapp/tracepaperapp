@@ -262,11 +262,13 @@ document.addEventListener('alpine:init', () => {
                 this.lock = true;
                 try{
                     let model = JSON.parse(JSON.stringify(this.mapping));
+                    model.att_on = this.event.att_name;
                     model.mapping = model.mapping.filter(x => x.att_operand != "unmapped");
                     model["nested-mapping"] = model["nested-mapping"].filter(x => x.att_strategy != "unmapped");
                     model["nested-mapping"].forEach(mapping => {
                         mapping.mapping = mapping.mapping.filter(x => x.att_operand != "unmapped");
                     });
+                    Modeler._roots[this.file] = "event-handler";
                     await Modeler.save_model(this.file,model);
                 }finally{
                     await Draftsman.sleep(100);
