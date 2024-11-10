@@ -254,6 +254,13 @@ document.addEventListener('alpine:init', () => {
                         return newValue;
                     }
                 },
+            async add_test_case(name){
+                if (pascalCaseRegex.test(name)){
+                    this.model["test-case"].push({att_name: name});
+                    await this.force_save();
+                    this.navigate(this.navigation);
+                }
+            },
             async init(){
                 await Draftsman.sleep(10);
                 await this.read();
@@ -274,12 +281,12 @@ document.addEventListener('alpine:init', () => {
             async read(){
                 await Draftsman.sleep(10);
                 if (Modeler.determine_type(this.navigation) == "behavior" && !this.readlock){
-                    console.log(this.model);
                     this.readlock = true;
                     try{
                     this.path = this.navigation;
                     let model = await Modeler.get_model(this.path);
                     await Draftsman.updateIfChanged(this, 'model', model);
+                    console.log(this.model);
                     await this.fetch_flow_vars();
                     let repo = await GitRepository.open();
                     this.modules = await repo.list(x => x.startsWith("lib/") && x.endsWith(".py"));
@@ -583,6 +590,7 @@ document.addEventListener('alpine:init', () => {
                     });
                     this.test["expected-state"]["#text"] = JSON.stringify(Draftsman.sortObjectByKey(this.state), null, 2);
                     this.test["expected-state"].att_pk = this.state[this.pk];
+                    console.log(this.test);
                     this.force_save();
                     this.filter_candidates();
                 },

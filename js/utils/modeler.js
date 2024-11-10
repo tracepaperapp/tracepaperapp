@@ -283,6 +283,14 @@ function prepare_behavior(flow){
             test.expected.forEach(event => {
                 event.field = make_sure_is_list(event.field);
             });
+            test.state = make_sure_is_not_nill(test.state);
+            if (test.state == ""){
+                test.state = "{}";
+            }
+            test["expected-state"] = make_sure_is_not_nill(test["expected-state"]);
+            if (test["expected-state"] == ""){
+                test["expected-state"] = {att_pk: "", "#text": "{}"};
+            }
         });
         return flow;
     }

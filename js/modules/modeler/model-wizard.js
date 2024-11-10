@@ -13,6 +13,8 @@ document.addEventListener('alpine:init', () => {
             parameters: this.$persist({}).using(sessionStorage).as("wizardParameters"),
             copyCommand: "",
             files: [],
+            aggregates: [],
+            targets: [],
             model: {},
             type: "",
             sources: [],
@@ -23,12 +25,14 @@ document.addEventListener('alpine:init', () => {
             previous: false,
             conflicted: this.$persist(false).using(sessionStorage).as("wizardConflicted"),
             dialog_id: this.$persist(0).using(sessionStorage).as("wizardDialog"),
+
             async init(){
                 this.$watch("state",this.update_context.bind(this));
                 this.$watch("navigation",this.update_context.bind(this));
                 await this.update_context();
             },
             async update_context(){
+                await this.set_context();
                 switch(this.state){
 
                     // Command modeler
@@ -43,44 +47,132 @@ document.addEventListener('alpine:init', () => {
                         this.update_action_buttons(false,true,true);
                         break;
 
-                    // whats next
+                    // Aggregate
                     case 20:
-                        console.log("todo")
+                        this.update_action_buttons(true);
+                        break;
+                    case 21:
+                        await this.list_sources();
+                        this.update_action_buttons(false,true,true);
+                        break;
+
+                    // Domain event
+                    case 30:
+                        this.aggregates = this.files.filter(x => x.endsWith("/root.xml")).map(x => x.split("/").at(1) + "." + x.split("/").at(2));
+                        this.update_action_buttons(true);
+                        break;
+                    case 31:
+                        this.targets = this.files.filter(x => x.endsWith(".xml") && x.includes(this.parameters.aggregate.replace(".","/")) && x.includes("/entities/")).map(x => x.split("/").at(-1).replace(".xml",""));
+                        this.targets.unshift("root");
+                        this.update_action_buttons(false,true,true);
+                        break;
+
+                    // Behavior flow
+                    case 40:
+                        this.aggregates = this.files.filter(x => x.endsWith("/root.xml")).map(x => x.split("/").at(1) + "." + x.split("/").at(2));
+                        this.update_action_buttons(false,false,true);
+                        break;
+
                     default:
                         this.update_action_buttons();
                 }
-                this.set_context();
             },
             update_action_buttons(next=false,previous=false,ready=false){
                 this.next = next;
                 this.previous = previous;
                 this.ready = ready;
             },
+
+            async prepare_command(prepared_model){
+                Modeler._roots[this.parameters.file] = "event";
+                prepared_model["att_graphql-namespace"] = this.parameters.namespace;
+                prepared_model["att_graphql-name"] = this.parameters.method;
+                prepared_model.att_name = this.parameters.eventName;
+                prepared_model.att_type = "ActorEvent";
+                prepared_model.att_authorization = this.parameters.att_authorization;
+                if (this.parameters.att_role){
+                    prepared_model.att_role = this.parameters.att_role;
+                }
+                let attributes = await this.fetch_attributes();
+                let keysWhitelist = ["att_name","att_type","att_pattern","att_default","att_auto-fill"];
+                prepared_model.field = Draftsman.filterKeys(attributes.fields,keysWhitelist);
+                attributes.entities.forEach(e => {
+                    e.field = Draftsman.filterKeys(e.field,keysWhitelist);
+                });
+                prepared_model["nested-object"] = Draftsman.filterKeys(attributes.entities,["att_name","field"]);
+                return prepared_model;
+            },
+
+            async prepare_aggregate(prepared_model){
+                Modeler._roots[this.parameters.file] = "aggregate";
+                prepared_model.att_name = this.parameters.name;
+                prepared_model["att_business-key"] = this.parameters.key;
+                let attributes = await this.fetch_attributes();
+                let keysWhitelist = ["att_name","att_type"];
+                prepared_model.field = Draftsman.filterKeys(attributes.fields.filter(x => x.att_name != this.parameters.key),keysWhitelist);
+                prepared_model.field.unshift({
+                    att_name: this.parameters.key,
+                    att_type: "String"
+                });
+
+                let entities = Draftsman.filterKeys(attributes.entities,["att_name","field","att_business-key"]);
+                for (const e of entities) {
+                    let path = this.parameters.file.replace("root.xml", "entities/" + e.att_name + ".xml");
+                    Modeler._roots[path] = "nested-object";
+                    await Modeler.save_model(path, e);
+                }
+                return prepared_model;
+            },
+
+            async prepare_domain_event(prepared_model){
+                prepared_model.att_type = "DomainEvent";
+                prepared_model.att_name = this.parameters.name;
+                prepared_model.att_source = this.parameters.aggregate;
+                if (this.parameters.target == "root"){
+                    let root_file = this.parameters.file.split("events/").at(0) + "root.xml";
+                    let root = await Modeler.get_model(root_file);
+                    prepared_model.field = Draftsman.filterKeys(root.field,["att_name","att_type"]);
+
+                    let repo = await GitRepository.open();
+                    let entity_folder = this.parameters.file.split("events/").at(0) + "entities/";
+                    let entities = await repo.list(x => x.startsWith(entity_folder) && x.endsWith(".xml"));
+                    prepared_model["nested-object"] = [];
+                    for (let entity of entities){
+                        entity = await Modeler.get_model(entity);
+                        prepared_model["nested-object"].push(entity);
+                    }
+                } else {
+                    let entity = this.parameters.file.split("events/").at(0) + "entities/" + this.parameters.target + ".xml";
+                    entity = await Modeler.get_model(entity);
+                    prepared_model.field = Draftsman.filterKeys(entity.field,["att_name","att_type"]);
+                }
+                return prepared_model;
+            },
+
+            async prepare_behavior_flow(prepared_model){
+                prepared_model.att_name = this.parameters.name;
+            },
+
             async insert_model(){
                 this.active = false;
                 let prepared_model = {};
                 switch (this.parameters.type){
                     case "command":
-                        Modeler._roots[this.parameters.file] = "event";
-                        prepared_model["att_graphql-namespace"] = this.parameters.namespace;
-                        prepared_model["att_graphql-name"] = this.parameters.method;
-                        prepared_model.att_name = this.parameters.eventName;
-                        prepared_model.att_type = "ActorEvent";
-                        prepared_model.att_authorization = this.parameters.att_authorization;
-                        if (this.parameters.att_role){
-                            prepared_model.att_role = this.parameters.att_role;
-                        }
-                        let attributes = await this.fetch_attributes();
-                        let keysWhitelist = ["att_name","att_type","att_pattern","att_default","att_auto-fill"];
-                        prepared_model.field = Draftsman.filterKeys(attributes.fields,keysWhitelist);
-                        attributes.entities.forEach(e => {
-                            e.field = Draftsman.filterKeys(e.field,keysWhitelist);
-                        });
-                        prepared_model["nested-object"] = Draftsman.filterKeys(attributes.entities,["att_name","field"]);
+                        prepared_model = await this.prepare_command(prepared_model);
+                        break;
+                    case "aggregate":
+                        prepared_model = await this.prepare_aggregate(prepared_model);
+                        break;
+                    case "event":
+                        prepared_model = await this.prepare_domain_event(prepared_model);
+                        break;
+                    case "behavior":
+                        prepared_model = await this.prepare_behavior_flow(prepared_model);
                         break;
                     default:
                         console.error("Create for type not implemented: ",this.parameters.type);
                 }
+                console.log(prepared_model);
                 let file = this.parameters.file;
                 await Modeler.save_model(file,prepared_model);
                 this.navigate(file);
@@ -105,15 +197,21 @@ document.addEventListener('alpine:init', () => {
             async copy_attributes(){
                 this.copy_modal = false;
                 let attributes = await this.fetch_attributes();
+
+                let keysWhitelist = [];
+                let fields = [];
+                let entities = [];
+                let keys = [];
+
                 switch (this.type){
                     case "command":
-                        let keysWhitelist = ["att_name","att_type","att_pattern","att_default","att_auto-fill"];
-                        let fields = Draftsman.filterKeys(attributes.fields,keysWhitelist);
+                        keysWhitelist = ["att_name","att_type","att_pattern","att_default","att_auto-fill"];
+                        fields = Draftsman.filterKeys(attributes.fields,keysWhitelist);
                         attributes.entities.forEach(e => {
                             e.field = Draftsman.filterKeys(e.field,keysWhitelist);
                         });
-                        let entities = Draftsman.filterKeys(attributes.entities,["att_name","field"]);
-                        let keys = this.model.field.map(x => x.att_name);
+                        entities = Draftsman.filterKeys(attributes.entities,["att_name","field"]);
+                        keys = this.model.field.map(x => x.att_name);
                         keys.push(...this.model["nested-object"].map(x => x.att_name));
                         fields.filter(x => !keys.includes(x.att_name)).forEach(f => {
                             this.model.field.push(f);
@@ -123,6 +221,23 @@ document.addEventListener('alpine:init', () => {
                             this.model["nested-object"].push(e);
                         });
                         break;
+                    case "aggregate":
+                        keysWhitelist = ["att_name","att_type"];
+                        fields = Draftsman.filterKeys(attributes.fields,keysWhitelist);
+                        attributes.entities.forEach(e => {
+                            e.field = Draftsman.filterKeys(e.field,keysWhitelist);
+                        });
+                        entities = Draftsman.filterKeys(attributes.entities,["att_name","field","att_business-key"]);
+                        keys = this.model.field.map(x => x.att_name);
+                        fields.filter(x => !keys.includes(x.att_name)).forEach(f => {
+                            this.model.field.push(f);
+                        });
+                        for (const e of entities) {
+                            let path = this.file.replace("root.xml", "entities/" + e.att_name + ".xml");
+                            Modeler._roots[path] = "nested-object";
+                            await Modeler.save_model(path, e);
+                        }
+                        break;
                     default:
                         alert("Not implemented");
                        console.error("Create for type not implemented: ",this.type);
@@ -130,25 +245,34 @@ document.addEventListener('alpine:init', () => {
                 await Modeler.save_model(this.file,this.model);
                 this.navigate(this.file);
             },
-            async start(){
+
+            start(){
                 this.active = true;
                 if (this.state == 0){
                     this.state = 1;
                 }
-                let repo = await GitRepository.open();
-                this.files = await repo.list();
             },
             async set_context(){
                 this.file = this.navigation;
                 this.model = await Modeler.get_model(this.file);
                 this.type = Modeler.determine_type(this.file);
                 this.copyEnabled = ["command","aggregate"].includes(this.type);
+
+                let repo = await GitRepository.open();
+                this.files = await repo.list();
             },
+
+            // Command flow
             async start_command(){
-                if (this.type == "command"){
-                    this.parameters.path = this.model["att_graphql-namespace"] + ".methodName";
-                } else {
-                    this.parameters.path = "Namespace.method"
+                switch(this.type){
+                    case "command":
+                        this.parameters.path = this.model["att_graphql-namespace"] + ".methodName";
+                        break;
+                    case "aggregate":
+                        this.parameters.path = this.file.split("/").at(1) + ".method";
+                        break;
+                    default:
+                        this.parameters.path = "Namespace.method";
                 }
                 if (["command","aggregate","entity"].includes(this.type)){
                     this.parameters.copyFrom = this.file;
@@ -158,7 +282,7 @@ document.addEventListener('alpine:init', () => {
                 this.state = 10;
             },
             check_command_name_uniqueness(){
-                this.conflicted = !apiPathRegex.test(this.parameters.path);
+                this.conflicted = !this.parameters.path || !apiPathRegex.test(this.parameters.path);
                 if (this.conflicted){
                     this.dialog_id = 0;
                     return;
@@ -172,13 +296,109 @@ document.addEventListener('alpine:init', () => {
                 let newFile = `commands/${elements[0].replaceAll('.','/')}/${eventName}.xml`;
                 this.parameters.file = newFile;
                 this.conflicted = this.files.includes(newFile);
-                console.log(this.conflicted);
+
                 if (this.conflicted){
                     this.dialog_id = 1;
                 } else {
                     this.dialog_id = 0;
                 }
             },
+
+            // Aggregate flow
+            async start_aggregate(){
+                this.parameters.subdomain = "";
+                this.parameters.name = "";
+                switch(this.type){
+                    case "command":
+                        this.parameters.subdomain = this.model["att_graphql-namespace"].split(".").at(0);
+                        break;
+                    case "aggregate":
+                        this.parameters.subdomain = this.file.split("/").at(1);
+                        break;
+                }
+                if (["command","aggregate","entity"].includes(this.type)){
+                    this.parameters.copyFrom = this.file;
+                }
+                this.parameters.type = "aggregate";
+                this.conflicted = true;
+                this.state = 20;
+            },
+            check_aggregate_name_uniqueness(){
+                this.conflicted = !pascalCaseRegex.test(this.parameters.subdomain) || !pascalCaseRegex.test(this.parameters.name) || !camelCaseRegex.test(this.parameters.key);
+                if (this.conflicted){
+                    this.dialog_id = 0;
+                    return
+                }
+                this.conflicted = !this.parameters.subdomain || !this.parameters.name || !this.parameters.key;
+                if (this.conflicted){
+                    this.dialog_id = 0;
+                    return
+                }
+                this.parameters.file = `domain/${this.parameters.subdomain}/${this.parameters.name}/root.xml`;
+                this.conflicted = this.files.includes(this.parameters.file);
+                if (this.conflicted){
+                    this.dialog_id = 1;
+                } else {
+                    this.dialog_id = 0;
+                }
+            },
+
+            // Domain event flow
+            async start_domain_event(){
+                this.parameters.aggregate = "";
+                this.parameters.name = "";
+                this.parameters.target = "root";
+                this.parameters.type = "event";
+                if (["aggregate","event","behavior"].includes(this.type)){
+                    let params = this.file.split("/");
+                    this.parameters.aggregate = params.at(1) + "." + params.at(2);
+                }
+                this.conflicted = true;
+                this.state = 30;
+            },
+            check_domain_event_name(){
+                this.conflicted = !this.aggregates.includes(this.parameters.aggregate) || !this.parameters.name || !pascalCaseRegex.test(this.parameters.name);
+                if (this.conflicted){
+                    this.dialog_id = 0;
+                    return
+                }
+                this.parameters.file = `domain/${this.parameters.aggregate.replace(".","/")}/events/${this.parameters.name}.xml`;
+                this.parameters.conflicts = this.files.filter(x => !x.includes("/event-handlers/") && x.endsWith(this.parameters.name + ".xml"));
+                this.conflicted = this.parameters.conflicts.length != 0;
+                if (this.conflicted){
+                    this.dialog_id = 1;
+                } else {
+                    this.dialog_id = 0;
+                }
+            },
+
+            // Behavior flow
+            async start_behavior_flow(){
+                this.parameters.aggregate = "";
+                this.parameters.name = "";
+                this.parameters.type = "behavior";
+                if (["aggregate","event","behavior"].includes(this.type)){
+                    let params = this.file.split("/");
+                    this.parameters.aggregate = params.at(1) + "." + params.at(2);
+                }
+                this.conflicted = true;
+                this.state = 40;
+            },
+            check_behavior_name(){
+                this.conflicted = !this.aggregates.includes(this.parameters.aggregate) || !this.parameters.name || !pascalCaseRegex.test(this.parameters.name);
+                if (this.conflicted){
+                    this.dialog_id = 0;
+                    return
+                }
+                this.parameters.file = `domain/${this.parameters.aggregate.replace(".","/")}/behavior-flows/${this.parameters.name}.xml`;
+                this.conflicted = this.files.includes(this.parameters.file);
+                if (this.conflicted){
+                    this.dialog_id = 1;
+                } else {
+                    this.dialog_id = 0;
+                }
+            },
+
             close(){
                 this.active = false;
                 this.state = 0;
@@ -200,7 +420,6 @@ document.addEventListener('alpine:init', () => {
                         (x.startsWith("domain/") && x.includes("/root")) ||
                         (x.startsWith("domain/") && x.includes("/entities/"))
                     )&& x.endsWith(".xml"));
-                console.log(this.sources);
             },
             handle_keydown(event) {
                 // Check voor Windows (Ctrl + M) of Mac (Cmd + M)
@@ -211,9 +430,15 @@ document.addEventListener('alpine:init', () => {
                 } else if (this.state == 1 && event.key === 'c'){
                     event.preventDefault();
                     this.start_command();
-                } else if((event.ctrlKey || event.metaKey) && event.key === 'i' && ["command"].includes(type)) {
+               } else if (this.state == 1 && event.key === 'a'){
+                     event.preventDefault();
+                     this.start_aggregate();
+               } else if (this.state == 1 && event.key === 'd'){
+                    event.preventDefault();
+                    this.start_domain_event();
+               } else if (this.state == 1 && event.key === 'b'){
                    event.preventDefault();
-                   // todo
+                   this.start_behavior_flow();
                } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && ["command"].includes(type)) {
                    event.preventDefault();
                    this.copy_fields();

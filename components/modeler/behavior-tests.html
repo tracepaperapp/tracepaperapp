@@ -14,6 +14,28 @@
                     </template>
                 </ul>
             </template>
+
+            <div x-data="{ editing: false, inputValue: '' }">
+                <!-- Knop die verandert in een invoerveld bij klikken -->
+                <template x-if="!editing">
+                    <button @click="editing = true"
+                            :disabled="editing_disabled"
+                            class="btn btn-success btn-outline btn-sm">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </template>
+
+                <!-- Invoerveld dat verschijnt wanneer de knop wordt geklikt -->
+                <template x-if="editing">
+                    <input type="text" x-model="inputValue"
+                           @blur="editing = false;add_test_case(inputValue);"
+                           placeholder="TestCaseName"
+                           :disabled="editing_disabled"
+                           x-data="inputValidator"
+                           @input="pascal_cased"
+                           class="input input-bordered w-full max-w-xs input-sm"/>
+                </template>
+            </div>
         </div>
         <div class="col-span-9">
             <template x-for="test in model['test-case']" :key="test.att_name">

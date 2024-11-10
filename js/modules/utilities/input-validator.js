@@ -101,10 +101,11 @@ document.addEventListener('alpine:init', () => {
                 async init(){
                     let trigger = await Modeler.get_model_by_name(this.trigger.att_source);
                     this.options = trigger.field.map(x => x.att_name);
+                    this.options.push(...trigger["nested-object"].map(x => x.att_name));
                     this.options.unshift("");
                     this.options.push("#''");
 
-                    this.keyOptions = trigger.field.map(x => x.att_name);
+                    this.keyOptions = trigger.field.filter(x => x.att_type == "String").map(x => x.att_name);
                     this.keyOptions.unshift("");
                     let repo = await GitRepository.open();
                     let files = await repo.list(x => x.startsWith("expressions/") && x.endsWith(".xml"));

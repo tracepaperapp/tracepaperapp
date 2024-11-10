@@ -24,6 +24,9 @@
         <div x-show="state == 1">
           <ul class="menu bg-base-200 rounded-box w-full">
             <li @click="start_command"><a>Command</a></li>
+            <li @click="start_aggregate"><a>Aggregate</a></li>
+            <li @click="start_domain_event"><a>Domain event</a></li>
+            <li @click="start_behavior_flow"><a>Behavior flow</a></li>
           </ul>
         </div>
 
@@ -163,6 +166,252 @@
             </template>
           </div>
 
+        </div>
+
+        <!-- Aggregate -->
+        <div x-show="state == 20" x-cloak x-transition>
+          <table class="table">
+            <tr>
+              <th scope="row">Subdomain</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.subdomain"
+                       x-data="inputValidator"
+                       @input="pascal_cased"
+                       @keyup.debounce.1000ms="check_aggregate_name_uniqueness"
+                       :disabled="editing_disabled"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Aggregate name</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.name"
+                       x-data="inputValidator"
+                       @input="pascal_cased"
+                       @keyup.debounce.1000ms="check_aggregate_name_uniqueness"
+                       :disabled="editing_disabled"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Functional key</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.key"
+                       x-data="inputValidator"
+                       @input="camel_cased"
+                       @keyup.debounce.1000ms="check_aggregate_name_uniqueness"
+                       :disabled="editing_disabled"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+          </table>
+          <div x-show="dialog_id == 1" x-cloak x-transition role="alert" class="alert alert-error mt-5">
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 shrink-0 stroke-current"
+                    fill="none"
+                    viewBox="0 0 24 24">
+              <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>The aggregate <span x-text="parameters.subdomain"></span>.<span x-text="parameters.name"></span> already exists!</span>
+          </div>
+        </div>
+        <div x-show="state == 21" x-cloak x-transition>
+          <table class="table">
+            <tr>
+              <th scope="row">Subdomain</th>
+              <td x-text="parameters.subdomain"></td>
+            </tr>
+            <tr>
+              <th scope="row">Aggregate name</th>
+              <td x-text="parameters.name"></td>
+            </tr>
+            <tr>
+              <th scope="row">Functional key</th>
+              <td x-text="parameters.key"></td>
+            </tr>
+            <tr x-show="!parameters.copyFrom" x-cloak x-transition>
+              <th scope="row">Copy fields from model:</th>
+              <td>
+                none selected
+              </td>
+            </tr>
+            <tr x-show="parameters.copyFrom" x-cloak x-transition>
+              <th scope="row">Copy fields from model:</th>
+              <template x-if="parameters.copyFrom">
+                <td>
+                  <span x-data="{type: Modeler.determine_type(parameters.copyFrom)}">
+                    <div x-show="type == 'command'" x-cloak x-transition class="badge badge-neutral">Command</div>
+                    <div x-show="type == 'aggregate'" x-cloak x-transition class="badge badge-primary">Aggregate</div>
+                    <div x-show="type == 'entity'" x-cloak x-transition class="badge badge-accent">Collection</div>
+                  </span>
+                  <span :navigation="parameters.copyFrom" x-text="get_name"></span>
+                  <button @click="parameters.copyFrom = ''" class="btn btn-outline btn-xs btn-error">remove</button>
+                </td>
+              </template>
+            </tr>
+          </table>
+          <div x-show="!parameters.copyFrom" x-cloak x-transition>
+            <template x-if="!parameters.copyFrom">
+              <div>
+                <label class="input input-bordered flex items-center gap-2 mt-5">
+                  <input type="text" class="grow" x-model="search" placeholder="Search" />
+                  <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          class="h-4 w-4 opacity-70">
+                    <path
+                            fill-rule="evenodd"
+                            d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                            clip-rule="evenodd" />
+                  </svg>
+                </label>
+                <table class="table">
+                  <template x-for="source in sources.filter(x => x.toLowerCase().includes(search.toLowerCase()))" :key="source">
+                    <tr>
+                      <td x-data="{type: Modeler.determine_type(source)}">
+                        <div x-show="type == 'command'" x-cloak x-transition class="badge badge-neutral">Command</div>
+                        <div x-show="type == 'aggregate'" x-cloak x-transition class="badge badge-primary">Aggregate</div>
+                        <div x-show="type == 'entity'" x-cloak x-transition class="badge badge-accent">Collection</div>
+                      </td>
+                      <td :navigation="source" x-text="get_name"></td>
+                      <td>
+                        <button @click="parameters.copyFrom = source" class="btn btn-outline btn-xs btn-primary">copy fields</button>
+                      </td>
+                    </tr>
+                  </template>
+                </table>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Domain Event -->
+        <div x-show="state == 30" x-cloak x-transition>
+          <table class="table">
+            <tr>
+              <th scope="row">Parent Aggregate</th>
+              <td>
+                <select :disabled="editing_disabled"
+                        @change="check_domain_event_name"
+                        x-model="parameters.aggregate"
+                        class="select select-xs select-ghost w-full max-w-xs modeler-input">
+                  <option></option>
+                  <template x-for="option in aggregates" :key="option">
+                    <option :value="option" :selected="option == parameters.aggregate" x-text="option"></option>
+                  </template>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Event name</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.name"
+                       x-data="inputValidator"
+                       @input="pascal_cased"
+                       @keyup.debounce.1000ms="check_domain_event_name"
+                       :disabled="editing_disabled"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+          </table>
+          <div x-show="dialog_id == 1" x-cloak x-transition role="alert" class="alert alert-error mt-5">
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 shrink-0 stroke-current"
+                    fill="none"
+                    viewBox="0 0 24 24">
+              <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>There is already an event with name [<span x-text="parameters.name"></span>] in the domain. Event names must be unique in the entire domain!<br><br>
+              <template x-for="file in parameters.conflicts">
+                <p x-text="file"></p>
+              </template>
+            </span>
+          </div>
+        </div>
+        <div x-show="state == 31" x-cloak x-transition>
+          <table class="table">
+            <tr>
+              <th scope="row">Parent Aggregate</th>
+              <td x-text="parameters.aggregate"></td>
+            </tr>
+            <tr>
+              <th scope="row">Event name</th>
+              <td x-text="parameters.name"></td>
+            </tr>
+            <tr>
+              <th scope="row">Data target</th>
+              <td>
+                <select :disabled="editing_disabled"
+                        x-model="parameters.target"
+                        class="select select-xs select-ghost w-full max-w-xs modeler-input">
+                  <template x-for="option in targets" :key="option">
+                    <option :value="option" :selected="option == parameters.target" x-text="option"></option>
+                  </template>
+                </select>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Behavior flow -->
+        <div x-show="state == 40" x-cloak x-transition>
+          <table class="table">
+            <tr>
+              <th scope="row">Parent Aggregate</th>
+              <td>
+                <select :disabled="editing_disabled"
+                        @change="check_behavior_name"
+                        x-model="parameters.aggregate"
+                        class="select select-xs select-ghost w-full max-w-xs modeler-input">
+                  <option></option>
+                  <template x-for="option in aggregates" :key="option">
+                    <option :value="option" :selected="option == parameters.aggregate" x-text="option"></option>
+                  </template>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Behavior flow name</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.name"
+                       x-data="inputValidator"
+                       @input="pascal_cased"
+                       @keyup.debounce.1000ms="check_behavior_name"
+                       :disabled="editing_disabled"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+          </table>
+          <div x-show="dialog_id == 1" x-cloak x-transition role="alert" class="alert alert-error mt-5">
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 shrink-0 stroke-current"
+                    fill="none"
+                    viewBox="0 0 24 24">
+              <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>There is already an behavior flow with name [<span x-text="parameters.name"></span>] in the aggregate [<span x-text="parameters.aggregate"></span>].</span>
+          </div>
         </div>
 
         <br>

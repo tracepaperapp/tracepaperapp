@@ -2,9 +2,14 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('infoCard', function(){
         return {
             summary: {},
-            open_github(){
+            github_navigation_lock: false,
+            async open_github(){
+                if (this.github_navigation_lock){return}
+                this.github_navigation_lock = true;
                 let file = this.$el.getAttribute("file");
                 window.open(sessionStorage.project_url + '/blob/' + sessionStorage.branch + '/' + file, '_blank').focus();
+                await Draftsman.sleep(1000);
+                this.github_navigation_lock = false;
             },
             get_path(){
                 let file = this.$el.getAttribute("file");
