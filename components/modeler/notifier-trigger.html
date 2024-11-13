@@ -1,6 +1,6 @@
-<template x-component="behavior-trigger">
+<template x-component="notifier-trigger">
     <div>
-        <template x-for="(trigger,index) in model.trigger" :key="trigger.att_source">
+        <template x-for="(trigger,index) in model.trigger" :key="index">
             <div x-data="triggerFieldSelector">
                 <template x-if="index != 0">
                     <hr>
@@ -8,7 +8,16 @@
                 <table class="table mt-5">
                     <tr class="text-xl">
                         <th scope="row">Event</th>
-                        <td colspan="2" x-text="trigger.att_source"></td>
+                        <td colspan="2" x-effect="if (trigger.att_source == ''){trigger.att_source = '@'}">
+                            <span x-show="!trigger.att_source.startsWith('@')" x-cloak x-transition x-text="trigger.att_source"></span>
+                            <input type="text"
+                                   x-model="trigger.att_source"
+                                   x-show="trigger.att_source.startsWith('@')" x-cloak x-transition
+                                   :disabled="editing_disabled"
+                                   @focusout="trigger.att_source = $el.value"
+                                   placeholder="@afterDeployment"
+                                   class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+                        </td>
                         <td>
                             <button @click="remove_trigger"
                                     :trigger="trigger.att_source"
@@ -16,12 +25,6 @@
                                     class="btn btn-xs btn-outline btn-error">
                                 <i class="fa-regular fa-trash-can"></i>
                             </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Functional key</th>
-                        <td colspan="2" x-import="elements/input">
-                            <ui-trigger-keyfield-selector></ui-trigger-keyfield-selector>
                         </td>
                     </tr>
                     <tr x-show="trigger['att_idempotency-key']" x-cloak x-transition>
@@ -63,7 +66,7 @@
                                        class="checkbox checkbox-sm" />
                             </td>
                             <td>
-                                <button @click="trigger.mapping = trigger.mapping.filter(x => map.att_target != x.att_target)"
+                                <button @click.once="trigger.mapping = trigger.mapping.filter(x => map.att_target != x.att_target);sync_to_disk()"
                                         :disabled="editing_disabled"
                                         class="btn btn-xs btn-outline btn-error">
                                     <i class="fa-regular fa-trash-can"></i>

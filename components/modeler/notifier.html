@@ -1,0 +1,89 @@
+<template x-component="notifier">
+    <div navigation-type="notifier"
+         id="active-tab"
+         x-show="navigationElementActive"
+         x-cloak
+         x-transition>
+        <div x-data="notifierModel">
+            <div class="grid grid-cols-12 gap-3 mt-5">
+                <div class="col-span-8">
+
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-5">
+                        Notifier: <span x-text="model.att_name"></span>
+                    </h3>
+
+                    <div role="tablist" class="tabs tabs-lifted">
+                        <input type="radio"
+                               name="domain_event_tabs"
+                               role="tab"
+                               class="tab"
+                               :checked="selectedTab[navigation] === 1"
+                               @click="selectedTab[navigation] = 1"
+                               aria-label="Triggers" />
+                        <div role="tabpanel"
+                             x-import="modeler/notifier-trigger"
+                             class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+                            <ui-notifier-trigger></ui-notifier-trigger>
+                        </div>
+
+                        <input type="radio"
+                               name="domain_event_tabs"
+                               role="tab"
+                               class="tab"
+                               :checked="selectedTab[navigation] === 2"
+                               @click="selectedTab[navigation] = 2"
+                               aria-label="Flow" />
+                        <div role="tabpanel"
+
+                             class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+                            <pre x-text="JSON.stringify(model,null,2)"></pre>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="col-span-4">
+
+                    <!-- Info Card -->
+                    <div class="card bg-primary text-primary-content mb-5 card-compact" x-data="infoCard">
+                        <div class="card-body">
+                            <div class="card-actions justify-end">
+                                <i @click="Draftsman.publishMessage('focus')"
+                                   class="fa-regular fa-eye cursor-pointer"></i>
+                                <i @click="open_github"
+                                   :file="navigation"
+                                   class="fa-solid fa-code cursor-pointer"></i>
+                            </div>
+                            <h2 class="card-title">Notifier</h2>
+                            <p class="text-xs" :file="navigation" x-text="get_path"></p>
+
+                            <table class="table table-xs">
+                                <tr>
+                                    <th scope="row">Triggers</th>
+                                    <td x-text="model.trigger.length"></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Activities</th>
+                                    <td x-text="model.activity.length"></td>
+                                </tr>
+                            </table>
+                            <div class="card-actions justify-end"
+                                 x-show="editing_enabled" x-cloak x-transition>
+                                <i class="fa-regular fa-trash-can cursor-pointer" @click="delete_model"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diagram -->
+                    <div x-import="elements/embedded-diagram">
+                        <ui-embedded-diagram></ui-embedded-diagram>
+                    </div>
+
+                    <!-- documentation -->
+                    <div :file="navigation" x-data="markdownEditor"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

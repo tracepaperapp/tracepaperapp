@@ -250,19 +250,20 @@ function prepare_projection(projection){
     return projection;
 }
 function prepare_notifier(notifier){
-                 notifier.trigger = make_sure_is_list(notifier.trigger);
-                 notifier.trigger.forEach(trigger=> {
-                     trigger.mapping = make_sure_is_list(trigger.mapping);
-                 });
-                 notifier.activity = make_sure_is_list(notifier.activity);
-                 notifier.activity.forEach(activity=> {
-                     activity.activity = make_sure_is_list(activity.activity);
-                     if(!activity.att_id){
-                         activity.att_id = Draftsman.makeid(6);
-                     }
-                 });
-                 return notifier;
-             }
+     notifier.trigger = make_sure_is_list(notifier.trigger);
+     notifier.trigger.forEach(trigger=> {
+         trigger.mapping = make_sure_is_list(trigger.mapping);
+         trigger["att_idempotency-key"] = make_sure_is_not_nill(trigger["att_idempotency-key"]);
+     });
+     notifier.activity = make_sure_is_list(notifier.activity);
+     notifier.activity.forEach(activity=> {
+         activity.activity = make_sure_is_list(activity.activity);
+         if(!activity.att_id){
+             activity.att_id = Draftsman.makeid(6);
+         }
+     });
+     return notifier;
+ }
 function prepare_behavior(flow){
         flow.trigger = make_sure_is_list(flow.trigger);
         flow.trigger.forEach(trigger => {

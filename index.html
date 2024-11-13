@@ -74,8 +74,13 @@
                             </template>
                         </div>
                         <div x-import="modeler/behavior">
-                            <template x-if="tab_type == 'behavior'">
+                            <template x-if="tab_type == 'behavior'" :key="navigation">
                                 <ui-behavior></ui-behavior>
+                            </template>
+                        </div>
+                        <div x-import="modeler/notifier">
+                            <template x-if="tab_type == 'notifier'" :key="navigation">
+                                <ui-notifier></ui-notifier>
                             </template>
                         </div>
                     </div>
@@ -125,6 +130,7 @@
     <script src="/js/modules/modeler/aggregate-entity.js"></script>
     <script src="/js/modules/modeler/domain-event.js"></script>
     <script src="/js/modules/modeler/behavior.js"></script>
+    <script src="/js/modules/modeler/notifier.js"></script>
 
 </body>
 </html>
