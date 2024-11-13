@@ -34,9 +34,9 @@
                                @click="selectedTab[navigation] = 2"
                                aria-label="Flow" />
                         <div role="tabpanel"
-
+                             x-import="modeler/notifier-flow"
                              class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-                            <pre x-text="JSON.stringify(model,null,2)"></pre>
+                            <ui-notifier-flow></ui-notifier-flow>
                         </div>
 
                     </div>

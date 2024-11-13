@@ -8,6 +8,65 @@ document.addEventListener('alpine:init', () => {
             triggerModal: false,
             search: "",
             availableTriggers: [],
+            flowVariables: [],
+            async fetch_flow_vars() {
+                let variables = [];
+
+                // Verwerk trigger mappings
+                for (let trigger of this.model.trigger) {
+                    for (let map of trigger.mapping) {
+                        if (!variables.includes(map.att_target)) {
+                            variables.push(map.att_target);
+                        }
+                    }
+                }
+
+                // Verwerk set-variable processors
+                for (let activity of this.model.activity) {
+                    if (['set-variable','retrieve-email-from-iam','render-template','fetch-property','call-internal-api','HTTP'].includes(activity.att_type)){
+                        variables.push(activity.att_name);
+                    }
+                    if (['get-token','get-systemuser-token'].includes(activity.att_type)){
+                        variables.push("token");
+                    }
+                    if (activity.att_type == 'code'){
+                        if (activity.att_code) {
+                                                // Verwerk inline code content
+                                                let content = activity.att_code;
+                                                content.split("|LB|")
+                                                    .filter(line => line.replaceAll(" ", "").match(/^(flow\.[\w]+)={1}/g))
+                                                    .forEach(line => {
+                                                        let variable = line.replace("flow.", "").split("=").at(0).trim();
+                                                        if (!variables.includes(variable)) {
+                                                            variables.push(variable);
+                                                        }
+                                                    });
+                                            } else {
+                        // Haal de code op uit een bestand via een async call
+                        let content = await Modeler.get_model(activity.att_file);
+                        content = content.content;
+                        let method_detected = false;
+
+                        content.split("\n").forEach(line => {
+                            if (line.startsWith(`def ${activity.att_handler}(flow):`)) {
+                                method_detected = true;
+                            } else if (line.startsWith("def")) {
+                                method_detected = false;
+                            }
+
+                            if (method_detected && line.replaceAll(" ", "").match(/^(flow\.[\w]+)={1}/g)) {
+                                let variable = line.replace("flow.", "").split("=").at(0).trim();
+                                if (!variables.includes(variable)) {
+                                    variables.push(variable);
+                                }
+                            }
+                        });
+                    }
+                    }
+                }
+                console.log(variables);
+                this.flowVariables = variables;
+            },
             async remove_trigger(){
                 let triggers = this.model.trigger.filter(x => this.$el.getAttribute("trigger") != x.att_source);
                 this.model.trigger = triggers;
@@ -50,7 +109,7 @@ document.addEventListener('alpine:init', () => {
                         type: Modeler.determine_type(x)
                     };
                 });
-                this.availableTriggers.push|(...[
+                this.availableTriggers.push(...[
                     {name: "@afterDeployment", file: "@afterDeployment", type: "Scheduled"},
                     {name: "@cron(0 0 * * ? *)", file: "@cron(0 0 * * ? *)", type: "Scheduled"},
                     {name: "@rate(1 minute)", file: "@rate(1 minute)", type: "Scheduled"}
@@ -76,6 +135,36 @@ document.addEventListener('alpine:init', () => {
                 this.model.trigger.push(trigger);
                 this.balance_triggers();
             },
+            update_idempotency(){
+                let trigger = this.model.trigger.filter(x => x.att_source == this.$el.getAttribute("trigger")).at(0);
+                let key = this.$el.getAttribute("name");
+                if(this.$el.checked){
+                    if (!('att_idempotency-key' in trigger)){
+                      trigger['att_idempotency-key'] = '';
+                    }
+                    trigger['att_idempotency-key'] += ' ' + key;
+                }else{
+                    trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace(key,'');
+               }
+               trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace('  ',' ').trim()
+            },
+            remove_activity(){
+                this.model.activity = this.model.activity.filter(x => x.att_id != this.$el.id);
+            },
+            move_activity_up() {
+                let index = parseInt(this.$el.getAttribute("index"), 10);
+                if (index > 0 && index < this.model.activity.length) {
+                    [this.model.activity[index - 1], this.model.activity[index]] =
+                        [this.model.activity[index], this.model.activity[index - 1]];
+                }
+            },
+            move_activity_down() {
+                let index = parseInt(this.$el.getAttribute("index"), 10);
+                if (index >= 0 && index < this.model.activity.length - 1) {
+                    [this.model.activity[index + 1], this.model.activity[index]] =
+                        [this.model.activity[index], this.model.activity[index + 1]];
+                }
+            },
             async init(){
                 this.read();
                 this._taskId = Draftsman.uuidv4();
@@ -88,6 +177,7 @@ document.addEventListener('alpine:init', () => {
             async read(){
                 await Draftsman.sleep(10);
                 this.model = await Modeler.get_model(this.navigation);
+                await this.fetch_flow_vars();
                 let availableEvents = await repo.list(x => x.startsWith(this.path.split("behavior-flows/").at(0) + "events/") && x.endsWith(".xml"));
                 await Draftsman.updateIfChanged(this, 'availableEvents', availableEvents);
             },
@@ -112,6 +202,7 @@ document.addEventListener('alpine:init', () => {
                 // e.g. model.field = model.field.filter(x => !x.deleted);
                 await Modeler.save_model(this.navigation,model);
                 this.model = model;
+                await this.fetch_flow_vars();
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

@@ -81,3 +81,24 @@
            class="input input-sm input-ghost w-full max-w-xs modeler-input" />
   </div>
 </template>
+<template x-component="notifier-variable-selector">
+  <div>
+    <select :disabled="editing_disabled"
+            x-model="activity[$prop('key')]"
+            x-data="{options: []}"
+            x-effect="let tmp = flowVariables;await Draftsman.sleep(1);if(tmp != options){options=tmp;}"
+            x-show="!activity[$prop('key')] || activity[$prop('key')] == '' || flowVariables.includes(activity[$prop('key')].replace('#flow.',''))" x-cloak x-transition
+            class="select select-sm select-ghost w-full max-w-xs modeler-input">
+      <option></option>
+      <template x-for="option in options" :key="option">
+        <option :value="'#flow.' + option" :selected="'#flow.' + option == activity[$prop('key')]" x-text="option"></option>
+      </template>
+      <option value="#''">#'expression'</option>
+    </select>
+    <input type="text"
+           :disabled="editing_disabled"
+           x-model="activity[$prop('key')]"
+           x-show="activity[$prop('key')] != '' && !flowVariables.includes(activity[$prop('key')].replace('#flow.',''))" x-cloak x-transition
+           class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+  </div>
+</template>

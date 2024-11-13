@@ -173,6 +173,7 @@
 
         <div class="navbar-center">
             <a class="btn btn-ghost text-xl" x-text="sessionStorage.project_name"></a>
+            <i class="fa-solid fa-rotate cursor-pointer" @click="location.reload()"></i>
         </div>
 
         <div class="navbar-end" x-data="sourceManagement">

@@ -1,0 +1,142 @@
+<template x-component="notifier-flow">
+    <div x-import="elements/input">
+        <template x-for="(activity, index) in model.activity" :key="activity.att_id">
+            <div>
+                <table class="table border mb-2">
+                    <thead>
+                    <tr class="bg-base-200">
+                        <th scope="row"
+                            x-text="activity.att_type">
+                        </th>
+                        <td class="text-right">
+                            <button @click="move_activity_up"
+                                    :index="index"
+                                    :disabled="editing_disabled"
+                                    x-show="index != 0" x-cloak x-transition
+                                    class="btn btn-xs btn-outline">
+                                <i class="fa-solid fa-arrow-up"></i>
+                            </button>
+                            <button @click="move_activity_down"
+                                    :index="index"
+                                    :disabled="editing_disabled"
+                                    x-show="(model.activity.length - 1) > index" x-cloak x-transition
+                                    class="btn btn-xs btn-outline">
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </button>
+                            <button @click="remove_activity"
+                                    :id="activity.att_id"
+                                    :disabled="editing_disabled"
+                                    class="btn btn-xs btn-outline btn-error">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Fail silent</th>
+                        <td class="text-right">
+                            <input type="checkbox"
+                                   @change="activity['att_fail-silent'] = $el.checked ? 'true' : 'false'"
+                                   :checked="activity['att_fail-silent'] && activity['att_fail-silent'] == 'true'"
+                                   class="checkbox" />
+                        </td>
+                    </tr>
+                    </thead>
+                    <template x-if="activity.att_type == 'create-iam-group' || activity.att_type == 'delete-iam-group'">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Group name</th>
+                                <td>
+                                    <ui-notifier-variable-selector key="att_group-name"></ui-notifier-variable-selector>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </template>
+                    <template x-if="activity.att_type == 'add-user-to-iam-group'">
+                        <tbody>
+                        <tr>
+                            <th scope="row">Group name</th>
+                            <td>
+                                <ui-notifier-variable-selector key="att_group-name"></ui-notifier-variable-selector>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Username</th>
+                            <td>
+                                <ui-notifier-variable-selector key="att_username"></ui-notifier-variable-selector>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </template>
+                    <template x-if="activity.att_type == 'remove-user-from-iam-group'">
+                        <tbody>
+                        <tr>
+                            <th scope="row">Group name</th>
+                            <td>
+                                <ui-notifier-variable-selector key="att_group-name"></ui-notifier-variable-selector>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Username</th>
+                            <td>
+                                <ui-notifier-variable-selector key="att_username"></ui-notifier-variable-selector>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </template>
+                    <template x-if="activity.att_type == 'retrieve-email-from-iam'">
+                        <tbody>
+                        <tr>
+                            <th scope="row">Variable name</th>
+                            <td>
+                                <input type="text"
+                                       :disabled="editing_disabled"
+                                       x-model="activity.att_name"
+                                       x-data="inputValidator"
+                                       @input="camel_cased"
+                                       placeholder="flowVariableName"
+                                       class="input input-sm w-full" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Username</th>
+                            <td>
+                                <ui-notifier-variable-selector key="att_username"></ui-notifier-variable-selector>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </template>
+                    <template x-if="activity.att_type == 'render-template'">
+                        <tbody>
+                        <tr>
+                            <th scope="row">Variable name</th>
+                            <td>
+                                <input type="text"
+                                       :disabled="editing_disabled"
+                                       x-model="activity.att_name"
+                                       x-data="inputValidator"
+                                       @input="camel_cased"
+                                       placeholder="flowVariableName"
+                                       class="input input-sm w-full" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Template file</th>
+                            <td x-data="{templates: null}" x-effect="templates = await Modeler.list_templates()">
+                                <select class="editable" x-model="activity['att_template-file']">
+                                    <option>-</option>
+                                    <template x-for="template in templates">
+                                        <option x-text="template.replace('templates/','')"
+                                                :value="template"
+                                                :selected="activity['att_template-file'] == template"></option>
+                                    </template>
+                                </select>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </template>
+                </table>
+                <pre x-text="JSON.stringify(activity,null,2)"></pre>
+            </div>
+        </template>
+    </div>
+</template>
