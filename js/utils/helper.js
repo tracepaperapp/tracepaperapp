@@ -198,11 +198,16 @@ class Draftsman {
     static editors = {};
     static editors_listners = {};
 
+    static deduplicateArray(arr) {
+     return [...new Set(arr)];
+   }
+
     static codeEditor(iframe,code,callback,completions=null){
         if (!iframe){return}
         let id = iframe.id;
         code = code.replaceAll('|LB|','\n');
         var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+
         if (iframeDocument.body.children.length == 0){
             var editorscript = iframeDocument.createElement("script");
             editorscript.src = "/js/tp/ace-editor.js";

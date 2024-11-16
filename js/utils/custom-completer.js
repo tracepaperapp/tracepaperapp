@@ -1,9 +1,9 @@
 try{
     var langTools = ace.require('ace/ext/language_tools');
 }catch{}
-try {
+if (!allCompletions) {
     var allCompletions = []
-}catch{}
+}
 
 
 var customCompleter = {
@@ -12,7 +12,6 @@ var customCompleter = {
           item.value.startsWith(prefix)
         );
         callback(null, filteredCompletions);
-
   }
  }
 langTools.addCompleter(customCompleter);

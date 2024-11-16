@@ -243,7 +243,7 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
 
-                this.flowVariables = variables;
+                this.flowVariables = Draftsman.deduplicateArray(variables);
             },
             prepare_state_variable_type: function(oldValue, newValue){
                     if (typeof(oldValue) === "number") {

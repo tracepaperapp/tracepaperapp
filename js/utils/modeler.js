@@ -143,7 +143,7 @@ class Modeler {
 
     static async get_model_by_name(name,subfolder=""){
         let repo = await GitRepository.open();
-        let files = await repo.list(x => x.startsWith(subfolder) && x.endsWith(name + ".xml") && !x.includes("/event-handlers/"));
+        let files = await repo.list(x => x.startsWith(subfolder) && x.endsWith("/" + name + ".xml") && !x.includes("/event-handlers/"));
         if (files.length > 1){
             throw new Error("Found more then 1 model with name: " + JSON.stringify(files));
         }
