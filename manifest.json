@@ -9,7 +9,7 @@
   "theme_color": "#1a1a1a",
   "icons": [
     {
-      "src": "/assets/logo.png",
+      "src": "/assets/tracepaper-icon.png",
       "sizes": "352x352",
       "type": "image/png"
     }
