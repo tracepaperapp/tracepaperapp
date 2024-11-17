@@ -1,3 +1,5 @@
+sessionStorage.globalWriteLock = "false";
+
 class GitRepository {
   static worker = null;
   static url = null;
@@ -102,6 +104,10 @@ class GitRepository {
 
   // Revert de wijzigingen van een bestand
   async revert(filePath) {
+    sessionStorage.globalWriteLock = "true";
+    setTimeout(function(){
+        sessionStorage.globalWriteLock = "false";
+    },2000);
     return this._sendMessage({
       action: 'revert',
       filePath,

@@ -153,23 +153,6 @@ document.addEventListener('alpine:init', () => {
                }
                trigger['att_idempotency-key'] = trigger['att_idempotency-key'].replace('  ',' ').trim()
             },
-            remove_activity(){
-                this.model.activity = this.model.activity.filter(x => x.att_id != this.$el.id);
-            },
-            move_activity_up() {
-                let index = parseInt(this.$el.getAttribute("index"), 10);
-                if (index > 0 && index < this.model.activity.length) {
-                    [this.model.activity[index - 1], this.model.activity[index]] =
-                        [this.model.activity[index], this.model.activity[index - 1]];
-                }
-            },
-            move_activity_down() {
-                let index = parseInt(this.$el.getAttribute("index"), 10);
-                if (index >= 0 && index < this.model.activity.length - 1) {
-                    [this.model.activity[index + 1], this.model.activity[index]] =
-                        [this.model.activity[index], this.model.activity[index + 1]];
-                }
-            },
             async get_methods(file){
                 let repo = await GitRepository.open();
                 let content = await repo.read(file);
@@ -188,13 +171,12 @@ document.addEventListener('alpine:init', () => {
                 }
             },
             async reload(){
-                this.lock = true;
+                this.notifier_lock = true;
                 try {
-                    this.model = Modeler.prepare_model("notifier",{});
                     await this.read();
                 } finally {
-                    await Draftsman.sleep(1000);
-                    this.lock = false;
+                    await Draftsman.sleep(100);
+                    this.notifier_lock = false;
                 }
             },
             async read(){
@@ -214,19 +196,16 @@ document.addEventListener('alpine:init', () => {
                 await Modeler.delete_model(file);
             },
             async rename(){
-                if(this.lock){return}
+                if(this.notifier_lock){return}
 //                // alter name in model
 //                await this._execute_save();
-//                this.lock = true;
+//                this.notifier_lock = true;
 //                // Move files to new path
 //                await Modeler.force_rename_model(this.preparedRename.oldPath,this.preparedRename.newPath);
             },
             async _execute_save(){
-                if(this.lock){return}
-                let model = JSON.parse(JSON.stringify(this.model));
-                // e.g. model.field = model.field.filter(x => !x.deleted);
-                await Modeler.save_model(this.navigation,model);
-                this.model = model;
+                if(this.notifier_lock){return}
+                await Modeler.save_model(this.navigation,this.model);
                 await this.fetch_flow_vars();
             },
             destroy(){
@@ -285,21 +264,65 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('notifierFlowControl', function(){
         return {
             activity_array: [],
+            target: "",
+            array_lock: false,
             init(){
                 this.$watch("model",this.reload.bind(this));
                 this.$watch("activity",this.reload.bind(this));
+                this.$watch("activity_array",this.save.bind(this));
+                this.listnerId = Draftsman.registerListener("force-reload",this.reload.bind(this));
             },
-            reload(){
-                console.log(this.activity);
-                console.log(this.model);
+            async reload(){
+                if (this.array_lock){return}
+                await Draftsman.sleep(100);
                 if(this.activity){
-                    this.activity_array = this.activity.activity;
+                    this.target = "activity";
+                    this.activity_array = Alpine.reactive(this.activity.activity);
                 } else {
-                    this.activity_array = this.model.activity;
+                    this.target = "model";
+                    this.activity_array = Alpine.reactive(this.model.activity);
                 }
-                console.log(this.activity_array);
+            },
+            save(){
+                if (this.target == "model"){
+                    this.model.activity = this.activity_array;
+                } else if(this.target == "activity"){
+                    let activity = this.model.activity.filter(x => x.att_id == this.activity.att_id).at(0);
+                    activity.activity = this.activity_array;
+                }
+            },
+            async remove_activity(){
+                if (this.array_lock){return}
+                this.array_lock = true;
+                this.activity_array = this.activity_array.filter(x => x.att_id != this.$el.id);
+                await Draftsman.sleep(1000);
+                this.array_lock = false;
+            },
+            async move_activity_up() {
+                let index = parseInt(this.$el.getAttribute("index"), 10);
+                if (index > 0 && index < this.activity_array.length) {
+                    if (this.array_lock){return}
+                    this.array_lock = true;
+                    [this.activity_array[index - 1], this.activity_array[index]] =
+                        [this.activity_array[index], this.activity_array[index - 1]];
+                    await Draftsman.sleep(1000);
+                    this.array_lock = false;
+                }
+            },
+            async move_activity_down() {
+                let index = parseInt(this.$el.getAttribute("index"), 10);
+                if (index >= 0 && index < this.activity_array.length - 1) {
+                    if (this.array_lock){return}
+                    this.array_lock = true;
+                    [this.activity_array[index + 1], this.activity_array[index]] =
+                        [this.activity_array[index], this.activity_array[index + 1]];
+                    await Draftsman.sleep(1000);
+                    this.array_lock = false;
+                }
+            },
+            destroy(){
+                Draftsman.deregisterListener(this.listnerId);
             }
-
         }
     });
 });

@@ -327,8 +327,14 @@ document.addEventListener('alpine:init', () => {
                 if(this.lock){return}
                 let hash = Draftsman.generateFingerprint(this.model);
                 if (hash == this.hash){return}
-                await Modeler.save_model(this.path,this.model);
-                this.hash = Draftsman.generateFingerprint(this.model);
+                this.lock = true;
+                try{
+                    await Modeler.save_model(this.path,this.model);
+                    this.hash = Draftsman.generateFingerprint(this.model);
+                } finally{
+                    await Draftsman.sleep(100);
+                    this.lock = false;
+                }
                 await this.fetch_flow_vars();
             },
             destroy(){

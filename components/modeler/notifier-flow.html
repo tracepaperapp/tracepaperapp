@@ -16,7 +16,7 @@
                 <button @click="move_activity_down"
                         :index="index"
                         :disabled="editing_disabled"
-                        x-show="(model.activity.length - 1) > index" x-cloak x-transition
+                        x-show="(activity_array.length - 1) > index" x-cloak x-transition
                         class="btn btn-xs btn-outline">
                     <i class="fa-solid fa-arrow-down"></i>
                 </button>
@@ -536,9 +536,9 @@
                     <ui-notifier-activity></ui-notifier-activity>
                 </template>
                 <template x-if="activity.att_type == 'loop'">
-                    <table class="table table-xs border mb-2">
+                    <table x-data="{active: $persist(false).using(sessionStorage).as(activity.att_id)}" class="table table-xs border border-primary-content mb-2">
                         <thead>
-                        <tr class="bg-base-200">
+                        <tr class="bg-primary-content">
                             <th scope="row"
                                 x-text="activity.att_type">
                             </th>
@@ -573,9 +573,19 @@
                                 <ui-notifier-variable-selector key="att_array"></ui-notifier-variable-selector>
                             </td>
                         </tr>
+                        <tr>
+                            <th scope="row">View content</th>
+                            <td>
+                                <div class="form-control w-52">
+                                    <label class="label cursor-pointer">
+                                        <input type="checkbox" class="toggle toggle-primary" x-model="active" />
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
                         </thead>
-                        <tbody x-data="notifierFlowControl">
-                        <template x-for="activity in activity_array" :key="activity.att_id">
+                        <tbody x-data="notifierFlowControl" x-show="active" x-cloak x-transition>
+                        <template x-for="(activity,index) in activity_array" :key="activity.att_id">
                             <tr>
                                 <td colspan="2">
                                     <ui-notifier-activity></ui-notifier-activity>

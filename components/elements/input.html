@@ -51,9 +51,11 @@
             x-model="map.att_value"
             x-show="!map.att_value.startsWith('#')" x-cloak x-transition
             class="select select-sm select-ghost w-full max-w-xs modeler-input">
+      <option></option>
       <template x-for="option in options" :key="option">
         <option :value="option" :selected="option == map.att_value" x-text="option"></option>
       </template>
+      <option>#''</option>
     </select>
     <input type="text"
            :disabled="editing_disabled"

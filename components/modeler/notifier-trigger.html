@@ -1,133 +1,137 @@
 <template x-component="notifier-trigger">
     <div>
-        <template x-for="(trigger,index) in model.trigger" :key="index">
-            <div x-data="triggerFieldSelector">
-                <template x-if="index != 0">
-                    <hr>
+        <template x-if="model.trigger">
+            <div>
+                <template x-for="(trigger,index) in model.trigger" :key="index">
+                    <div x-data="triggerFieldSelector">
+                        <template x-if="index != 0">
+                            <hr>
+                        </template>
+                        <table class="table mt-5">
+                            <tr class="text-xl">
+                                <th scope="row">Event</th>
+                                <td colspan="2" x-effect="if (trigger.att_source == ''){trigger.att_source = '@'}">
+                                    <span x-show="!trigger.att_source.startsWith('@')" x-cloak x-transition x-text="trigger.att_source"></span>
+                                    <input type="text"
+                                           x-model="trigger.att_source"
+                                           x-show="trigger.att_source.startsWith('@')" x-cloak x-transition
+                                           :disabled="editing_disabled"
+                                           @focusout="trigger.att_source = $el.value"
+                                           placeholder="@afterDeployment"
+                                           class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+                                </td>
+                                <td>
+                                    <button @click="remove_trigger"
+                                            :trigger="trigger.att_source"
+                                            :disabled="editing_disabled"
+                                            class="btn btn-xs btn-outline btn-error">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr x-show="trigger['att_idempotency-key']" x-cloak x-transition>
+                                <th scope="row">Idempotency TTL</th>
+                                <td colspan="2">
+                                    <input type="text"
+                                           x-model="trigger['att_idempotency-ttl']"
+                                           :disabled="editing_disabled"
+                                           placeholder="24 * 60 * 60"
+                                           class="input input-sm input-ghost w-full max-w-xs modeler-input" />
+                                </td>
+                            </tr>
+                            <tr><td></td></tr>
+                            <tr>
+                                <th scope="col">Flow variable</th>
+                                <th scope="col">Event field</th>
+                                <th scope="col">Idempotency check</th>
+                            </tr>
+                            <template x-for="(map,index) in trigger.mapping" :key="index">
+                                <tr>
+                                    <td>
+                                        <input type="text"
+                                               :disabled="editing_disabled"
+                                               x-model="map.att_target"
+                                               x-data="inputValidator"
+                                               @input="camel_cased"
+                                               placeholder="flowVariableName"
+                                               class="input input-sm w-full" />
+                                    </td>
+                                    <td x-import="elements/input">
+                                        <ui-trigger-field-selector></ui-trigger-field-selector>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox"
+                                               @change="update_idempotency"
+                                               :trigger="trigger.att_source"
+                                               :name="map.att_value"
+                                               :checked="map.att_value && trigger['att_idempotency-key'].includes(map.att_value)"
+                                               class="checkbox checkbox-sm" />
+                                    </td>
+                                    <td>
+                                        <button @click.once="trigger.mapping = trigger.mapping.filter(x => map.att_target != x.att_target);sync_to_disk()"
+                                                :disabled="editing_disabled"
+                                                class="btn btn-xs btn-outline btn-error">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr>
+                                <td colspan="3"></td>
+                                <td>
+                                    <button @click="trigger.mapping.push({att_target: Draftsman.generateRandomCamelCaseString(), att_value: ''})"
+                                            :disabled="editing_disabled"
+                                            class="btn btn-xs btn-outline btn-success">
+                                        <i class="fa-regular fa-plus"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
                 </template>
-                <table class="table mt-5">
-                    <tr class="text-xl">
-                        <th scope="row">Event</th>
-                        <td colspan="2" x-effect="if (trigger.att_source == ''){trigger.att_source = '@'}">
-                            <span x-show="!trigger.att_source.startsWith('@')" x-cloak x-transition x-text="trigger.att_source"></span>
-                            <input type="text"
-                                   x-model="trigger.att_source"
-                                   x-show="trigger.att_source.startsWith('@')" x-cloak x-transition
-                                   :disabled="editing_disabled"
-                                   @focusout="trigger.att_source = $el.value"
-                                   placeholder="@afterDeployment"
-                                   class="input input-sm input-ghost w-full max-w-xs modeler-input" />
-                        </td>
-                        <td>
-                            <button @click="remove_trigger"
-                                    :trigger="trigger.att_source"
-                                    :disabled="editing_disabled"
-                                    class="btn btn-xs btn-outline btn-error">
-                                <i class="fa-regular fa-trash-can"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr x-show="trigger['att_idempotency-key']" x-cloak x-transition>
-                        <th scope="row">Idempotency TTL</th>
-                        <td colspan="2">
-                            <input type="text"
-                                   x-model="trigger['att_idempotency-ttl']"
-                                   :disabled="editing_disabled"
-                                   placeholder="24 * 60 * 60"
-                                   class="input input-sm input-ghost w-full max-w-xs modeler-input" />
-                        </td>
-                    </tr>
-                    <tr><td></td></tr>
-                    <tr>
-                        <th scope="col">Flow variable</th>
-                        <th scope="col">Event field</th>
-                        <th scope="col">Idempotency check</th>
-                    </tr>
-                    <template x-for="map in trigger.mapping" :key="map.att_target">
-                        <tr>
-                            <td>
-                                <input type="text"
-                                       :disabled="editing_disabled"
-                                       x-model="map.att_target"
-                                       x-data="inputValidator"
-                                       @input="camel_cased"
-                                       placeholder="flowVariableName"
-                                       class="input input-sm w-full" />
-                            </td>
-                            <td x-import="elements/input">
-                                <ui-trigger-field-selector></ui-trigger-field-selector>
-                            </td>
-                            <td>
-                                <input type="checkbox"
-                                       @change="update_idempotency"
-                                       :trigger="trigger.att_source"
-                                       :name="map.att_value"
-                                       :checked="trigger['att_idempotency-key'].includes(map.att_value)"
-                                       class="checkbox checkbox-sm" />
-                            </td>
-                            <td>
-                                <button @click.once="trigger.mapping = trigger.mapping.filter(x => map.att_target != x.att_target);sync_to_disk()"
-                                        :disabled="editing_disabled"
-                                        class="btn btn-xs btn-outline btn-error">
-                                    <i class="fa-regular fa-trash-can"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </template>
-                    <tr>
-                        <td colspan="3"></td>
-                        <td>
-                            <button @click="trigger.mapping.push({att_target: Draftsman.generateRandomCamelCaseString(), att_value: ''})"
-                                    :disabled="editing_disabled"
-                                    class="btn btn-xs btn-outline btn-success">
-                                <i class="fa-regular fa-plus"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </table>
+                <button @click="prepare_add_trigger"
+                        :disabled="editing_disabled"
+                        class="btn btn-xs btn-outline btn-success mt-5">
+                    <i class="fa-regular fa-plus"></i> trigger
+                </button>
+                <dialog x-show="triggerModal" x-cloak x-transition
+                        class="modal modal-open">
+                    <div class="modal-box w-11/12 max-w-5xl">
+                        <form method="dialog">
+                            <button @click="triggerModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        </form>
+                        <h3 class="font-bold text-lg">Add trigger</h3>
+
+                        <label class="input input-bordered flex items-center gap-2 mt-5">
+                            <input type="text" class="grow" x-model="search" placeholder="Search" />
+                            <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 16 16"
+                                    fill="currentColor"
+                                    class="h-4 w-4 opacity-70">
+                                <path
+                                        fill-rule="evenodd"
+                                        d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                                        clip-rule="evenodd" />
+                            </svg>
+                        </label>
+
+                        <table class="table mt-2">
+                            <template x-for="t in availableTriggers" :key="t.file">
+                                <tr x-show="t.file.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
+                                    <th scope="row" x-text="t.type"></th>
+                                    <td x-text="t.name"></td>
+                                    <td>
+                                        <button @click="add_trigger" :file="t.file" class="btn btn-sm btn-outline btn-success">
+                                            <i class="fa-regular fa-plus"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </table>
+                    </div>
+                </dialog>
             </div>
         </template>
-        <button @click="prepare_add_trigger"
-                :disabled="editing_disabled"
-                class="btn btn-xs btn-outline btn-success mt-5">
-            <i class="fa-regular fa-plus"></i> trigger
-        </button>
-        <dialog x-show="triggerModal" x-cloak x-transition
-                class="modal modal-open">
-            <div class="modal-box w-11/12 max-w-5xl">
-                <form method="dialog">
-                    <button @click="triggerModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-                </form>
-                <h3 class="font-bold text-lg">Add trigger</h3>
-
-                <label class="input input-bordered flex items-center gap-2 mt-5">
-                    <input type="text" class="grow" x-model="search" placeholder="Search" />
-                    <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 16 16"
-                            fill="currentColor"
-                            class="h-4 w-4 opacity-70">
-                        <path
-                                fill-rule="evenodd"
-                                d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                                clip-rule="evenodd" />
-                    </svg>
-                </label>
-
-                <table class="table mt-2">
-                    <template x-for="t in availableTriggers" :key="t.file">
-                        <tr x-show="t.file.toLowerCase().includes(search.toLowerCase())" x-cloak x-transition>
-                            <th scope="row" x-text="t.type"></th>
-                            <td x-text="t.name"></td>
-                            <td>
-                                <button @click="add_trigger" :file="t.file" class="btn btn-sm btn-outline btn-success">
-                                    <i class="fa-regular fa-plus"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </template>
-                </table>
-            </div>
-        </dialog>
     </div>
 </template>

@@ -86,11 +86,17 @@ document.addEventListener('alpine:init', () => {
                 if(this.lock){return}
                 let hash = Draftsman.generateFingerprint(this.model);
                 if (hash == this.hash){return}
-                let model = JSON.parse(JSON.stringify(this.model));
-                model.field = model.field.filter(x => !x.deleted);
-                await Modeler.save_model(this.path,this.model);
-                this.model = model;
-                this.hash = Draftsman.generateFingerprint(this.model);
+                this.lock = true;
+                try{
+                    let model = JSON.parse(JSON.stringify(this.model));
+                    model.field = model.field.filter(x => !x.deleted);
+                    await Modeler.save_model(this.path,model);
+                    this.model = model;
+                    this.hash = Draftsman.generateFingerprint(this.model);
+                } finally {
+                    await Draftsman.sleep(100);
+                    this.lock = false;
+                }
             },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);

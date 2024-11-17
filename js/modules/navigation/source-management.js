@@ -24,9 +24,12 @@ document.addEventListener('alpine:init', () => {
             async revert_file(){
                 let file = this.$el.getAttribute("file");
                 await this.repo.revert(file);
-                await this.execute_diff();
-                Draftsman.publishMessage("force-reload",file);
-                Draftsman.publishMessage("file-reverted",file);
+                location.reload();
+//                await this.execute_diff();
+//                Draftsman.publishMessage("force-reload",file);
+//                Draftsman.publishMessage("file-reverted",file);
+//                await Draftsman.sleep(1000);
+//                this.navigate(this.navigation);
             },
             async revert_all(){
                 if(!confirm("Remove all local changes, are you sure?")){return}

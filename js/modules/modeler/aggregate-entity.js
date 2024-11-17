@@ -60,7 +60,7 @@ document.addEventListener('alpine:init', () => {
                     this.model = model;
                     this.hash = Draftsman.generateFingerprint(this.model);
                 } finally {
-                    await Draftsman.sleep(10);
+                    await Draftsman.sleep(100);
                     this.lock = false;
                 }
             },
