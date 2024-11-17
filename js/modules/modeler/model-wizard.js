@@ -73,6 +73,11 @@ document.addEventListener('alpine:init', () => {
                         this.update_action_buttons(false,false,true);
                         break;
 
+                    // Notifier
+                    case 50:
+                        this.update_action_buttons(false,false,true);
+                        break;
+
                     default:
                         this.update_action_buttons();
                 }
@@ -160,6 +165,13 @@ document.addEventListener('alpine:init', () => {
                 return prepared_model;
             },
 
+            async prepare_notifier(prepared_model){
+                Modeler._roots[this.parameters.file] = "notifier";
+                prepared_model.att_name = this.parameters.name;
+                prepared_model = Modeler.prepare_model("notifier",prepared_model);
+                return prepared_model;
+            },
+
             async insert_model(){
                 this.active = false;
                 let prepared_model = {};
@@ -175,6 +187,9 @@ document.addEventListener('alpine:init', () => {
                         break;
                     case "behavior":
                         prepared_model = await this.prepare_behavior_flow(prepared_model);
+                        break;
+                    case "notifier":
+                        prepared_model = await this.prepare_notifier(prepared_model);
                         break;
                     default:
                         console.error("Create for type not implemented: ",this.parameters.type);
@@ -406,6 +421,28 @@ document.addEventListener('alpine:init', () => {
                 }
             },
 
+            // Notifier
+            async start_notifier(){
+                this.parameters.name = "";
+                this.parameters.type = "notifier";
+                this.conflicted = true;
+                this.state = 50;
+            },
+            check_notifier_name(){
+                this.conflicted = !this.parameters.name || !pascalCaseRegex.test(this.parameters.name);
+                if (this.conflicted){
+                    this.dialog_id = 0;
+                    return
+                }
+                this.parameters.file = `notifiers/${this.parameters.name}.xml`;
+                this.conflicted = this.files.includes(this.parameters.file);
+                if (this.conflicted){
+                    this.dialog_id = 1;
+                } else {
+                    this.dialog_id = 0;
+                }
+            },
+
             close(){
                 this.active = false;
                 this.state = 0;
@@ -446,6 +483,9 @@ document.addEventListener('alpine:init', () => {
                } else if (this.state == 1 && event.key === 'b'){
                    event.preventDefault();
                    this.start_behavior_flow();
+               } else if (this.state == 1 && event.key === 'n'){
+                   event.preventDefault();
+                   this.start_notifier();
                } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && ["command"].includes(type)) {
                    event.preventDefault();
                    this.copy_fields();

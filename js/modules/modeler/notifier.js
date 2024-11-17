@@ -122,15 +122,9 @@ document.addEventListener('alpine:init', () => {
             },
             async add_trigger(){
                 this.triggerModal = false;
-                let root = await Modeler.get_model(this.path.split("behavior-flows/").at(0) + "root.xml");
                 let event = await Modeler.get_model(this.$el.getAttribute("file"));
                 let fields = event.field.map(x => x.att_name);
                 let trigger = {att_source: event.att_name, mapping: [], "att_idempotency-key": ""};
-                if (fields.includes(root["att_business-key"])){
-                    trigger["att_key-field"] = root["att_business-key"];
-                } else {
-                    trigger["att_key-field"] = "";
-                }
                 fields.forEach(field => {
                     trigger.mapping.push({att_target: field, att_value: field});
                 });
@@ -192,8 +186,7 @@ document.addEventListener('alpine:init', () => {
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
             },
             async delete_model(){
-                let file = ``;
-                await Modeler.delete_model(file);
+                await Modeler.delete_model(this.navigation);
             },
             async rename(){
                 if(this.notifier_lock){return}
@@ -266,11 +259,16 @@ document.addEventListener('alpine:init', () => {
             activity_array: [],
             target: "",
             array_lock: false,
-            init(){
+            insertActivityModal: false,
+            search: this.$persist("").using(sessionStorage).as("activity-search"),
+            flowControlInitialized: false,
+            async init(){
                 this.$watch("model",this.reload.bind(this));
                 this.$watch("activity",this.reload.bind(this));
                 this.$watch("activity_array",this.save.bind(this));
                 this.listnerId = Draftsman.registerListener("force-reload",this.reload.bind(this));
+                this.flowControlInitialized = true;
+                await this.reload();
             },
             async reload(){
                 if (this.array_lock){return}
@@ -282,6 +280,12 @@ document.addEventListener('alpine:init', () => {
                     this.target = "model";
                     this.activity_array = Alpine.reactive(this.model.activity);
                 }
+            },
+            get_types(){
+               return this.activity_types;
+            },
+            set_nested(){
+               this.activity_types = this.activity_types.filter(x => x != "loop");
             },
             save(){
                 if (this.target == "model"){
@@ -320,9 +324,66 @@ document.addEventListener('alpine:init', () => {
                     this.array_lock = false;
                 }
             },
+            prepare_insert_after(){
+                this.insert_mode = "after";
+                this.reference_index = parseInt(this.$el.getAttribute("index"), 10);
+                this.insertActivityModal = true;
+            },
+            prepare_insert_before(){
+                this.insert_mode = "before";
+                this.reference_index = parseInt(this.$el.getAttribute("index"), 10);
+                this.insertActivityModal = true;
+            },
+            insert(){
+                this.insertActivityModal = false;
+                let type = this.$el.getAttribute("activity-type");
+                let activity = {};
+
+                switch(type){
+                    case "loop":
+                        activity.activity = [];
+                        break;
+                }
+
+                activity.att_type = type;
+                activity.att_id = Draftsman.makeid(6);
+                switch(this.insert_mode){
+                    case "after":
+                        this.activity_array.splice(this.reference_index + 1, 0, activity);
+                        break;
+                    case "before":
+                        this.activity_array.splice(this.reference_index, 0, activity);
+                        break;
+                }
+            },
             destroy(){
                 Draftsman.deregisterListener(this.listnerId);
-            }
+            },
+            activity_types: [
+                  "create-iam-group",
+                  "delete-iam-group",
+                  "add-user-to-iam-group",
+                  "remove-user-from-iam-group",
+                  "retrieve-email-from-iam",
+                  "render-template",
+                  "send-email",
+                  "send-graphql-notification",
+                  "write-file",
+                  "fetch-property",
+                  "get-token",
+                  "get-systemuser-token",
+                  "iam-create-systemuser",
+                  "iam-create-user",
+                  "iam-delete-user",
+                  "set-variable",
+                  "call-internal-api",
+                  "code",
+            //      "dmn",
+                  "HTTP",
+            //      "scheduled-event",
+                  "invalidate-cdn",
+                  "loop"
+            ]
         }
     });
 });

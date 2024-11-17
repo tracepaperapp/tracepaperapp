@@ -185,11 +185,13 @@ class Modeler {
 
     static async delete_model(name){
         let repo = await GitRepository.open();
+        sessionStorage.globalWriteLock = "true";
         try{
             console.log(await repo.delete(name));
             console.log(await repo.delete(name.replace(".xml",".md")));
         } finally {
             await Draftsman.sleep(100);
+            sessionStorage.globalWriteLock = "false";
             Draftsman.publishMessage("file-reverted",name);
         }
     }
