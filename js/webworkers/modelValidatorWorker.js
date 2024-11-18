@@ -93,7 +93,7 @@ ModelValidator = {
     async validateModel(files) {
         this.errors = [];
         try{
-            for (const file of files.filter(x => !x.endsWith(".log") && !x.endsWith(".md"))) {
+            for (const file of files.filter(x => !x.endsWith(".log") && !x.endsWith(".md") && !x.endsWith(".bin"))) {
                 const type = Modeler.determine_type(file);
 
                 if (type === "readme" || type === "unknown") {

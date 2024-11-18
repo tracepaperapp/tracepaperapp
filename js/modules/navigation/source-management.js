@@ -46,12 +46,16 @@ document.addEventListener('alpine:init', () => {
             },
             async commit_changes(){
                 this.commitModal = false;
-                this.repo.commit(this.commitMessage);
-                await Draftsman.sleep(1000);
-                await this.repo.push();
-                this.force = [];
-                this.readyToCommit = false;
-                this.diff = {};
+                try{
+                    this.repo.commit(this.commitMessage);
+                    await Draftsman.sleep(1000);
+                    await this.repo.push();
+                    this.force = [];
+                    this.readyToCommit = false;
+                    this.diff = {};
+                } catch(err){
+                    console.log(err);
+                }
             },
             async execute_diff(){
                 this.readyToCommit = false;

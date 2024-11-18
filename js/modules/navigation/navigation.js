@@ -144,9 +144,12 @@ document.addEventListener('alpine:init', () => {
                     document.getElementById("main").scrollTop = position;
                 }
             },
-            close_tab: function(){
+            close_tab: function(tab=null){
                 this.$event.preventDefault();
-                let tab = this.$el.getAttribute("navigation");
+                if (typeof tab !== 'string'){
+                    tab = this.$el.getAttribute("navigation");
+                }
+                console.log(tab);
                 this.tabs = this.tabs.filter(x => x != tab);
                 if (this.navigation == tab && this.tabs.length != 0){
                     this.navigation = this.tabs.at(-1);
@@ -197,6 +200,15 @@ document.addEventListener('alpine:init', () => {
                       console.log("All storage cleared.");
                       location.reload();
                 }
+            },
+            force_pull: async function(){
+                if (sessionStorage.project_url &&
+                    confirm(`Do you want to perform a fresh checkout of the repository ${sessionStorage.project_url}?\nLocal changes will be lost!`)){
+                        const request = indexedDB.deleteDatabase(sessionStorage.project_url.replace("https://github.com/",""));
+                        request.onsuccess = function () {
+                            location.reload();
+                        };
+                    }
             },
             _handle_rename: function(message){
                 this.tabs = this.tabs.filter(x => x != message.oldPath);

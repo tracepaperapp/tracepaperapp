@@ -105,6 +105,7 @@ self.onmessage = async (event) => {
     }
   } catch (error) {
     console.log(event);
+    console.log(error);
     console.error(error.stack);
     postMessage({ error: error.message, request_id, last_pull });
   }
@@ -205,11 +206,30 @@ async function mergeRemoteChanges() {
 
 // Stage local changes
 async function stageLocalChanges() {
-  const status = await isogit.statusMatrix({ fs, dir });
-  for (let [filepath, , workdirStatus, stageStatus] of status) {
-    if (workdirStatus !== stageStatus) {
-      await isogit.add({ fs, dir, filepath });
+  try {
+    const status = await isogit.statusMatrix({ fs, dir });
+    console.trace("Status matrix:", status);
+
+    for (let [filepath, , workdirStatus, stageStatus] of status) {
+      try {
+        if (workdirStatus !== stageStatus) {
+          if (workdirStatus === 0) {
+            // Bestand is verwijderd: gebruik remove
+            console.trace(`Bestand verwijderd, staging voor verwijdering: ${filepath}`);
+            await isogit.remove({ fs, dir, filepath });
+          } else {
+            // Bestand is gewijzigd of nieuw: gebruik add
+            console.trace(`Bestand toegevoegd of gewijzigd, staging: ${filepath}`);
+            await isogit.add({ fs, dir, filepath });
+          }
+        }
+      } catch (err) {
+        console.warn(`Fout bij verwerken van bestand ${filepath}:`, err.message);
+      }
     }
+  } catch (err) {
+    console.error("Algemene fout in stageLocalChanges:", err.message);
+    throw err;
   }
 }
 
@@ -446,15 +466,23 @@ async function revertFile(filePath) {
 }
 
 async function commitChanges(message,repoUrl) {
-  await stageLocalChanges();
-  await fetchRemoteChanges(repoUrl);
-  await mergeRemoteChanges();
-  await isogit.commit({
-    fs,
-    dir,
-    author: { name: 'User', email: 'user@example.com' },
-    message
-  });
+  try{
+      await stageLocalChanges();
+      await fetchRemoteChanges(repoUrl);
+      await mergeRemoteChanges();
+      await isogit.commit({
+        fs,
+        dir,
+        author: { name: 'User', email: 'user@example.com' },
+        message
+      });
+  }catch(err){
+      console.error("Fout tijdens commit-proces:", err.message);
+      console.error("Stacktrace:", err.stack);
+
+      // Rethrow om het probleem verder omhoog in de keten te behandelen
+      throw err;
+  }
 }
 
 async function hasUnpushedChanges(repoUrl) {

@@ -10,6 +10,7 @@ document.addEventListener('alpine:init', () => {
             entities: {},
             root: {},
             search: "",
+            newName: "",
             eventModal: false,
             availableEvents: [],
             selectedTab: this.$persist({}).using(sessionStorage).as("behaviorTab"),
@@ -286,7 +287,7 @@ document.addEventListener('alpine:init', () => {
                     this.path = this.navigation;
                     let model = await Modeler.get_model(this.path);
                     await Draftsman.updateIfChanged(this, 'model', model);
-                    console.log(this.model);
+                    this.newName = this.model.att_name;
                     await this.fetch_flow_vars();
                     let repo = await GitRepository.open();
                     this.modules = await repo.list(x => x.startsWith("lib/") && x.endsWith(".py"));
@@ -315,13 +316,20 @@ document.addEventListener('alpine:init', () => {
             async delete_model(){
                 await Modeler.delete_model(this.path);
             },
+            async check_name(){
+                let repo = await GitRepository.open();
+                let files = await repo.list(x => x.endsWith(this.path.replace(this.model.att_name + ".xml", this.newName + ".xml")));
+                this.duplicateName = files.length > 0;
+            },
             async rename(){
                 if(this.lock){return}
-                // alter name in model
+                let newPath = this.path.replace(this.model.att_name + ".xml", this.newName + ".xml");
+                this.model.att_name = this.newName;
                 await this._execute_save();
                 this.lock = true;
                 // Move files to new path
-                //await Modeler.force_rename_model(oldpath,newpath);
+                console.log(this.path," --> ",newPath)
+                await Modeler.force_rename_model(this.path,newPath);
             },
             async _execute_save(){
                 if(this.lock){return}

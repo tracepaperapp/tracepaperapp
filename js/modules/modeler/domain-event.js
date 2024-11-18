@@ -46,7 +46,9 @@ document.addEventListener('alpine:init', () => {
                 Draftsman.debounce(this._taskId,this._execute_save.bind(this),1500);
             },
             async delete_model(){
-                // TODO soft delete?
+                await Modeler.force_rename_model(this.path,this.path + ".bin");
+                await Draftsman.sleep(1000);
+                this.close_tab(this.path + ".bin");
             },
             async _execute_save(){
                 if(this.lock){return}

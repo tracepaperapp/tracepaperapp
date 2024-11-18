@@ -67,19 +67,21 @@ document.addEventListener('alpine:init', () => {
                 await this._execute_save();
                 this.lock = true;
                 await Draftsman.sleep(10);
-                let force_reload = this.subdomain != this.newSubdomain;
+                console.log(this.subdomain, this.newSubdomain,this.subdomain != this.newSubdomain);
+                let force_reload = false;//this.subdomain != this.newSubdomain;
                 let sourcePath = this.path.replace("root.xml","");
                 let targetPath = sourcePath.replace(`/${this.subdomain}/${oldName}/`,`/${this.newSubdomain}/${this.newName}/`);
                 let repo = await GitRepository.open();
                 await repo.moveDirectory(sourcePath,targetPath);
-                await Draftsman.sleep(100);
-                Draftsman.publishMessage("file-renamed",{
-                    oldPath: sourcePath + "root.xml",
-                    newPath: targetPath + "root.xml"
-                });
                 if (force_reload){
-                    Draftsman.sleep(500);
+                    Draftsman.sleep(1000);
                     location.reload();
+                } else {
+                    await Draftsman.sleep(100);
+                    Draftsman.publishMessage("file-renamed",{
+                        oldPath: sourcePath + "root.xml",
+                        newPath: targetPath + "root.xml"
+                    });
                 }
             },
             async _execute_save(){

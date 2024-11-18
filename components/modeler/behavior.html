@@ -71,6 +71,25 @@
 
                                 <table class="table table-xs">
                                     <tr>
+                                        <th  scope="row">Name</th>
+                                        <td>
+                                            <input type="text"
+                                                   :disabled="editing_disabled"
+                                                   x-model="newName"
+                                                   x-data="inputValidator"
+                                                   @input="pascal_cased"
+                                                   @keyup.debounce.500ms="check_name"
+                                                   placeholder="BehaviorName"
+                                                   class="input w-[70%] input-xs mr-2" />
+                                            <button x-show="newName != model.att_name" x-cloak x-transition
+                                                    @click="rename"
+                                                    class="btn btn-outline btn-xs"
+                                                    :class="duplicateName ? 'btn-error' : 'btn-success'">
+                                                save
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <th scope="row">Is create flow</th>
                                         <td>
                                             <input type="checkbox"

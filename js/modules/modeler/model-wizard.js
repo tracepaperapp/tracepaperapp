@@ -183,6 +183,11 @@ document.addEventListener('alpine:init', () => {
                         prepared_model = await this.prepare_aggregate(prepared_model);
                         break;
                     case "event":
+                        if (this.files.includes(this.parameters.file + ".bin")){
+                            await Modeler.force_rename_model(this.parameters.file + ".bin",this.parameters.file);
+                            this.close();
+                            return;
+                        }
                         prepared_model = await this.prepare_domain_event(prepared_model);
                         break;
                     case "behavior":

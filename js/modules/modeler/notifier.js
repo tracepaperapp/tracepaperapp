@@ -7,6 +7,7 @@ document.addEventListener('alpine:init', () => {
             listnerId: "",
             triggerModal: false,
             search: "",
+            newName: "",
             availableTriggers: [],
             flowVariables: [],
             templates: [],
@@ -176,6 +177,7 @@ document.addEventListener('alpine:init', () => {
             async read(){
                 await Draftsman.sleep(10);
                 this.model = await Modeler.get_model(this.navigation);
+                this.newName = this.model.att_name;
                 await this.fetch_flow_vars();
                 let repo = await GitRepository.open();
                 let templates = await repo.list(x => x.startsWith("templates/"));
@@ -188,13 +190,20 @@ document.addEventListener('alpine:init', () => {
             async delete_model(){
                 await Modeler.delete_model(this.navigation);
             },
+            async check_name(){
+                let repo = await GitRepository.open();
+                let files = await repo.list(x => x.endsWith(this.navigation.replace(this.model.att_name + ".xml", this.newName + ".xml")));
+                this.duplicateName = files.length > 0;
+            },
             async rename(){
                 if(this.notifier_lock){return}
-//                // alter name in model
-//                await this._execute_save();
-//                this.notifier_lock = true;
-//                // Move files to new path
-//                await Modeler.force_rename_model(this.preparedRename.oldPath,this.preparedRename.newPath);
+                // alter name in model
+                let newPath = this.navigation.replace(this.model.att_name + ".xml", this.newName + ".xml");
+                this.model.att_name = this.newName;
+                await this._execute_save();
+                this.notifier_lock = true;
+                // Move files to new path
+                await Modeler.force_rename_model(this.navigation,newPath);
             },
             async _execute_save(){
                 if(this.notifier_lock){return}

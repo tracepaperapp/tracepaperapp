@@ -14,6 +14,7 @@
                     class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                     <li><a @click="projectModal = true">Open project</a></li>
                     <li :class="offline ? 'disabled' : ''"><a @click="newProjectModal = true">Start new project</a></li>
+                    <li :class="offline || !sessionStorage.project_url ? 'disabled' : ''"><a @click="force_pull">Fresh checkout repository</a></li>
                     <li><a @click="Draftsman.signOut">Sign out</a></li>
                 </ul>
                 <dialog x-show="projectModal" x-cloak x-transition class="modal modal-open">
