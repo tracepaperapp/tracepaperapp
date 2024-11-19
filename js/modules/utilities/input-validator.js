@@ -1,4 +1,5 @@
 const pascalCaseRegex = /^[A-Z][a-zA-Z0-9]*$/;
+const viewPathRegex = /^([A-Z][a-zA-Z0-9]*)(\/[A-Z][a-zA-Z0-9]*)*$/;
 const camelCaseRegex = /^[a-z][a-zA-Z0-9]*$/;
 const lowercaseRegex = /^[a-z]+$/;
 const apiPathRegex = /^([A-Z][a-z]*\.)+[a-z][a-zA-Z]*$/;
@@ -23,6 +24,10 @@ document.addEventListener('alpine:init', () => {
             pascal_cased(){
                 const message = "Must be PascalCased!";
                 this.validate_regex(pascalCaseRegex,message);
+            },
+            view_path(){
+                const message = "Must be a View/Path!";
+                this.validate_regex(viewPathRegex,message);
             },
             camel_cased(){
                 const message = "Must be camelCased!";

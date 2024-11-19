@@ -1,0 +1,132 @@
+<template x-component="view-data">
+    <div x-data="viewData">
+        <table class="table mb-5">
+            <thead>
+            <tr class="bg-primary-content">
+                <th scope="row" colspan="4">Fields</th>
+            </tr>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
+                <th scope="col">Is Primary Key</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="(field,index) in fields" :key="index">
+                <tr>
+                    <td>
+                        <input type="text"
+                               x-model="field.att_name"
+                               :disabled="editing_disabled"
+                               placeholder="fieldName"
+                               x-data="inputValidator"
+                               @input="camel_cased"
+                               class="input input-sm w-full max-w-xs" />
+                    </td>
+                    <td>
+                        <select :disabled="editing_disabled"
+                                x-model="field.att_type"
+                                class="select select-sm select-ghost w-full max-w-xs modeler-input">
+                            <option></option>
+                            <template x-for="option in types" :key="option">
+                                <option :value="option" :selected="option == field.att_type" x-text="option"></option>
+                            </template>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="checkbox"
+                               @change="if($el.checked){field.att_pk = 'true'}else{delete field.att_pk}"
+                               :checked="'att_pk' in field && field.att_pk == 'true'"
+                               class="checkbox checkbox-primary" />
+                    </td>
+                    <td x-show="editing_enabled" x-cloak x-transition>
+                        <button @click="model.field = model.field.filter(x => x.att_name != field.att_name)"
+                                class="btn btn-xs btn-outline btn-error">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            </template>
+            <tr>
+                <td colspan="3"></td>
+                <td x-show="editing_enabled" x-cloak x-transition>
+                    <button @click="add_field"
+                            class="btn btn-xs btn-outline btn-success">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <table class="table mb-5 table-xs">
+            <thead>
+            <tr class="bg-primary-content">
+                <th scope="row" colspan="7">Relations</th>
+            </tr>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
+                <th scope="col">Referenced view</th>
+                <th scope="col">Foreign key</th>
+                <th scope="col">Authorization mode</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="(field,index) in relations" :key="index">
+                <tr>
+                    <td>
+                        <input type="text"
+                               x-model="field.att_name"
+                               :disabled="editing_disabled"
+                               placeholder="fieldName"
+                               x-data="inputValidator"
+                               @input="camel_cased"
+                               class="input input-sm w-20" />
+                    </td>
+                    <td>
+                        <select :disabled="editing_disabled"
+                                x-model="field.att_type"
+                                class="select select-sm select-ghost modeler-input w-40">
+                            <option></option>
+                            <template x-for="option in relation_types" :key="option">
+                                <option :value="option" :selected="option == field.att_type" x-text="option"></option>
+                            </template>
+                        </select>
+                    </td>
+                    <td>
+                        <select :disabled="editing_disabled"
+                                x-model="field.att_ref"
+                                class="select select-sm select-ghost modeler-input w-40">
+                            <option></option>
+                            <template x-for="option in views" :key="option">
+                                <option :value="option" :selected="option == field.att_ref" x-text="option"></option>
+                            </template>
+                        </select>
+                    </td>
+                    <td x-show="field.att_type != 'ObjectList'" x-cloak x-transition>
+                        <select :disabled="editing_disabled"
+                                x-model="field['att_foreign-key']"
+                                class="select select-sm select-ghost modeler-input w-40">
+                            <option></option>
+                            <template x-for="option in fkeys" :key="option">
+                                <option :value="option" :selected="option == field['att_foreign-key']" x-text="option"></option>
+                            </template>
+                            <option>#canonical</option>
+                        </select>
+                    </td>
+                    <td x-show="field.att_type != 'ObjectList'" x-cloak x-transition>
+                        n.a.
+                    </td>
+                    <td x-show="field.att_type == 'ObjectList'" x-cloak x-transition>
+                        n.a.
+                    </td>
+                    <td x-show="field.att_type == 'ObjectList'" x-cloak x-transition>
+                        inherit from API query
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+</template>

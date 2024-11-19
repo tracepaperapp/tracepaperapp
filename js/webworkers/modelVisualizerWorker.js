@@ -9,6 +9,7 @@ const view_field_types = field_types.concat(["StringList"]);
 
 console.error = function(msg){}
 console.log = function(msg){}
+console.trace = function(msg){}
 
 const options = {
     ignoreAttributes : false,
@@ -65,7 +66,6 @@ function filter_data(roots,connectionRadius=1){
                 }
             }
     });
-
     let nodes = {};
     if (eligible_nodes.length != 0){
         for (let i=0; i < connectionRadius; i++){
@@ -514,10 +514,14 @@ function extractPlaceholders(str) {
 }
 
 function invert(obj) {
-    return Object.entries(obj).reduce((acc, [key, value]) => {
-        acc[value] = key;
-        return acc;
-    }, {});
+    const result = {};
+    for (const [key, value] of Object.entries(obj)) {
+        if (value.startsWith("views/") && key.includes(".")) {
+            continue; // Skip this entry
+        }
+        result[value] = key;
+    }
+    return result;
 }
 
 function darkenColor(color, amount = 0.2) {

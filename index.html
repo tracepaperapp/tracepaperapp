@@ -83,6 +83,11 @@
                                 <ui-notifier></ui-notifier>
                             </template>
                         </div>
+                        <div x-import="modeler/view">
+                            <template x-if="tab_type == 'view'" :key="navigation">
+                                <ui-view></ui-view>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,6 +136,7 @@
     <script src="/js/modules/modeler/domain-event.js"></script>
     <script src="/js/modules/modeler/behavior.js"></script>
     <script src="/js/modules/modeler/notifier.js"></script>
+    <script src="/js/modules/modeler/view.js"></script>
 
 </body>
 </html>

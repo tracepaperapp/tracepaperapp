@@ -1,0 +1,143 @@
+<template x-component="view">
+    <div navigation-type="view"
+         id="active-tab"
+         x-show="navigationElementActive"
+         x-cloak
+         x-transition>
+        <div x-data="viewModel">
+            <div class="grid grid-cols-12 gap-3 mt-5">
+                    <div class="col-span-8">
+
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-5">
+                            View: <span x-text="model.att_name"></span>
+                        </h3>
+
+                        <div role="tablist" class="tabs tabs-lifted">
+                            <input type="radio"
+                                   name="domain_event_tabs"
+                                   role="tab"
+                                   class="tab whitespace-nowrap"
+                                   :checked="selectedTab[navigation] === 1"
+                                   @click="selectedTab[navigation] = 1"
+                                   aria-label="Data model" />
+                            <div role="tabpanel"
+                                 x-import="modeler/view-data"
+                                 class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+                                <ui-view-data></ui-view-data>
+                            </div>
+
+                            <input type="radio"
+                                   name="domain_event_tabs"
+                                   role="tab"
+                                   class="tab whitespace-nowrap"
+                                   :checked="selectedTab[navigation] === 2"
+                                   @click="selectedTab[navigation] = 2"
+                                   aria-label="Data sources" />
+                            <div role="tabpanel"
+
+                                 class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+                                <pre x-text="JSON.stringify(model,null,2)"></pre>
+                            </div>
+
+                            <input type="radio"
+                                   name="domain_event_tabs"
+                                   role="tab"
+                                   class="tab"
+                                   :checked="selectedTab[navigation] === 3"
+                                   @click="selectedTab[navigation] = 3"
+                                   aria-label="Queries" />
+                            <div role="tabpanel"
+
+                                 class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-span-4">
+
+                        <!-- Info Card -->
+                        <div class="card bg-primary text-primary-content mb-5 card-compact" x-data="infoCard">
+                            <div class="card-body">
+                                <div class="card-actions justify-end">
+                                    <i @click="Draftsman.publishMessage('focus')"
+                                       class="fa-regular fa-eye cursor-pointer"></i>
+                                    <i @click="open_github"
+                                       :file="navigation"
+                                       class="fa-solid fa-code cursor-pointer"></i>
+                                </div>
+                                <h2 class="card-title">View</h2>
+                                <p class="text-xs" :file="navigation" x-text="get_path"></p>
+
+                                <table class="table table-xs">
+                                    <tr>
+                                        <th  scope="row">Name</th>
+                                        <td>
+                                            <input type="text"
+                                                   :disabled="editing_disabled"
+                                                   x-model="newName"
+                                                   x-data="inputValidator"
+                                                   @input="pascal_cased"
+                                                   @keyup.debounce.500ms="check_name"
+                                                   placeholder="ViewName"
+                                                   class="input w-[70%] input-xs mr-2" />
+                                            <button x-show="newName != model.att_name" x-cloak x-transition
+                                                    @click="rename"
+                                                    class="btn btn-outline btn-xs"
+                                                    :class="duplicateName ? 'btn-error' : 'btn-success'">
+                                                save
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th  scope="row">Path</th>
+                                        <td>
+                                            <input type="text"
+                                                   :disabled="editing_disabled"
+                                                   x-model="newPath"
+                                                   x-data="inputValidator"
+                                                   @input="view_path"
+                                                   @keyup.debounce.500ms="check_name"
+                                                   placeholder="Sub/Folder"
+                                                   class="input w-[70%] input-xs mr-2" />
+                                            <button x-show="!navigation.startsWith('views/' + newPath)" x-cloak x-transition
+                                                    @click="rename"
+                                                    class="btn btn-outline btn-xs"
+                                                    :class="duplicateName ? 'btn-error' : 'btn-success'">
+                                                save
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Fields</th>
+                                        <td x-text="model.field.length"></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Datasources</th>
+                                        <td x-text="model['snapshot-handler'].length + model['custom-handler'].length"></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Queries</th>
+                                        <td x-text="model.query.length"></td>
+                                    </tr>
+                                </table>
+                                <div class="card-actions justify-end"
+                                     x-show="editing_enabled" x-cloak x-transition>
+                                    <i class="fa-regular fa-trash-can cursor-pointer" @click="delete_model"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diagram -->
+                        <div x-import="elements/embedded-diagram">
+                            <ui-embedded-diagram></ui-embedded-diagram>
+                        </div>
+
+                        <!-- documentation -->
+                        <div :file="navigation" x-data="markdownEditor"></div>
+
+                    </div>
+                </div>
+        </div>
+    </div>
+</template>
