@@ -186,7 +186,7 @@ document.addEventListener('alpine:init', () => {
                             this.mapping.att_operand = "convert_items";
                             this.mapping.att_value = this.mapping.att_target;
                             let fields = this.collections[this.mapping.att_value].field.map(x => x.att_name);
-                            let referencedView = await Modeler.get_model_by_name(this.field.att_ref,"views/",true);
+                            let referencedView = await Modeler.get_model_by_name(this.field.att_ref,"views/");
                             let template = {};
                             referencedView.field.filter(x => !(x.att_name in template)).forEach(x => template[x.att_name] = "");
                             fields.filter(x => x in template).forEach(x => template[x] = x);
@@ -307,7 +307,7 @@ document.addEventListener('alpine:init', () => {
 
                     let targets = this.model.field.filter(x => x.att_type == "ObjectList" && x.att_name in this.collections);
                     for (const target of targets){
-                        let referencedView = await Modeler.get_model_by_name(target.att_ref,"views/",true);
+                        let referencedView = await Modeler.get_model_by_name(target.att_ref,"views/");
                         code += `entity.${target.att_name} =  = convert_to_dictionary(\n\t[\n`;
                         code += "\t\t{\n";
                         referencedView.field.filter(x => fields.includes(x.att_name)).forEach(field => {
