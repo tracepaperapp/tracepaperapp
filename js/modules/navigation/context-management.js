@@ -76,12 +76,6 @@ document.addEventListener('alpine:init', () => {
                 // Optionally, send analytics event with outcome of user choice
                 console.log(`User response to the install prompt: ${outcome}`);
                 this.deferredInstallPrompt = !("accepted" == outcome);
-                this.$watch("navigation",this.determine_content_activation.bind(this));
-            },
-            async determine_content_activation(){
-                if (this.navigation == ""){
-
-                }
             },
             async create_user(){
                 this.profileModal = false;

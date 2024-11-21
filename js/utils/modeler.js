@@ -116,7 +116,7 @@ class Modeler {
        }
    }
 
-    static async get_model(file){
+    static async get_model(file,cached=false){
        let repo = await GitRepository.open();
        let content = await repo.read(file);
        if (file.endsWith(".xml")){
@@ -147,7 +147,7 @@ class Modeler {
         if (files.length > 1){
             throw new Error("Found more then 1 model with name: " + JSON.stringify(files));
         }
-        return await this.get_model(files.at(0));
+        return await this.get_model(files.at(0),true);
     }
 
     static async save_model(file,content){

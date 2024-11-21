@@ -27,7 +27,6 @@
                         <select :disabled="editing_disabled"
                                 x-model="field.att_type"
                                 class="select select-sm select-ghost w-full max-w-xs modeler-input">
-                            <option></option>
                             <template x-for="option in types" :key="option">
                                 <option :value="option" :selected="option == field.att_type" x-text="option"></option>
                             </template>
@@ -59,74 +58,130 @@
             </tbody>
         </table>
 
-        <table class="table mb-5 table-xs">
+        <table class="table mb-5 table-xs max-w-full">
             <thead>
             <tr class="bg-primary-content">
-                <th scope="row" colspan="7">Relations</th>
-            </tr>
-            <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Type</th>
-                <th scope="col">Referenced view</th>
-                <th scope="col">Foreign key</th>
-                <th scope="col">Authorization mode</th>
+                <th scope="row">Relations</th>
             </tr>
             </thead>
             <tbody>
-            <template x-for="(field,index) in relations" :key="index">
-                <tr>
-                    <td>
-                        <input type="text"
-                               x-model="field.att_name"
-                               :disabled="editing_disabled"
-                               placeholder="fieldName"
-                               x-data="inputValidator"
-                               @input="camel_cased"
-                               class="input input-sm w-20" />
-                    </td>
-                    <td>
-                        <select :disabled="editing_disabled"
-                                x-model="field.att_type"
-                                class="select select-sm select-ghost modeler-input w-40">
-                            <option></option>
-                            <template x-for="option in relation_types" :key="option">
-                                <option :value="option" :selected="option == field.att_type" x-text="option"></option>
-                            </template>
-                        </select>
-                    </td>
-                    <td>
-                        <select :disabled="editing_disabled"
-                                x-model="field.att_ref"
-                                class="select select-sm select-ghost modeler-input w-40">
-                            <option></option>
-                            <template x-for="option in views" :key="option">
-                                <option :value="option" :selected="option == field.att_ref" x-text="option"></option>
-                            </template>
-                        </select>
-                    </td>
-                    <td x-show="field.att_type != 'ObjectList'" x-cloak x-transition>
-                        <select :disabled="editing_disabled"
-                                x-model="field['att_foreign-key']"
-                                class="select select-sm select-ghost modeler-input w-40">
-                            <option></option>
-                            <template x-for="option in fkeys" :key="option">
-                                <option :value="option" :selected="option == field['att_foreign-key']" x-text="option"></option>
-                            </template>
-                            <option>#canonical</option>
-                        </select>
-                    </td>
-                    <td x-show="field.att_type != 'ObjectList'" x-cloak x-transition>
-                        n.a.
-                    </td>
-                    <td x-show="field.att_type == 'ObjectList'" x-cloak x-transition>
-                        n.a.
-                    </td>
-                    <td x-show="field.att_type == 'ObjectList'" x-cloak x-transition>
-                        inherit from API query
-                    </td>
-                </tr>
-            </template>
+            <tr>
+                <td>
+                    <template x-for="(field,index) in relations" :key="index">
+                        <table class="table table-xs mt-3 border border-primary-content">
+                            <tr class="bg-primary-content">
+                                <th scope="row">
+                                    View: <span x-text="field.att_ref"></span>
+                                </th>
+                                <td class="text-right">
+                                    <button @click="model.field = model.field.filter(x => x.att_name != field.att_name)"
+                                            class="btn btn-xs btn-outline btn-error">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Field name</th>
+                                <td>
+                                    <input type="text"
+                                           x-model="field.att_name"
+                                           :disabled="editing_disabled"
+                                           placeholder="fieldName"
+                                           x-data="inputValidator"
+                                           @input="camel_cased"
+                                           class="input input-sm min-w-full" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Relation type</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="field.att_type"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <template x-for="option in relation_types" :key="option">
+                                            <option :value="option" :selected="option == field.att_type" x-text="option"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Referenced view</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="field.att_ref"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <option></option>
+                                        <template x-for="option in views" :key="option">
+                                            <option :value="option" :selected="option == field.att_ref" x-text="option"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr x-show="field.att_type != 'ObjectList'" x-cloak x-transition>
+                                <th scope="row">Foreign key</th>
+                                <td>
+                                    <template x-if="field.att_type != 'ObjectList'">
+                                        <select :disabled="editing_disabled"
+                                                x-model="field['att_foreign-key']"
+                                                class="select select-sm select-ghost modeler-input min-w-full">
+                                            <option></option>
+                                            <template x-for="option in fkeys" :key="option">
+                                                <option :value="option" :selected="option == field['att_foreign-key']" x-text="option"></option>
+                                            </template>
+                                            <option>#canonical</option>
+                                        </select>
+                                    </template>
+                                </td>
+                            </tr>
+                            <tr x-show="field.att_type != 'ObjectList'" x-cloak x-transition>
+                                <th scope="row">Authorization mode</th>
+                                <td>
+                                    <template x-if="field.att_type != 'ObjectList'">
+                                        <select :disabled="editing_disabled"
+                                                @change="if($el.value == 'inherit'){delete field.att_role}else{field.att_role = ''}"
+                                                class="select select-sm select-ghost modeler-input min-w-full">
+                                            <option :selected="!('att_role' in field)">inherit</option>
+                                            <option :selected="'att_role' in field">role based</option>
+                                        </select>
+                                    </template>
+                                </td>
+                            </tr>
+                            <tr x-show="'att_role' in field" x-cloak x-transition>
+                                <th scope="row">Required role</th>
+                                <template x-if="'att_role' in field">
+                                    <td>
+                                        <div x-data="roleSelector">
+                                            <select :disabled="editing_disabled"
+                                                    x-model="field.att_role"
+                                                    x-show="!field.att_role.startsWith('#')" x-cloak x-transition
+                                                    class="select select-sm select-ghost min-w-full modeler-input">
+                                                <template x-for="role in roles" :key="role">
+                                                    <option :value="role" :selected="role == model.att_role" x-text="role"></option>
+                                                </template>
+                                            </select>
+                                            <template x-if="pattern && field.att_role.startsWith('#')">
+                                                <input type="text"
+                                                       x-model="field.att_role"
+                                                       x-data="inputValidator(pattern)"
+                                                       message="Must be a valid global expression"
+                                                       @input="custom_pattern"
+                                                       x-show="field.att_role.startsWith('#')" x-cloak x-transition
+                                                       class="input input-sm min-w-full" />
+                                            </template>
+                                        </div>
+                                    </td>
+                                </template>
+                            </tr>
+                        </table>
+                    </template>
+                </td>
+            </tr>
             </tbody>
         </table>
+
+        <button @click="add_relation"
+                class="btn btn-xs btn-outline btn-success">
+            <i class="fa-solid fa-plus"></i> Add relation
+        </button>
     </div>
 </template>

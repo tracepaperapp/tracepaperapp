@@ -12,7 +12,7 @@
                             View: <span x-text="model.att_name"></span>
                         </h3>
 
-                        <div role="tablist" class="tabs tabs-lifted">
+                        <div role="tablist" class="tabs tabs-lifted max-w-full">
                             <input type="radio"
                                    name="domain_event_tabs"
                                    role="tab"
@@ -34,9 +34,10 @@
                                    @click="selectedTab[navigation] = 2"
                                    aria-label="Data sources" />
                             <div role="tabpanel"
-
+                                 x-import="modeler/view-data-sources"
                                  class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-                                <pre x-text="JSON.stringify(model,null,2)"></pre>
+                                <ui-view-data-sources></ui-view-data-sources>
+
                             </div>
 
                             <input type="radio"
@@ -49,7 +50,7 @@
                             <div role="tabpanel"
 
                                  class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-
+                                <pre x-text="JSON.stringify(model,null,2)"></pre>
                             </div>
                         </div>
 

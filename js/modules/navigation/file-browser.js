@@ -70,18 +70,23 @@ document.addEventListener('alpine:init', () => {
             },
             async focus(){
                 let type = Modeler.determine_type(this.navigation);
+                let key = "";
                 switch(type){
                     case "command":
                     case "event":
                     case "aggregate":
                     case "behavior":
-                    let key = "/write/" + this.navigation.replace("root.xml","");
-                    Object.keys(directories).forEach(p => {
-                        sessionStorage.setItem(p,key.startsWith(p) || p.startsWith(key));
-                    });
+                    case "notifier":
+                        key = "/write/" + this.navigation.replace("root.xml","");
+                    case "view":
+                    case "projection":
+                        key = "/view/" + this.navigation;
                     case "render":
-                    await this.prepare();
-                    break;
+                        Object.keys(directories).forEach(p => {
+                            sessionStorage.setItem(p,key.startsWith(p) || p.startsWith(key));
+                        });
+                        await this.prepare();
+                        break;
                     default:
                     //pass
                 }

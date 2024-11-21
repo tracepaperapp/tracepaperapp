@@ -1,0 +1,285 @@
+<template x-component="view-data-sources">
+    <div x-data="viewDataSources"
+         class="grid grid-cols-12 gap-3 mt-5">
+
+        <div class="col-span-3 border-r pr-2">
+            <ul class="menu menu-xs rounded-lg">
+                <template x-for="handler in model['snapshot-handler']" :key="handler.att_id">
+                    <li>
+                        <a @click="selectedSource[navigation] = handler.att_id;await Draftsman.sleep(500);$dispatch('reload-handler')"
+                           :class="handler.att_id == selectedSource[navigation] ? 'active' : ''">
+                            <i class="fa-solid fa-file-import"></i>
+                            <span x-text="handler['att_sub-domain'] + ' ' + handler.att_aggregate"></span>
+                        </a>
+                    </li>
+                </template>
+                <template x-for="handler in model['custom-handler']" :key="handler.att_id">
+                    <li>
+                        <a @click="selectedSource[navigation] = handler.att_id;await Draftsman.sleep(500);$dispatch('reload-handler')"
+                           :class="handler.att_id == selectedSource[navigation] ? 'active' : ''">
+                            <i class="fa-solid fa-file-code"></i>
+                            <span x-text="handler['att_sub-domain'] + ' ' + handler.att_aggregate"></span>
+                        </a>
+                    </li>
+                </template>
+                <li>
+                    <a @click="add_mapping">
+                        <i class="fa-solid fa-plus"></i>
+                        Add mapper
+                    </a>
+                </li>
+                <li>
+                    <a @click="add_custom_mapping">
+                        <i class="fa-solid fa-plus"></i>
+                        Add custom mapper
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="col-span-9 pr-2">
+
+            <template x-for="handler in model['snapshot-handler']" :key="handler.att_id">
+                <template x-if="handler.att_id == selectedSource[navigation]" :key="handler.att_id">
+                    <div x-data="viewHandler"
+                         @reload-handler.window="prepare_data"
+                         x-show="handler.att_id == selectedSource[navigation]" x-cloak x-transition>
+                        <table class="table">
+                            <tr>
+                                <th scope="row">Subdomain</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="handler['att_sub-domain']"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <option></option>
+                                        <template x-for="option in subdomains" :key="option">
+                                            <option :value="option" :selected="option == handler['att_sub-domain']" x-text="option"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button @click="model['snapshot-handler'] = model['snapshot-handler'].filter(x => x.att_id != handler.att_id)"
+                                            class="btn btn-xs btn-outline btn-error">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Aggregate</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="handler.att_aggregate"
+                                            @change="$dispatch('source-aggregate-changed')"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <option></option>
+                                        <template x-for="option in aggregates[handler['att_sub-domain']]" :key="option">
+                                            <option :value="option" :selected="option == handler.att_aggregate" x-text="option"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Processing strategy</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="handler.att_processor"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <option value="item">Item</option>
+                                        <option value="dictionary">Dictionary</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr x-show="handler.att_processor == 'dictionary'" x-cloak x-transition>
+                                <th scope="row">Aggregate collection</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="handler.att_dictionary"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <option></option>
+                                        <template x-for="dictionary in Object.keys(collections)">
+                                            <option :value="dictionary" x-text="dictionary" :selected="handler.att_dictionary == dictionary"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Functional key</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="handler['att_key-mapping']"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <option></option>
+                                        <template x-for="field in source.field">
+                                            <option :value="field.att_name" x-text="field.att_name" :selected="handler['att_key-mapping'] == field.att_name"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table class="table mt-5">
+                            <thead>
+                            <tr>
+                                <th scope="col">View field</th>
+                                <th scope="col">Mapping</th>
+                                <th scope="col">Aggregate field</th>
+                                <td class="text-right">
+                                    <div class="tooltip" data-tip="Autofill empty mappings">
+                                        <button @click="$dispatch('auto-map')" class="btn btn-circle btn-xs btn-ghost">
+                                            <i class="fa-solid fa-compass-drafting"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <template x-for="field in target_fields">
+                                <tr x-data="viewMapping" @source-aggregate-changed.window="get_mapping">
+                                    <td x-text="field.att_name"></td>
+                                    <td>
+                                        <select :disabled="editing_disabled"
+                                                x-model="mapping.att_operand"
+                                                class="select select-sm select-ghost modeler-input min-w-full">
+                                            <option>unmapped</option>
+                                            <option x-show="field.att_type != 'ObjectList'">set</option>
+                                            <option x-show="field.att_type != 'ObjectList'">add</option>
+                                            <option x-show="field.att_type != 'ObjectList'">subtract</option>
+                                            <option x-show="field.att_type == 'ObjectList'" value="convert_items">map items</option>
+                                        </select>
+                                    </td>
+                                    <td colspan="2">
+                                        <template x-if="mapping.att_operand == 'convert_items'">
+                                            <small>Source collection:</small>
+                                        </template>
+                                        <select :disabled="editing_disabled"
+                                                x-show="mapping.att_operand != 'unmapped'" x-cloak x-transition
+                                                @auto-map.window="auto_map"
+                                                x-model="mapping.att_value"
+                                                class="select select-sm select-ghost modeler-input min-w-full">
+                                            <option></option>
+                                            <template x-for="value in sources">
+                                                <option :value="value" x-text="value" :selected="value == mapping.att_value"></option>
+                                            </template>
+                                        </select>
+                                        <template x-if="mapping.att_operand == 'convert_items'">
+                                            <table class="table table-xs">
+                                                <tr>
+                                                    <th scope="col">View field</th>
+                                                    <th scope="col">Source field</th>
+                                                </tr>
+                                                <template x-for="(source_field,target_field) in template">
+                                                    <tr>
+                                                        <td x-text="target_field"></td>
+                                                        <td>
+                                                            <select :disabled="editing_disabled"
+                                                                    x-model="template[target_field]"
+                                                                    class="select select-xs select-ghost modeler-input min-w-full">
+                                                                <option></option>
+                                                                <template x-for="value in collections[mapping.att_value].field.map(x => x.att_name)">
+                                                                    <option :value="value" x-text="value" :selected="value == source_field"></option>
+                                                                </template>
+                                                            </select>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </table>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                            </tbody>
+                        </table>
+
+                        <table class="table mt-5">
+                            <tr>
+                                <th colspan="2" scope="col">If any of the next statements evaluates to true, the view entity will be deleted:</th>
+                            </tr>
+                            <template x-for="statement in handler.delete" :key="statement.att_id">
+                                <tr>
+                                    <td x-text="">
+                                        <input type="text"
+                                               x-model="statement.att_condition"
+                                               :disabled="editing_disabled"
+                                               placeholder="#snapshot.isDeleted != ''"
+                                               class="input input-sm w-full modeler-input" />
+                                    </td>
+                                    <td class="text-right">
+                                        <button @click="handler.delete = handler.delete.filter(x => x.att_id != statement.att_id)"
+                                                class="btn btn-xs btn-outline btn-error">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr>
+                                <td colspan="2" class="text-right">
+                                    <button @click="add_delete_statement"
+                                            class="btn btn-xs btn-outline btn-success">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </template>
+            </template>
+
+            <template x-for="handler in model['custom-handler']" :key="handler.att_id">
+                <template x-if="handler.att_id == selectedSource[navigation]">
+                    <div x-data="viewHandler"
+                         x-show="handler.att_id == selectedSource[navigation]" x-cloak x-transition>
+                        <table class="table">
+                            <tr>
+                                <th scope="row">Subdomain</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="handler['att_sub-domain']"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <option></option>
+                                        <template x-for="option in subdomains" :key="option">
+                                            <option :value="option" :selected="option == handler['att_sub-domain']" x-text="option"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button @click="model['custom-handler'] = model['snapshot-handler'].filter(x => x.att_id != handler.att_id)"
+                                            class="btn btn-xs btn-outline btn-error">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Aggregate</th>
+                                <td>
+                                    <select :disabled="editing_disabled"
+                                            x-model="handler.att_aggregate"
+                                            class="select select-sm select-ghost modeler-input min-w-full">
+                                        <option></option>
+                                        <template x-for="option in aggregates[handler['att_sub-domain']]" :key="option">
+                                            <option :value="option" :selected="option == handler.att_aggregate" x-text="option"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">
+                                    <iframe :id="handler.att_id"
+                                            style="width: 100%;height:35vh;"
+                                            x-init="render_editor">
+                                    </iframe>
+                                </td>
+                            </tr>
+                        </table>
+                        <button class="btn btn-outline btn-warning btn-sm"
+                                :class="rendering ? 'btn-disabled' : ''"
+                                @click="generate_code">
+                            Suggest code
+                        </button>
+                    </div>
+                </template>
+            </template>
+
+        </div>
+
+    </div>
+</template>

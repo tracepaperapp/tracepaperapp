@@ -265,6 +265,14 @@ document.addEventListener('alpine:init', () => {
                             await Modeler.save_model(path, e);
                         }
                         break;
+                    case "view":
+                        keysWhitelist = ["att_name","att_type"];
+                        fields = Draftsman.filterKeys(attributes.fields,keysWhitelist);
+                        keys = this.model.field.map(x => x.att_name);
+                        fields.filter(x => !keys.includes(x.att_name)).forEach(f => {
+                            this.model.field.push(f);
+                        });
+                        break;
                     default:
                         alert("Not implemented");
                        console.error("Create for type not implemented: ",this.type);
@@ -283,7 +291,7 @@ document.addEventListener('alpine:init', () => {
                 this.file = this.navigation;
                 this.model = await Modeler.get_model(this.file);
                 this.type = Modeler.determine_type(this.file);
-                this.copyEnabled = ["command","aggregate"].includes(this.type);
+                this.copyEnabled = ["command","aggregate","view"].includes(this.type);
 
                 let repo = await GitRepository.open();
                 this.files = await repo.list();

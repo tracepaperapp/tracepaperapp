@@ -184,6 +184,7 @@ document.addEventListener('alpine:init', () => {
             },
             render_editor(){
                 let completions = new CodeCompletions();
+                  // TODO: code completions
 //                completions.add_items(this.event.field.map(x => "event." + x.att_name));
 //                completions.add_items(this.root.field.map(x => "self." + x.att_name));
                 let processor = this.model.processor.filter(x => x.att_id == this.$el.id).at(0);
