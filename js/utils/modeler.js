@@ -37,6 +37,8 @@ const xml_options = {
     attributeNamePrefix : "att_"
 };
 
+var model_cache = {};
+
 class Modeler {
     static worker = null;
     static callbacks = {};
@@ -117,6 +119,7 @@ class Modeler {
    }
 
     static async get_model(file,cached=false){
+       if (cached && file in model_cache){return model_cache[file]}
        let repo = await GitRepository.open();
        let content = await repo.read(file);
        if (file.endsWith(".xml")){
@@ -138,16 +141,17 @@ class Modeler {
        } else {
            content = {content:content};
        }
+       model_cache[file] = content;
        return content;
     }
 
-    static async get_model_by_name(name,subfolder=""){
+    static async get_model_by_name(name,subfolder="",cached=false){
         let repo = await GitRepository.open();
         let files = await repo.list(x => x.startsWith(subfolder) && x.endsWith("/" + name + ".xml") && !x.includes("/event-handlers/"));
         if (files.length > 1){
             throw new Error("Found more then 1 model with name: " + JSON.stringify(files));
         }
-        return await this.get_model(files.at(0),true);
+        return await this.get_model(files.at(0),cached);
     }
 
     static async save_model(file,content){

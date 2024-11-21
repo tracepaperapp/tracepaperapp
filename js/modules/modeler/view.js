@@ -186,7 +186,7 @@ document.addEventListener('alpine:init', () => {
                             this.mapping.att_operand = "convert_items";
                             this.mapping.att_value = this.mapping.att_target;
                             let fields = this.collections[this.mapping.att_value].field.map(x => x.att_name);
-                            let referencedView = await Modeler.get_model_by_name(this.field.att_ref,"views/");
+                            let referencedView = await Modeler.get_model_by_name(this.field.att_ref,"views/",true);
                             let template = {};
                             referencedView.field.filter(x => !(x.att_name in template)).forEach(x => template[x.att_name] = "");
                             fields.filter(x => x in template).forEach(x => template[x] = x);
@@ -227,7 +227,7 @@ document.addEventListener('alpine:init', () => {
                     this.lock_template = true;
                     template = template.replace(/,(\s*})/g, '$1');
                     template = JSON.parse(template);
-                    let referencedView = await Modeler.get_model_by_name(this.field.att_ref,"views/");
+                    let referencedView = await Modeler.get_model_by_name(this.field.att_ref,"views/",true);
                     referencedView.field.filter(x => !(x.att_name in template)).forEach(x => template[x.att_name] = "");
                     this.template = template;
                     await Draftsman.sleep(500);
@@ -251,16 +251,16 @@ document.addEventListener('alpine:init', () => {
                     let agg = "domain/" + this.handler["att_sub-domain"] + "/" + this.handler.att_aggregate + "/";
                     if (this.handler.att_processor == "dictionary"){
                         if (this.handler.att_dictionary){
-                            this.source =  await Modeler.get_model(agg + "entities/" + this.handler.att_dictionary + ".xml");
+                            this.source =  await Modeler.get_model(agg + "entities/" + this.handler.att_dictionary + ".xml",true);
                         } else {
                             this.source = {};
                         }
                     } else {
-                        this.source =  await Modeler.get_model(agg + "root.xml");
+                        this.source =  await Modeler.get_model(agg + "root.xml",true);
                     }
                     let entities = await repo.list(x => x.startsWith(agg + "entities/") && x.endsWith(".xml"));
                     for (const entityPath of entities){
-                        let entity = await Modeler.get_model(entityPath);
+                        let entity = await Modeler.get_model(entityPath,true);
                         this.collections[entity.att_name] = entity;
                     }
                 }
@@ -307,7 +307,7 @@ document.addEventListener('alpine:init', () => {
 
                     let targets = this.model.field.filter(x => x.att_type == "ObjectList" && x.att_name in this.collections);
                     for (const target of targets){
-                        let referencedView = await Modeler.get_model_by_name(target.att_ref,"views/");
+                        let referencedView = await Modeler.get_model_by_name(target.att_ref,"views/",true);
                         code += `entity.${target.att_name} =  = convert_to_dictionary(\n\t[\n`;
                         code += "\t\t{\n";
                         referencedView.field.filter(x => fields.includes(x.att_name)).forEach(field => {
