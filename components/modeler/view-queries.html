@@ -1,0 +1,97 @@
+<template x-component="view-queries">
+    <div x-data="viewQueries">
+        <template x-for="query in model.query">
+            <table class="table mb-5 border border-primary-content">
+                <tr class="bg-primary-content">
+                    <th scope="row">API path</th>
+                    <td>
+                        <span x-text="query['att_graphql-namespace']"></span>.<span x-text="query['att_field-name']"></span>
+                    </td>
+                    <td class="text-right">
+                        <button @click="model.query = model.query.filter(x => x['att_field-name'] != query['att_field-name'])"
+                                class="btn btn-xs btn-outline btn-error">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Method name</th>
+                    <td x-show="!['get','filter'].includes(query.att_type)" x-cloak x-transition colspan="2">
+                        <input type="text"
+                               :disabled="editing_disabled"
+                               x-model="query['att_field-name']"
+                               x-data="inputValidator"
+                               @input="camel_cased"
+                               placeholder="methodName"
+                               class="input w-full" />
+                    </td>
+                    <td colspan="2" x-show="['get','filter'].includes(query.att_type)" x-cloak x-transition x-text="query['att_field-name']"></td>
+                </tr>
+                <tr x-show="query.att_type != 'get'" x-cloak x-transition>
+                    <th scope="row">Use canonical search</th>
+                    <td colspan="2">
+                        <input type="checkbox"
+                               @change="query['att_use-canonical-search'] = $el.checked ? 'true' : 'false'"
+                               :checked="'true' == query['att_use-canonical-search']"
+                               class="checkbox checkbox-primary" />
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Authorization mode</th>
+                    <td x-import="elements/input" colspan="2">
+                        <ui-view-auth-mode></ui-view-auth-mode>
+                    </td>
+                </tr>
+                <tr x-show="query.att_authorization == 'role'" x-cloak x-transition>
+                    <th scope="row">Required role</th>
+                    <td x-import="elements/input" colspan="2">
+                        <ui-view-role-selector></ui-view-role-selector>
+                    </td>
+                </tr>
+                <tr x-show="query.att_authorization == 'user'" x-cloak x-transition>
+                    <th scope="row">Username field</th>
+                    <td colspan="2">
+                        <select :disabled="editing_disabled"
+                                x-model="query['att_username-field']"
+                                class="select select-ghost w-full modeler-input">
+                            <option></option>
+                            <option x-show="query.att_type == 'get'" x-cloak x-transition>key</option>
+                            <option x-show="query['att_use-canonical-search'] == 'true'" x-cloak x-transition>key_begins_with</option>
+                            <template x-for="field in roles" :key="field">
+                                <option :value="field" :selected="field == query['att_username-field']" x-text="field"></option>
+                            </template>
+                        </select>
+                    </td>
+                </tr>
+                <template x-if="query.att_type != 'get'">
+                    <tr class="bg-primary-content">
+                        <th scope="row" colspan="3">Filter clauses</th>
+                    </tr>
+                </template>
+                <template x-if="query.att_type != 'get'">
+                    <template x-for="field in model.field.filter(x => types.includes(x.att_type))">
+                        <tr x-data="filterClause">
+                            <th scope="row" x-text="field.att_name"></th>
+                            <td>
+                                <select :disabled="editing_disabled"
+                                        @change.debounce="update_filter"
+                                        x-model="operand"
+                                        class="select select-ghost w-full modeler-input">
+                                    <template x-for="op in operands">
+                                        <option x-text="op" :value="op" :selected="op == operand"></option>
+                                    </template>
+                                </select>
+                            </td>
+                        </tr>
+                    </template>
+                </template>
+            </table>
+        </template>
+
+        <ul class="menu menu-horizontal bg-primary-content w-full rounded-box">
+            <li :class="has_get ? 'disabled' : ''"><a @click="add_get">Add get</a></li>
+            <li :class="has_filter ? 'disabled' : ''"><a @click="add_filter">Add filter</a></li>
+            <li><a @click.debounce="add_query">Add named Query</a></li>
+        </ul>
+    </div>
+</template>

@@ -7,6 +7,16 @@
     <option>role</option>
   </select>
 </template>
+<template x-component="view-auth-mode">
+  <select :disabled="editing_disabled"
+          x-model="query.att_authorization"
+          class="select select-ghost w-full modeler-input">
+    <option>anonymous</option>
+    <option>authenticated</option>
+    <option>role</option>
+    <option value="user">user must match</option>
+  </select>
+</template>
 <template x-component="role-selector">
   <div x-data="roleSelector" x-init="if(!model.att_role){model.att_role = ''}">
     <select :disabled="editing_disabled"
@@ -25,6 +35,27 @@
              @input="custom_pattern"
              x-show="model.att_role.startsWith('#')" x-cloak x-transition
              class="input input-sm w-full max-w-xs" />
+    </template>
+  </div>
+</template>
+<template x-component="view-role-selector">
+  <div x-data="roleSelector" x-init="if(!query.att_role){query.att_role = ''}">
+    <select :disabled="editing_disabled"
+            x-model="query.att_role"
+            x-show="!query.att_role.startsWith('#')" x-cloak x-transition
+            class="select select-ghost w-full modeler-input">
+      <template x-for="role in roles" :key="role">
+        <option :value="role" :selected="role == query.att_role" x-text="role"></option>
+      </template>
+    </select>
+    <template x-if="pattern && query.att_role.startsWith('#')">
+      <input type="text"
+             x-model="query.att_role"
+             x-data="inputValidator(pattern)"
+             message="Must be a valid global expression"
+             @input="custom_pattern"
+             x-show="query.att_role.startsWith('#')" x-cloak x-transition
+             class="input input-sm w-full" />
     </template>
   </div>
 </template>

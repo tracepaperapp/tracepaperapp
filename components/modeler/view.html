@@ -48,9 +48,9 @@
                                    @click="selectedTab[navigation] = 3"
                                    aria-label="Queries" />
                             <div role="tabpanel"
-
+                                 x-import="modeler/view-queries"
                                  class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-                                <pre x-text="JSON.stringify(model,null,2)"></pre>
+                                <ui-view-queries></ui-view-queries>
                             </div>
                         </div>
 

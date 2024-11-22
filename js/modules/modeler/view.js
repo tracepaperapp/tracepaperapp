@@ -138,6 +138,82 @@ document.addEventListener('alpine:init', () => {
             }
         }
     });
+    Alpine.data("viewQueries",function(){
+        return {
+            has_get: false,
+            has_filter: false,
+            init(){
+                this.sync();
+                this.$watch("model",this.sync.bind(this));
+            },
+            sync(){
+                this.has_get = this.model.query.filter(x => x.att_type == "get").length != 0;
+                this.has_filter = this.model.query.filter(x => x.att_type == "filter").length != 0;
+                console.log("-->",this.has_get,this.has_filter);
+            },
+            add_get(){
+                if(this.has_get){return}
+                this.model.query.push({
+                    "att_field-name": "get",
+                    "att_graphql-namespace": this.navigation.split('/').slice(1, -1).join('.'),
+                    att_type: "get",
+                    att_authorization: "authenticated"
+                });
+            },
+            add_filter(){
+                if(this.has_filter){return}
+                this.model.query.push({
+                    "att_field-name": "filter",
+                    "att_graphql-namespace": this.navigation.split('/').slice(1, -1).join('.'),
+                    att_type: "filter",
+                    att_authorization: "authenticated",
+                    "att_use-canonical-search": "false",
+                    "filter-clause": []
+                });
+            },
+            add_query(){
+                this.model.query.push({
+                    "att_field-name": Draftsman.generateRandomCamelCaseString(),
+                    "att_graphql-namespace": this.navigation.split('/').slice(1, -1).join('.'),
+                    att_type: "query",
+                    att_authorization: "authenticated",
+                    "att_use-canonical-search": "false",
+                    "filter-clause": []
+                });
+            }
+        }
+    });
+    Alpine.data("filterClause", function(){
+        return {
+            operand: "",
+            operands: ["","equals","not_equals"],
+            async init(){
+                let eligible = this.query["filter-clause"].filter(x => x["att_field-name"] == this.field.att_name);
+                if (eligible.length != 0){
+                    this.operand = eligible.at(0).att_operand;
+                }
+                if ([].includes(this.field.att_type)){
+                    this.operands.push("less_than","greater_than","less_than_equals","greater_than_equals");
+                }
+            },
+            update_filter(){
+                if (this.operand == ""){
+                    this.query["filter-clause"] = this.query["filter-clause"].filter(x => x["att_field-name"] != this.field.att_name)
+                } else {
+                    let eligible = this.query["filter-clause"].filter(x => x["att_field-name"] == this.field.att_name);
+                    if (eligible.length != 0){
+                        eligible.at(0).att_operand = this.operand;
+                    } else {
+                        this.query["filter-clause"].push({
+                            "att_field-name": this.field.att_name,
+                            att_operand: this.operand,
+                            att_id: Draftsman.makeid(6)
+                        });
+                    }
+                }
+            }
+        }
+    });
     Alpine.data("viewMapping", function(){
         return {
             mapping: {},

@@ -8,6 +8,7 @@ Navigatie van command naar behavior loopt niet lekker, pagina heeft een refresh 
     wrs opgelost
 
 Goed nalopen of view_name overlaps en command/event overlaps are correctly detected by the validator.
++ graphql path overlaps detecteren (denk aan duplicate named queries)
 
 
 
