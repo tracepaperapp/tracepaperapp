@@ -44,8 +44,14 @@
     </head>
     <body x-data="session"
           x-import="ide/menu-bar;ide/file-browser;ide/tab-bar;utils/tables">
+
+    <div class="navbar bg-neutral text-neutral-content min-h-0 h-10 px-4">
+            <span>You are using the free public beta version of *Tracepaper*. We do not guarantee availability or reliability and are not
+                liable for any outcomes or issues resulting from its use. Use at your own risk. <a class="link" target="_blank" href="https://draftsman.io/Terms_%26_Conditions/">Terms & Conditions</a></span>
+    </div>
+
         <ui-menu-bar></ui-menu-bar>
-        <div class="grid grid-cols-12 gap-3 h-[91vh]">
+        <div class="grid grid-cols-12 gap-3 h-[85vh]">
             <div class="col-span-2 bg-primary-content h-full">
                 <ui-file-browser></ui-file-browser>
             </div>
