@@ -1,56 +1,44 @@
-<template x-component="view">
-    <div navigation-type="view"
+<template x-component="projection">
+    <div navigation-type="projection"
          id="active-tab"
          x-show="navigationElementActive"
          x-cloak
          x-transition>
-        <div x-data="viewModel">
+        <div x-data="projectionModel">
             <div class="grid grid-cols-12 gap-3 mt-5">
                     <div class="col-span-8">
 
                         <h3 class="text-2xl font-semibold text-gray-800 mb-5">
-                            View: <span x-text="model.att_name"></span>
+                            Projection: <span x-text="model.att_name"></span>
                         </h3>
 
                         <div role="tablist" class="tabs tabs-lifted max-w-full">
                             <input type="radio"
-                                   name="domain_event_tabs"
+                                   name="projection_tabs"
                                    role="tab"
                                    class="tab whitespace-nowrap"
                                    :checked="selectedTab[navigation] === 1"
                                    @click="selectedTab[navigation] = 1"
-                                   aria-label="Data model" />
+                                   aria-label="API Configuration" />
                             <div role="tabpanel"
-                                 x-import="modeler/view-data"
+                                 
                                  class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-                                <ui-view-data></ui-view-data>
+                                <pre x-text="JSON.stringify(model,null,2)"></pre>
                             </div>
 
                             <input type="radio"
-                                   name="domain_event_tabs"
+                                   name="projection_tabs"
                                    role="tab"
                                    class="tab whitespace-nowrap"
                                    :checked="selectedTab[navigation] === 2"
                                    @click="selectedTab[navigation] = 2"
-                                   aria-label="Data sources" />
+                                   aria-label="Transformation Logic" />
                             <div role="tabpanel"
-                                 x-import="modeler/view-data-sources"
+
                                  class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-                                <ui-view-data-sources></ui-view-data-sources>
+
                             </div>
 
-                            <input type="radio"
-                                   name="domain_event_tabs"
-                                   role="tab"
-                                   class="tab"
-                                   :checked="selectedTab[navigation] === 3"
-                                   @click="selectedTab[navigation] = 3"
-                                   aria-label="Queries" />
-                            <div role="tabpanel"
-                                 x-import="modeler/view-queries"
-                                 class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-                                <ui-view-queries></ui-view-queries>
-                            </div>
                         </div>
 
                     </div>

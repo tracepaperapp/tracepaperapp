@@ -2,7 +2,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('viewModel', function(){
         return {
             model: Modeler.prepare_model("view",{}),
-            selectedTab: this.$persist({}).using(sessionStorage).as("notifierTab"),
+            selectedTab: this.$persist({}).using(sessionStorage).as("viewTab"),
             _taskId: "",
             listnerId: "",
             search: "",

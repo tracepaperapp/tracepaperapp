@@ -60,8 +60,8 @@ document.addEventListener('alpine:init', () => {
                     let type = this.$el.getAttribute("navigation-type");
                     let file_type = Modeler.determine_type(this.navigation);
 
-                    // temp testcode
-                    if (!["readme","diagram","command","aggregate","event","behavior","notifier","view"].includes(file_type) && navigation != this.navigation){
+                    // temp testcode TODO Remove
+                    if (!["readme","diagram","command","aggregate","event","behavior","notifier","view","projection"].includes(file_type) && navigation != this.navigation){
                         file_type = "dummy";
                     }
 
