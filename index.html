@@ -25,6 +25,12 @@
 <body>
     <div x-data="navigation">
         <div x-data="contextManagement">
+
+            <div class="navbar bg-neutral text-neutral-content min-h-0 h-10 px-4">
+            <span>You are using the free public beta version of *Tracepaper*. We do not guarantee availability or reliability and are not
+                liable for any outcomes or issues resulting from its use. Use at your own risk. <a class="link" target="_blank" href="https://draftsman.io/Terms_%26_Conditions/">Terms & Conditions</a></span>
+            </div>
+
             <div x-import="menu-bar">
                 <ui-menu-bar></ui-menu-bar>
             </div>
@@ -88,6 +94,7 @@
                                 <ui-view></ui-view>
                             </template>
                         </div>
+                        <div class="mb-5"></div>
                     </div>
                 </div>
             </div>

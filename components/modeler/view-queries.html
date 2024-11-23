@@ -1,14 +1,14 @@
 <template x-component="view-queries">
     <div x-data="viewQueries">
-        <template x-for="query in model.query">
-            <table class="table mb-5 border border-primary-content">
+        <template x-for="query in model.query" :key="query.att_id">
+            <table class="table mb-5 border border-primary-content" :id="query.att_id">
                 <tr class="bg-primary-content">
                     <th scope="row">API path</th>
                     <td>
                         <span x-text="query['att_graphql-namespace']"></span>.<span x-text="query['att_field-name']"></span>
                     </td>
                     <td class="text-right">
-                        <button @click="model.query = model.query.filter(x => x['att_field-name'] != query['att_field-name'])"
+                        <button @click="model.query = model.query.filter(x => x.att_id != query.att_id);document.getElementById(query.att_id).remove()"
                                 class="btn btn-xs btn-outline btn-error">
                             <i class="fa-regular fa-trash-can"></i>
                         </button>
@@ -65,18 +65,18 @@
                 </tr>
                 <template x-if="query.att_type != 'get'">
                     <tr class="bg-primary-content">
-                        <th scope="row" colspan="3">Filter clauses</th>
+                        <th scope="row" class="text-xs" colspan="3">Filter clauses</th>
                     </tr>
                 </template>
                 <template x-if="query.att_type != 'get'">
                     <template x-for="field in model.field.filter(x => types.includes(x.att_type))">
-                        <tr x-data="filterClause">
+                        <tr class="text-xs" x-data="filterClause">
                             <th scope="row" x-text="field.att_name"></th>
                             <td>
                                 <select :disabled="editing_disabled"
                                         @change.debounce="update_filter"
                                         x-model="operand"
-                                        class="select select-ghost w-full modeler-input">
+                                        class="select select-xs select-ghost w-full modeler-input">
                                     <template x-for="op in operands">
                                         <option x-text="op" :value="op" :selected="op == operand"></option>
                                     </template>

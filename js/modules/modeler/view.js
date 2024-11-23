@@ -150,6 +150,7 @@ document.addEventListener('alpine:init', () => {
                 this.has_get = this.model.query.filter(x => x.att_type == "get").length != 0;
                 this.has_filter = this.model.query.filter(x => x.att_type == "filter").length != 0;
                 console.log("-->",this.has_get,this.has_filter);
+                this.model.query.filter(q => !("att_id" in q)).forEach(q => q.att_id = Draftsman.makeid(6));
             },
             add_get(){
                 if(this.has_get){return}
