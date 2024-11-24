@@ -83,6 +83,11 @@ document.addEventListener('alpine:init', () => {
                         this.update_action_buttons(false,false,true);
                         break;
 
+                    // Projection
+                    case 70:
+                        this.update_action_buttons(false,false,true);
+                        break;
+
                     default:
                         this.update_action_buttons();
                 }
@@ -184,6 +189,13 @@ document.addEventListener('alpine:init', () => {
                 return prepared_model;
             },
 
+            async prepare_projection(prepared_model){
+                Modeler._roots[this.parameters.file] = "projection";
+                prepared_model.att_name = this.parameters.name;
+                prepared_model = Modeler.prepare_model("projection",prepared_model);
+                return prepared_model;
+            },
+
             async insert_model(){
                 this.active = false;
                 let prepared_model = {};
@@ -210,6 +222,9 @@ document.addEventListener('alpine:init', () => {
                         break;
                     case "view":
                         prepared_model = await this.prepare_view(prepared_model);
+                        break;
+                    case "projection":
+                        prepared_model = await this.prepare_projection(prepared_model);
                         break;
                     default:
                         console.error("Create for type not implemented: ",this.parameters.type);
@@ -485,7 +500,29 @@ document.addEventListener('alpine:init', () => {
                     return
                 }
                 this.parameters.file = `views/${this.parameters.path ? this.parameters.path : this.parameters.name}/${this.parameters.name}.xml`;
-                this.conflicted = this.files.includes(this.parameters.file);
+                this.conflicted = this.files.filter(x => x.startsWith("views/") && x.endsWith(this.parameters.name + ".xml")).length != 0;
+                if (this.conflicted){
+                    this.dialog_id = 1;
+                } else {
+                    this.dialog_id = 0;
+                }
+            },
+
+            // Projection
+            async start_projection(){
+                this.parameters.name = "";
+                this.parameters.type = "projection";
+                this.conflicted = true;
+                this.state = 70;
+            },
+            check_projection_name(){
+                this.conflicted = !this.parameters.name || !pascalCaseRegex.test(this.parameters.name);
+                if (this.conflicted){
+                    this.dialog_id = 0;
+                    return
+                }
+                this.parameters.file = `projections/${this.parameters.path ? this.parameters.path : this.parameters.name}/${this.parameters.name}.xml`;
+                this.conflicted = this.files.filter(x => x.startsWith("projections/") && x.endsWith(this.parameters.name + ".xml")).length != 0;
                 if (this.conflicted){
                     this.dialog_id = 1;
                 } else {
@@ -539,6 +576,9 @@ document.addEventListener('alpine:init', () => {
                } else if (this.state == 1 && event.key === 'v'){
                    event.preventDefault();
                    this.start_view();
+               } else if (this.state == 1 && event.key === 'p'){
+                  event.preventDefault();
+                  this.start_projection();
                } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && ["command"].includes(type)) {
                    event.preventDefault();
                    this.copy_fields();
