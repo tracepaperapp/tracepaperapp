@@ -125,7 +125,7 @@
                                 <th scope="col">Aggregate field</th>
                                 <td class="text-right">
                                     <div class="tooltip" data-tip="Autofill empty mappings">
-                                        <button @click="$dispatch('auto-map')" class="btn btn-circle btn-xs btn-ghost">
+                                        <button @click="$dispatch('auto-map')" class="btn btn-circle btn-xs btn-outline btn-warning">
                                             <i class="fa-solid fa-compass-drafting"></i>
                                         </button>
                                     </div>
@@ -273,7 +273,7 @@
                         <button class="btn btn-outline btn-warning btn-sm"
                                 :class="rendering ? 'btn-disabled' : ''"
                                 @click="generate_code">
-                            Suggest code
+                            <i class="fa-solid fa-compass-drafting"></i> Suggest code
                         </button>
                     </div>
                 </template>

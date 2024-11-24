@@ -10,5 +10,8 @@ Navigatie van command naar behavior loopt niet lekker, pagina heeft een refresh 
 Goed nalopen of view_name overlaps en command/event overlaps are correctly detected by the validator.
 + graphql path overlaps detecteren (denk aan duplicate named queries)
 
+view move naar andere namespace -> query namespace mee refactoren (kijk ook even naar projectie)
+
+alle code editors nalopen en code completion verbeteren
 
 
