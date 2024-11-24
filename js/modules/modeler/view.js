@@ -123,7 +123,7 @@ document.addEventListener('alpine:init', () => {
             },
             add_mapping(){
                 let id = Draftsman.makeid(6);
-                this.model['snapshot-handler'].push({att_id: id,mapping:[]});
+                this.model['snapshot-handler'].push({att_id: id,mapping:[],delete:[]});
                 this.selectedSource[this.navigation] = id;
             },
             add_custom_mapping(){
@@ -193,7 +193,7 @@ document.addEventListener('alpine:init', () => {
                 if (eligible.length != 0){
                     this.operand = eligible.at(0).att_operand;
                 }
-                if ([].includes(this.field.att_type)){
+                if (["Int","Float"].includes(this.field.att_type)){
                     this.operands.push("less_than","greater_than","less_than_equals","greater_than_equals");
                 }
             },

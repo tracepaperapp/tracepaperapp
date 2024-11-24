@@ -48,6 +48,11 @@
                 <a>Notifier</a>
               </div>
             </li>
+            <li @click="start_view">
+              <div class="tooltip tooltip-bottom text-left" data-tip="Shortcut: V-key">
+                <a>View</a>
+              </div>
+            </li>
           </ul>
         </div>
 
@@ -469,6 +474,53 @@
           </div>
         </div>
 
+        <!-- View -->
+        <div x-show="state == 60" x-cloak x-transition>
+          <table class="table">
+            <tr>
+              <th scope="row">Path</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.path"
+                       x-data="inputValidator"
+                       @input="viewPathRegex"
+                       @keyup.debounce.1000ms="check_view_name"
+                       :disabled="editing_disabled"
+                       placeholder="Folder/Path"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">View name</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.name"
+                       x-data="inputValidator"
+                       @input="pascal_cased"
+                       @keyup.debounce.1000ms="check_view_name"
+                       :disabled="editing_disabled"
+                       placeholder="ViewName"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+          </table>
+          <div x-show="dialog_id == 1" x-cloak x-transition role="alert" class="alert alert-error mt-5">
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 shrink-0 stroke-current"
+                    fill="none"
+                    viewBox="0 0 24 24">
+              <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>There is already a Notifier with name [<span x-text="parameters.name"></span>] in the domain.</span>
+          </div>
+        </div>
+
+        <pre x-text="JSON.stringify(parameters,null,2)"></pre>
         <div class="modal-action">
 
           <button class="btn btn-primary"

@@ -109,16 +109,41 @@
                                         </td>
                                     </tr>
                                     <tr>
+                                        <th scope="row">Exclude from notification mechanism</th>
+                                        <td class="pl-4">
+                                            <input type="checkbox"
+                                                   @change="model['att_exclude-notification'] = $el.checked ? 'true' : 'false'"
+                                                   :checked="'true' == model['att_exclude-notification']"
+                                                   class="checkbox checkbox-info" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Data retention</th>
+                                        <td>
+                                            <input type="number"
+                                                   class="input input-ghost input-xs w-full modeler-input"
+                                                   min="-1"
+                                                   step="1"
+                                                   x-model="model['att_data-retention-days']" />
+                                            <small x-show="model['att_data-retention-days'] > -1" x-cloak x-transition>
+                                                The view object is stored for <span x-text="model['att_data-retention-days']"></span> days.
+                                            </small>
+                                            <small x-show="model['att_data-retention-days'] == -1" x-cloak x-transition>
+                                                View object is stored indefinitely.
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <th scope="row">Fields</th>
-                                        <td x-text="model.field.length"></td>
+                                        <td class="pl-4" x-text="model.field.length"></td>
                                     </tr>
                                     <tr>
                                         <th scope="row">Datasources</th>
-                                        <td x-text="model['snapshot-handler'].length + model['custom-handler'].length"></td>
+                                        <td class="pl-4" x-text="model['snapshot-handler'].length + model['custom-handler'].length"></td>
                                     </tr>
                                     <tr>
                                         <th scope="row">Queries</th>
-                                        <td x-text="model.query.length"></td>
+                                        <td class="pl-4" x-text="model.query.length"></td>
                                     </tr>
                                 </table>
                                 <div class="card-actions justify-end"
