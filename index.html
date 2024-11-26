@@ -99,6 +99,11 @@
                                 <ui-projection></ui-projection>
                             </template>
                         </div>
+                        <div x-import="modeler/expressions">
+                            <template x-if="tab_type == 'expressions'" :key="navigation">
+                                <ui-expressions></ui-expressions>
+                            </template>
+                        </div>
                         <div class="mb-5"></div>
                     </div>
                 </div>
@@ -150,6 +155,7 @@
     <script src="/js/modules/modeler/notifier.js"></script>
     <script src="/js/modules/modeler/view.js"></script>
     <script src="/js/modules/modeler/projection.js"></script>
+    <script src="/js/modules/modeler/expressions.js"></script>
 
 </body>
 </html>

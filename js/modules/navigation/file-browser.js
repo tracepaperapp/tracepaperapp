@@ -81,6 +81,8 @@ document.addEventListener('alpine:init', () => {
                     case "view":
                     case "projection":
                         key = "/view/" + this.navigation;
+                    case "expressions":
+                        key = "/utils/" + this.navigation
                     case "render":
                         Object.keys(directories).forEach(p => {
                             sessionStorage.setItem(p,key.startsWith(p) || p.startsWith(key));

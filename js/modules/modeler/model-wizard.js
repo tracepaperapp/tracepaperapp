@@ -88,6 +88,11 @@ document.addEventListener('alpine:init', () => {
                         this.update_action_buttons(false,false,true);
                         break;
 
+                    // Expression
+                    case 80:
+                        this.update_action_buttons(false,false,true);
+                        break;
+
                     default:
                         this.update_action_buttons();
                 }
@@ -196,6 +201,15 @@ document.addEventListener('alpine:init', () => {
                 return prepared_model;
             },
 
+            async prepare_expression(prepared_model){
+                Modeler._roots[this.parameters.file] = "expression";
+                prepared_model.att_name = this.parameters.name;
+                sessionStorage.prepared_expression = this.parameters.name;
+                prepared_model.att_type = "ActorEventRole";
+                prepared_model = Modeler.prepare_model("expression",prepared_model);
+                return prepared_model;
+            },
+
             async insert_model(){
                 this.active = false;
                 let prepared_model = {};
@@ -225,6 +239,14 @@ document.addEventListener('alpine:init', () => {
                         break;
                     case "projection":
                         prepared_model = await this.prepare_projection(prepared_model);
+                        break;
+                    case "expression":
+                        prepared_model = await this.prepare_expression(prepared_model);
+                        let file = this.parameters.file;
+                        await Modeler.save_model(file,prepared_model);
+                        this.navigate("Expressions");
+                        this.close();
+                        return
                         break;
                     default:
                         console.error("Create for type not implemented: ",this.parameters.type);
@@ -318,10 +340,13 @@ document.addEventListener('alpine:init', () => {
                 }
             },
             async set_context(){
-                this.file = this.navigation;
-                this.model = await Modeler.get_model(this.file);
-                this.type = Modeler.determine_type(this.file);
-                this.copyEnabled = ["command","aggregate","view"].includes(this.type);
+                try{
+                    this.file = this.navigation;
+                    this.model = await Modeler.get_model(this.file);
+                    this.type = Modeler.determine_type(this.file);
+                    this.copyEnabled = ["command","aggregate","view"].includes(this.type);
+                }catch{}
+
 
                 let repo = await GitRepository.open();
                 this.files = await repo.list();
@@ -530,6 +555,28 @@ document.addEventListener('alpine:init', () => {
                 }
             },
 
+            // Expression
+            async start_expression(){
+                this.parameters.name = "";
+                this.parameters.type = "expression";
+                this.conflicted = true;
+                this.state = 80;
+            },
+            check_expression_name(){
+                this.conflicted = !this.parameters.name || !camelCaseRegex.test(this.parameters.name);
+                if (this.conflicted){
+                    this.dialog_id = 0;
+                    return
+                }
+                this.parameters.file = `expressions/${this.parameters.name}.xml`;
+                this.conflicted = this.files.includes(this.parameters.file);
+                if (this.conflicted){
+                    this.dialog_id = 1;
+                } else {
+                    this.dialog_id = 0;
+                }
+            },
+
             close(){
                 this.active = false;
                 this.state = 0;
@@ -579,6 +626,9 @@ document.addEventListener('alpine:init', () => {
                } else if (this.state == 1 && event.key === 'p'){
                   event.preventDefault();
                   this.start_projection();
+               } else if (this.state == 1 && event.key === 'e'){
+                 event.preventDefault();
+                 this.start_expression();
                } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && ["command"].includes(type)) {
                    event.preventDefault();
                    this.copy_fields();

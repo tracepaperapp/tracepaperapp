@@ -9,7 +9,7 @@ document.addEventListener('alpine:init', () => {
             async init(){
                 await Draftsman.sleep(10);
                 let type = Modeler.determine_type(this.navigation);
-                this.mode = ["readme","command"].includes(type) ? "aggregate" : "behavior";
+                this.mode = ["view","projection"].includes(type) ? "aggregate" : "behavior";
                 this.draw();
                 this.listnerId = Draftsman.registerListener("force-reload",this.draw.bind(this));
             },

@@ -24,7 +24,7 @@ document.addEventListener('alpine:init', () => {
             async cleanup_tabs(cascade=true){
                 let repo = await GitRepository.open();
                 let files = await repo.list();
-                files.push("/diagram","/dummy")
+                files.push("/diagram","/dummy","Expressions")
                 if (this.tabs.length != 0){
                     this.tabs = this.tabs.filter(x => files.includes(x));
                 }
@@ -97,7 +97,8 @@ document.addEventListener('alpine:init', () => {
                         this.navigation = file;
                     }else{
                         let navigation = this.$el.getAttribute("navigation");
-                        if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram"].includes(navigation)){
+                        console.log(navigation);
+                        if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram","Expressions"].includes(navigation)){
                             navigation += "/root.xml";
                         }
                         this.navigation = navigation;
@@ -105,6 +106,7 @@ document.addEventListener('alpine:init', () => {
 
                     await Draftsman.sleep(100);
                     this.tab_type = Modeler.determine_type(this.navigation);
+                    console.log(this.tab_type);
                     await Draftsman.sleep(10);
                     Draftsman.publishMessage("force-reload",this.navigation);
                     this.update_tabs();
