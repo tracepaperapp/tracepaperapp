@@ -24,7 +24,7 @@ document.addEventListener('alpine:init', () => {
             async cleanup_tabs(cascade=true){
                 let repo = await GitRepository.open();
                 let files = await repo.list();
-                files.push("/diagram","/dummy","Expressions")
+                files.push("/diagram","/dummy","Expressions","Dependencies")
                 if (this.tabs.length != 0){
                     this.tabs = this.tabs.filter(x => files.includes(x));
                 }
@@ -60,11 +60,6 @@ document.addEventListener('alpine:init', () => {
                     let type = this.$el.getAttribute("navigation-type");
                     let file_type = Modeler.determine_type(this.navigation);
 
-                    // temp testcode TODO Remove
-                    if (!["readme","diagram","command","aggregate","event","behavior","notifier","view","projection"].includes(file_type) && navigation != this.navigation){
-                        file_type = "dummy";
-                    }
-
                     if (type && type == file_type){
                         return "active";
                     } else if (navigation == this.navigation){
@@ -98,7 +93,7 @@ document.addEventListener('alpine:init', () => {
                     }else{
                         let navigation = this.$el.getAttribute("navigation");
                         console.log(navigation);
-                        if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram","Expressions"].includes(navigation)){
+                        if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram","Expressions","Dependencies"].includes(navigation)){
                             navigation += "/root.xml";
                         }
                         this.navigation = navigation;

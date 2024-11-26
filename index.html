@@ -104,6 +104,11 @@
                                 <ui-expressions></ui-expressions>
                             </template>
                         </div>
+                        <div x-import="modeler/dependencies">
+                            <template x-if="navigation == 'Dependencies'" :key="navigation">
+                                <ui-dependencies></ui-dependencies>
+                            </template>
+                        </div>
                         <div class="mb-5"></div>
                     </div>
                 </div>
@@ -156,6 +161,7 @@
     <script src="/js/modules/modeler/view.js"></script>
     <script src="/js/modules/modeler/projection.js"></script>
     <script src="/js/modules/modeler/expressions.js"></script>
+    <script src="/js/modules/modeler/configuration.js"></script>
 
 </body>
 </html>
