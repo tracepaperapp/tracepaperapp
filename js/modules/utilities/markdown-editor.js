@@ -24,7 +24,7 @@ document.addEventListener('alpine:init', () => {
                 this.listnerId = Draftsman.registerListener("force-reload",this.read.bind(this));
             },
             async read(){
-                this.path = this.$el.getAttribute("file").replace(".xml",".md");
+                this.path = this.$el.getAttribute("file").split(".").at(0) + ".md";
                 try{
                     this.content = await this.repo.read(this.path);
                 } catch {

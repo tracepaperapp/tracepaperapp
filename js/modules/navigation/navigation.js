@@ -93,7 +93,7 @@ document.addEventListener('alpine:init', () => {
                     }else{
                         let navigation = this.$el.getAttribute("navigation");
                         console.log(navigation);
-                        if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !["/diagram","Expressions","Dependencies","Patterns","Roles"].includes(navigation)){
+                        if (!navigation.endsWith(".xml") && !navigation.endsWith(".md") && !navigation.endsWith(".py") && !["/diagram","Expressions","Dependencies","Patterns","Roles"].includes(navigation)){
                             navigation += "/root.xml";
                         }
                         this.navigation = navigation;

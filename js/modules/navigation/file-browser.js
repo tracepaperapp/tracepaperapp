@@ -81,7 +81,7 @@ document.addEventListener('alpine:init', () => {
                     case "view":
                     case "projection":
                         key = "/view/" + this.navigation;
-                    case "expressions":
+                    case "code":
                         key = "/utils/" + this.navigation
                     case "render":
                         Object.keys(directories).forEach(p => {

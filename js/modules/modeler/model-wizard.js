@@ -3,7 +3,7 @@ ctrl + m --> open wizard
     c --> add command
 ctrl + shift + c --> copy wizard
 */
-
+const enabled_for_copy = ["command","aggregate","view"];
 document.addEventListener('alpine:init', () => {
     Alpine.data('modelWizard', function(){
         return {
@@ -95,6 +95,11 @@ document.addEventListener('alpine:init', () => {
 
                     // Pattern
                     case 90:
+                        this.update_action_buttons(false,false,true);
+                        break;
+
+                    // Python Module
+                    case 100:
                         this.update_action_buttons(false,false,true);
                         break;
 
@@ -257,20 +262,22 @@ document.addEventListener('alpine:init', () => {
                         break;
                     case "expression":
                         prepared_model = await this.prepare_expression(prepared_model);
-                        file = this.parameters.file;
                         await Modeler.save_model(file,prepared_model);
                         this.navigate("Expressions");
                         this.close();
-                        return
-                        break;
+                        return;
                     case "pattern":
                         prepared_model = await this.prepare_pattern(prepared_model);
-                        file = this.parameters.file;
                         await Modeler.save_model(file,prepared_model);
                         this.navigate("Patterns");
                         this.close();
-                        return
-                        break;
+                        return;
+                    case "code":
+                        let repo = await GitRepository.open();
+                        await repo.write(file, "# Python Module");
+                        this.navigate(file);
+                        this.close();
+                        return;
                     default:
                         console.error("Create for type not implemented: ",this.parameters.type);
                 }
@@ -366,7 +373,7 @@ document.addEventListener('alpine:init', () => {
                     this.file = this.navigation;
                     this.model = await Modeler.get_model(this.file);
                     this.type = Modeler.determine_type(this.file);
-                    this.copyEnabled = ["command","aggregate","view"].includes(this.type);
+                    this.copyEnabled = enabled_for_copy.includes(this.type);
                 }catch{}
 
 
@@ -622,6 +629,28 @@ document.addEventListener('alpine:init', () => {
                     }
             },
 
+            // Python Module
+            async start_module(){
+                this.parameters.name = "";
+                this.parameters.type = "code";
+                this.conflicted = true;
+                this.state = 100;
+            },
+            check_module_name(){
+                    this.conflicted = !this.parameters.name || !pascalCaseRegex.test(this.parameters.name);
+                    if (this.conflicted){
+                        this.dialog_id = 0;
+                        return
+                    }
+                    this.parameters.file = `lib/${this.parameters.name}.py`;
+                    this.conflicted = this.files.includes(this.parameters.file);
+                    if (this.conflicted){
+                        this.dialog_id = 1;
+                    } else {
+                        this.dialog_id = 0;
+                    }
+            },
+
             close(){
                 this.active = false;
                 this.state = 0;
@@ -677,7 +706,10 @@ document.addEventListener('alpine:init', () => {
                } else if (this.state == 1 && event.key === 'r'){
                  event.preventDefault();
                  this.start_pattern();
-               } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && ["command"].includes(type)) {
+               } else if (this.state == 1 && event.key === 'm'){
+                    event.preventDefault();
+                    this.start_module();
+               } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && enabled_for_copy.includes(type)) {
                    event.preventDefault();
                    this.copy_fields();
                } else if (event.key === 'Escape' || event.key === 'Esc') {

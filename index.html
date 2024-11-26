@@ -119,6 +119,11 @@
                                 <ui-roles></ui-roles>
                             </template>
                         </div>
+                        <div x-import="modeler/python">
+                            <template x-if="tab_type == 'code'" :key="navigation">
+                                <ui-python></ui-python>
+                            </template>
+                        </div>
                         <div class="mb-5"></div>
                     </div>
                 </div>
