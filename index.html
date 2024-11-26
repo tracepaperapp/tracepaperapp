@@ -114,6 +114,11 @@
                                 <ui-patterns></ui-patterns>
                             </template>
                         </div>
+                        <div x-import="modeler/roles">
+                            <template x-if="navigation == 'Roles'" :key="navigation">
+                                <ui-roles></ui-roles>
+                            </template>
+                        </div>
                         <div class="mb-5"></div>
                     </div>
                 </div>

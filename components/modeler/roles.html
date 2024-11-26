@@ -1,0 +1,62 @@
+<template x-component="roles">
+    <div navigation="Roles"
+         id="active-tab"
+         x-show="navigationElementActive"
+         x-cloak
+         x-transition.delay.100ms>
+        <template navigation="Roles" x-if="navigationElementActive">
+            <div  class="grid grid-cols-12 gap-3 mt-5" x-data="metaContainer">
+                <div class="col-span-8 ml-2">
+
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-5">
+                        Roles:
+                    </h3>
+                    <table class="table">
+                        <template x-for="(role,index) in model.roles">
+                            <tr>
+                                <th scope="row">
+                                    <span class="ml-3" x-text="role"></span>
+                                </th>
+                                <td>
+                                    <button @click="model.roles.splice(index,1)"
+                                            :disabled="editing_disabled"
+                                            class="btn btn-xs btn-outline btn-error">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr>
+                            <td>
+                                <input type="text"
+                                       :disabled="editing_disabled"
+                                       @blur="add_role"
+                                       x-data="inputValidator"
+                                       @input="camel_cased"
+                                       placeholder="newRoleName..."
+                                       class="input w-full" />
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+                <div class="col-span-4">
+
+                    <!-- Info Card -->
+                    <div class="card bg-primary text-primary-content mb-5 card-compact">
+                        <div class="card-body">
+                            <div class="card-actions justify-end">
+                                <i @click="open_github"
+                                   file="meta.json" x-data="infoCard"
+                                   class="fa-solid fa-code cursor-pointer"></i>
+                            </div>
+                            <h2 class="card-title">Role names</h2>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
