@@ -63,6 +63,11 @@
                 <a>Expression</a>
               </div>
             </li>
+            <li @click="start_pattern">
+              <div class="tooltip tooltip-bottom text-left" data-tip="Shortcut: R-key">
+                <a>Pattern (regex)</a>
+              </div>
+            </li>
           </ul>
         </div>
 
@@ -606,6 +611,49 @@
                       d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>There is already an Expression with name [<span x-text="parameters.name"></span>] in the domain.</span>
+          </div>
+        </div>
+
+        <!-- Pattern -->
+        <div x-show="state == 90" x-cloak x-transition>
+          <table class="table">
+            <tr>
+              <th scope="row">Pattern name</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.name"
+                       x-data="inputValidator"
+                       @input="pascal_cased"
+                       @keyup.debounce.1000ms="check_pattern_name"
+                       :disabled="editing_disabled"
+                       placeholder="PatternName"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Pattern name</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.regex"
+                       :disabled="editing_disabled"
+                       placeholder="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+          </table>
+          <div x-show="dialog_id == 1" x-cloak x-transition role="alert" class="alert alert-error mt-5">
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 shrink-0 stroke-current"
+                    fill="none"
+                    viewBox="0 0 24 24">
+              <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>There is already an Patten with name [<span x-text="parameters.name"></span>] in the domain.</span>
           </div>
         </div>
 

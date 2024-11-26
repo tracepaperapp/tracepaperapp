@@ -93,6 +93,11 @@ document.addEventListener('alpine:init', () => {
                         this.update_action_buttons(false,false,true);
                         break;
 
+                    // Pattern
+                    case 90:
+                        this.update_action_buttons(false,false,true);
+                        break;
+
                     default:
                         this.update_action_buttons();
                 }
@@ -210,9 +215,19 @@ document.addEventListener('alpine:init', () => {
                 return prepared_model;
             },
 
+            async prepare_pattern(prepared_model){
+                Modeler._roots[this.parameters.file] = "pattern";
+                prepared_model.att_name = this.parameters.name;
+                sessionStorage.prepared_pattern = this.parameters.name;
+                prepared_model.att_regex = this.parameters.regex;
+                prepared_model = Modeler.prepare_model("pattern",prepared_model);
+                return prepared_model;
+            },
+
             async insert_model(){
                 this.active = false;
                 let prepared_model = {};
+                let file = this.parameters.file;
                 switch (this.parameters.type){
                     case "command":
                         prepared_model = await this.prepare_command(prepared_model);
@@ -242,9 +257,17 @@ document.addEventListener('alpine:init', () => {
                         break;
                     case "expression":
                         prepared_model = await this.prepare_expression(prepared_model);
-                        let file = this.parameters.file;
+                        file = this.parameters.file;
                         await Modeler.save_model(file,prepared_model);
                         this.navigate("Expressions");
+                        this.close();
+                        return
+                        break;
+                    case "pattern":
+                        prepared_model = await this.prepare_pattern(prepared_model);
+                        file = this.parameters.file;
+                        await Modeler.save_model(file,prepared_model);
+                        this.navigate("Patterns");
                         this.close();
                         return
                         break;
@@ -252,7 +275,6 @@ document.addEventListener('alpine:init', () => {
                         console.error("Create for type not implemented: ",this.parameters.type);
                 }
                 console.log(prepared_model);
-                let file = this.parameters.file;
                 await Modeler.save_model(file,prepared_model);
                 this.navigate(file);
                 this.close();
@@ -577,6 +599,29 @@ document.addEventListener('alpine:init', () => {
                 }
             },
 
+            // Pattern
+            async start_pattern(){
+                this.parameters.name = "";
+                this.parameters.regex = "";
+                this.parameters.type = "pattern";
+                this.conflicted = true;
+                this.state = 90;
+            },
+            check_pattern_name(){
+                    this.conflicted = !this.parameters.name || !pascalCaseRegex.test(this.parameters.name);
+                    if (this.conflicted){
+                        this.dialog_id = 0;
+                        return
+                    }
+                    this.parameters.file = `patterns/${this.parameters.name}.xml`;
+                    this.conflicted = this.files.includes(this.parameters.file);
+                    if (this.conflicted){
+                        this.dialog_id = 1;
+                    } else {
+                        this.dialog_id = 0;
+                    }
+            },
+
             close(){
                 this.active = false;
                 this.state = 0;
@@ -629,6 +674,9 @@ document.addEventListener('alpine:init', () => {
                } else if (this.state == 1 && event.key === 'e'){
                  event.preventDefault();
                  this.start_expression();
+               } else if (this.state == 1 && event.key === 'r'){
+                 event.preventDefault();
+                 this.start_pattern();
                } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && ["command"].includes(type)) {
                    event.preventDefault();
                    this.copy_fields();

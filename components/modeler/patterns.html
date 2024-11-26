@@ -1,0 +1,93 @@
+<template x-component="patterns">
+    <div x-data="patternsContainer" id="active-tab">
+        <div class="grid grid-cols-12 gap-3 mt-5">
+            <div class="col-span-8">
+
+                <label class="input input-bordered flex items-center gap-2 mb-5">
+                    <input type="text" x-model="search" class="grow" placeholder="Search" />
+                    <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            class="h-4 w-4 opacity-70">
+                        <path
+                                fill-rule="evenodd"
+                                d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                                clip-rule="evenodd" />
+                    </svg>
+                </label>
+
+                <table class="table">
+                    <template x-for="pattern in patterns" :key="pattern">
+                        <tr x-show="search.replace(/\s+/g, '') == '' || pattern.toLowerCase().includes(search.replace(/\s+/g, '').toLowerCase()) || model.att_regex.toLowerCase().includes(search.replace(/\s+/g, '').toLowerCase())" x-cloak x-transition
+                            class="border-b"
+                            x-data="patternModel">
+                            <td>
+                                <i @click="open_diagram(pattern)"
+                                   class="fa-regular fa-eye cursor-pointer"></i>
+                            </td>
+                            <td>
+                                <input type="text"
+                                       :disabled="editing_disabled"
+                                       x-model="newName"
+                                       x-data="inputValidator"
+                                       @keyup.debounce.500ms="check_name"
+                                       @input="pascal_cased"
+                                       placeholder="PatternName"
+                                       class="input input-sm w-[80%]" />
+                                <button x-show="newName != model.att_name" x-cloak x-transition
+                                        @click="rename"
+                                        class="btn btn-outline btn-xs"
+                                        :class="duplicateName ? 'btn-error' : 'btn-success'">
+                                    save
+                                </button>
+                            </td>
+                            <td class="max-w-[20vw]">
+                                <input type="text"
+                                       :disabled="editing_disabled"
+                                       x-model="model.att_regex"
+                                       placeholder="RegEx"
+                                       class="input input-sm w-full modeler-input" />
+                                <hr class="mt-5 mb-5">
+                                <div :file="pattern" x-data="markdownEditor"></div>
+                            </td>
+                            <td>
+                                <button @click="remove_pattern(pattern)"
+                                        :disabled="editing_disabled"
+                                        class="ml-5 btn btn-xs btn-outline btn-error">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </table>
+
+            </div>
+            <div class="col-span-4">
+
+                <!-- Info Card -->
+                <div class="card bg-primary text-primary-content mb-5 card-compact" x-data="infoCard">
+                    <div class="card-body">
+                        <div class="card-actions justify-end">
+                            <i @click="Draftsman.publishMessage('focus')"
+                               class="fa-regular fa-eye cursor-pointer"></i>
+                            <i @click="open_github"
+                               file="expressions/"
+                               class="fa-solid fa-code cursor-pointer"></i>
+                        </div>
+                        <h2 class="card-title">Expressions</h2>
+                        <p class="text-xs" :file="navigation" x-text="get_path"></p>
+                    </div>
+                </div>
+
+                <!-- Diagram -->
+                <template x-if="navigation != ''">
+                    <div x-import="elements/embedded-diagram">
+                        <ui-embedded-diagram></ui-embedded-diagram>
+                    </div>
+                </template>
+
+            </div>
+        </div>
+    </div>
+</template>

@@ -109,6 +109,11 @@
                                 <ui-dependencies></ui-dependencies>
                             </template>
                         </div>
+                        <div x-import="modeler/patterns">
+                            <template x-if="tab_type == 'patterns'" :key="navigation">
+                                <ui-patterns></ui-patterns>
+                            </template>
+                        </div>
                         <div class="mb-5"></div>
                     </div>
                 </div>
@@ -162,6 +167,6 @@
     <script src="/js/modules/modeler/projection.js"></script>
     <script src="/js/modules/modeler/expressions.js"></script>
     <script src="/js/modules/modeler/configuration.js"></script>
-
+    <script src="/js/modules/modeler/patterns.js"></script>
 </body>
 </html>
