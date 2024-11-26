@@ -24,7 +24,7 @@ document.addEventListener('alpine:init', () => {
                 this.expressions = expression_cache;
                 if (sessionStorage.prepared_expression){
                     this.search = sessionStorage.prepared_expression;
-                    sessionStorage.remove("prepared_expression");
+                    sessionStorage.removeItem("prepared_expression");
                 }
             },
             async open_diagram(expression){
@@ -32,6 +32,9 @@ document.addEventListener('alpine:init', () => {
                 await Draftsman.sleep(500);
                 selected_expression = expression;
                 this.navigation = expression;
+                if (this.search == ""){
+                    this.search = expression.split("/").at(-1).replace(".xml","");
+                }
             },
             async remove_expression(expression){
                 try{
