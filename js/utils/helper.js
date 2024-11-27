@@ -202,78 +202,159 @@ class Draftsman {
      return [...new Set(arr)];
    }
 
-    static codeEditor(iframe,code,callback,completions=null){
-        if (!iframe){return}
+//    static codeEditor(iframe,code,callback,completions=null,filepath="dummy.py"){
+//        let config = getAceEditorConfig(filepath)
+//        if (!iframe){return}
+//        let id = iframe.id;
+//        code = code.replaceAll('|LB|','\n');
+//        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+//
+//        if (iframeDocument.body.children.length == 0){
+//            var editorscript = iframeDocument.createElement("script");
+//            editorscript.src = "/js/tp/ace-editor.js";
+//            iframeDocument.head.appendChild(editorscript);
+//
+//            // Initialize the editor once the script is loaded
+//            editorscript.onload = function() {
+//                var languagescript = iframeDocument.createElement("script");
+//                languagescript.src = "/js/tp/ace-language.js";
+//                iframeDocument.head.appendChild(languagescript);
+//
+//                languagescript.onload = function() {
+//                    var pythonscript = iframeDocument.createElement("script");
+//                    pythonscript.src = config.cdn;
+//                    iframeDocument.head.appendChild(pythonscript);
+//
+//                    pythonscript.onload = function() {
+//                        if (completions){
+//                            var completer = iframeDocument.createElement("script");
+//                            completer.src = "/js/utils/custom-completer.js";
+//                            iframeDocument.head.appendChild(completer);
+//
+//                            var allCompletions = iframeDocument.createElement("script");
+//                            allCompletions.textContent = "allCompletions = " + JSON.stringify(completions);
+//                            iframeDocument.head.appendChild(allCompletions);
+//                        }
+//
+//                        var editorDiv = iframeDocument.createElement("div");
+//                        editorDiv.style.height = "100%";
+//                        editorDiv.style.width = "100%";
+//                        iframeDocument.body.appendChild(editorDiv);
+//
+//                        var editor = iframe.contentWindow.ace.edit(editorDiv);
+//                        let theme = localStorage.theme == "dark" ? "ace/theme/github_dark" : "ace/theme/github";
+//                        editor.session.setMode(config.mode);
+//                        editor.setValue(code,1);
+//                        editor.setTheme(theme);
+//                        editor.setOptions({
+//                            enableBasicAutocompletion: true,
+//                            enableSnippets: true,
+//                            enableLiveAutocompletion: true
+//                        });
+//                        editor.setReadOnly(sessionStorage.privelige != "write");
+//                        // Add a callback to listen for changes
+//                        Draftsman.editors_listners[id] = function(delta) {
+//                            callback(editor.getValue(),id);
+//                        }
+//                        editor.session.on('change', Draftsman.editors_listners[id]);
+//                        Draftsman.editors[id] = editor;
+//                        //editor.resize(); // Ensure the editor is resized correctly
+//                        //editor.renderer.updateFull(); // Force a full update of the editor
+//                    }
+//                }
+//            };
+//        } else {
+//            var allCompletions = iframeDocument.createElement("script");
+//            allCompletions.textContent = "allCompletions = " + JSON.stringify(completions);
+//            iframeDocument.head.appendChild(allCompletions);
+//            Draftsman.editors[id].setValue(code,1);
+//            Draftsman.editors[id].session.off('change', Draftsman.editors_listners[id]);
+//            Draftsman.editors_listners[id] = function(delta) {
+//                callback(Draftsman.editors[id].getValue(),id);
+//            }
+//            Draftsman.editors[id].session.on('change', Draftsman.editors_listners[id]);
+//        }
+//
+//    }
+
+    static codeEditor(iframe, code, callback, completions = null, filepath = "dummy.py") {
+        let config = getAceEditorConfig(filepath);
+        if (!iframe) return;
+
         let id = iframe.id;
-        code = code.replaceAll('|LB|','\n');
-        var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+        code = code.replaceAll('|LB|', '\n');
+        const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
 
-        if (iframeDocument.body.children.length == 0){
-            var editorscript = iframeDocument.createElement("script");
-            editorscript.src = "/js/tp/ace-editor.js";
-            iframeDocument.head.appendChild(editorscript);
+        if (iframeDocument.body.children.length === 0) {
+            // Load Ace Editor from the CDN
+            const aceScript = iframeDocument.createElement("script");
+            aceScript.src = "https://cdnjs.cloudflare.com/ajax/libs/ace/1.11.2/ace.js";
+            iframeDocument.head.appendChild(aceScript);
 
-            // Initialize the editor once the script is loaded
-            editorscript.onload = function() {
-                var languagescript = iframeDocument.createElement("script");
-                languagescript.src = "/js/tp/ace-language.js";
-                iframeDocument.head.appendChild(languagescript);
+            aceScript.onload = () => {
+                // Set up the editor
+                const editorDiv = iframeDocument.createElement("div");
+                editorDiv.style.height = "100%";
+                editorDiv.style.width = "100%";
+                iframeDocument.body.appendChild(editorDiv);
 
-                languagescript.onload = function() {
-                    var pythonscript = iframeDocument.createElement("script");
-                    pythonscript.src = "/js/tp/ace-python.js";
-                    iframeDocument.head.appendChild(pythonscript);
+                const editor = iframe.contentWindow.ace.edit(editorDiv);
 
-                    pythonscript.onload = function() {
-                        if (completions){
-                            var completer = iframeDocument.createElement("script");
-                            completer.src = "/js/utils/custom-completer.js";
-                            iframeDocument.head.appendChild(completer);
+                // Configure the editor
+                const theme = localStorage.theme === "dark" ? "ace/theme/github_dark" : "ace/theme/github";
+                editor.session.setMode(config.mode);
+                editor.setValue(code, 1);
+                editor.setTheme(theme);
+                editor.setOptions({
+                    enableBasicAutocompletion: true,
+                    enableSnippets: true,
+                    enableLiveAutocompletion: true,
+                });
+                editor.setReadOnly(sessionStorage.privelige !== "write");
 
-                            var allCompletions = iframeDocument.createElement("script");
-                            allCompletions.textContent = "allCompletions = " + JSON.stringify(completions);
-                            iframeDocument.head.appendChild(allCompletions);
-                        }
-
-                        var editorDiv = iframeDocument.createElement("div");
-                        editorDiv.style.height = "100%";
-                        editorDiv.style.width = "100%";
-                        iframeDocument.body.appendChild(editorDiv);
-
-                        var editor = iframe.contentWindow.ace.edit(editorDiv);
-                        let theme = localStorage.theme == "dark" ? "ace/theme/github_dark" : "ace/theme/github";
-                        editor.session.setMode('ace/mode/python');
-                        editor.setValue(code,1);
-                        editor.setTheme(theme);
-                        editor.setOptions({
-                            enableBasicAutocompletion: true,
-                            enableSnippets: true,
-                            enableLiveAutocompletion: true
-                        });
-                        editor.setReadOnly(sessionStorage.privelige != "write");
-                        // Add a callback to listen for changes
-                        Draftsman.editors_listners[id] = function(delta) {
-                            callback(editor.getValue(),id);
-                        }
-                        editor.session.on('change', Draftsman.editors_listners[id]);
-                        Draftsman.editors[id] = editor;
-                        //editor.resize(); // Ensure the editor is resized correctly
-                        //editor.renderer.updateFull(); // Force a full update of the editor
-                    }
+                // Add custom completions if provided
+                if (completions) {
+                    iframe.contentWindow.ace.require("ace/ext/language_tools");
+                    editor.completers = [{
+                        getCompletions: (editor, session, pos, prefix, callback) => {
+                            callback(null, completions.map(item => ({
+                                caption: item.label,
+                                value: item.value,
+                                meta: item.meta || "custom",
+                            })));
+                        },
+                    }];
                 }
+
+                // Set up change listener
+                Draftsman.editors_listners[id] = function(delta) {
+                    callback(editor.getValue(), id);
+                };
+                editor.session.on('change', Draftsman.editors_listners[id]);
+
+                Draftsman.editors[id] = editor;
             };
         } else {
-            var allCompletions = iframeDocument.createElement("script");
-            allCompletions.textContent = "allCompletions = " + JSON.stringify(completions);
-            iframeDocument.head.appendChild(allCompletions);
-            Draftsman.editors[id].setValue(code,1);
-            Draftsman.editors[id].session.off('change', Draftsman.editors_listners[id]);
-            Draftsman.editors_listners[id] = function(delta) {
-                callback(Draftsman.editors[id].getValue(),id);
+            // Update existing editor with new code and completions
+            if (completions) {
+                Draftsman.editors[id].completers = [{
+                    getCompletions: (editor, session, pos, prefix, callback) => {
+                        callback(null, completions.map(item => ({
+                            caption: item.label,
+                            value: item.value,
+                            meta: item.meta || "custom",
+                        })));
+                    },
+                }];
             }
+            Draftsman.editors[id].setValue(code, 1);
+            Draftsman.editors[id].session.off('change', Draftsman.editors_listners[id]);
+
+            Draftsman.editors_listners[id] = function(delta) {
+                callback(Draftsman.editors[id].getValue(), id);
+            };
             Draftsman.editors[id].session.on('change', Draftsman.editors_listners[id]);
         }
-
     }
 
     static unregisterTask(f) {
@@ -339,4 +420,26 @@ class CodeCompletions {
     toJSON() {
         return this.completions;
     }
+}
+
+function getAceEditorConfig(filepath) {
+    // Een mapping van extensies naar modes en CDN-scripts
+    const extensionMap = {
+        html: { mode: "ace/mode/html", cdn: "/js/tp/mode-html.js" },
+        md: { mode: "ace/mode/markdown", cdn: "https://cdnjs.cloudflare.com/ajax/libs/ace/1.11.2/mode-markdown.js" },
+        gql: { mode: "ace/mode/graphql", cdn: "https://cdnjs.cloudflare.com/ajax/libs/ace/1.11.2/mode-graphql.js" },
+        txt: { mode: "ace/mode/plain_text", cdn: "https://cdnjs.cloudflare.com/ajax/libs/ace/1.11.2/mode-plain_text.js" },
+        py: {mode: "ace/mode/python", cdn: "/js/tp/ace-python.js"}
+    };
+
+    // Haal de extensie van het bestandspad
+    const extension = filepath.split('.').pop();
+
+    // Zoek de bijbehorende modus en CDN-script
+    const config = extensionMap[extension] || {
+        mode: "ace/mode/plain_text", // Fallback modus
+        cdn: "https://cdnjs.cloudflare.com/ajax/libs/ace/1.11.2/mode-plain_text.js",
+    };
+
+    return config;
 }

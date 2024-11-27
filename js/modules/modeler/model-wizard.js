@@ -103,6 +103,11 @@ document.addEventListener('alpine:init', () => {
                         this.update_action_buttons(false,false,true);
                         break;
 
+                    // Python Module
+                    case 110:
+                        this.update_action_buttons(false,false,true);
+                        break;
+
                     default:
                         this.update_action_buttons();
                 }
@@ -274,7 +279,7 @@ document.addEventListener('alpine:init', () => {
                         return;
                     case "code":
                         let repo = await GitRepository.open();
-                        await repo.write(file, "# Python Module");
+                        await repo.write(file, "# Content");
                         this.navigate(file);
                         this.close();
                         return;
@@ -651,6 +656,28 @@ document.addEventListener('alpine:init', () => {
                     }
             },
 
+            // Python Module
+            async start_template(){
+                this.parameters.name = "templates/new.md";
+                this.parameters.type = "code";
+                this.conflicted = true;
+                this.state = 110;
+            },
+            check_template_name(){
+                    this.conflicted = !this.parameters.name || !templatePath.test(this.parameters.name);
+                    if (this.conflicted){
+                        this.dialog_id = 0;
+                        return
+                    }
+                    this.parameters.file = this.parameters.name;
+                    this.conflicted = this.files.includes(this.parameters.file);
+                    if (this.conflicted){
+                        this.dialog_id = 1;
+                    } else {
+                        this.dialog_id = 0;
+                    }
+            },
+
             close(){
                 this.active = false;
                 this.state = 0;
@@ -709,6 +736,9 @@ document.addEventListener('alpine:init', () => {
                } else if (this.state == 1 && event.key === 'm'){
                     event.preventDefault();
                     this.start_module();
+               } else if (this.state == 1 && event.key === 't'){
+                   event.preventDefault();
+                   this.start_template();
                } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && enabled_for_copy.includes(type)) {
                    event.preventDefault();
                    this.copy_fields();

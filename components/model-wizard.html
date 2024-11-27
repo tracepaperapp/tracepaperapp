@@ -73,6 +73,11 @@
                 <a>Python Module</a>
               </div>
             </li>
+            <li @click="start_template">
+              <div class="tooltip tooltip-bottom text-left" data-tip="Shortcut: T-key">
+                <a>Template</a>
+              </div>
+            </li>
           </ul>
         </div>
 
@@ -695,7 +700,39 @@
           </div>
         </div>
 
-        <pre x-text="JSON.stringify(parameters,null,2)"></pre>
+        <!-- Template -->
+        <div x-show="state == 110" x-cloak x-transition>
+          <table class="table">
+            <tr>
+              <th scope="row">Template</th>
+              <td>
+                <input type="text"
+                       x-model="parameters.name"
+                       x-data="inputValidator"
+                       @input="template_path"
+                       @keyup.debounce.1000ms="check_template_name"
+                       :disabled="editing_disabled"
+                       placeholder="templates/myTemplate.md"
+                       class="input input-sm w-full max-w-xs" />
+              </td>
+            </tr>
+          </table>
+          <div x-show="dialog_id == 1" x-cloak x-transition role="alert" class="alert alert-error mt-5">
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 shrink-0 stroke-current"
+                    fill="none"
+                    viewBox="0 0 24 24">
+              <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>There is already a Template with name [<span x-text="parameters.name"></span>] in the domain.</span>
+          </div>
+        </div>
+        
         <div class="modal-action">
 
           <button class="btn btn-primary"

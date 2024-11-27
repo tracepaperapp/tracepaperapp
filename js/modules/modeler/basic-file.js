@@ -7,11 +7,13 @@ document.addEventListener('alpine:init', () => {
             _taskId: "",
             listnerId: "",
             newName: "",
+            newPath: "",
             duplicateName: false,
             initialized: false,
             async init(){
                 this.repo = await GitRepository.open();
                 this.path = this.$el.getAttribute("file");
+                this.newPath = this.path;
                 this.newName = this.path.split("/").at(1).split(".").at(0);
                 this.read();
                 this._taskId = Draftsman.uuidv4();
@@ -21,10 +23,15 @@ document.addEventListener('alpine:init', () => {
             render_editor(){
                 let completions = new CodeCompletions();
                 //completions.add_items(this.model.input.map(x => `arguments["${x.att_name}"]`));
-                Draftsman.codeEditor(this.$el,this.content,this._update_code.bind(this),completions);
+                Draftsman.codeEditor(this.$el,this.content,this._update_code.bind(this),completions,this.path);
             },
             async check_name(){
-                let files = await this.repo.list(x => x == "lib/" + this.newName + ".py");
+                let files = [];
+                if (this.path.startsWith("lib/")){
+                    files = await this.repo.list(x => x == "lib/" + this.newName + ".py");
+                } else {
+                    files = await this.repo.list(x => x == this.newPath);
+                }
                 this.duplicateName = files.length != 0;
             },
             _update_code(code){
@@ -41,7 +48,11 @@ document.addEventListener('alpine:init', () => {
                 await this._execute_save();
                 this.lock = true;
                 // Move files to new path
-                await Modeler.force_rename_model(this.path,"lib/" + this.newName + ".py");
+                if (this.path.startsWith("lib/")){
+                    await Modeler.force_rename_model(this.path,"lib/" + this.newName + ".py");
+                } else {
+                    await Modeler.force_rename_model(this.path,this.newPath);
+                }
             },
             async delete_model(){
                 await Modeler.delete_model(this.path);

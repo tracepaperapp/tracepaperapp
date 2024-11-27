@@ -5,6 +5,7 @@ const lowercaseRegex = /^[a-z]+$/;
 const apiPathRegex = /^([A-Z][a-z]*\.)+[a-z][a-zA-Z]*$/;
 const githubAccountRegex = /^[a-zA-Z0-9\-]{1,39}$/;
 const repoRegex = /^https:\/\/github.com\/[a-zA-Z0-9\-._]+\/[a-zA-Z0-9\-._]+$/;
+const templatePath = /^templates\/[^\s]+\.[a-zA-Z0-9_]+$/;
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('inputValidator', (pattern=null) => {
@@ -48,6 +49,10 @@ document.addEventListener('alpine:init', () => {
             github_repo_url(){
                 const message = "Must be a gitHub repo url!";
                 this.validate_regex(repoRegex,message);
+            },
+            template_path(){
+                const message = "Must be a valid path starting with templates/ e.g. templates/example.md!";
+                this.validate_regex(templatePath,message);
             },
             custom_pattern(){
                 console.log(this.pattern);

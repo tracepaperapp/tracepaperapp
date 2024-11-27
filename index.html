@@ -124,6 +124,11 @@
                                 <ui-python></ui-python>
                             </template>
                         </div>
+                        <div x-import="modeler/template">
+                            <template x-if="tab_type == 'template'" :key="navigation">
+                                <ui-template></ui-template>
+                            </template>
+                        </div>
                         <div class="mb-5"></div>
                     </div>
                 </div>

@@ -69,6 +69,8 @@ class Modeler {
                 return "notifier";
             } else if (file.startsWith("lib/")){
                 return "code";
+            } else if (file.startsWith("templates/")){
+                return "template";
             } else if (file.startsWith("expressions/")){
                 return "expression";
             } else if (file.startsWith("patterns")){
