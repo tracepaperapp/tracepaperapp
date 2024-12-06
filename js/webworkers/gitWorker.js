@@ -1,7 +1,7 @@
 console.trace = function(){};
 console.log = function(){};
 console.warning = function(){};
-console.error = function(){};
+console.error = function(){};//*/
 
 importScripts('/js/tp/isomorphic-git.js');
 importScripts('/js/tp/lightning-fs.js');
@@ -512,11 +512,14 @@ async function hasUnpushedChanges(repoUrl) {
 }
 
 async function pushChanges() {
+  console.log("PUSH");
   await isogit.push({
     fs,
     http,
     dir,
-    corsProxy: proxy
+    corsProxy: proxy,
+    ref: 'main',
+    force: true
   });
 }
 

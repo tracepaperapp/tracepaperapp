@@ -15,3 +15,6 @@ view move naar andere namespace -> query namespace mee refactoren (kijk ook even
 alle code editors nalopen en code completion verbeteren
 
 fileUploade event, wordt deze toegevoegd aan de config.xml, en is deze selectable als trigger?
+
+offline mode zelf triggeren, geeft betere performance op slecht netwerk --> Of er voor zorgen dat de auto pull
+niet zo hard er in hakt

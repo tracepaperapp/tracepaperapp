@@ -47,7 +47,7 @@ document.addEventListener('alpine:init', () => {
             async commit_changes(){
                 this.commitModal = false;
                 try{
-                    this.repo.commit(this.commitMessage);
+                    await this.repo.commit(this.commitMessage);
                     await Draftsman.sleep(1000);
                     await this.repo.push();
                     this.force = [];
