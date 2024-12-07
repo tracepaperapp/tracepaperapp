@@ -344,7 +344,7 @@ function addAttIdToJson(data) {
     if (Array.isArray(data)) {
         // Als het een array is, loop door alle elementen
         data.forEach(item => addAttIdToJson(item));
-    } else if (typeof data === "object" && data !== null) {
+    } else if (typeof data === "object" && data !== null && !data.att_id) {
         // Als het een object is, voeg att_id toe
         data.att_id = Draftsman.makeid(6);
         // Recursief verder voor alle properties
