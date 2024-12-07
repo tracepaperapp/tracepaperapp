@@ -138,7 +138,7 @@
                                                                 </template>
                                                                 <template x-if="input.att_type == 'Nested'">
                                                                     <td x-data="scenarioActivityNestedInput">
-                                                                        
+
                                                                         <template x-for="(item,index) in data" :key="index">
                                                                             <table class="table table-xs mb-5">
                                                                                 <tr class="bg-primary-content">
@@ -188,6 +188,7 @@
                                                                                                x-data="inputValidator"
                                                                                                @input="camel_cased"
                                                                                                @focusout="insertField(item,$el.value)"
+                                                                                               @keyup.enter="insertField(item,$el.value)"
                                                                                                placeholder="newFieldName"
                                                                                                class="input w-full input-xs" />
                                                                                     </td>
@@ -195,14 +196,14 @@
                                                                             </table>
                                                                         </template>
 
-                                                                        <button @click="data.push({key: ''})"
+                                                                        <button @click="if(data.length == 0){data.push({key: ''})}else{data.push(JSON.parse(JSON.stringify(data.at(-1))))}"
                                                                                 :disabled="editing_disabled"
                                                                                 class="btn btn-xs btn-outline btn-success">
                                                                             <i class="fa-regular fa-plus"></i> Add object
                                                                         </button>
                                                                     </td>
                                                                 </template>
-                                                                <td>
+                                                                <td class="align-top">
                                                                     <button @click="activity.input = activity.input.filter(x => x.att_name != input.att_name)"
                                                                             :disabled="editing_disabled"
                                                                             class="btn btn-xs btn-outline btn-error">

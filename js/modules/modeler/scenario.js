@@ -180,8 +180,10 @@ document.addEventListener('alpine:init', () => {
                 data: [],
                 lock: false,
                 init(){
-                    let data = JSON.parse(this.input.att_value);
-                    this.data = data;
+                    try{
+                        let data = JSON.parse(this.input.att_value);
+                        this.data = data;
+                    }catch{}
                     this.$watch("data",this.save.bind(this));
                 },
                 async save(){
