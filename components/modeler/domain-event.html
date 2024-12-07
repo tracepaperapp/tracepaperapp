@@ -33,7 +33,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <template x-for="field in model.field">
+                                    <template x-for="field in model.field" :key="field.att_id">
                                         <tr>
                                             <td>
                                                 <input type="text"
@@ -84,7 +84,7 @@
                                     </tbody>
                                 </table>
 
-                                <template x-for="nested in model['nested-object']" :key="nested.att_name">
+                                <template x-for="nested in model['nested-object']" :key="nested.att_id">
                                     <div>
                                         <hr>
                                         <table class="table mt-5">
@@ -116,7 +116,7 @@
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            <template x-for="field in nested.field">
+                                            <template x-for="field in nested.field" :key="field.att_id">
                                                 <tr>
                                                     <td>
                                                         <input type="text"
@@ -224,7 +224,7 @@
                                                         <td x-show="map.att_operand != 'unmapped'" x-cloak x-transition>
                                                             <select class="modeler-input" :disabled="editing_disabled" x-model="map.att_value">
                                                                 <option value="">-</option>
-                                                                <template x-for="target in event.field">
+                                                                <template x-for="target in event.field" :key="target.att_id">
                                                                     <option :value="target.att_name"
                                                                             :selected="map.att_value == target.att_name"
                                                                             x-text="target.att_name"></option>
@@ -233,7 +233,7 @@
                                                         </td>
                                                     </tr>
                                                 </template>
-                                                <template x-for="nested in mapping['nested-mapping']">
+                                                <template x-for="nested in mapping['nested-mapping']" :key="nested.att_id">
                                                     <tr>
                                                         <td x-text="nested.att_target"></td>
                                                         <td>
@@ -250,7 +250,7 @@
                                                                     <td>
                                                                         <select class="modeler-input" :disabled="editing_disabled" x-model="nested.att_source">
                                                                             <option value="">-</option>
-                                                                            <template x-for="target in event['nested-object']">
+                                                                            <template x-for="target in event['nested-object']" :key="target.att_id">
                                                                                 <option :value="target.att_name"
                                                                                         :selected="nested.att_source == target.att_name"
                                                                                         x-text="target.att_name"></option>

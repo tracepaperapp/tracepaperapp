@@ -3,7 +3,7 @@
         <div class="col-span-3 border-r pr-2">
             <template x-if="model">
                 <ul class="menu menu-xs rounded-lg">
-                    <template x-for="test in model['test-case']" :key="test.att_name">
+                    <template x-for="test in model['test-case']" :key="test.att_id">
                         <li>
                             <a @click="selectedTest[navigation] = test.att_name"
                                :class="test.att_name == selectedTest[navigation] ? 'active' : ''">
@@ -38,7 +38,7 @@
             </div>
         </div>
         <div class="col-span-9">
-            <template x-for="test in model['test-case']" :key="test.att_name">
+            <template x-for="test in model['test-case']" :key="test.att_id">
                 <div x-show="test.att_name == selectedTest[navigation]" x-cloak x-transition>
 
                     <!-- Initial State -->
@@ -212,7 +212,7 @@
                             <th scope="col">Type</th>
                             <th scope="col">Value</th>
                         </tr>
-                        <template x-for="input in test.input" :key="input.att_name">
+                        <template x-for="input in test.input" :key="input.att_id">
                             <tr>
                                 <td x-text="input.att_name"></td>
                                 <td x-text="input.att_type"></td>

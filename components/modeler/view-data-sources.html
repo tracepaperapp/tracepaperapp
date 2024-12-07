@@ -96,7 +96,7 @@
                                             x-model="handler.att_dictionary"
                                             class="select select-sm select-ghost modeler-input min-w-full">
                                         <option></option>
-                                        <template x-for="dictionary in Object.keys(collections)">
+                                        <template x-for="dictionary in Object.keys(collections)" :key="dictionary">
                                             <option :value="dictionary" x-text="dictionary" :selected="handler.att_dictionary == dictionary"></option>
                                         </template>
                                     </select>
@@ -109,7 +109,7 @@
                                             x-model="handler['att_key-mapping']"
                                             class="select select-sm select-ghost modeler-input min-w-full">
                                         <option></option>
-                                        <template x-for="field in source.field">
+                                        <template x-for="field in source.field" :key="field.att_id">
                                             <option :value="field.att_name" x-text="field.att_name" :selected="handler['att_key-mapping'] == field.att_name"></option>
                                         </template>
                                     </select>
@@ -133,7 +133,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <template x-for="field in target_fields">
+                            <template x-for="field in target_fields" :key="field.att_id">
                                 <tr x-data="viewMapping" @source-aggregate-changed.window="get_mapping">
                                     <td x-text="field.att_name"></td>
                                     <td>
@@ -157,7 +157,7 @@
                                                 x-model="mapping.att_value"
                                                 class="select select-sm select-ghost modeler-input min-w-full">
                                             <option></option>
-                                            <template x-for="value in sources">
+                                            <template x-for="value in sources" :key="value">
                                                 <option :value="value" x-text="value" :selected="value == mapping.att_value"></option>
                                             </template>
                                         </select>
@@ -167,7 +167,7 @@
                                                     <th scope="col">View field</th>
                                                     <th scope="col">Source field</th>
                                                 </tr>
-                                                <template x-for="(source_field,target_field) in template">
+                                                <template x-for="(source_field,target_field) in template" :key="target_field">
                                                     <tr>
                                                         <td x-text="target_field"></td>
                                                         <td>
@@ -175,7 +175,7 @@
                                                                     x-model="template[target_field]"
                                                                     class="select select-xs select-ghost modeler-input min-w-full">
                                                                 <option></option>
-                                                                <template x-for="value in collections[mapping.att_value].field.map(x => x.att_name)">
+                                                                <template x-for="value in collections[mapping.att_value].field.map(x => x.att_name)" :key="value">
                                                                     <option :value="value" x-text="value" :selected="value == source_field"></option>
                                                                 </template>
                                                             </select>

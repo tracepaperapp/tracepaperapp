@@ -23,7 +23,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <template x-for="field in model.field">
+                                <template x-for="field in model.field" :key="field.att_id">
                                     <tr>
                                         <td>
                                             <input type="text"
@@ -137,7 +137,7 @@
                                                 <td>
                                                     <select :disabled="editing_disabled" class="select select-ghost w-full h-full select-xs" x-model="model['att_business-key']">
                                                         <option value="">-</option>
-                                                        <template x-for="field in model.field.filter(x => x.att_type == 'String')" :key="field.att_name">
+                                                        <template x-for="field in model.field.filter(x => x.att_type == 'String')" :key="field.att_id">
                                                             <option :value="field.att_name" x-text="field.att_name" :selected="field.att_name == model['att_business-key']"></option>
                                                         </template>
                                                     </select>

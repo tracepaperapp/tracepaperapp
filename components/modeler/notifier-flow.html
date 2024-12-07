@@ -153,7 +153,7 @@
                     <td>
                         <select class="modeler-input" x-model="activity['att_template-file']">
                             <option>-</option>
-                            <template x-for="template in templates">
+                            <template x-for="template in templates" :key="template">
                                 <option x-text="template.replace('templates/','')"
                                         :value="template"
                                         :selected="activity['att_template-file'] == template"></option>
@@ -369,7 +369,7 @@
                     <td>
                         <select class="modeler-input" x-model="activity['att_template-file']">
                             <option>-</option>
-                            <template x-for="template in templates">
+                            <template x-for="template in templates" :key="template">
                                 <option x-text="template.replace('templates/','')"
                                         :value="template"
                                         :selected="activity['att_template-file'] == template"></option>
@@ -410,7 +410,7 @@
                     <td>
                         <select class="modeler-input" x-model="activity['att_python-file']">
                             <option>-</option>
-                            <template x-for="module in modules">
+                            <template x-for="module in modules" :key="module">
                                 <option x-text="module.split('/').at(-1).replace('.py','')"
                                         :value="module" :selected="activity['att_python-file'] == module"></option>
                             </template>
@@ -422,7 +422,7 @@
                     <td x-data="{methods: []}" x-effect="methods = await get_methods(activity['att_python-file'])">
                         <select class="modeler-input" x-model="activity.att_handler">
                             <option>-</option>
-                            <template x-for="method in methods">
+                            <template x-for="method in methods" :key="method">
                                 <option x-text="method"
                                         :value="method" :selected="activity.att_handler == method"></option>
                             </template>
@@ -509,7 +509,7 @@
                         <td>
                             <select class="editable" x-model="activity['att_template-file']">
                                 <option>-</option>
-                                <template x-for="template in templates">
+                                <template x-for="template in templates" :key="template">
                                     <option x-text="template.replace('templates/','')"
                                             :value="template"
                                             :selected="activity['att_template-file'] == template"></option>

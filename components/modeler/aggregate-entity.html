@@ -39,7 +39,7 @@
                                         x-model="model['att_business-key']"
                                         class="select select-ghost w-full max-w-xs modeler-input">
                                     <option></option>
-                                    <template x-for="field in model.field">
+                                    <template x-for="field in model.field" :key="field.att_id">
                                         <option :value="field.att_name" :selected="model['att_business-key'] == field.att_name" x-text="field.att_name"></option>
                                     </template>
                                 </select>
@@ -51,7 +51,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <template x-for="field in model.field">
+                        <template x-for="field in model.field" :key="field.att_id">
                             <tr>
                                 <td>
                                     <input type="text"

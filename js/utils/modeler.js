@@ -170,6 +170,7 @@ class Modeler {
             let xml = builder.build(json);
             xml = xml.replaceAll(placeholder,"true");
             await repo.write(file,xml);
+            addAttIdToJson(content);
         } else if (file.endsWith(".json")){
             content = JSON.stringify(content,null,2);
             await repo.write(file,content);

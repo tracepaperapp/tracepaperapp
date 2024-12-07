@@ -135,7 +135,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    <template x-for="field in model.field">
+                                    <template x-for="field in model.field" :key="field.att_id">
                                         <tr>
                                             <td>
                                                 <input type="text"
@@ -212,7 +212,7 @@
                                 </tbody>
                             </table>
 
-                            <template x-for="collection in model['nested-object']">
+                            <template x-for="collection in model['nested-object']" :key="collection.att_id">
                                 <div>
                                     <hr class="mt-10">
                                     <table class="table mt-2">
@@ -249,7 +249,7 @@
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        <template x-for="field in collection.field">
+                                        <template x-for="field in collection.field" :key="field.att_id">
                                             <tr>
                                                 <td>
                                                     <input type="text"

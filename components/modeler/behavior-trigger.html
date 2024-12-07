@@ -1,6 +1,6 @@
 <template x-component="behavior-trigger">
     <div>
-        <template x-for="(trigger,index) in model.trigger" :key="trigger.att_source">
+        <template x-for="(trigger,index) in model.trigger" :key="trigger.att_id">
             <div x-data="triggerFieldSelector">
                 <template x-if="index != 0">
                     <hr>
@@ -40,7 +40,7 @@
                         <th scope="col">Event field</th>
                         <th scope="col">Idempotency check</th>
                     </tr>
-                    <template x-for="map in trigger.mapping" :key="map.att_target">
+                    <template x-for="map in trigger.mapping" :key="map.att_id">
                         <tr>
                             <td>
                                 <input type="text"

@@ -1,6 +1,6 @@
 <template x-component="behavior-flow">
     <div>
-        <template x-for="(processor, index) in model.processor" :key="Draftsman.generateFingerprint(processor)">
+        <template x-for="(processor, index) in model.processor" :key="processor.att_id">
             <table class="table border mb-2">
                 <!-- header -->
                 <tr class="bg-base-200">
@@ -67,7 +67,7 @@
                     <th scope="col" colspan="2">Value</th>
                 </tr>
                 <template x-if="processor.att_type == 'emit-event'">
-                    <template x-for="map in processor.mapping" :key="Draftsman.generateFingerprint(map)">
+                    <template x-for="map in processor.mapping" :key="map.att_id">
                         <tr>
                             <td x-text="map.att_target"></td>
                             <td x-import="elements/input" colspan="3">

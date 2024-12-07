@@ -12,7 +12,7 @@
             </tr>
             </thead>
             <tbody>
-            <template x-for="(field,index) in fields" :key="index">
+            <template x-for="(field,index) in fields" :key="field.att_id">
                 <tr>
                     <td>
                         <input type="text"
@@ -67,7 +67,7 @@
             <tbody>
             <tr>
                 <td>
-                    <template x-for="(field,index) in relations" :key="index">
+                    <template x-for="(field,index) in relations" :key="field.att_id">
                         <table class="table table-xs mt-3 border border-primary-content">
                             <tr class="bg-primary-content">
                                 <th scope="row">
