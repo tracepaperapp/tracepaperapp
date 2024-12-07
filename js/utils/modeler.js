@@ -92,23 +92,22 @@ class Modeler {
 
     static prepare_model(type,model){
        if (type == "view"){
-           return prepare_view(model);
+           model = prepare_view(model);
        } else if (type == "behavior"){
-           return prepare_behavior(model);
+           model = prepare_behavior(model);
        } else if (type == "notifier"){
-           return prepare_notifier(model);
+           model = prepare_notifier(model);
        } else if (type == "projection"){
-           return prepare_projection(model);
+           model = prepare_projection(model);
        } else if (type == "command"){
-           return prepare_command(model);
+           model = prepare_command(model);
        } else if (type == "config"){
            if (!model.global || model.global == ''){
                model.global = {};
            }
            model.global.dependency = make_sure_is_list(model.global.dependency);
-           return model;
       } else if(type == "scenario"){
-           return prepare_scenario(model);
+           model = prepare_scenario(model);
        } else {
            model.field = make_sure_is_list(model.field);
            model["nested-object"] = make_sure_is_list(model["nested-object"]);
@@ -116,8 +115,9 @@ class Modeler {
            model.mapping = make_sure_is_list(model.mapping);
            model['nested-mapping']  = make_sure_is_list(model['nested-mapping']);
            model["nested-mapping"].forEach(x => {x.mapping = make_sure_is_list(x.mapping)});
-           return model;
        }
+       addAttIdToJson(model);
+       return model;
    }
 
     static async get_model(file,cached=false){
@@ -165,6 +165,7 @@ class Modeler {
             let json = JSON.stringify(raw_content);
             json = json.replaceAll('"true"','"' + placeholder + '"');
             json = JSON.parse(json);
+            removeAttIdFromJson(json);
             let builder = new XMLBuilder(xml_options);
             let xml = builder.build(json);
             xml = xml.replaceAll(placeholder,"true");
@@ -336,4 +337,28 @@ function prepare_view(view){
     if (!view["att_data-retention-days"]){view["att_data-retention-days"] = -1}
     if (!view["att_exclude-notification"]){view["att_exclude-notification"] = "false"}
     return view;
+}
+
+function addAttIdToJson(data) {
+    if (Array.isArray(data)) {
+        // Als het een array is, loop door alle elementen
+        data.forEach(item => addAttIdToJson(item));
+    } else if (typeof data === "object" && data !== null) {
+        // Als het een object is, voeg att_id toe
+        data.att_id = Draftsman.makeid(6);
+        // Recursief verder voor alle properties
+        Object.values(data).forEach(value => addAttIdToJson(value));
+    }
+}
+
+function removeAttIdFromJson(data) {
+    if (Array.isArray(data)) {
+        // Als het een array is, loop door alle elementen
+        data.forEach(item => removeAttIdFromJson(item));
+    } else if (typeof data === "object" && data !== null) {
+        // Als het een object is, verwijder att_id
+        delete data.att_id;
+        // Recursief verder voor alle properties
+        Object.values(data).forEach(value => removeAttIdFromJson(value));
+    }
 }
