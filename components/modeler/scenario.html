@@ -93,6 +93,8 @@
                                         </tr>
                                         <tr>
                                             <td colspan="3">
+
+                                                <!-- set variables -->
                                                 <template x-if="activity.att_type == 'set-variables'">
                                                     <table class="table table-xs mb-5">
                                                         <tr>
@@ -125,13 +127,81 @@
                                                                         <option>Nested</option>
                                                                     </select>
                                                                 </td>
-                                                                <td>
-                                                                    <input type="text"
-                                                                           x-model="input.att_value"
-                                                                           :disabled="editing_disabled"
-                                                                           placeholder="Description"
-                                                                           class="input input-sm input-ghost w-full min-w-[15vw] modeler-input" />
-                                                                </td>
+                                                                <template x-if="input.att_type != 'Nested'">
+                                                                    <td>
+                                                                        <input type="text"
+                                                                               x-model="input.att_value"
+                                                                               :disabled="editing_disabled"
+                                                                               placeholder="Description"
+                                                                               class="input input-sm input-ghost w-full min-w-[15vw] modeler-input" />
+                                                                    </td>
+                                                                </template>
+                                                                <template x-if="input.att_type == 'Nested'">
+                                                                    <td x-data="scenarioActivityNestedInput">
+                                                                        
+                                                                        <template x-for="(item,index) in data" :key="index">
+                                                                            <table class="table table-xs mb-5">
+                                                                                <tr class="bg-primary-content">
+                                                                                    <th scope="row" colspan="4">
+                                                                                        Item <span x-text="index + 1"></span>
+                                                                                    </th>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <th scope="col">Name</th>
+                                                                                    <th scope="col">Type</th>
+                                                                                    <th scope="col">Value</th>
+                                                                                </tr>
+                                                                                <template x-for="(value,key) in item" :key="key">
+                                                                                    <tr x-data="{type: 'String'}" x-init="type = determine_type(value)">
+                                                                                        <td x-text="key"></td>
+                                                                                        <td>
+                                                                                            <select x-model="type"
+                                                                                                    @change="item[key] = convert_value(value,type)"
+                                                                                                    class="select select-ghost select-xs w-full">
+                                                                                                <option>String</option>
+                                                                                                <option>Int</option>
+                                                                                                <option>Float</option>
+                                                                                                <option>Boolean</option>
+                                                                                            </select>
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <input type="text"
+                                                                                                   :value="value"
+                                                                                                   @change="item[key] = convert_value($el.value,type)"
+                                                                                                   :disabled="editing_disabled"
+                                                                                                   placeholder="Value"
+                                                                                                   class="input input-sm input-ghost w-full modeler-input" />
+                                                                                        </td>
+                                                                                        <td>
+                                                                                            <button @click="delete item[key]"
+                                                                                                    :disabled="editing_disabled"
+                                                                                                    class="btn btn-xs btn-outline btn-error">
+                                                                                                <i class="fa-regular fa-trash-can"></i>
+                                                                                            </button>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                </template>
+                                                                                <tr>
+                                                                                    <td colspan="4">
+                                                                                        <input type="text"
+                                                                                               :disabled="editing_disabled"
+                                                                                               x-data="inputValidator"
+                                                                                               @input="camel_cased"
+                                                                                               @focusout="insertField(item,$el.value)"
+                                                                                               placeholder="newFieldName"
+                                                                                               class="input w-full input-xs" />
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </table>
+                                                                        </template>
+
+                                                                        <button @click="data.push({key: ''})"
+                                                                                :disabled="editing_disabled"
+                                                                                class="btn btn-xs btn-outline btn-success">
+                                                                            <i class="fa-regular fa-plus"></i> Add object
+                                                                        </button>
+                                                                    </td>
+                                                                </template>
                                                                 <td>
                                                                     <button @click="activity.input = activity.input.filter(x => x.att_name != input.att_name)"
                                                                             :disabled="editing_disabled"
@@ -154,7 +224,9 @@
                                                     </table>
                                                 </template>
 
+                                                <!--
                                                 <pre x-text="JSON.stringify(activity,null,2)"></pre>
+                                                 -->
                                             </td>
                                         </tr>
                                     </table>

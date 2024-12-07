@@ -175,4 +175,58 @@ document.addEventListener('alpine:init', () => {
             }
         }
     });
+    Alpine.data('scenarioActivityNestedInput',function(){
+            return {
+                data: [],
+                lock: false,
+                init(){
+                    let data = JSON.parse(this.input.att_value);
+                    this.data = data;
+                    this.$watch("data",this.save.bind(this));
+                },
+                async save(){
+                    if (this.lock){return}
+                    this.lock = true;
+                    try{
+                        let data = this.data.filter(x => Object.keys(x).length != 0);
+                        this.input.att_value = JSON.stringify(data);
+                        this.data = data;
+                        await Draftsman.sleep(100);
+                    } finally{
+                        this.lock = false;
+                    }
+                },
+                insertField(item){
+                    if (this.$el.value
+                        && camelCaseRegex.test(this.$el.value)
+                        && !(this.$el.value in item)){
+                        item[this.$el.value] = "";
+                        this.$el.value = "";
+                    }
+                },
+                convert_value(value,type){
+                    switch(type){
+                        case "Int":
+                            return parseInt(value,10);
+                        case "Float":
+                            return parseFloat(value);
+                        case "Boolean":
+                            return value.toLowerCase() == "true";
+                        default:
+                            return String(value);
+                    }
+                },
+                determine_type(value){
+                    if (typeof value === "boolean"){
+                        return "Boolean";
+                    } else if (typeof value === "number" && Number.isInteger(value)){
+                        return "Int";
+                    } else if (typeof value === "number" && !Number.isInteger(value)){
+                        return "Float";
+                    } else {
+                        return "String"
+                    }
+                }
+            }
+        });
 });
