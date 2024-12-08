@@ -195,6 +195,10 @@ class Draftsman {
        }
    }
 
+    static getKeyByValue(obj, value) {
+        return Object.keys(obj).find(key => obj[key] === value);
+    }
+
     static editors = {};
     static editors_listners = {};
 

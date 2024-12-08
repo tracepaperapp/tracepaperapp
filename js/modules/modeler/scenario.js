@@ -8,6 +8,10 @@ document.addEventListener('alpine:init', () => {
             listnerId: "",
             newName: "",
             scenarios: [],
+            commands: {},
+            flowvars: [],
+            components: [],
+            scs: "",
             duplicateName: false,
             initialized: false,
             active: "",
@@ -24,7 +28,7 @@ document.addEventListener('alpine:init', () => {
                 const scrollContainer = this.$el;
                 const tables = scrollContainer.querySelectorAll('table');
                 const containerRect = scrollContainer.getBoundingClientRect();
-                const threshold = containerRect.top + (containerRect.height * 0.2);
+                const threshold = containerRect.top + (containerRect.height * 0.4);
 
                 let active = "";
                 for (const table of tables) {
@@ -32,12 +36,16 @@ document.addEventListener('alpine:init', () => {
                     if (
                         rect.top < threshold && // Bovenkant van de tabel is boven de drempel
                         rect.bottom > containerRect.top // Onderkant van de tabel is onder de bovenkant van de container
+                        && table.getAttribute("x-activity-id")
                     ) {
-                        active = table.getAttribute("x-activity-id");
+                        if (rect.bottom > containerRect.top && active == ""){
+                            active = table.getAttribute("x-activity-id");
+                        } else if (rect.top < threshold
+                                    && rect.bottom > containerRect.top){
+                            active = table.getAttribute("x-activity-id");
+                        }
                     }
                 }
-
-                // Update de actieve tabel
                 this.active = active;
                 this.scrollContainer = scrollContainer;
             },
@@ -120,6 +128,30 @@ document.addEventListener('alpine:init', () => {
             _update_code(code){
                 this.content = code;
             },
+            async determine_flow_vars(file){
+                let model = await Modeler.get_model(file);
+                model.activity.filter(x => ["set-variables","query"].includes(x.att_type)).forEach(activity => {
+                    if (activity.att_type == "set-variables"){
+                        activity.input.forEach(i => {
+                            this.add_flow_var(`#${i.att_name}#`);
+                        });
+                    } else {
+                        activity["extract-value"].forEach(e => {
+                            this.add_flow_var(`#${e["att_put-key"]}#`);
+                        });
+                    }
+                });
+                for (scenario of model.att_extends.split(";")){
+                    if (scenario){
+                        await this.determine_flow_vars(`scenarios/${scenario}.xml`);
+                    }
+                }
+            },
+            add_flow_var(flowvar){
+                if (!this.flowvars.includes(flowvar)){
+                    this.flowvars.push(flowvar);
+                }
+            },
             async read(){
                 this.initialized = false;
                 this.model = await Modeler.get_model(this.path);
@@ -129,6 +161,27 @@ document.addEventListener('alpine:init', () => {
                 this.initialized = true;
                 if (this.active == ""){
                     this.active = this.model.activity.at(0).att_id;
+                }
+                await this.determine_flow_vars(this.path);
+                let behaviors = await this.repo.list(x => x.startsWith("domain/") && x.includes('/behavior-flows/') && x.endsWith(".xml"));
+                behaviors.forEach(file => {
+                    let x = file.split("/");
+                    this.add_component(`${x.at(1)}.${x.at(2)}.${x.at(4).replace(".xml","")}`);
+                });
+                let notifiers = await this.repo.list(x => x.startsWith("notifiers/") && x.endsWith(".xml"));
+                notifiers.forEach(file => {
+                    let x = file.split("/");
+                    this.add_component(`${x.at(-1).replace(".xml","")}-Notifier`);
+                });
+                let commands = await this.repo.list(x => x.startsWith("commands/") && x.endsWith(".xml"));
+                for (file of commands){
+                    let command = await Modeler.get_model(file);
+                    this.commands[file] = command["att_graphql-namespace"] + "." + command["att_graphql-name"];
+                }
+            },
+            add_component(component){
+                if (!this.components.includes(component)){
+                    this.components.push(component);
                 }
             },
             async rename(){
@@ -157,6 +210,8 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('scenarioActivity',function(){
         return {
             type: "",
+            reference: null,
+            select_command: false,
             init(){
                 switch(this.activity.att_type){
                     case "mutation":
@@ -172,6 +227,41 @@ document.addEventListener('alpine:init', () => {
                     att_type: "String",
                     att_value: ""
                 });
+            },
+            async change_command(){
+                console.log(this.path,this.file);
+                this.select_command = false;
+                this.activity["expected-trace"] = [];
+                this.activity.att_path = this.path;
+                let command = await Modeler.get_model(this.file);
+                this.activity.input = command.field.filter(x => !x["att_auto-fill"] || x["att_auto-fill"] == "").map(x => {
+                    return {
+                        att_name: x.att_name,
+                        att_type: x.att_type,
+                        att_value: "#"
+                    }
+                });
+                command["nested-object"].forEach(x => {
+                    this.activity.input.push({
+                        att_name: x.att_name,
+                        att_type: "Nested",
+                        att_value: "#"
+                    });
+                });
+                this.reference = command;
+            },
+            async add_object(){
+                console.log(this.input.att_name);
+                if (!this.reference){
+                    let file = Draftsman.getKeyByValue(this.commands,this.activity.att_path);
+                    this.reference = await Modeler.get_model(file);
+                }
+                let obj = this.reference["nested-object"].filter(x => x.att_name == this.input.att_name).at(0);
+                let val = {};
+                obj.field.forEach(x => {
+                    val[x.att_name] = x.att_type == "Boolean" ? true : x.att_type == "String" ? "" : 0;
+                });
+                this.data.push(val);
             }
         }
     });
