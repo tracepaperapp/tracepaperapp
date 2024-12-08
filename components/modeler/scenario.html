@@ -420,9 +420,147 @@
                                                     </div>
                                                 </template>
 
-                                                
-                                                <pre x-text="JSON.stringify(activity,null,2)"></pre>
-                                                 -->
+                                                <!-- Switch user -->
+                                                <template x-if="activity.att_type == 'switch-user'">
+                                                    <table class="table table-xs mb-5">
+                                                        <tr>
+                                                            <th scope="row">User number</th>
+                                                            <td>
+                                                                <input type="number"
+                                                                       min="1"
+                                                                       max="100"
+                                                                       x-model="activity['att_user-number']"
+                                                                       class="input input-ghost w-full input-xs modeler-input" />
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </template>
+
+                                                <!-- Wait -->
+                                                <template x-if="activity.att_type == 'wait'">
+                                                    <table class="table table-xs mb-5">
+                                                        <tr>
+                                                            <th scope="row">Wait for</th>
+                                                            <td>
+                                                                <input type="number"
+                                                                       x-model="activity.att_milliseconds"
+                                                                       class="input input-ghost w-full input-xs modeler-input" />
+                                                            </td>
+                                                            <td>Milliseconds</td>
+                                                        </tr>
+                                                    </table>
+                                                </template>
+
+                                                <!-- Grant role -->
+                                                <template x-if="activity.att_type == 'grant-role'">
+                                                    <table class="table table-xs mb-5">
+                                                        <tr>
+                                                            <th scope="row">Role</th>
+                                                            <td x-data="metaContainer">
+                                                                <select x-model="activity.att_role" class="select select-ghost select-xs w-full">
+                                                                    <option></option>
+                                                                    <template x-for="role  in model.roles">
+                                                                        <option :value="role" x-text="role" :selected="role == activity.att_role"></option>
+                                                                    </template>
+                                                                </select>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </template>
+
+                                                <!-- Query -->
+                                                <template x-if="activity.att_type == 'query'">
+                                                    <div>
+
+                                                        <!-- Query selector -->
+                                                        <button class="btn btn-outline btn-primary btn-block mb-5"
+                                                                @click="sqs = activity.att_path.replace(/\.[^\.]*$/, '');select_query = true">
+                                                            Query: <span x-text="activity.att_path"></span>
+                                                        </button>
+                                                        <dialog x-show="select_query" x-cloak x-transition class="modal modal-open">
+                                                            <div class="modal-box">
+                                                                <h3 class="text-lg font-bold">Select a query</h3>
+                                                                <p class="py-4">
+                                                                    <label class="input input-bordered flex items-center gap-2 my-5">
+                                                                        <input type="text" class="grow" x-model="sqs" placeholder="Search" />
+                                                                        <svg
+                                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                                viewBox="0 0 16 16"
+                                                                                fill="currentColor"
+                                                                                class="h-4 w-4 opacity-70">
+                                                                            <path
+                                                                                    fill-rule="evenodd"
+                                                                                    d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                                                                                    clip-rule="evenodd" />
+                                                                        </svg>
+                                                                    </label>
+
+                                                                <table class="table">
+                                                                    <template x-for="query in Object.keys(queries)">
+                                                                        <tr x-show="query.toLowerCase().includes(sqs.toLowerCase())" x-cloak x-transition
+                                                                            class="hover cursor-pointer"
+                                                                            @click="change_query"
+                                                                            :class="activity.att_path == query ? 'bg-primary-content' : ''">
+                                                                            <td x-text="query"></td>
+                                                                        </tr>
+                                                                    </template>
+                                                                </table>
+                                                                </p>
+                                                                <div class="modal-action">
+                                                                    <form method="dialog">
+                                                                        <!-- if there is a button in form, it will close the modal -->
+                                                                        <button class="btn" @click="select_command = false">Close</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </dialog>
+
+                                                        <!-- Input -->
+                                                        <table class="table table-xs mb-5">
+                                                            <tr>
+                                                                <th scope="col" colspan="4">Query parameters</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="col">Name</th>
+                                                                <th scope="col">Type</th>
+                                                                <th scope="col">Value</th>
+                                                            </tr>
+                                                            <template x-for="input in activity.input">
+                                                                <tr>
+                                                                    <td x-text="input.att_name">
+                                                                    </td>
+                                                                    <td x-text="input.att_type">
+                                                                    </td>
+                                                                    <template x-if="input.att_value.startsWith('#')">
+                                                                        <td>
+                                                                            <select x-model="input.att_value" class="select select-ghost select-xs w-full">
+                                                                                <option value="#">-select-flow-variable-</option>
+                                                                                <template x-for="flowvar in flowvars" :key="flowvar">
+                                                                                    <option :value="flowvar"
+                                                                                            x-text="flowvar.replaceAll('#','')"
+                                                                                            :selected="flowvar == input.att_value"></option>
+                                                                                </template>
+                                                                                <option>-inline-</option>
+                                                                            </select>
+                                                                        </td>
+                                                                    </template>
+                                                                    <template x-if="!input.att_value.startsWith('#')">
+                                                                        <td>
+                                                                            <input type="text"
+                                                                                   x-model="input.att_value"
+                                                                                   :disabled="editing_disabled"
+                                                                                   placeholder="Description"
+                                                                                   class="input input-xs input-ghost w-full min-w-[15vw] modeler-input" />
+                                                                        </td>
+                                                                    </template>
+                                                                </tr>
+                                                            </template>
+                                                        </table>
+
+                                                        <pre x-text="JSON.stringify(activity,null,2)"></pre>
+                                                    </div>
+                                                </template>
+
                                             </td>
                                         </tr>
                                     </table>

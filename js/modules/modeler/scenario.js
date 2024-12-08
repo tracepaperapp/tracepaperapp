@@ -9,9 +9,11 @@ document.addEventListener('alpine:init', () => {
             newName: "",
             scenarios: [],
             commands: {},
+            queries: {},
             flowvars: [],
             components: [],
             scs: "",
+            sqs: "",
             duplicateName: false,
             initialized: false,
             active: "",
@@ -178,6 +180,13 @@ document.addEventListener('alpine:init', () => {
                     let command = await Modeler.get_model(file);
                     this.commands[file] = command["att_graphql-namespace"] + "." + command["att_graphql-name"];
                 }
+                let views = await this.repo.list(x => x.startsWith("views/") && x.endsWith(".xml"));
+                for (file of views){
+                    let view = await Modeler.get_model(file);
+                    view.query.forEach(q => {
+                        this.queries[q["att_graphql-namespace"] + "." + q["att_field-name"]] = {q,view};
+                    });
+                }
             },
             add_component(component){
                 if (!this.components.includes(component)){
@@ -212,6 +221,7 @@ document.addEventListener('alpine:init', () => {
             type: "",
             reference: null,
             select_command: false,
+            select_query: false,
             init(){
                 switch(this.activity.att_type){
                     case "mutation":
@@ -227,6 +237,38 @@ document.addEventListener('alpine:init', () => {
                     att_type: "String",
                     att_value: ""
                 });
+            },
+            change_query(){
+                this.select_query = false;
+                this.activity.att_path = this.query;
+                let query = this.queries[this.query].q;
+                let view = this.queries[this.query].view;
+                if (query.att_type == "get"){
+                    this.activity.input = [{
+                        att_name: "key",
+                        att_type: "String",
+                        att_value: "#",
+                        att_id: Draftsman.makeid(6)
+                    }];
+                } else if ("att_use-canonical-search" in query && query["att_use-canonical-search"] == "true"){
+                    this.activity.input = [{
+                        att_name: "key_begins_with",
+                        att_type: "String",
+                        att_value: "#",
+                        att_id: Draftsman.makeid(6)
+                    }];
+                } else {
+                    this.activity.input = [];
+                }
+                query["filter-clause"].forEach(c => {
+                    this.activity.input.push({
+                         att_name: c["att_field-name"],
+                         att_type: view.field.filter(x => x.att_name == c["att_field-name"]).at(0).att_type,
+                         att_value: "#",
+                         att_id: Draftsman.makeid(6)
+                     });
+                });
+                //this.activity.input
             },
             async change_command(){
                 console.log(this.path,this.file);
