@@ -525,7 +525,7 @@
                                                                 <th scope="col">Type</th>
                                                                 <th scope="col">Value</th>
                                                             </tr>
-                                                            <template x-for="input in activity.input">
+                                                            <template x-for="input in activity.input" :key="input.att_id">
                                                                 <tr>
                                                                     <td x-text="input.att_name">
                                                                     </td>
@@ -557,7 +557,137 @@
                                                             </template>
                                                         </table>
 
-                                                        <pre x-text="JSON.stringify(activity,null,2)"></pre>
+                                                        <!-- Expected values -->
+                                                        <table class="table table-xs mb-5">
+                                                            <tr>
+                                                                <th scope="col" colspan="4">Expected Values</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="col">Path</th>
+                                                                <th scope="col">Type</th>
+                                                                <th scope="col">Expected value</th>
+                                                            </tr>
+                                                            <template x-if="queries_ready">
+                                                                <template x-for="expected in activity['expect-value']" :key="expected.att_id">
+                                                                    <tr>
+                                                                        <td x-data="viewPathBuilder">
+                                                                            <template x-for="(p,index) in path">
+                                                                                <span x-data="{editing: false}">
+                                                                                    <span x-show="index != 0" x-cloak x-transition> - </span>
+                                                                                    <span class="modeler-input cursor-pointer"
+                                                                                          x-show="!editing" x-cloak x-transition
+                                                                                          @click="editing = true"
+                                                                                          x-text="p"></span>
+                                                                                    <select :disabled="editing_disabled"
+                                                                                            x-model="path[index]"
+                                                                                            x-show="editing" x-cloak x-transition
+                                                                                            @blur="editing = false"
+                                                                                            @change="update_path"
+                                                                                            class="select select-ghost select-xs modeler-input">
+                                                                                        <template x-for="option in options[index]">
+                                                                                            <option :value="option" x-text="option" :selected="option == p"></option>
+                                                                                        </template>
+                                                                                    </select>
+                                                                                </span>
+                                                                            </template>
+                                                                            <div hidden="true" x-text="JSON.stringify(options,null,2)"></div>
+                                                                        </td>
+                                                                        <td x-text="expected.att_type">
+                                                                        </td>
+                                                                        <template x-if="expected.att_value.startsWith('#')">
+                                                                            <td>
+                                                                                <select x-model="expected.att_value" class="select select-ghost select-xs w-full">
+                                                                                    <option value="#">-select-flow-variable-</option>
+                                                                                    <template x-for="flowvar in flowvars" :key="flowvar">
+                                                                                        <option :value="flowvar"
+                                                                                                x-text="flowvar.replaceAll('#','')"
+                                                                                                :selected="flowvar == expected.att_value"></option>
+                                                                                    </template>
+                                                                                    <option>-inline-</option>
+                                                                                </select>
+                                                                            </td>
+                                                                        </template>
+                                                                        <template x-if="!expected.att_value.startsWith('#')">
+                                                                            <td>
+                                                                                <input type="text"
+                                                                                       x-model="expected.att_value"
+                                                                                       :disabled="editing_disabled"
+                                                                                       placeholder="Description"
+                                                                                       class="input input-xs input-ghost w-full modeler-input" />
+                                                                            </td>
+                                                                        </template>
+                                                                        <td class="text-right">
+                                                                            <button @click="activity['expect-value'] = activity['expect-value'].filter(x => x.att_id != expected.att_id)" class="btn btn-xs btn-outline btn-error">
+                                                                                <i class="fa-regular fa-trash-can"></i>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                </template>
+                                                            </template>
+                                                            <tr>
+                                                                <td colspan="3"></td>
+                                                                <td class="text-right">
+                                                                    <button @click="add_expected_value" class="btn btn-xs btn-outline btn-success">
+                                                                        <i class="fa-solid fa-plus"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+
+                                                        <!-- Extract values -->
+                                                        <table class="table table-xs mb-5">
+                                                            <tr>
+                                                                <th scope="col" colspan="4">Data Extractions</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="col">Name</th>
+                                                                <th scope="col">Type</th>
+                                                                <th scope="col">Path</th>
+                                                            </tr>
+                                                            <template x-if="queries_ready">
+                                                                <template x-for="expected in activity['extract-value']" :key="expected.att_id">
+                                                                    <tr>
+                                                                        <td x-text="expected['att_put-key']"></td>
+                                                                        <td x-text="expected.att_type"></td>
+                                                                        <td x-data="viewPathBuilder">
+                                                                            <template x-for="(p,index) in path">
+                                                                                <span x-data="{editing: false}">
+                                                                                    <span x-show="index != 0" x-cloak x-transition> - </span>
+                                                                                    <span class="modeler-input cursor-pointer"
+                                                                                          x-show="!editing" x-cloak x-transition
+                                                                                          @click="editing = true"
+                                                                                          x-text="p"></span>
+                                                                                    <select :disabled="editing_disabled"
+                                                                                            x-model="path[index]"
+                                                                                            x-show="editing" x-cloak x-transition
+                                                                                            @blur="editing = false"
+                                                                                            @change="update_path"
+                                                                                            class="select select-ghost select-xs modeler-input">
+                                                                                        <template x-for="option in options[index]">
+                                                                                            <option :value="option" x-text="option" :selected="option == p"></option>
+                                                                                        </template>
+                                                                                    </select>
+                                                                                </span>
+                                                                            </template>
+                                                                            <div hidden="true" x-text="JSON.stringify(options,null,2)"></div>
+                                                                        </td>
+                                                                        <td class="text-right">
+                                                                            <button @click="activity['extract-value'] = activity['extract-value'].filter(x => x.att_id != expected.att_id)" class="btn btn-xs btn-outline btn-error">
+                                                                                <i class="fa-regular fa-trash-can"></i>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                </template>
+                                                            </template>
+                                                            <tr>
+                                                                <td colspan="3"></td>
+                                                                <td class="text-right">
+                                                                    <button @click="add_extraction" class="btn btn-xs btn-outline btn-success">
+                                                                        <i class="fa-solid fa-plus"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
                                                     </div>
                                                 </template>
 

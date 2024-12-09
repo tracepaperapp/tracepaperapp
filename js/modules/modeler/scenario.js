@@ -10,6 +10,7 @@ document.addEventListener('alpine:init', () => {
             scenarios: [],
             commands: {},
             queries: {},
+            queries_ready: false,
             flowvars: [],
             components: [],
             scs: "",
@@ -187,6 +188,7 @@ document.addEventListener('alpine:init', () => {
                         this.queries[q["att_graphql-namespace"] + "." + q["att_field-name"]] = {q,view};
                     });
                 }
+                this.queries_ready = true;
             },
             add_component(component){
                 if (!this.components.includes(component)){
@@ -230,6 +232,9 @@ document.addEventListener('alpine:init', () => {
                     default:
                         this.type = Draftsman.capitalizeFirstLetter(this.activity.att_type.replace("-"," "));
                 }
+                if (this.activity.att_type == "query"){
+                    this.query = this.activity.att_path;
+                }
             },
             add_input(){
                 this.activity.input.push({
@@ -271,7 +276,6 @@ document.addEventListener('alpine:init', () => {
                 //this.activity.input
             },
             async change_command(){
-                console.log(this.path,this.file);
                 this.select_command = false;
                 this.activity["expected-trace"] = [];
                 this.activity.att_path = this.path;
@@ -293,7 +297,6 @@ document.addEventListener('alpine:init', () => {
                 this.reference = command;
             },
             async add_object(){
-                console.log(this.input.att_name);
                 if (!this.reference){
                     let file = Draftsman.getKeyByValue(this.commands,this.activity.att_path);
                     this.reference = await Modeler.get_model(file);
@@ -304,7 +307,27 @@ document.addEventListener('alpine:init', () => {
                     val[x.att_name] = x.att_type == "Boolean" ? true : x.att_type == "String" ? "" : 0;
                 });
                 this.data.push(val);
-            }
+            },
+            add_expected_value(){
+                let view = this.queries[this.query].view;
+                let field = view.field.filter(x => ["String","Int","Float","Boolean"].includes(x.att_type)).at(0);
+                this.activity["expect-value"].push({
+                    att_name: field.att_name,
+                    att_type: field.att_type,
+                    att_value: "#",
+                    att_id: Draftsman.makeid(6)
+                });
+            },
+            add_extraction(){
+                let view = this.queries[this.query].view;
+                let field = view.field.filter(x => ["String","Int","Float","Boolean"].includes(x.att_type)).at(0);
+                this.activity["extract-value"].push({
+                    "att_put-key": Draftsman.generateRandomCamelCaseString(),
+                    att_name: field.att_name,
+                    att_type: field.att_type,
+                    att_id: Draftsman.makeid(6)
+                });
+}
         }
     });
     Alpine.data('scenarioActivityNestedInput',function(){
@@ -363,4 +386,55 @@ document.addEventListener('alpine:init', () => {
                 }
             }
         });
+    Alpine.data("viewPathBuilder", function(){
+        return {
+            path: [],
+            options: [],
+            references: [],
+            async init(){
+                this.path = this.expected.att_name.split(".");
+                await this.update_path();
+            },
+            async update_path(){
+                let view = this.queries[this.query].view;
+                this.options = [];
+                for (let index = 0; index < this.path.length; index++){
+                    let field = {};
+                    if (index == 0){
+                        this.options.push(view.field.filter(x => x.att_type != "StringList").map(x => x.att_name));
+                        this.references.push(view);
+                        field = view.field.filter(x => x.att_name == this.path[index]).at(0);
+                    } else if (index != 0 && !isNaN(Number(this.path[index]))){
+                        this.options.push(["0","1","2","3"]);
+                        field = view.field.filter(x => x.att_name == this.path[index-1]).at(0);
+                    } else if (isNaN(Number(this.path[index]))) {
+                        if (!isNaN(Number(this.path[index-1]))){
+                            field = view.field.filter(x => x.att_name == this.path[index -2]).at(0);
+                        } else {
+                            field = view.field.filter(x => x.att_name == this.path[index -1]).at(0);
+                        }
+                        view = await Modeler.get_model_by_name(field.att_ref,"views/",true);
+                        this.options.push(view.field.filter(x => x.att_type != "StringList").map(x => x.att_name));
+                        this.references.push(view);
+                        field = view.field.filter(x => x.att_name == this.path[index]).at(0);
+                    }
+                    if(["String","Int","Float","Boolean"].includes(field.att_type)){
+                        this.path = this.path.slice(0,index +1);
+                        break;
+                    }
+                }
+                this.expected.att_name = this.path.join(".");
+                this.expected.att_type = view.field.filter(x => x.att_name == this.path.at(-1)).at(0).att_type;
+                if (["ObjectList","OneToMany","ManyToMany"].includes(this.expected.att_type)){
+                    this.path.push("0",view.field.filter(x => ["String","Int","Float","Boolean"].includes(x.att_type)).at(0).att_name );
+                    await Draftsman.sleep(10);
+                    await this.update_path();
+                } else if (["OneToOne","ManyToOne"].includes(this.expected.att_type)){
+                    this.path.push(view.field.filter(x => ["String","Int","Float","Boolean"].includes(x.att_type)).at(0).att_name );
+                    await Draftsman.sleep(10);
+                    await this.update_path();
+                }
+            }
+        }
+    });
 });
