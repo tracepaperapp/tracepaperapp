@@ -30,6 +30,27 @@
                         </div>
 
                         <div class="col-span-9 scrollbar-v h-[70vh]" @scroll="onScroll">
+                            <button x-show="model.activity.length == 0" x-cloak x-transition
+                                    @click="prepare_insert_before"
+                                    class="btn btn-block btn-outline btn-primary">Add first activity</button>
+                            <dialog x-show="insertActivityModal" x-cloak x-transition
+                                    class="modal modal-open">
+                                <div class="modal-box">
+                                    <form method="dialog">
+                                        <button @click="insertActivityModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                                    </form>
+                                    <h3 class="font-bold text-lg">Add activity</h3>
+                                    <ul class="menu bg-base-200 rounded-box w-full">
+                                        <li><a @click="insert('set-variables')">Set variables</a></li>
+                                        <li><a @click="insert('mutation')">Trigger command</a></li>
+                                        <li><a @click="insert('query')">Query view store</a></li>
+                                        <li><a @click="insert('switch-user')">Switch user</a></li>
+                                        <li><a @click="insert('grant-role')">Grant role to current user</a></li>
+                                        <li><a @click="insert('refresh-token')">Refresh curent user token</a></li>
+                                        <li><a @click="insert('wait')">Sleep</a></li>
+                                    </ul>
+                                </div>
+                            </dialog>
                             <div x-init="onScroll">
                                 <template x-for="(activity,index) in model.activity" :key="activity.att_id">
                                     <table class="table border border-primary-content mb-5"
@@ -699,25 +720,6 @@
                         </div>
                     </div>
 
-                    <dialog x-show="insertActivityModal" x-cloak x-transition
-                            class="modal modal-open">
-                        <div class="modal-box">
-                            <form method="dialog">
-                                <button @click="insertActivityModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-                            </form>
-                            <h3 class="font-bold text-lg">Add activity</h3>
-                            <ul class="menu bg-base-200 rounded-box w-full">
-                                <li><a @click="insert('set-variables')">Set variables</a></li>
-                                <li><a @click="insert('mutation')">Trigger command</a></li>
-                                <li><a @click="insert('query')">Query view store</a></li>
-                                <li><a @click="insert('switch-user')">Switch user</a></li>
-                                <li><a @click="insert('grant-role')">Grant role to current user</a></li>
-                                <li><a @click="insert('refresh-token')">Refresh curent user token</a></li>
-                                <li><a @click="insert('wait')">Sleep</a></li>
-                            </ul>
-                        </div>
-                    </dialog>
-
                 </div>
                 <div class="col-span-4">
 
@@ -761,7 +763,7 @@
                                         Depends on
                                     </th>
                                 </tr>
-                                <template x-for="reference in model.att_extends.split(';')" :key="reference">
+                                <template x-for="reference in model.att_extends.split(';').filter(x => x)" :key="reference">
                                     <tr>
                                         <td x-text="reference"></td>
                                         <td x-show="editing_enabled" x-cloak x-transition class="text-right">

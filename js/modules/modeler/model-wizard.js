@@ -103,8 +103,13 @@ document.addEventListener('alpine:init', () => {
                         this.update_action_buttons(false,false,true);
                         break;
 
-                    // Python Module
+                    // Template
                     case 110:
+                        this.update_action_buttons(false,false,true);
+                        break;
+
+                    // Scenario
+                    case 120:
                         this.update_action_buttons(false,false,true);
                         break;
 
@@ -283,6 +288,11 @@ document.addEventListener('alpine:init', () => {
                         this.navigate(file);
                         this.close();
                         return;
+                    case "scenario":
+                        Modeler._roots[this.parameters.file] = "scenario";
+                        prepared_model.att_name = this.parameters.name;
+                        prepared_model = Modeler.prepare_model("scenario",prepared_model);
+                        break;
                     default:
                         console.error("Create for type not implemented: ",this.parameters.type);
                 }
@@ -656,7 +666,7 @@ document.addEventListener('alpine:init', () => {
                     }
             },
 
-            // Python Module
+            // Template
             async start_template(){
                 this.parameters.name = "templates/new.md";
                 this.parameters.type = "code";
@@ -670,6 +680,28 @@ document.addEventListener('alpine:init', () => {
                         return
                     }
                     this.parameters.file = this.parameters.name;
+                    this.conflicted = this.files.includes(this.parameters.file);
+                    if (this.conflicted){
+                        this.dialog_id = 1;
+                    } else {
+                        this.dialog_id = 0;
+                    }
+            },
+
+            // Scenario
+            async start_scenario(){
+                this.parameters.name = "";
+                this.parameters.type = "scenario";
+                this.conflicted = true;
+                this.state = 120;
+            },
+            check_scenario_name(){
+                    this.conflicted = !this.parameters.name || !pascalCaseRegex.test(this.parameters.name);
+                    if (this.conflicted){
+                        this.dialog_id = 0;
+                        return
+                    }
+                    this.parameters.file = "scenarios/" + this.parameters.name + ".xml";
                     this.conflicted = this.files.includes(this.parameters.file);
                     if (this.conflicted){
                         this.dialog_id = 1;
@@ -739,6 +771,9 @@ document.addEventListener('alpine:init', () => {
                } else if (this.state == 1 && event.key === 't'){
                    event.preventDefault();
                    this.start_template();
+               } else if (this.state == 1 && event.key === "s"){
+                   event.preventDefault();
+                   this.start_scenario();
                } else if((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'c' && enabled_for_copy.includes(type)) {
                    event.preventDefault();
                    this.copy_fields();
