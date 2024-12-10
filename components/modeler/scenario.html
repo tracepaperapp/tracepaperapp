@@ -509,7 +509,7 @@
                                                                 <div class="modal-action">
                                                                     <form method="dialog">
                                                                         <!-- if there is a button in form, it will close the modal -->
-                                                                        <button class="btn" @click="select_command = false">Close</button>
+                                                                        <button class="btn" @click="select_query = false">Close</button>
                                                                     </form>
                                                                 </div>
                                                             </div>
@@ -573,7 +573,7 @@
                                                                         <td x-data="viewPathBuilder">
                                                                             <template x-for="(p,index) in path">
                                                                                 <span x-data="{editing: false}">
-                                                                                    <span x-show="index != 0" x-cloak x-transition> - </span>
+                                                                                    <span x-show="index != 0" x-cloak x-transition> &middot; </span>
                                                                                     <span class="modeler-input cursor-pointer"
                                                                                           x-show="!editing" x-cloak x-transition
                                                                                           @click="editing = true"
@@ -652,7 +652,7 @@
                                                                         <td x-data="viewPathBuilder">
                                                                             <template x-for="(p,index) in path">
                                                                                 <span x-data="{editing: false}">
-                                                                                    <span x-show="index != 0" x-cloak x-transition> - </span>
+                                                                                    <span x-show="index != 0" x-cloak x-transition> &middot; </span>
                                                                                     <span class="modeler-input cursor-pointer"
                                                                                           x-show="!editing" x-cloak x-transition
                                                                                           @click="editing = true"
@@ -701,43 +701,20 @@
 
                     <dialog x-show="insertActivityModal" x-cloak x-transition
                             class="modal modal-open">
-                        <div class="modal-box w-11/12 max-w-5xl">
+                        <div class="modal-box">
                             <form method="dialog">
                                 <button @click="insertActivityModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                             </form>
                             <h3 class="font-bold text-lg">Add activity</h3>
-
-                            <label class="input input-bordered flex items-center gap-2 mt-5">
-                                <input type="text" class="grow" x-model="search" placeholder="Search" />
-                                <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 16 16"
-                                        fill="currentColor"
-                                        class="h-4 w-4 opacity-70">
-                                    <path
-                                            fill-rule="evenodd"
-                                            d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-                                            clip-rule="evenodd" />
-                                </svg>
-                            </label>
-
-                            <table class="table mt-2" x-data="{types: []}" x-effect="if(insertActivityModal){types = get_types()}">
-                                <template x-if="types.length != 0">
-                                    <template x-for="type in activity_types" :key="type">
-                                        <tr @click="insert"
-                                            :activity-type="type"
-                                            :index="index"
-                                            class="hover"
-                                            x-show="type.includes(search.toLowerCase())" x-cloak x-transition>
-                                            <th x-text="type"></th>
-                                            <td class="text-right">
-                                                <i class="fa-solid fa-plus"></i>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </template>
-
-                            </table>
+                            <ul class="menu bg-base-200 rounded-box w-full">
+                                <li><a @click="insert('set-variables')">Set variables</a></li>
+                                <li><a @click="insert('mutation')">Trigger command</a></li>
+                                <li><a @click="insert('query')">Query view store</a></li>
+                                <li><a @click="insert('switch-user')">Switch user</a></li>
+                                <li><a @click="insert('grant-role')">Grant role to current user</a></li>
+                                <li><a @click="insert('refresh-token')">Refresh curent user token</a></li>
+                                <li><a @click="insert('wait')">Sleep</a></li>
+                            </ul>
                         </div>
                     </dialog>
 
@@ -812,9 +789,9 @@
                     </div>
 
                     <!-- Diagram -->
-<!--                    <div x-import="elements/embedded-diagram">-->
-<!--                        <ui-embedded-diagram></ui-embedded-diagram>-->
-<!--                    </div>-->
+                    <div x-import="elements/embedded-diagram">
+                        <ui-gate-diagram></ui-gate-diagram>
+                    </div>
 
                     <!-- documentation -->
                     <div :file="navigation" x-data="markdownEditor"></div>

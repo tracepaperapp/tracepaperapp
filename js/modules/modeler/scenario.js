@@ -93,27 +93,36 @@ document.addEventListener('alpine:init', () => {
                 this.reference_index = parseInt(this.$el.getAttribute("index"), 10);
                 this.insertActivityModal = true;
             },
-            insert(){
+            async insert(type){
                 this.insertActivityModal = false;
-//                let type = this.$el.getAttribute("activity-type");
-//                let activity = {};
-//
-//                switch(type){
-//                    case "loop":
-//                        activity.activity = [];
-//                        break;
-//                }
-//
-//                activity.att_type = type;
-//                activity.att_id = Draftsman.makeid(6);
-//                switch(this.insert_mode){
-//                    case "after":
-//                        this.activity_array.splice(this.reference_index + 1, 0, activity);
-//                        break;
-//                    case "before":
-//                        this.activity_array.splice(this.reference_index, 0, activity);
-//                        break;
-//                }
+                if (this.insert_lock){return}
+                this.insert_lock = true;
+                try{
+                    activity = {
+                        att_type: type,
+                        att_id: Draftsman.makeid(6),
+                        input: [],
+                        "expect-value": [],
+                        "expected-trace": [],
+                        "extract-value": [],
+                        att_path: "",
+                        att_view: ""
+                    };
+
+                    switch(this.insert_mode){
+                        case "after":
+                            this.model.activity.splice(this.reference_index + 1, 0, activity);
+                            break;
+                        case "before":
+                            this.model.activity.splice(this.reference_index, 0, activity);
+                            break;
+                    }
+                    await Draftsman.sleep(100);
+                    this.scrollToTable(activity.att_id);
+                } finally {
+                    await Draftsman.sleep(100);
+                    this.insert_lock = false;
+                }
             },
             async init(){
                 this.repo = await GitRepository.open();
@@ -232,7 +241,7 @@ document.addEventListener('alpine:init', () => {
                     default:
                         this.type = Draftsman.capitalizeFirstLetter(this.activity.att_type.replace("-"," "));
                 }
-                if (this.activity.att_type == "query"){
+                if (this.activity.att_type == "query" && !this.query){
                     this.query = this.activity.att_path;
                 }
             },
@@ -248,6 +257,7 @@ document.addEventListener('alpine:init', () => {
                 this.activity.att_path = this.query;
                 let query = this.queries[this.query].q;
                 let view = this.queries[this.query].view;
+                this.activity.att_view = view.att_name;
                 if (query.att_type == "get"){
                     this.activity.input = [{
                         att_name: "key",
@@ -273,7 +283,6 @@ document.addEventListener('alpine:init', () => {
                          att_id: Draftsman.makeid(6)
                      });
                 });
-                //this.activity.input
             },
             async change_command(){
                 this.select_command = false;

@@ -33,4 +33,94 @@ document.addEventListener('alpine:init', () => {
             }
         }
     });
+    Alpine.data('gateDiagram', function(){
+            return {
+                listnerId: "",
+                session: session,
+                path: "",
+                draw_lock: false,
+                async init(){
+                    await this.draw();
+                    await Draftsman.sleep(10);
+                    this.listnerId = Draftsman.registerListener("force-reload",this.draw.bind(this));
+                },
+                async draw(){
+                    if (this.draw_lock){return}
+                    this.draw_lock = true;
+                    try{
+                        console.log(this.navigation);
+                        let repo = await GitRepository.open();
+                        let files = await repo.list(x => x.startsWith("scenarios/") && x.endsWith(".xml"));
+                        console.log(files);
+                        let scenarios = [];
+                        let stops = [];
+                        let links = {};
+                        for (let i = 0; i < files.length; i++){
+                            let scenario = await Modeler.get_model(files[i],true);
+                            scenarios.push(scenario);
+                            stops.push(scenario.att_name);
+                            links[scenario.att_name] = files[i];
+                        }
+                        session.all_links = links;
+                        let nodes = [{id: 'START',shape:'dot',color:"#82B366",size: 10,label: "Start"},{id: 'STOP',shape:'dot',color:"#B85450",size: 10,label: "End"}];
+                        let edges = [];
+                        scenarios.forEach(s => {
+                            nodes.push({
+                                id: s.att_name,
+                                label: s.att_name,
+                                shape: "box",
+                                color: this.navigation.includes(s.att_name) ? "#FFA807" : "#6E6EFD"
+                            });
+                            if (s.att_extends){
+                                s.att_extends.split(";").forEach(r => {
+                                    edges.push({ from: r, to: s.att_name, color: { inherit: "both" }, arrows: "to" });
+                                    stops = stops.filter(x => x != r);
+                                });
+                            } else {
+                                edges.push({ from: "START", to: s.att_name, color: { inherit: "both" }, arrows: "to" });
+                            }
+                        });
+                        stops.forEach(s => {
+                            edges.push({ from: s, to: "STOP", color: { inherit: "both" }, arrows: "to" });
+                        });
+                        console.log(stops);
+                        var container = document.getElementById("gate-diagram");
+                        var data = {
+                          nodes: new vis.DataSet(nodes),
+                          edges: new vis.DataSet(edges)
+                        };
+                        console.log(data);
+                        var options = {
+                            width: "100%",
+                            height: "250px"
+                        };
+                        var network = new vis.Network(container, data, options);
+                        network.focus(this.navigation.split("/").at(0).replace(".xml",""), {
+                            scale: 1.5, // Zoomniveau (hoe groter, hoe verder uitgezoomd)
+                            animation: {
+                                duration: 1000, // Animatieduur in milliseconden
+                                easingFunction: 'easeInOutQuad', // Animatietype
+                            },
+                        });
+                        session.selected_node = "";
+                        network.on("click", function (params) {
+                            session.selected_node = params.nodes.at(0);
+                            network.focus(session.selected_node, {
+                                scale: 1.5, // Zoomniveau (hoe groter, hoe verder uitgezoomd)
+                                animation: {
+                                    duration: 1000, // Animatieduur in milliseconden
+                                    easingFunction: 'easeInOutQuad', // Animatietype
+                                },
+                            });
+                        });
+                    } finally{
+                        await Draftsman.sleep(100);
+                        this.draw_lock = false;
+                    }
+                },
+                destroy(){
+                    Draftsman.deregisterListener(this.listnerId);
+                }
+            }
+        });
 });
