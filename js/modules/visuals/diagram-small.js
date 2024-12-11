@@ -48,10 +48,8 @@ document.addEventListener('alpine:init', () => {
                     if (this.draw_lock){return}
                     this.draw_lock = true;
                     try{
-                        console.log(this.navigation);
                         let repo = await GitRepository.open();
                         let files = await repo.list(x => x.startsWith("scenarios/") && x.endsWith(".xml"));
-                        console.log(files);
                         let scenarios = [];
                         let stops = [];
                         let links = {};
@@ -83,13 +81,11 @@ document.addEventListener('alpine:init', () => {
                         stops.forEach(s => {
                             edges.push({ from: s, to: "STOP", color: { inherit: "both" }, arrows: "to" });
                         });
-                        console.log(stops);
                         var container = document.getElementById("gate-diagram");
                         var data = {
                           nodes: new vis.DataSet(nodes),
                           edges: new vis.DataSet(edges)
                         };
-                        console.log(data);
                         var options = {
                             width: "100%",
                             height: "250px"
