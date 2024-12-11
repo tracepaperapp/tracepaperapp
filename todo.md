@@ -18,3 +18,5 @@ fileUploade event, wordt deze toegevoegd aan de config.xml, en is deze selectabl
 
 offline mode zelf triggeren, geeft betere performance op slecht netwerk --> Of er voor zorgen dat de auto pull
 niet zo hard er in hakt
+
+uitzoeken of de save debounce eruit kan

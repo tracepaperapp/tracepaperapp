@@ -163,7 +163,7 @@ document.addEventListener('alpine:init', () => {
                     const li = document.createElement('li');
                     const fileLink = document.createElement('a');
                     fileLink.innerHTML = `<i class="fa-solid fa-gear"></i> Settings`;
-                    fileLink.setAttribute("navigation","settings");
+                    fileLink.setAttribute("navigation","Settings");
                     fileLink.setAttribute(":class","navigationElementActive");
                     fileLink.setAttribute("x-on:click","navigate");
                     li.appendChild(fileLink);

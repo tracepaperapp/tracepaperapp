@@ -134,6 +134,11 @@
                                 <ui-scenario></ui-scenario>
                             </template>
                         </div>
+                        <div x-import="settings">
+                            <template x-if="navigation == 'Settings'">
+                                <ui-settings></ui-settings>
+                            </template>
+                        </div>
                         <div class="mb-5"></div>
                     </div>
                 </div>
@@ -169,6 +174,7 @@
     <script src="/js/modules/navigation/context-management.js"></script>
     <script src="/js/modules/utilities/input-validator.js"></script>
     <script src="/js/modules/navigation/file-browser.js"></script>
+    <script src="/js/modules/navigation/settings.js"></script>
     <script src="/js/modules/modeler/basic-file.js"></script>
     <script src="/js/modules/utilities/markdown-editor.js"></script>
     <script src="/js/modules/utilities/info-card.js"></script>

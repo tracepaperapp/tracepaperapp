@@ -1,0 +1,30 @@
+query GetProject($key: ID = "") {
+  Project {
+    get(key: $key) {
+      name
+      repositories {
+        name
+        status
+        url
+      }
+      pipelines {
+        pipelineName
+        stackId
+      }
+      deployments {
+        apiEndpoint
+        apiId
+        apiKey
+        appId
+        cognitoDomain
+        domainName
+        drn
+        eventBus
+        key
+        propertyVault
+        stackId
+        userPoolId
+      }
+    }
+  }
+}

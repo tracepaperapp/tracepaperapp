@@ -24,7 +24,7 @@ document.addEventListener('alpine:init', () => {
             async cleanup_tabs(cascade=true){
                 let repo = await GitRepository.open();
                 let files = await repo.list();
-                files.push("/diagram","/dummy","Expressions","Dependencies","Patterns","Roles")
+                files.push("/diagram","/dummy","Expressions","Dependencies","Patterns","Roles","Settings")
                 if (this.tabs.length != 0){
                     this.tabs = this.tabs.filter(x => files.includes(x));
                 }
@@ -93,7 +93,7 @@ document.addEventListener('alpine:init', () => {
                     }else{
                         let navigation = this.$el.getAttribute("navigation");
                         console.log(navigation);
-                        if (!navigation.includes(".") && !["/diagram","Expressions","Dependencies","Patterns","Roles"].includes(navigation)){
+                        if (!navigation.includes(".") && !["/diagram","Expressions","Dependencies","Patterns","Roles","Settings"].includes(navigation)){
                             navigation += "/root.xml";
                         }
                         this.navigation = navigation;
