@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <title>Build log</title>
+
+    <!-- AlpineJS -->
+    <script src="/js/tp/vimeshui.js"></script>
+    <script src="/js/tp/alpine.js" defer></script>
+
+    <!-- cofig -->
+    <script src="/js/config/setup.js"></script>
+    <script src="/js/config/configuration.js"></script>
+    <script src="/js/config/configuration-staging.js"></script>
+
+    <!-- DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="/js/tp/tailwind.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/ide.css" />
+    <link rel="stylesheet" href="/css/draftsman.css" />
+</head>
+<body>
+    <div x-data="buildLog">
+        <table class="table table-auto w-full">
+            <tr class="border-b bg-base-200">
+                <th scope="row">AWS Pipeline</th>
+                <td>
+                    <a class="link cursor-pointer" @click="
+                        let url = 'https://' + pipeline.stackId.split(':')[3] + '.console.aws.amazon.com/codesuite/codepipeline/pipelines/' + pipeline.pipelineName + '/view';
+                        window. open(url, '_blank')"
+                       x-text="pipeline.pipelineName"></a>
+                </td>
+                <td x-text="status"></td>
+            </tr>
+            <tr class="border-b bg-base-200">
+                <th scope="row">Quality Gate report</th>
+                <td>
+                    <a class="link cursor-pointer" @click="let url = 'https://' + pipeline.stackId.split(':')[3] + '.console.aws.amazon.com/dynamodbv2/home?region=' + pipeline.stackId.split(':')[3] + '#edit-item?itemMode=2&amp;pk=QA-Scenario-Execution-Report&amp;route=ROUTE_ITEM_EXPLORER&amp;sk=&amp;table='+ pipeline.pipelineName +'-cache';
+                            window. open(url, '_blank');" x-text="pipeline.pipelineName.replace('pipeline','quality-gate-report')"></a>
+                </td>
+                <td>Last log: <span x-text="updated"></span></td>
+            </tr>
+            <template x-for="log in logs" :key="log.timestamp">
+                <tr class="border-b">
+                    <th class="w-1  whitespace-nowrap" scope="row" x-text="luxon.DateTime.fromMillis(Number(log.timestamp)*1000).toSQL()"></th>
+                    <td colspan="2" x-html="log.message"></td>
+                </tr>
+            </template>
+        </table>
+    </div>
+    <script src="/js/utils/helper.js"></script>
+    <script src="/js/tp/luxon.js"></script>
+    <script src="/js/utils/api.js"></script>
+    <script src="/js/utils/git.js"></script>
+    <script src="/js/modules/utilities/build-log.js"></script>
+</body>
+</html>

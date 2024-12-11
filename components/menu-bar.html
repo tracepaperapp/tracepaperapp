@@ -310,7 +310,7 @@
                         <p class="py-4">
                         <table class="table">
                             <template x-for="build in builds">
-                                <tr class="cursor-pointer border-b hover" @click.debounce="window.open('/build-log?drn=' + build.drn, '_blank')">
+                                <tr class="cursor-pointer border-b hover" @click.debounce="window.open('/build-log.html?drn=' + build.drn, '_blank')">
                                     <th scope="row" x-text="build.drn"></th>
                                     <td x-text="build.status"></td>
                                     <td x-text="luxon.DateTime.fromMillis(Number(build.lastEvent)*1000).toRelative()"></td>

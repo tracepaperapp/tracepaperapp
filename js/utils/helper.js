@@ -406,7 +406,10 @@ class Draftsman {
 
     static signOut(){
         let logout_uri = `${localStorage["aws-congnito-ui"]}/logout?client_id=${localStorage["aws-congnito-app-id"]}&logout_uri=${window.location.origin}`;
+        let staging = localStorage['staging-environment'] ? localStorage['staging-environment'] : 'false';
         sessionStorage.clear();
+        localStorage.clear();
+        localStorage['staging-environment'] = staging;
         location = logout_uri;
     }
 }

@@ -60,9 +60,9 @@
                                             <ul>
                                                 <li x-text="pipeline.pipelineName" class="link cursor-pointer" @click="
                         let url = 'https://' + pipeline.stackId.split(':')[3] + '.console.aws.amazon.com/codesuite/codepipeline/pipelines/' + pipeline.pipelineName + '/view';
-                        window. open(url, '_blank')">livedemo-main-pipeline</li>
+                        window. open(url, '_blank')"></li>
                                                 <li class="link cursor-pointer" @click="let url = 'https://' + pipeline.stackId.split(':')[3] + '.console.aws.amazon.com/dynamodbv2/home?region=' + pipeline.stackId.split(':')[3] + '#edit-item?itemMode=2&amp;pk=QA-Scenario-Execution-Report&amp;route=ROUTE_ITEM_EXPLORER&amp;sk=&amp;table='+ pipeline.pipelineName +'-cache';
-                            window. open(url, '_blank');" x-text="pipeline.pipelineName.replace('pipeline','quality-gate-report')">livedemo-main-quality-gate-report</li>
+                            window. open(url, '_blank');" x-text="pipeline.pipelineName.replace('pipeline','quality-gate-report')"></li>
                                             </ul>
                                         </div>
                                     </template>

@@ -1,5 +1,5 @@
-subscription MySubscription {
-  onNotification {
+subscription OnNotification($identifier: String = "", $type: String = "") {
+  onNotification(type: $type, identifier: $identifier) {
     identifier
     message
     type

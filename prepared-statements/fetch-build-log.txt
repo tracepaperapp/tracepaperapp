@@ -1,0 +1,12 @@
+query FetchBuildLog($key: ID = "") {
+  Build {
+    get(key: $key) {
+      logs {
+        timestamp
+        message
+      }
+      status
+      lastEvent
+    }
+  }
+}

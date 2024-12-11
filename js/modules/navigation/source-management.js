@@ -136,13 +136,12 @@ document.addEventListener('alpine:init', () => {
             _track_build_request(data){
                 data = data["data"]["onTrace"];
                 if(data.status == "success"){
-                    window.open('/build-log?drn=' + this.drn + ":" + this.buildId, '_blank');
+                    window.open('/build-log.html?drn=' + this.drn + ":" + this.buildId, '_blank');
                 }
             },
             async update_build_log_list(){
                 let api = await API.initialize(true);
                 let data = await api.query("/prepared-statements/list-builds.txt",{key_begins_with:this.drn},true);
-                console.log(data);
                 this.builds = Draftsman.sortArrayByKey(data.data.Build.filter.resultset,"drn");
                 this.builds.reverse();
             }
