@@ -297,6 +297,31 @@
                 </dialog>
             </div>
 
+            <div x-show="builds.length" x-cloak x-transition class="relative inline-block">
+                <button @click="buildView = true" class="btn btn-circle btn-outline btn-primary m-2">
+                    <i class="fa-solid fa-list"></i>
+                </button>
+                <dialog x-show="buildView" x-cloak x-transition class="modal modal-open">
+                    <div class="modal-box  w-11/12 max-w-5xl">
+                        <form method="dialog">
+                            <button @click="buildView = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        </form>
+                        <h3 class="font-bold text-lg">Builds</h3>
+                        <p class="py-4">
+                        <table class="table">
+                            <template x-for="build in builds">
+                                <tr class="cursor-pointer border-b hover" @click.debounce="window.open('/build-log?drn=' + build.drn, '_blank')">
+                                    <th scope="row" x-text="build.drn"></th>
+                                    <td x-text="build.status"></td>
+                                    <td x-text="luxon.DateTime.fromMillis(Number(build.lastEvent)*1000).toRelative()"></td>
+                                </tr>
+                            </template>
+                        </table>
+                        </p>
+                    </div>
+                </dialog>
+            </div>
+
             <div class="ml-1">
                 <small x-show="offline" x-cloak x-transition><div class="badge badge-error badge-outline">No internet connection!</div><br></small>
                 <small x-show="last_pull && !offline" x-cloak x-transition>Last&nbsp;pulled: <span x-text="last_pull"></span></small><br>

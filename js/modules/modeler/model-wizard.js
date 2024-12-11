@@ -386,9 +386,10 @@ document.addEventListener('alpine:init', () => {
             async set_context(){
                 try{
                     this.file = this.navigation;
-                    this.model = await Modeler.get_model(this.file);
                     this.type = Modeler.determine_type(this.file);
+                    console.log(this.type);
                     this.copyEnabled = enabled_for_copy.includes(this.type);
+                    this.model = await Modeler.get_model(this.file);
                 }catch{}
 
 

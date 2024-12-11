@@ -20,3 +20,5 @@ offline mode zelf triggeren, geeft betere performance op slecht netwerk --> Of e
 niet zo hard er in hakt
 
 uitzoeken of de save debounce eruit kan
+
+logs en excepties weghalen

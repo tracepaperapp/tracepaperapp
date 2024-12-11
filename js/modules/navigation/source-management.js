@@ -3,6 +3,7 @@ document.addEventListener('alpine:init', () => {
         return {
             changes: [],
             conflict: false,
+            drn: this.$persist("").using(sessionStorage),
             commitMessage: this.$persist("").using(sessionStorage),
             force: [],
             readyToCommit: false,
@@ -12,11 +13,14 @@ document.addEventListener('alpine:init', () => {
             diff: {},
             repo: null,
             commitModal: false,
+            buildView: false,
             issues: [],
+            builds: [],
             async init(){
                 this.repo = await GitRepository.open();
                 Draftsman.registerTask(this._list_changes.bind(this),0.2,"source-administration");
-                Draftsman.registerTask(this.validate_model.bind(this),10,"model-validation"); //TODO
+                Draftsman.registerTask(this.validate_model.bind(this),10,"model-validation");
+                await this.update_build_log_list();
             },
             async validate_model(){
                 this.issues = await Modeler.validate();
@@ -25,11 +29,6 @@ document.addEventListener('alpine:init', () => {
                 let file = this.$el.getAttribute("file");
                 await this.repo.revert(file);
                 location.reload();
-//                await this.execute_diff();
-//                Draftsman.publishMessage("force-reload",file);
-//                Draftsman.publishMessage("file-reverted",file);
-//                await Draftsman.sleep(1000);
-//                this.navigate(this.navigation);
             },
             async revert_all(){
                 if(!confirm("Remove all local changes, are you sure?")){return}
@@ -53,6 +52,8 @@ document.addEventListener('alpine:init', () => {
                     this.force = [];
                     this.readyToCommit = false;
                     this.diff = {};
+                    console.log("Yes");
+                    await this.start_build();
                 } catch(err){
                     console.log(err);
                 }
@@ -116,6 +117,34 @@ document.addEventListener('alpine:init', () => {
                 }
                 this.commit_diff = GitRepository.commit_diff;
                 this.last_pull = luxon.DateTime.fromMillis(this.last_pull_raw).toRelative();
+            },
+            async start_build(){
+                let api = await API.initialize(true);
+                let correlationId = Draftsman.uuidv4();
+
+                let now = new Date();
+                let year = now.getFullYear().toString();
+                let month = (now.getMonth() + 1).toString().padStart(2, '0');
+                let day = now.getDate().toString().padStart(2, '0');
+                let hour = now.getHours().toString().padStart(2, '0');
+                let minute = now.getMinutes().toString().padStart(2, '0');
+                this.buildId = `${year}-${month}-${day}T${hour}:${minute}`;
+
+                this.subscriptionId = await api.subscription("/prepared-statements/subscribe-track-and-trace.txt",{correlationId},this._track_build_request.bind(this));
+                await api.mutation("/prepared-statements/start-build.txt",{drn: this.drn, buildId: this.buildId},true,true,correlationId);
+            },
+            _track_build_request(data){
+                data = data["data"]["onTrace"];
+                if(data.status == "success"){
+                    window.open('/build-log?drn=' + this.drn + ":" + this.buildId, '_blank');
+                }
+            },
+            async update_build_log_list(){
+                let api = await API.initialize(true);
+                let data = await api.query("/prepared-statements/list-builds.txt",{key_begins_with:this.drn},true);
+                console.log(data);
+                this.builds = Draftsman.sortArrayByKey(data.data.Build.filter.resultset,"drn");
+                this.builds.reverse();
             }
         }
     });

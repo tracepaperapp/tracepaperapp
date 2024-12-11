@@ -1,0 +1,7 @@
+mutation StartBuild($buildId: String = "", $drn: String = "") {
+  Project {
+    build(input: {drn: $drn, buildId: $buildId}) {
+      correlationId
+    }
+  }
+}

@@ -177,6 +177,15 @@ class Draftsman {
         return sortedObj;
     }
 
+    static sortArrayByKey(array, key) {
+        return array.sort((a, b) => {
+            if (typeof a[key] === "string") {
+                return a[key].localeCompare(b[key]);
+            }
+            return a[key] - b[key]; // Numeriek
+        });
+    }
+
     static generateFingerprint(obj) {
          let fp = btoa(JSON.stringify(Draftsman.sortObjectByKey(obj)));
          return fp;
