@@ -1,6 +1,10 @@
 <template x-component="notifier-activity">
     <template x-if="activity">
         <table class="table table-xs border mb-2">
+            <colgroup>
+                <col style="width: 200px;">
+                <col>
+            </colgroup>
             <thead>
             <tr class="bg-base-200">
                 <th scope="row"
@@ -62,7 +66,7 @@
             </tr>
             <tr>
                 <th scope="row">Fail silent</th>
-                <td class="text-right">
+                <td>
                     <input type="checkbox"
                            @change="activity['att_fail-silent'] = $el.checked ? 'true' : 'false'"
                            :checked="activity['att_fail-silent'] && activity['att_fail-silent'] == 'true'"
