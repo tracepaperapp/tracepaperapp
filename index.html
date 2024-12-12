@@ -41,7 +41,7 @@
                         <ui-file-browser></ui-file-browser>
                     </div>
                 </div>
-                <div class="w-full" :class="browserToggle ? 'col-span-10' : 'col-span-12'" x-transition>
+                <div :class="browserToggle ? 'col-span-10 w-full' : 'col-span-12 mx-3 w-[99%]'" x-transition>
                     <div x-import="elements/trace-notifications">
                         <ui-trace-notifications></ui-trace-notifications>
                     </div>
