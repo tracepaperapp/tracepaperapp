@@ -27,27 +27,28 @@
         <div x-data="contextManagement">
 
             <div class="navbar bg-neutral text-neutral-content min-h-0 h-10 px-4">
-            <span>You are using the free public beta version of *Tracepaper*. We do not guarantee availability or reliability and are not
-                liable for any outcomes or issues resulting from its use. Use at your own risk. <a class="link" target="_blank" href="https://draftsman.io/Terms_%26_Conditions/">Terms & Conditions</a></span>
+            <small>You are using the free public beta version of *Tracepaper*. We do not guarantee availability or reliability and are not
+                liable for any outcomes or issues resulting from its use. Use at your own risk. <a class="link" target="_blank" href="https://draftsman.io/Terms_%26_Conditions/">Terms & Conditions</a></small>
             </div>
 
             <div x-import="menu-bar">
                 <ui-menu-bar></ui-menu-bar>
             </div>
 
-            <div class="grid grid-cols-12 gap-3 mt-5">
-                <div class="col-span-2">
+            <div class="grid grid-cols-12 gap-3 mt-5" x-data="{browserToggle: $persist(true)}">
+                <div class="col-span-2" x-show="browserToggle" x-cloak x-transition>
                     <div x-import="file-browser">
                         <ui-file-browser></ui-file-browser>
                     </div>
                 </div>
-                <div class="col-span-10 w-full">
+                <div class="w-full" :class="browserToggle ? 'col-span-10' : 'col-span-12'" x-transition>
                     <div x-import="elements/trace-notifications">
                         <ui-trace-notifications></ui-trace-notifications>
                     </div>
                     <div x-import="tab-bar">
                         <ui-tab-bar></ui-tab-bar>
                     </div>
+
                     <div class="max-h-[80vh] scrollbar-v" @scroll="saveScrollPosition" id="main">
                         <div x-import="modeler/readme">
                             <template x-if="tab_type == 'readme'" :key="navigation">

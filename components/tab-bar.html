@@ -1,6 +1,13 @@
 <template x-component="tab-bar">
-    <div class="w-[99%] my-1">
-        <div role="tablist" class="tabs tabs-lifted w-[99%]">
+    <div class="w-full my-1 flex items-center justify-between">
+        <!-- Button -->
+        <button @click="browserToggle = !browserToggle" class="btn btn-sm btn-circle btn-ghost">
+            <i x-show="browserToggle" x-cloak x-transition class="fa-solid fa-angles-left"></i>
+            <i x-show="!browserToggle" x-cloak x-transition class="fa-solid fa-angles-right"></i>
+        </button>
+
+        <!-- Tab bar -->
+        <div role="tablist" class="tabs tabs-lifted w-[99%] flex-grow">
             <template x-for="path in tabs" :key="path">
                 <a role="tab"
                    :class="path == navigation ? 'tab tab-active' : 'tab'"
@@ -13,6 +20,5 @@
                 </a>
             </template>
         </div>
-    </div>
     </div>
 </template>
