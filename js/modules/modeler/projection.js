@@ -77,6 +77,12 @@ document.addEventListener('alpine:init', () => {
                 if (!(this.navigation in this.selectedTab)){
                     this.selectedTab[this.navigation] = 2;
                 }
+                const urlParams = new URLSearchParams(window.location.search);
+                const tab = urlParams.get('tab');
+                console.log(tab)
+                if (tab) {
+                    this.selectedTab[this.navigation] = Number(tab);
+                }
                 let repo = await GitRepository.open();
                 let views = await repo.list(x => x.startsWith("views/") && x.endsWith(".xml"));
                 this.views = views.map(x => x.split("/").at(-1).replace(".xml",""));

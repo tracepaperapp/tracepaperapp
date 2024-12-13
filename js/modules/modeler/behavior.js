@@ -275,6 +275,12 @@ document.addEventListener('alpine:init', () => {
                 if (!(this.path in this.selectedTest)){
                     this.selectedTest[this.path] = this.model["test-case"].at(0).att_name;
                 }
+                const urlParams = new URLSearchParams(window.location.search);
+                const tab = urlParams.get('tab');
+                console.log(tab)
+                if (tab) {
+                    this.selectedTab[this.path] = Number(tab);
+                }
             },
             async force_load(){
                 this.readlock = false;

@@ -19,6 +19,12 @@ document.addEventListener('alpine:init', () => {
                 if (!(this.navigation in this.selectedTab)){
                     this.selectedTab[this.navigation] = 1;
                 }
+                const urlParams = new URLSearchParams(window.location.search);
+                const tab = urlParams.get('tab');
+                console.log(tab)
+                if (tab) {
+                    this.selectedTab[this.navigation] = Number(tab);
+                }
             },
             async reload(){
                 this.view_lock = true;
