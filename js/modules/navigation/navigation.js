@@ -14,6 +14,10 @@ document.addEventListener('alpine:init', () => {
                     });
                     location.reload();
                 }
+                if(location.hash){
+                    let file = location.hash.replace("#","");
+                    this.navigate(file);
+                }
                 Draftsman.registerTask(this._save_session.bind(this),10,"save-session")
                 this.listnerId = Draftsman.registerListener("file-renamed",this._handle_rename.bind(this));
                 this.tabCleanupId = Draftsman.registerListener("file-reverted",this.cleanup_tabs.bind(this));
