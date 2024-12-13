@@ -78,19 +78,20 @@ document.addEventListener('alpine:init', () => {
                     case "behavior":
                     case "notifier":
                         key = "/write/" + this.navigation.replace("root.xml","");
+                        break;
                     case "view":
                     case "projection":
                         key = "/view/" + this.navigation;
+                        break;
                     case "code":
                         key = "/utils/" + this.navigation
-                    case "render":
-                        Object.keys(directories).forEach(p => {
-                            sessionStorage.setItem(p,key.startsWith(p) || p.startsWith(key));
-                        });
-                        await this.prepare();
                         break;
-                    default:
-                    //pass
+                }
+                if (key){
+                    Object.keys(directories).forEach(p => {
+                        sessionStorage.setItem(p,key.startsWith(p) || p.startsWith(key));
+                    });
+                    await this.prepare();
                 }
             },
             async prepare(){
