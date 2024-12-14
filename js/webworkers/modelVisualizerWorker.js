@@ -1,5 +1,5 @@
 importScripts('/js/tp/isomorphic-git.js');
-importScripts('/js/tp/lightning-fs.js');
+importScripts('/js/tp/lightning-fs.js'); 
 importScripts('/js/utils/helper.js');
 importScripts('/js/utils/modeler.js');
 importScripts('/js/tp/fast-xml-parser.js')
