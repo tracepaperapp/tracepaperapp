@@ -40,6 +40,8 @@ self.onmessage = async function (event) {
                 const cachedData = await loadFromCache('raw_data');
                 if (cachedData) {
                     // Stuur de gecachte data direct terug
+                    raw_data = cachedData;
+                    reverse_index = invert(raw_data.all_links);
                     postMessage({ result: cachedData, request_id, action });
                 }
 

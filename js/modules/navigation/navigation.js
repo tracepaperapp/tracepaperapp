@@ -7,25 +7,30 @@ document.addEventListener('alpine:init', () => {
             issuesView: false,
             tab_type: this.$persist("").using(sessionStorage),
             async init(){
-                if (!sessionStorage.project_url && localStorage.session){
-                    let items = JSON.parse(localStorage.session);
-                    items.forEach(item => {
-                        sessionStorage.setItem(item.key,item.value);
-                    });
-                    location.reload();
+                try{
+                    if (!sessionStorage.project_url && localStorage.session){
+                        let items = JSON.parse(localStorage.session);
+                        items.forEach(item => {
+                            sessionStorage.setItem(item.key,item.value);
+                        });
+                        location.reload();
+                    }
+                    Draftsman.registerTask(this._save_session.bind(this),10,"save-session")
+                    this.listnerId = Draftsman.registerListener("file-renamed",this._handle_rename.bind(this));
+                    this.tabCleanupId = Draftsman.registerListener("file-reverted",this.cleanup_tabs.bind(this));
+                    Draftsman.registerTask(Diagram.prepare_data,30,"prepare-diagram-data");
+                    await this.set_scroll();
+                    await this.cleanup_tabs(false); // This one last, because it will stall in offline-mode
+                    if(location.hash){
+                        let file = location.hash.replace("#","");
+                        await this.navigate(file);
+                        setTimeout(function(){
+                            Draftsman.publishMessage('focus');
+                        },1000)
+                    }
+                } catch (err){
+                    console.error(err);
                 }
-                if(location.hash){
-                    let file = location.hash.replace("#","");
-                    await this.navigate(file);
-                    await Draftsman.sleep(1000);
-                    Draftsman.publishMessage('focus');
-                }
-                Draftsman.registerTask(this._save_session.bind(this),10,"save-session")
-                this.listnerId = Draftsman.registerListener("file-renamed",this._handle_rename.bind(this));
-                this.tabCleanupId = Draftsman.registerListener("file-reverted",this.cleanup_tabs.bind(this));
-                Draftsman.registerTask(Diagram.prepare_data,30,"prepare-diagram-data");
-                await this.set_scroll();
-                await this.cleanup_tabs(false); // This one last, because it will stall in offline-mode
             },
             async cleanup_tabs(cascade=true){
                 let repo = await GitRepository.open();
@@ -98,7 +103,6 @@ document.addEventListener('alpine:init', () => {
                         this.navigation = file;
                     }else{
                         let navigation = this.$el.getAttribute("navigation");
-                        console.log(navigation);
                         if (!navigation.includes(".") && !["/diagram","Expressions","Dependencies","Patterns","Roles","Settings"].includes(navigation)){
                             navigation += "/root.xml";
                         }
@@ -107,7 +111,6 @@ document.addEventListener('alpine:init', () => {
 
                     await Draftsman.sleep(100);
                     this.tab_type = Modeler.determine_type(this.navigation);
-                    console.log(this.tab_type);
                     await Draftsman.sleep(10);
                     Draftsman.publishMessage("force-reload",this.navigation);
                     this.update_tabs();
@@ -152,7 +155,6 @@ document.addEventListener('alpine:init', () => {
                 if (typeof tab !== 'string'){
                     tab = this.$el.getAttribute("navigation");
                 }
-                console.log(tab);
                 this.tabs = this.tabs.filter(x => x != tab);
                 if (this.navigation == tab && this.tabs.length != 0){
                     this.navigation = this.tabs.at(-1);
@@ -230,9 +232,6 @@ document.addEventListener('alpine:init', () => {
             },
             saveScrollPosition: function() {
                 sessionStorage.setItem('scrollPosition:' + this.navigation, this.$el.scrollTop);
-            },
-            destroy(){
-                console.log("WHY!!!!")
             }
         }
     });

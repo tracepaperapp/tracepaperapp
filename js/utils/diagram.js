@@ -11,7 +11,7 @@ class Diagram {
 
     static async node_diagram(file,id,height="200px",selection={}, mode="aggregate",radius=1){
         let key = Diagram.generate_key(file,radius);
-
+        let i = 0;
         while(!Diagram.prepared){
             await Draftsman.sleep(10);
         }
@@ -106,4 +106,8 @@ class Diagram {
           Diagram.worker.postMessage(message);
         });
       }
+}
+
+if (true){
+    //Diagram
 }
