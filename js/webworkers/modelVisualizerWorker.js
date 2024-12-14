@@ -27,29 +27,42 @@ let raw_data = {};
 let reverse_index = {};
 
 self.onmessage = async function (event) {
-    const { action, repoUrl, request_id, file, radius=1 } = event.data;
+    const { action, repoUrl, request_id, file, radius = 1 } = event.data;
     try {
         switch (action) {
-          case "initialize":
-            if (!fs || repo != repoUrl){
-                fs = new LightningFS(repoUrl.replace("https://github.com/", ""));
-                repo = repoUrl;
-            }
-            raw_data = await refresh_data();
-            reverse_index = invert(raw_data.all_links);
-            postMessage({ result: raw_data, request_id,action });
-            break;
-          case 'node-diagram':
-            postMessage({ result: filter_data(file,radius), request_id,action });
-            break;
-          default:
-            postMessage({ error: 'Unknown action', request_id,action });
+            case 'initialize':
+                if (!fs || repo !== repoUrl) {
+                    fs = new LightningFS(repoUrl.replace('https://github.com/', ''));
+                    repo = repoUrl;
+                }
+
+                // 1. Laad gecachte data
+                const cachedData = await loadFromCache('raw_data');
+                if (cachedData) {
+                    // Stuur de gecachte data direct terug
+                    postMessage({ result: cachedData, request_id, action });
+                }
+
+                // 2. Werk de cache in de achtergrond bij
+                raw_data = await refresh_data();
+                reverse_index = invert(raw_data.all_links);
+
+                // Stuur de bijgewerkte data terug
+                postMessage({ result: raw_data, request_id, action });
+                break;
+
+            case 'node-diagram':
+                postMessage({ result: filter_data(file, radius), request_id, action });
+                break;
+
+            default:
+                postMessage({ error: 'Unknown action', request_id, action });
         }
-      } catch (error) {
+    } catch (error) {
         console.error(error);
-        postMessage({ error: error.message, request_id,action });
-      }
-}
+        postMessage({ error: error.message, request_id, action });
+    }
+};
 
 function filter_data(roots,connectionRadius=1){
     let eligible_nodes = [];
@@ -100,7 +113,9 @@ function filter_data(roots,connectionRadius=1){
 
 async function refresh_data(){
     files = await isogit.listFiles({ fs, dir: dir, ref: 'HEAD' });
-    return await Diagram.draw();
+    const data = await Diagram.draw();
+    await saveToCache('raw_data', data); // Update de cache
+    return data;
 }
 
 async function get_model(file){
@@ -556,4 +571,44 @@ function lightenColor(color, amount = 0.2) {
 
     // Retourneer in het rgba-formaat met een opacity van 1
     return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 1)`;
+}
+
+// Experimental cache
+const DB_NAME = 'NodeCache';
+const STORE_NAME = 'cache';
+
+async function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+
+        request.onsuccess = (event) => resolve(event.target.result);
+        request.onerror = (event) => reject(event.target.error);
+    });
+}
+
+async function saveToCache(key, value) {
+    const db = await openDB();
+    const tx = db.transaction([STORE_NAME], 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.put(value, key);
+    return tx.complete;
+}
+
+async function loadFromCache(key) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_NAME], 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get(key);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
 }

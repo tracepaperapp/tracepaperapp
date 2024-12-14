@@ -59,7 +59,11 @@ function add_file(file, name){
 document.addEventListener('alpine:init', () => {
     Alpine.data('fileBrowser', function(){
         return {
+            items: this.$persist([]).using(sessionStorage).as("fileList"),
             async init(){
+                if (this.items.length != 0){
+                    this.render_browser(this.items, this.$el);
+                }
                 await this.prepare();
                 this.renameListner = Draftsman.registerListener("file-renamed",this.reload.bind(this));
                 this.reloadListner = Draftsman.registerListener("force-reload",this.reload.bind(this));
@@ -160,7 +164,7 @@ document.addEventListener('alpine:init', () => {
                     });
                     this.$el.innerHTML = '';
                     this.render_browser(items, this.$el);
-
+                    this.items = items;
                     const li = document.createElement('li');
                     const fileLink = document.createElement('a');
                     fileLink.innerHTML = `<i class="fa-solid fa-gear"></i> Settings`;
