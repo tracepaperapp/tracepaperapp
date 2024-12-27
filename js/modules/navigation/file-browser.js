@@ -48,9 +48,13 @@ function repair_path(path){
 }
 
 function add_file(file, name){
-    let directory = get_directory(get_parent(file))
+    let directory = get_directory(get_parent(file));
+    let filename = name ? name : file.split("/").at(-1);
+    if (!file.includes("templates/")){
+        filename = filename.split(".").at(0);
+    }
     directory.push({
-        name: name ? name : file.split("/").at(-1).split(".").at(0),
+        name: filename,
         type: "file",
         path: repair_path(file)
     });

@@ -6,6 +6,15 @@ document.addEventListener('alpine:init', () => {
             tabs: this.$persist([]).using(sessionStorage),
             issuesView: false,
             tab_type: this.$persist("").using(sessionStorage),
+            docs_nav_lock: false,
+            async open_docs(){
+                if (this.docs_nav_lock){return}
+                this.docs_nav_lock = true;
+                let file = this.$el.getAttribute("slug");
+                window.open('https://tracepaper.draftsman.io/docs/' + file, '_blank').focus();
+                await Draftsman.sleep(1000);
+                this.docs_nav_lock = false;
+            },
             async init(){
                 try{
                     if (!sessionStorage.project_url && localStorage.session){
