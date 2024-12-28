@@ -1,0 +1,200 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <title>Tracepaper 4</title>
+
+    <!-- AlpineJS & Vimesh -->
+    <script defer src="/js/tp/alpine-persist.js"></script>
+    <script src="/js/tp/vimeshui.js"></script>
+    <script src="/js/tp/alpine.js" defer></script>
+
+    <!-- cofig -->
+    <script src="/js/config/setup.js"></script>
+    <script src="/js/config/configuration.js"></script>
+    <script src="/js/config/configuration-staging.js"></script>
+
+    <!-- DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="/js/tp/tailwind.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/ide.css" />
+    <link rel="stylesheet" href="/css/draftsman.css" />
+</head>
+<body>
+    <div x-data="navigation">
+        <div x-data="contextManagement">
+
+            <div class="navbar bg-neutral text-neutral-content min-h-0 h-10 px-4">
+            <small>You are using the free public beta version of *Tracepaper*. We do not guarantee availability or reliability and are not
+                liable for any outcomes or issues resulting from its use. Use at your own risk. <a class="link" target="_blank" href="https://draftsman.io/Terms_%26_Conditions/">Terms & Conditions</a></small>
+            </div>
+
+            <div x-import="menu-bar">
+                <ui-menu-bar></ui-menu-bar>
+            </div>
+
+            <div class="grid grid-cols-12 gap-3 mt-5" x-data="{browserToggle: $persist(true)}">
+                <div class="col-span-2" x-show="browserToggle" x-cloak x-transition>
+                    <div x-import="file-browser">
+                        <ui-file-browser></ui-file-browser>
+                    </div>
+                </div>
+                <div :class="browserToggle ? 'col-span-10 w-full' : 'col-span-12 mx-3 w-[99%]'" x-transition>
+                    <div x-import="elements/trace-notifications">
+                        <ui-trace-notifications></ui-trace-notifications>
+                    </div>
+                    <div x-import="tab-bar">
+                        <ui-tab-bar></ui-tab-bar>
+                    </div>
+
+                    <div class="max-h-[80vh] scrollbar-v" @scroll="saveScrollPosition" id="main">
+                        <div x-import="modeler/readme">
+                            <template x-if="tab_type == 'readme'" :key="navigation">
+                                <ui-readme></ui-readme>
+                            </template>
+                        </div>
+                        <div x-import="modeler/dummy-page">
+                            <template x-if="tab_type == ''" :key="navigation">
+                                <ui-dummy></ui-dummy>
+                            </template>
+                        </div>
+                        <div x-import="modeler/diagram">
+                            <template x-if="tab_type == 'diagram'" :key="navigation">
+                                <ui-diagram></ui-diagram>
+                            </template>
+                        </div>
+                        <div x-import="modeler/command">
+                            <template x-if="tab_type == 'command'" :key="navigation">
+                                <ui-command></ui-command>
+                            </template>
+                        </div>
+                        <div x-import="modeler/aggregate">
+                            <template x-if="tab_type == 'aggregate'" :key="navigation">
+                                <ui-aggregate></ui-aggregate>
+                            </template>
+                        </div>
+                        <div x-import="modeler/domain-event">
+                            <template x-if="tab_type == 'event'" :key="navigation">
+                                <ui-domain-event></ui-domain-event>
+                            </template>
+                        </div>
+                        <div x-import="modeler/behavior">
+                            <template x-if="tab_type == 'behavior'" :key="navigation">
+                                <ui-behavior></ui-behavior>
+                            </template>
+                        </div>
+                        <div x-import="modeler/notifier">
+                            <template x-if="tab_type == 'notifier'" :key="navigation">
+                                <ui-notifier></ui-notifier>
+                            </template>
+                        </div>
+                        <div x-import="modeler/view">
+                            <template x-if="tab_type == 'view'" :key="navigation">
+                                <ui-view></ui-view>
+                            </template>
+                        </div>
+                        <div x-import="modeler/projection">
+                            <template x-if="tab_type == 'projection'" :key="navigation">
+                                <ui-projection></ui-projection>
+                            </template>
+                        </div>
+                        <div x-import="modeler/expressions">
+                            <template x-if="tab_type == 'expressions'" :key="navigation">
+                                <ui-expressions></ui-expressions>
+                            </template>
+                        </div>
+                        <div x-import="modeler/dependencies">
+                            <template x-if="navigation == 'Dependencies'" :key="navigation">
+                                <ui-dependencies></ui-dependencies>
+                            </template>
+                        </div>
+                        <div x-import="modeler/patterns">
+                            <template x-if="tab_type == 'patterns'" :key="navigation">
+                                <ui-patterns></ui-patterns>
+                            </template>
+                        </div>
+                        <div x-import="modeler/roles">
+                            <template x-if="navigation == 'Roles'" :key="navigation">
+                                <ui-roles></ui-roles>
+                            </template>
+                        </div>
+                        <div x-import="modeler/python">
+                            <template x-if="tab_type == 'code'" :key="navigation">
+                                <ui-python></ui-python>
+                            </template>
+                        </div>
+                        <div x-import="modeler/template">
+                            <template x-if="tab_type == 'template'" :key="navigation">
+                                <ui-template></ui-template>
+                            </template>
+                        </div>
+                        <div x-import="modeler/scenario">
+                            <template x-if="tab_type == 'scenario'" :key="navigation">
+                                <ui-scenario></ui-scenario>
+                            </template>
+                        </div>
+                        <div x-import="settings">
+                            <template x-if="navigation == 'Settings'">
+                                <ui-settings></ui-settings>
+                            </template>
+                        </div>
+                        <div class="mb-5"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- tp -->
+    <script src="/js/tp/luxon.js"></script>
+    <script src="/js/tp/diff.js"></script>
+    <script src="/js/tp/vis.js"></script>
+    <script src="/js/tp/showdown.js"></script>
+    <script src="/js/tp/fast-xml-parser.js"></script>
+    <script src="/js/tp/xml-builder.js"></script>
+    <script src="/js/tp/ace-editor.js"></script>
+    <script src="/js/tp/ace-language.js"></script>
+    <script src="/js/tp/ace-python.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <!-- utils -->
+    <script src="/js/utils/helper.js"></script>
+    <script src="/js/utils/api.js"></script>
+    <script src="/js/utils/database.js"></script>
+    <script src="/js/utils/searchindex.js"></script>
+    <script src="/js/utils/git.js"></script>
+    <script src="/js/utils/modeler.js"></script>
+    <script src="/js/utils/diagram.js"></script>
+
+    <!-- customs -->
+    <script src="/js/modules/navigation/navigation.js"></script>
+    <script src="/js/modules/navigation/source-management.js"></script>
+    <script src="/js/modules/navigation/context-management.js"></script>
+    <script src="/js/modules/utilities/input-validator.js"></script>
+    <script src="/js/modules/navigation/file-browser.js"></script>
+    <script src="/js/modules/navigation/settings.js"></script>
+    <script src="/js/modules/modeler/basic-file.js"></script>
+    <script src="/js/modules/utilities/markdown-editor.js"></script>
+    <script src="/js/modules/utilities/info-card.js"></script>
+    <script src="/js/modules/visuals/treemap.js"></script>
+    <script src="/js/modules/visuals/diagram-only.js"></script>
+    <script src="/js/modules/visuals/diagram-small.js"></script>
+    <script src="/js/modules/modeler/model-wizard.js"></script>
+    <script src="/js/modules/modeler/modeler-template.js"></script>
+    <script src="/js/modules/modeler/command.js"></script>
+    <script src="/js/modules/modeler/aggregate-root.js"></script>
+    <script src="/js/modules/modeler/aggregate-entity.js"></script>
+    <script src="/js/modules/modeler/domain-event.js"></script>
+    <script src="/js/modules/modeler/behavior.js"></script>
+    <script src="/js/modules/modeler/notifier.js"></script>
+    <script src="/js/modules/modeler/view.js"></script>
+    <script src="/js/modules/modeler/projection.js"></script>
+    <script src="/js/modules/modeler/expressions.js"></script>
+    <script src="/js/modules/modeler/configuration.js"></script>
+    <script src="/js/modules/modeler/patterns.js"></script>
+    <script src="/js/modules/modeler/scenario.js"></script>
+</body>
+</html>
