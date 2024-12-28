@@ -5,18 +5,196 @@
     <link rel="manifest" href="/manifest.json">
     <title>Tracepaper 4</title>
 
+    <!-- AlpineJS & Vimesh -->
+    <script defer src="/js/tp/alpine-persist.js"></script>
+    <script src="/js/tp/vimeshui.js"></script>
+    <script src="/js/tp/alpine.js" defer></script>
+
+    <!-- cofig -->
+    <script src="/js/config/setup.js"></script>
+    <script src="/js/config/configuration.js"></script>
+    <script src="/js/config/configuration-staging.js"></script>
+
     <!-- DaisyUI -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="/js/tp/tailwind.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/ide.css" />
+    <link rel="stylesheet" href="/css/draftsman.css" />
 </head>
 <body>
-<div class="h-[100vh] w-[100vw] flex flex-col items-center justify-center bg-gradient-to-r from-[#045D5D] to-[#067D7D] space-y-6">
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-1/2 h-auto" viewBox="0 0 543 98" fill="none">
-        <path d="M5.544 73V22.24H24.408C32.904 22.24 39.456 24.424 44.064 28.792C48.72 33.16 51.048 39.424 51.048 47.584C51.048 55.696 48.72 61.96 44.064 66.376C39.456 70.792 32.904 73 24.408 73H5.544ZM14.76 65.368H23.832C35.544 65.368 41.4 59.44 41.4 47.584C41.4 35.776 35.544 29.872 23.832 29.872H14.76V65.368ZM60.3878 73V22.24H82.4198C87.9878 22.24 92.2838 23.584 95.3078 26.272C98.3318 28.912 99.8438 32.632 99.8438 37.432C99.8438 41.224 98.8598 44.368 96.8918 46.864C94.9238 49.312 92.0918 50.968 88.3958 51.832C90.8438 52.6 92.8598 54.448 94.4438 57.376L102.94 73H92.7878L84.0038 56.8C83.1398 55.216 82.1078 54.136 80.9078 53.56C79.7558 52.984 78.2678 52.696 76.4438 52.696H69.6038V73H60.3878ZM69.6038 45.856H80.8358C87.5558 45.856 90.9158 43.12 90.9158 37.648C90.9158 32.224 87.5558 29.512 80.8358 29.512H69.6038V45.856ZM103.361 73L126.329 22.24H133.889L156.857 73H147.497L142.457 61.264H117.689L112.721 73H103.361ZM130.001 32.248L120.857 53.92H139.289L130.145 32.248H130.001ZM162.411 73V22.24H195.603V29.584H171.627V43.912H194.091V51.256H171.627V73H162.411ZM215.643 73V29.944H198.219V22.24H242.283V29.944H224.859V73H215.643ZM263.931 73.72C259.947 73.72 256.251 73.216 252.843 72.208C249.435 71.152 246.555 69.736 244.203 67.96L247.011 60.688C249.363 62.368 251.931 63.664 254.715 64.576C257.547 65.488 260.619 65.944 263.931 65.944C267.723 65.944 270.483 65.32 272.211 64.072C273.939 62.776 274.803 61.12 274.803 59.104C274.803 57.424 274.179 56.104 272.931 55.144C271.731 54.184 269.643 53.392 266.667 52.768L258.747 51.112C249.723 49.192 245.211 44.56 245.211 37.216C245.211 34.048 246.051 31.288 247.731 28.936C249.411 26.584 251.739 24.76 254.715 23.464C257.691 22.168 261.123 21.52 265.011 21.52C268.467 21.52 271.707 22.048 274.731 23.104C277.755 24.112 280.275 25.552 282.291 27.424L279.483 34.336C275.499 30.976 270.651 29.296 264.939 29.296C261.627 29.296 259.035 29.992 257.163 31.384C255.291 32.776 254.355 34.6 254.355 36.856C254.355 38.584 254.931 39.976 256.083 41.032C257.235 42.04 259.203 42.832 261.987 43.408L269.835 45.064C274.587 46.072 278.115 47.656 280.419 49.816C282.771 51.976 283.947 54.856 283.947 58.456C283.947 61.48 283.131 64.144 281.499 66.448C279.867 68.752 277.539 70.552 274.515 71.848C271.539 73.096 268.011 73.72 263.931 73.72ZM292.001 73V22.24H299.705L317.705 55.432L335.633 22.24H343.193V73H334.841V38.8L320.297 65.296H314.897L300.353 38.944V73H292.001ZM348.892 73L371.86 22.24H379.42L402.388 73H393.028L387.988 61.264H363.22L358.252 73H348.892ZM375.532 32.248L366.388 53.92H384.82L375.676 32.248H375.532ZM407.942 73V22.24H414.854L442.142 57.664V22.24H450.71V73H443.87L416.51 37.432V73H407.942ZM461.37 73V67.96H466.338V73H461.37ZM478.357 73V22.24H481.381V73H478.357ZM515.32 73.576C510.76 73.576 506.824 72.52 503.512 70.408C500.2 68.296 497.632 65.296 495.808 61.408C494.032 57.52 493.144 52.912 493.144 47.584C493.144 42.208 494.032 37.6 495.808 33.76C497.584 29.872 500.128 26.896 503.44 24.832C506.752 22.72 510.712 21.664 515.32 21.664C519.928 21.664 523.888 22.72 527.2 24.832C530.56 26.896 533.128 29.872 534.904 33.76C536.68 37.6 537.568 42.184 537.568 47.512C537.568 52.888 536.656 57.52 534.832 61.408C533.056 65.296 530.512 68.296 527.2 70.408C523.888 72.52 519.928 73.576 515.32 73.576ZM515.32 70.624C521.368 70.624 526.048 68.608 529.36 64.576C532.672 60.544 534.328 54.88 534.328 47.584C534.328 40.288 532.672 34.648 529.36 30.664C526.096 26.632 521.416 24.616 515.32 24.616C509.32 24.616 504.664 26.632 501.352 30.664C498.04 34.648 496.384 40.288 496.384 47.584C496.384 54.832 498.04 60.496 501.352 64.576C504.664 68.608 509.32 70.624 515.32 70.624Z"
-              fill="#FFFFFF"/>
-    </svg>
-    <h1 class="text-3xl text-white">We’re currently performing maintenance. Please check back soon!</h1>
+<div x-data="navigation">
+    <div x-data="contextManagement">
+
+        <div class="navbar bg-neutral text-neutral-content min-h-0 h-10 px-4">
+            <small>You are using the free public beta version of *Tracepaper*. We do not guarantee availability or reliability and are not
+                liable for any outcomes or issues resulting from its use. Use at your own risk. <a class="link" target="_blank" href="https://draftsman.io/Terms_%26_Conditions/">Terms & Conditions</a></small>
+        </div>
+
+        <div x-import="menu-bar">
+            <ui-menu-bar></ui-menu-bar>
+        </div>
+
+        <div class="grid grid-cols-12 gap-3 mt-5" x-data="{browserToggle: $persist(true)}">
+            <div class="col-span-2" x-show="browserToggle" x-cloak x-transition>
+                <div x-import="file-browser">
+                    <ui-file-browser></ui-file-browser>
+                </div>
+            </div>
+            <div :class="browserToggle ? 'col-span-10 w-full' : 'col-span-12 mx-3 w-[99%]'" x-transition>
+                <div x-import="elements/trace-notifications">
+                    <ui-trace-notifications></ui-trace-notifications>
+                </div>
+                <div x-import="tab-bar">
+                    <ui-tab-bar></ui-tab-bar>
+                </div>
+
+                <div class="max-h-[80vh] scrollbar-v" @scroll="saveScrollPosition" id="main">
+                    <div x-import="modeler/readme">
+                        <template x-if="tab_type == 'readme'" :key="navigation">
+                            <ui-readme></ui-readme>
+                        </template>
+                    </div>
+                    <div x-import="modeler/dummy-page">
+                        <template x-if="tab_type == ''" :key="navigation">
+                            <ui-dummy></ui-dummy>
+                        </template>
+                    </div>
+                    <div x-import="modeler/diagram">
+                        <template x-if="tab_type == 'diagram'" :key="navigation">
+                            <ui-diagram></ui-diagram>
+                        </template>
+                    </div>
+                    <div x-import="modeler/command">
+                        <template x-if="tab_type == 'command'" :key="navigation">
+                            <ui-command></ui-command>
+                        </template>
+                    </div>
+                    <div x-import="modeler/aggregate">
+                        <template x-if="tab_type == 'aggregate'" :key="navigation">
+                            <ui-aggregate></ui-aggregate>
+                        </template>
+                    </div>
+                    <div x-import="modeler/domain-event">
+                        <template x-if="tab_type == 'event'" :key="navigation">
+                            <ui-domain-event></ui-domain-event>
+                        </template>
+                    </div>
+                    <div x-import="modeler/behavior">
+                        <template x-if="tab_type == 'behavior'" :key="navigation">
+                            <ui-behavior></ui-behavior>
+                        </template>
+                    </div>
+                    <div x-import="modeler/notifier">
+                        <template x-if="tab_type == 'notifier'" :key="navigation">
+                            <ui-notifier></ui-notifier>
+                        </template>
+                    </div>
+                    <div x-import="modeler/view">
+                        <template x-if="tab_type == 'view'" :key="navigation">
+                            <ui-view></ui-view>
+                        </template>
+                    </div>
+                    <div x-import="modeler/projection">
+                        <template x-if="tab_type == 'projection'" :key="navigation">
+                            <ui-projection></ui-projection>
+                        </template>
+                    </div>
+                    <div x-import="modeler/expressions">
+                        <template x-if="tab_type == 'expressions'" :key="navigation">
+                            <ui-expressions></ui-expressions>
+                        </template>
+                    </div>
+                    <div x-import="modeler/dependencies">
+                        <template x-if="navigation == 'Dependencies'" :key="navigation">
+                            <ui-dependencies></ui-dependencies>
+                        </template>
+                    </div>
+                    <div x-import="modeler/patterns">
+                        <template x-if="tab_type == 'patterns'" :key="navigation">
+                            <ui-patterns></ui-patterns>
+                        </template>
+                    </div>
+                    <div x-import="modeler/roles">
+                        <template x-if="navigation == 'Roles'" :key="navigation">
+                            <ui-roles></ui-roles>
+                        </template>
+                    </div>
+                    <div x-import="modeler/python">
+                        <template x-if="tab_type == 'code'" :key="navigation">
+                            <ui-python></ui-python>
+                        </template>
+                    </div>
+                    <div x-import="modeler/template">
+                        <template x-if="tab_type == 'template'" :key="navigation">
+                            <ui-template></ui-template>
+                        </template>
+                    </div>
+                    <div x-import="modeler/scenario">
+                        <template x-if="tab_type == 'scenario'" :key="navigation">
+                            <ui-scenario></ui-scenario>
+                        </template>
+                    </div>
+                    <div x-import="settings">
+                        <template x-if="navigation == 'Settings'">
+                            <ui-settings></ui-settings>
+                        </template>
+                    </div>
+                    <div class="mb-5"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
+
+<!-- tp -->
+<script src="/js/tp/luxon.js"></script>
+<script src="/js/tp/diff.js"></script>
+<script src="/js/tp/vis.js"></script>
+<script src="/js/tp/showdown.js"></script>
+<script src="/js/tp/fast-xml-parser.js"></script>
+<script src="/js/tp/xml-builder.js"></script>
+<script src="/js/tp/ace-editor.js"></script>
+<script src="/js/tp/ace-language.js"></script>
+<script src="/js/tp/ace-python.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+<!-- utils -->
+<script src="/js/utils/helper.js"></script>
+<script src="/js/utils/api.js"></script>
+<script src="/js/utils/database.js"></script>
+<script src="/js/utils/searchindex.js"></script>
+<script src="/js/utils/git.js"></script>
+<script src="/js/utils/modeler.js"></script>
+<script src="/js/utils/diagram.js"></script>
+
+<!-- customs -->
+<script src="/js/modules/navigation/navigation.js"></script>
+<script src="/js/modules/navigation/source-management.js"></script>
+<script src="/js/modules/navigation/context-management.js"></script>
+<script src="/js/modules/utilities/input-validator.js"></script>
+<script src="/js/modules/navigation/file-browser.js"></script>
+<script src="/js/modules/navigation/settings.js"></script>
+<script src="/js/modules/modeler/basic-file.js"></script>
+<script src="/js/modules/utilities/markdown-editor.js"></script>
+<script src="/js/modules/utilities/info-card.js"></script>
+<script src="/js/modules/visuals/treemap.js"></script>
+<script src="/js/modules/visuals/diagram-only.js"></script>
+<script src="/js/modules/visuals/diagram-small.js"></script>
+<script src="/js/modules/modeler/model-wizard.js"></script>
+<script src="/js/modules/modeler/modeler-template.js"></script>
+<script src="/js/modules/modeler/command.js"></script>
+<script src="/js/modules/modeler/aggregate-root.js"></script>
+<script src="/js/modules/modeler/aggregate-entity.js"></script>
+<script src="/js/modules/modeler/domain-event.js"></script>
+<script src="/js/modules/modeler/behavior.js"></script>
+<script src="/js/modules/modeler/notifier.js"></script>
+<script src="/js/modules/modeler/view.js"></script>
+<script src="/js/modules/modeler/projection.js"></script>
+<script src="/js/modules/modeler/expressions.js"></script>
+<script src="/js/modules/modeler/configuration.js"></script>
+<script src="/js/modules/modeler/patterns.js"></script>
+<script src="/js/modules/modeler/scenario.js"></script>
 </body>
 </html>
