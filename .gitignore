@@ -4,3 +4,5 @@
 tmp/
 tmp/*
 dev-server.py
+css/node_modules/*
+/css/custom-daisy/node_modules
