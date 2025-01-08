@@ -131,10 +131,10 @@ document.addEventListener('alpine:init', () => {
                     mapping: []
                 };
                 processor.mapping.push(...event.field.map(x => {
-                    return {att_target: x.att_name, att_value: ""};
+                    return {att_id: Draftsman.makeid(6),att_target: x.att_name, att_value: ""};
                 }));
                 processor.mapping.push(...event["nested-object"].map(x => {
-                    return {att_target: x.att_name, att_value: ""};
+                    return {att_id: Draftsman.makeid(6),att_target: x.att_name, att_value: ""};
                 }));
                 this.model.processor.push(processor);
             },
