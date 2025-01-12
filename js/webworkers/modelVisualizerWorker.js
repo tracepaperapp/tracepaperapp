@@ -124,7 +124,11 @@ async function get_model(file){
     let content = await fs.promises.readFile(dir + "/" + file, "utf8");
     if (file.endsWith(".xml")){
         content = parser.parse(content);
-        content = Object.values(content)[0];
+        let root = Object.keys(content).at(0);
+        if (root == "?xml"){
+            root = Object.keys(content).at(1);
+        }
+        content = content[root];
         let type = Modeler.determine_type(file);
         content = Modeler.prepare_model(type,content);
     } else if (file.endsWith(".json")){
