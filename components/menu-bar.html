@@ -324,6 +324,7 @@
 
             <div class="ml-1">
                 <small x-show="offline" x-cloak x-transition><div class="badge badge-error badge-outline">No internet connection!</div><br></small>
+                <small x-show="last_build" x-cloak x-transition><div class="badge badge-info badge-outline cursor-pointer" @click="open_last_build">Deployment started...</div><br></small>
                 <small x-show="last_pull && !offline" x-cloak x-transition>Last&nbsp;pulled: <span x-text="last_pull"></span></small><br>
                 <small x-show="commit_diff.remoteAhead" x-cloak x-transition><span x-text="commit_diff.remoteAhead"></span>
                 commits behind remote</small>

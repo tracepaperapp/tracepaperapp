@@ -11,6 +11,7 @@ document.addEventListener('alpine:init', () => {
             last_pull_raw: this.$persist(0).using(sessionStorage),
             commit_diff: {},
             diff: {},
+            last_build: "",
             repo: null,
             commitModal: false,
             buildView: false,
@@ -52,7 +53,6 @@ document.addEventListener('alpine:init', () => {
                     this.force = [];
                     this.readyToCommit = false;
                     this.diff = {};
-                    console.log("Yes");
                     await this.start_build();
                 } catch(err){
                     console.log(err);
@@ -133,10 +133,17 @@ document.addEventListener('alpine:init', () => {
                 this.subscriptionId = await api.subscription("/prepared-statements/subscribe-track-and-trace.txt",{correlationId},this._track_build_request.bind(this));
                 await api.mutation("/prepared-statements/start-build.txt",{drn: this.drn, buildId: this.buildId},true,true,correlationId);
             },
+            open_last_build(){
+                window.open('/build-log.html?drn=' + this.drn + ":" + this.buildId, '_blank');
+            },
+            _reset_last_build(){
+                this.last_build = "";
+            },
             _track_build_request(data){
                 data = data["data"]["onTrace"];
                 if(data.status == "success"){
-                    window.open('/build-log.html?drn=' + this.drn + ":" + this.buildId, '_blank');
+                    this.last_build = this.drn + ":" + this.buildId;
+                    setTimeout(this._reset_last_build.bind(this),60000);
                 }
             },
             async update_build_log_list(){

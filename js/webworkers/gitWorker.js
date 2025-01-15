@@ -1,4 +1,4 @@
-console.trace = function(){};
+/*console.trace = function(){};
 console.log = function(){};
 console.warning = function(){};
 console.error = function(){};//*/
@@ -138,13 +138,17 @@ async function initializeRepo(repoUrl, pullInterval, author = "j.doe") {
 
   // Zet een interval voor het pullen van wijzigingen
   setInterval(async () => {
-    let staged = await this.checkForStagedChanges();
-    if (!staged){
-        await isogit.fetch({fs,dir: dir,http: http});
-        await isogit.pull({fs,http,dir: dir});
-        this.last_pull = Date.now();
-    } else {
-        this.commit_diff = await getCommitsDifference();
+    try{
+        let staged = await this.checkForStagedChanges();
+        if (!staged){
+            await isogit.fetch({fs,dir: dir,http: http});
+            await isogit.pull({fs,http,dir: dir});
+            this.last_pull = Date.now();
+        } else {
+            this.commit_diff = await getCommitsDifference();
+        }
+    }catch{
+        console.log("Issue with auto pull...");
     }
   }, pullInterval);
 }
@@ -175,63 +179,97 @@ async function cloneRepo(repoUrl, author) {
   });
 }
 
-// Fetch remote changes
-async function fetchRemoteChanges(repoUrl) {
+async function fetchRemoteChanges({ fs, dir, http }) {
   await isogit.fetch({
     fs,
     http,
     dir,
-    corsProxy: proxy,
-    url: repoUrl,
     ref: 'main',
-    singleBranch: true
+    singleBranch: true,
   });
+  console.log('Fetched latest remote changes.');
 }
 
-// Merge remote changes without overwriting local changes
+async function decideFileVersion(filepath) {
+  const statuses = await isogit.statusMatrix({ fs, dir });
+
+  // Vind de status van het specifieke bestand
+  const fileStatus = statuses.find(([file]) => file === filepath);
+
+  if (!fileStatus) {
+    throw new Error(`File not found in the repository: ${filepath}`);
+  }
+
+  const [, headStatus, workdirStatus, stageStatus] = fileStatus;
+
+  // Regels voor beslissingen
+  if (stageStatus > 0) {
+    // Er zijn gestagede wijzigingen: gebruik de lokale versie
+    console.log(`File ${filepath} has staged changes. Using local version.`);
+    return 'local';
+  } else if (workdirStatus > 0) {
+    // Alleen niet-gestagede wijzigingen: vraag gebruiker om handmatige actie
+    console.warn(`File ${filepath} has unstaged changes. Please stage or discard them.`);
+    throw new Error(`Unstaged changes detected in ${filepath}.`);
+  } else {
+    // Geen lokale wijzigingen: gebruik de remote versie
+    console.log(`File ${filepath} has no local changes. Using remote version.`);
+    return 'remote';
+  }
+}
+
+async function applyFileVersion(filepath, decision) {
+  if (decision === 'local') {
+    console.log(`Keeping local version of ${filepath}`);
+    // Zorg ervoor dat het bestand in de staging area blijft
+    await isogit.add({ fs, dir, filepath });
+  } else if (decision === 'remote') {
+    console.log(`Using remote version of ${filepath}`);
+    // Reset het bestand naar de remote versie
+    await isogit.checkout({
+      fs,
+      dir,
+      filepaths: [filepath],
+      force: true // Forceer reset naar remote versie
+    });
+  }
+}
+
 async function mergeRemoteChanges() {
   const mergeResult = await isogit.merge({
     fs,
     dir,
     ours: 'main',
     theirs: 'origin/main',
-    fastForwardOnly: false
+    fastForwardOnly: true, // Forceer fast-forward merge
   });
-  if (!mergeResult.alreadyMerged && !mergeResult.fastForward && !mergeResult.clean) {
-    console.log('Merge conflicts detected. Local changes preserved.');
-  } else {
-    console.log('Merge successful.');
-  }
-}
-
-// Stage local changes
-async function stageLocalChanges() {
-  try {
-    const status = await isogit.statusMatrix({ fs, dir });
-    console.trace("Status matrix:", status);
-
-    for (let [filepath, , workdirStatus, stageStatus] of status) {
-      try {
-        if (workdirStatus !== stageStatus) {
-          if (workdirStatus === 0) {
-            // Bestand is verwijderd: gebruik remove
-            console.trace(`Bestand verwijderd, staging voor verwijdering: ${filepath}`);
-            await isogit.remove({ fs, dir, filepath });
-          } else {
-            // Bestand is gewijzigd of nieuw: gebruik add
-            console.trace(`Bestand toegevoegd of gewijzigd, staging: ${filepath}`);
-            await isogit.add({ fs, dir, filepath });
-          }
-        }
-      } catch (err) {
-        console.warn(`Fout bij verwerken van bestand ${filepath}:`, err.message);
+  console.log(mergeResult);
+  if (mergeResult.fastForward) {
+    console.log('Fast-forward merge completed.');
+  } else if (!mergeResult.clean) {
+    console.warn('Conflicts detected. Resolving conflicts...');
+    const statuses = await isogit.statusMatrix({ fs, dir });
+    for (const [filepath, , , stageStatus] of statuses) {
+      if (stageStatus === 3) { // Conflict
+        console.log(`Resolving conflict in file: ${filepath}`);
+        await isogit.checkout({ fs, dir, filepaths: [filepath], force: true });
       }
     }
-  } catch (err) {
-    console.error("Algemene fout in stageLocalChanges:", err.message);
-    throw err;
+    console.log('Conflicts resolved.');
   }
 }
+
+async function stageLocalChanges({ fs, dir }) {
+  const statuses = await isogit.statusMatrix({ fs, dir });
+
+  for (const [filepath, headStatus, workdirStatus, stageStatus] of statuses) {
+    if (workdirStatus !== stageStatus) {
+      console.log(`Staging file: ${filepath}`);
+      await isogit.add({ fs, dir, filepath });
+    }
+  }
+}
+
 
 // Bestandsbeheer functies
 async function listFiles() {
@@ -324,53 +362,53 @@ async function status(diff = false) {
   const statuses = await isogit.statusMatrix({ fs, dir });
 
   // Alleen remote statuses ophalen als 'diff' waar is
-  this.remoteStatuses = diff ? await getRemoteStatuses() : this.remoteStatuses;
+  if (diff) {
+    this.remoteStatuses = await getRemoteStatuses();
+  }
 
-  const statusResults = await Promise.all(statuses.map(async ([filepath, headStatus, workdirStatus, stageStatus]) => {
-      let status = 'unmodified';
-      let hasConflict = false;
-
-      // Nieuw bestand, niet gestaged (untracked)
-      if (headStatus === 0 && workdirStatus === 2 && stageStatus === 0) {
-        status = 'untracked';
-      }
-      // Nieuw bestand, volledig gestaged (added)
-      else if (headStatus === 0 && stageStatus === 2) {
-        status = 'added';
-      }
-      // Bestand bestaat in HEAD, gewijzigd in werkdirectory en niet gestaged (modified, unstaged)
-      else if (headStatus === 1 && workdirStatus === 2 && stageStatus === 1) {
-        status = 'modified (unstaged)';
-      }
-      // Bestand bestaat in HEAD, volledig gestaged en werkdirectory komt overeen met staging (modified, staged)
-      else if (headStatus === 1 && workdirStatus === 2 && stageStatus === 2) {
-        status = 'modified (staged)';
-      }
-      // Bestand is verwijderd (deleted), maar nog niet gestaged
-      else if (headStatus === 1 && workdirStatus === 0 && stageStatus === 1) {
-        status = 'deleted (unstaged)';
-      }
-      // Bestand is verwijderd (deleted) en gestaged voor commit
-      else if (headStatus === 1 && workdirStatus === 0 && stageStatus === 0) {
-        status = 'deleted (staged)';
-      }
-
-      // Check voor conflicts door te kijken naar de delta van de remote en lokale commit-geschiedenis
-      const remoteStatus = this.remoteStatuses.remoteStatuses[filepath];
-      if (this.remoteStatuses.hasDiverged && remoteStatus && (workdirStatus === 2 || stageStatus === 2)) {
-        const hasRemoteChanges = await checkForRemoteChanges(filepath);
-        hasConflict = hasRemoteChanges;
-        if (hasConflict) status += ' (conflict)';
-      }
-
-      return {
-        filePath: filepath,
-        status: status,
-        hasConflict: hasConflict,  // Voeg een veld toe om aan te geven of er een conflict is
-      };
-    }));
+  const statusResults = await Promise.all(
+    statuses.map(([filepath, headStatus, workdirStatus, stageStatus]) =>
+      processFileStatus(filepath, headStatus, workdirStatus, stageStatus, this.remoteStatuses)
+    )
+  );
 
   return statusResults;
+}
+
+async function processFileStatus(filepath, headStatus, workdirStatus, stageStatus, remoteStatuses) {
+  let status = getFileStatus(headStatus, workdirStatus, stageStatus);
+  let hasConflict = false;
+
+  // Controleer op conflicten
+  const remoteStatus = remoteStatuses.remoteStatuses[filepath];
+  if (remoteStatuses.hasDiverged && remoteStatus && (workdirStatus === 2 || stageStatus === 2)) {
+    const hasRemoteChanges = await checkForRemoteChanges(filepath);
+    hasConflict = hasRemoteChanges;
+    if (hasConflict) status += ' (conflict)';
+  }
+
+  return {
+    filePath: filepath,
+    status: status,
+    hasConflict: hasConflict,
+  };
+}
+
+function getFileStatus(headStatus, workdirStatus, stageStatus) {
+  if (headStatus === 0 && workdirStatus === 2 && stageStatus === 0) {
+    return 'untracked';
+  } else if (headStatus === 0 && stageStatus === 2) {
+    return 'added';
+  } else if (headStatus === 1 && workdirStatus === 2 && stageStatus === 1) {
+    return 'modified (unstaged)';
+  } else if (headStatus === 1 && workdirStatus === 2 && stageStatus === 2) {
+    return 'modified (staged)';
+  } else if (headStatus === 1 && workdirStatus === 0 && stageStatus === 1) {
+    return 'deleted (unstaged)';
+  } else if (headStatus === 1 && workdirStatus === 0 && stageStatus === 0) {
+    return 'deleted (staged)';
+  }
+  return 'unmodified';
 }
 
 // Helperfunctie om remote status op te halen
@@ -409,18 +447,33 @@ async function getRemoteStatuses() {
   return { remoteStatuses, hasDiverged };
 }
 
-// Controleer of een bestand remote gewijzigd is sinds de laatste lokale commit
 async function checkForRemoteChanges(filepath) {
-  // Haal de logs van de lokale en remote branch op voor het specifieke bestand
-  const localLogs = await isogit.log({ fs, dir, ref: 'HEAD', filepaths: [filepath] });
-  const remoteLogs = await isogit.log({ fs, dir, ref: 'origin/main', filepaths: [filepath] });
+  try {
+    // Haal de inhoud van het bestand uit de lokale HEAD
+    const localContent = await isogit.readBlob({
+      fs,
+      dir,
+      oid: await isogit.resolveRef({ fs, dir, ref: 'HEAD' }),
+      filepath,
+    });
 
-  // Vergelijk de laatste commit van lokaal en remote
-  const localCommit = localLogs[0] ? localLogs[0].oid : null;
-  const remoteCommit = remoteLogs[0] ? remoteLogs[0].oid : null;
+    // Haal de inhoud van het bestand uit de remote branch
+    const remoteContent = await isogit.readBlob({
+      fs,
+      dir,
+      oid: await isogit.resolveRef({ fs, dir, ref: 'origin/main' }),
+      filepath,
+    });
 
-  // Als de remote commit verschilt van de lokale commit, is het bestand remote gewijzigd
-  return localCommit !== remoteCommit;
+    // Vergelijk de inhoud
+    return localContent.blob.toString('utf8') !== remoteContent.blob.toString('utf8');
+  } catch (error) {
+    // Als het bestand niet bestaat in een van de branches, markeer het als gewijzigd
+    if (error.code === 'NotFoundError') {
+      return true;
+    }
+    throw error;
+  }
 }
 
 async function fetchRemoteFile(filePath){
@@ -465,23 +518,71 @@ async function revertFile(filePath) {
 
 }
 
-async function commitChanges(message,repoUrl) {
-  try{
-      await stageLocalChanges();
-      await fetchRemoteChanges(repoUrl);
-      await mergeRemoteChanges();
-      await isogit.commit({
-        fs,
-        dir,
-        author: { name: 'User', email: 'user@example.com' },
-        message
-      });
-  }catch(err){
-      console.error("Fout tijdens commit-proces:", err.message);
-      console.error("Stacktrace:", err.stack);
+async function pullLatestChanges() {
+  try {
+    console.log('Pulling latest changes...');
+    await isogit.pull({
+      fs,
+      http,
+      dir,
+      singleBranch: true,
+      ref: 'main',
+    });
+    console.log('Pull completed.');
+    this.last_pull = Date.now();
+  } catch (error) {
+    console.error('Error during pull:', error.message);
+    throw error;
+  }
+}
 
-      // Rethrow om het probleem verder omhoog in de keten te behandelen
-      throw err;
+async function commitChanges(message,repoUrl,author) {
+  try {
+    // 1. Fetch remote changes
+    console.log('Fetching remote changes...');
+    await isogit.fetch({ fs, dir, http, ref: 'main' });
+
+    // 2. Merge remote changes
+    console.log('Merging remote changes...');
+    await mergeRemoteChanges({ fs, dir });
+
+    // 3. Stage local changes
+    console.log('Staging local changes...');
+    await stageLocalChanges({ fs, dir });
+
+    const statuses = await isogit.statusMatrix({ fs, dir });
+
+      // Maak een stash van gestagede bestanden
+      const stash = {};
+      for (const status of statuses) {
+        if (status[2] > 0) {
+          stash[status[0]] = await readFile(status[0]);
+        }
+      }
+
+      // 2. Pull wijzigingen van de remote repository
+      await pullLatestChanges();
+
+      // 3. Herstel de gestagede bestanden
+      console.log("Restoring stashed files...");
+      for (const item of Object.entries(stash)) {
+        await writeFile(item[0], item[1]);
+      }
+
+    // 4. Commit staged changes
+    console.log('Committing changes...');
+    await isogit.commit({
+      fs,
+      dir,
+      author: author || { name: 'User', email: 'user@example.com' },
+      message,
+    });
+
+    console.log('Synchronization complete!');
+  } catch (error) {
+    console.log(error);
+    console.error('Error during synchronization:', error.message);
+    throw error;
   }
 }
 
@@ -513,13 +614,14 @@ async function hasUnpushedChanges(repoUrl) {
 
 async function pushChanges() {
   console.log("PUSH");
+  await pullLatestChanges();
   await isogit.push({
     fs,
     http,
     dir,
     corsProxy: proxy,
     ref: 'main',
-    force: true
+    force: false
   });
 }
 

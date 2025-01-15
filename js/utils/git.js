@@ -22,7 +22,7 @@ class GitRepository {
         GitRepository.url = sessionStorage.project_url;
         await repo._sendMessage({
           action: 'initialize',
-          pullInterval: 900000,
+          pullInterval: 60000,
         });
     } else if (GitRepository.url != sessionStorage.project_url){
         throw new Error(`The GIT worker is already initialized on repo [${GitRepository.url}] if you want to connect to [${repoUrl}] you have to execute the reset function first!`);
