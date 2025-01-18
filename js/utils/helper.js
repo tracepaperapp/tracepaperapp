@@ -163,16 +163,37 @@ class Draftsman {
        return result;
    }
 
+//    static sortObjectByKey(obj) {
+//        if (obj === null || typeof obj !== 'object') {
+//            return obj;
+//        }
+//
+//        // Sorteer de keys van het object en map over ze heen om een nieuw object te maken
+//        const sortedObj = {};
+//        Object.keys(obj).sort().forEach(key => {
+//            sortedObj[key] = Draftsman.sortObjectByKey(obj[key]); // Rekursief sorteren voor nested objects
+//        });
+//
+//        return sortedObj;
+//    }
+
     static sortObjectByKey(obj) {
         if (obj === null || typeof obj !== 'object') {
-            return obj;
+            return obj; // Geen object of array, retourneer de waarde
         }
 
-        // Sorteer de keys van het object en map over ze heen om een nieuw object te maken
+        if (Array.isArray(obj)) {
+            // Als het een array is, map recursief over de elementen
+            return obj.map(item => Draftsman.sortObjectByKey(item));
+        }
+
+        // Object: Sorteer de keys en maak een nieuw object
         const sortedObj = {};
-        Object.keys(obj).sort().forEach(key => {
-            sortedObj[key] = Draftsman.sortObjectByKey(obj[key]); // Rekursief sorteren voor nested objects
-        });
+        Object.keys(obj)
+            .sort()
+            .forEach(key => {
+                sortedObj[key] = Draftsman.sortObjectByKey(obj[key]); // Rekursief sorteren voor nested objects
+            });
 
         return sortedObj;
     }

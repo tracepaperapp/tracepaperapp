@@ -125,18 +125,22 @@
                                             <template x-for="item in value" :key="item">
                                                 <tr>
                                                     <td x-text="item"></td>
-                                                    <td>
-                                                        <ui-delete-button
-                                                                @delete.once.stop="state[fkey] = state[fkey].filter(x => x != item);$dispatch('updated')"></ui-delete-button>
+                                                    <td class="text-end">
+                                                        <button @click="state[fkey] = state[fkey].filter(x => x != item)"
+                                                                :disabled="editing_disabled"
+                                                                class="btn btn-xs btn-outline btn-error">
+                                                            <i class="fa-regular fa-trash-can"></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             </template>
                                             <tr>
-                                                <td></td>
                                                 <td>
-                                                    <ui-add-button modal-title="Value"
-                                                                   @updated.debounce.stop="if($event.detail.value && !value.includes($event.detail.value)){value.push($event.detail.value);state[fkey] = value;$dispatch('updated')}"></ui-add-button>
+                                                    <input type="text"
+                                                           @focusout="if ($el.value){value.push($el.value);state[fkey] = value;$el.value = ''}"
+                                                           placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
                                                 </td>
+                                                <td></td>
                                             </tr>
                                         </table>
                                     </td>
@@ -326,6 +330,7 @@
                         <span>Zero expected events configured, test will expect a functional exception</span>
                     </div>
 
+                    <!-- expected state -->
                     <table x-data="behaviorTestCaseExpectedState"
                            x-show="test.expected.length != 0" x-cloak x-transition
                            class="table table-xs border mb-5">
@@ -411,18 +416,22 @@
                                             <template x-for="item in value" :key="item">
                                                 <tr>
                                                     <td x-text="item"></td>
-                                                    <td>
-                                                        <ui-delete-button
-                                                                @delete.once.stop="state[fkey] = state[fkey].filter(x => x != item);$dispatch('updated')"></ui-delete-button>
+                                                    <td class="text-end">
+                                                        <button @click="state[fkey] = state[fkey].filter(x => x != item)"
+                                                                :disabled="editing_disabled"
+                                                                class="btn btn-xs btn-outline btn-error">
+                                                            <i class="fa-regular fa-trash-can"></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             </template>
                                             <tr>
-                                                <td></td>
                                                 <td>
-                                                    <ui-add-button modal-title="Value"
-                                                                   @updated.debounce.stop="if($event.detail.value && !value.includes($event.detail.value)){value.push($event.detail.value);state[fkey] = value;$dispatch('updated')}"></ui-add-button>
+                                                    <input type="text"
+                                                           @focusout="if ($el.value){value.push($el.value);state[fkey] = value;$el.value = ''}"
+                                                           placeholder="value" class="input input-ghost input-xs w-full modeler-input" />
                                                 </td>
+                                                <td></td>
                                             </tr>
                                         </table>
                                     </td>
